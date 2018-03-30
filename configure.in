@@ -1,0 +1,38 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.59)
+AC_INIT(arctracker.h)
+AC_CONFIG_SRCDIR([initialise.c])
+AC_CONFIG_HEADER([config.h])
+
+# Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+# Checks for libraries.
+# FIXME: Replace `main' with a function in `-lasound':
+AC_CHECK_LIB(asound, snd_pcm_writei)
+AC_PATH_LIB_LIBCONFIG
+AC_PATH_LIB(artsc)
+AC_CHECK_LIB(artsc, arts_write)
+
+# Checks for header files.
+AC_HEADER_STDC
+#AC_CHECK_HEADERS(stdlib.h string.h sys/ioctl.h sys/soundcard.h sys/unistd.h sys/fcntl.h artsc.h alsa/asoundlib.h)
+AC_CHECK_HEADERS(stdlib.h string.h,, [AC_MSG_ERROR(Standard C headers not found!)])
+AC_CHECK_HEADERS(sys/ioctl.h,, [AC_MSG_ERROR(Header file sys/ioctl.h not found!)])
+AC_CHECK_HEADERS(sys/soundcard.h,, [AC_MSG_ERROR(Header file sys/soundcard.h not found!)])
+AC_CHECK_HEADERS(sys/unistd.h,, [AC_MSG_ERROR(Header file sys/unistd.h not found!)])
+AC_CHECK_HEADERS(sys/fcntl.h,, [AC_MSG_ERROR(Header file sys/fcntl.h not found!)])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
+
+# Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

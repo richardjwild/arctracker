@@ -1,0 +1,58 @@
+Arctracker, the Archimedes modfile player
+-----------------------------------------
+
+This program is designed to play modfiles that have been created using the
+Tracker and Desktop Tracker programs that run on the Acorn Archimedes and
+compatible range of microcomputers.
+
+Both Tracker and Desktop Tracker are programs that work in the same manner as
+the old Ultimate Soundtracker program by Karsten Obarski and all its myriad
+clones that run on the Commodore Amiga.  However, both Tracker and Desktop
+Tracker have their own file formats and so none of the existing modfile players
+available for Linux (or Windows, to the best of my knowledge) will play them.
+
+This program exists for two reasons:
+
+(1) I wanted to be able to play all my old Tracker and Desktop Tracker modfiles
+on my Linux machine, and
+
+(2) I want to write an advanced tracker editor of my own for Linux and this
+seemed like a useful exercise to try my hand at first.
+
+Currently, the program runs from the command line only.  It is invoked like
+this:
+
+	arctracker [options] <modfile>
+
+where <modfile> is the filename of the Tracker or Desktop Tracker modfile to
+be played, and [options] can be any or none of the following:
+
+	--loop		Continually repeat the modfile until the program is
+			interrupted by ctrl-c.  The default is not to repeat.
+
+	--pianola	Print the pattern information to stdout as the modfile
+			is playing in the manner of an old pianola roll.
+
+	--volume=<n>	Software-scale the volume where n is between 1 and 255.
+			The default is 64.  When playing modfiles with more than
+			4 channels (Desktop Tracker modfiles can have up to 16)
+			a volume greater than 64 can cause saturation, which
+			will sound like an amplifier being overdriven.  If this
+			happens a lower volume should be used.
+
+	--oss		Use the OSS sound output API.  This is the default.  If
+			this option is chosen neither --alsa nor --arts may be
+			specified.
+
+	--alsa		Use the ALSA sound output API.  If this option is
+			chosen neither --oss nor --arts may be specified.
+
+	--arts		Use the aRts soundserver output API.  This enables many
+			sources of sound output to use the sound device at the
+			same time.  If this option is chosen neither --oss nor
+			--alsa may be specified.
+
+-----------------------------------------------------------
+Arctracker is copyright (c) Richard Wild 2003, 2004 & 2005.
+
+richardwild@users.sourceforge.net
