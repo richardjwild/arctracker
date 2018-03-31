@@ -2,3 +2,4 @@ arctracker
 *.o
 config.log
 arctracker.cbp
+arctracker.layout
