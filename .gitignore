@@ -3,3 +3,8 @@ arctracker
 config.log
 arctracker.cbp
 arctracker.layout
+autom4te.cache/
+autoscan.log
+compile
+missing
+stamp-h1

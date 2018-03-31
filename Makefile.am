@@ -16,15 +16,15 @@
 # along with Arctracker; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA
 
-CC=gcc
-INSTALL=/usr/bin/install -c
-CFLAGS=-g -O2 
-LDFLAGS=
-CLIBS= 
-INSTALLDIR=/usr/local
+CC=@CC@
+INSTALL=@INSTALL@
+CFLAGS=@CFLAGS@
+LDFLAGS=@LDFLAGS@
+CLIBS=@LIBS@
+INSTALLDIR=@prefix@
 
 arctracker: arctracker.o initialise.o read_mod.o play_mod.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(CLIBS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o $(CLIBS)
 
 arctracker.o: arctracker.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c

@@ -19,6 +19,28 @@ on my Linux machine, and
 (2) I want to write an advanced tracker editor of my own for Linux and this
 seemed like a useful exercise to try my hand at first.
 
+How to build it
+---------------
+
+You need to have GNU automake and autoconf installed. Run the following command:
+
+	autoreconf -vfi
+
+If that succeeds, then run:
+
+	./configure
+
+You can then build the program with:
+
+	make arctracker
+
+and install it with:
+
+	sudo make install
+
+How to run it
+-------------
+
 Currently, the program runs from the command line only.  It is invoked like
 this:
 
@@ -52,7 +74,7 @@ be played, and [options] can be any or none of the following:
 			same time.  If this option is chosen neither --oss nor
 			--alsa may be specified.
 
------------------------------------------------------------
-Arctracker is copyright (c) Richard Wild 2003, 2004 & 2005.
+-----------------------------------------------------------------
+Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
 
 richardwild@users.sourceforge.net
