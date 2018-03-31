@@ -8,3 +8,11 @@ autoscan.log
 compile
 missing
 stamp-h1
+Makefile
+Makefile.in
+aclocal.m4
+config.h
+config.h.in
+config.status
+configure
+install-sh
