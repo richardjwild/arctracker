@@ -19,7 +19,7 @@
 #include "arctracker.h"
 #include "config.h"
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	return_status retcode = SUCCESS;
 	program_arguments args;
