@@ -259,7 +259,7 @@ void initialise_values(
 	}
 
 	if (p_pianola == NO) {
-		printf("Playing position 1 of %d", p_module->tune_length);
+		printf("Playing position 1 of %ld", p_module->tune_length);
 		fflush(stdout);
 	}
 
@@ -297,7 +297,7 @@ yn update_counters(
 
 		if (p_pianola == NO) {
 			printf(
-				"%cPlaying position %d of %d ",
+				"%cPlaying position %d of %ld ",
 				13,
 				p_current_positions->position_in_sequence + 1,
 				p_module->tune_length);

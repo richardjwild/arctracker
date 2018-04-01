@@ -840,7 +840,7 @@ return_status validate_modfile(
 	int i;
 
 	if (p_module->num_channels < 1 || p_module->num_channels > 8) {
-		fprintf(stderr,"Modfile corrupt - number of voices %d invalid\n", p_module->num_channels);
+		fprintf(stderr,"Modfile corrupt - number of voices %ld invalid\n", p_module->num_channels);
 		retcode = FILE_CORRUPT;
 	}
 
@@ -855,12 +855,12 @@ return_status validate_modfile(
 	}
 
 	if (retcode == SUCCESS && ((p_module->tune_length > MAX_TUNELENGTH) || (p_module->tune_length < 1))) {
-		fprintf(stderr,"Modfile corrupt - tune length %d invalid\n", p_module->tune_length);
+		fprintf(stderr,"Modfile corrupt - tune length %ld invalid\n", p_module->tune_length);
 		retcode = FILE_CORRUPT;
 	}
 
 	if (retcode == SUCCESS && (p_module->num_patterns > NUM_PATTERNS || p_module->num_patterns < 1)) {
-		fprintf(stderr,"Modfile corrupt - number of patterns %d invalid\n", p_module->num_patterns);
+		fprintf(stderr,"Modfile corrupt - number of patterns %ld invalid\n", p_module->num_patterns);
 		retcode = FILE_CORRUPT;
 	}
 
@@ -877,18 +877,18 @@ return_status validate_modfile(
 		for (i=0; i<p_num_samples; i++, p_sample++) {
 			if (p_sample->sample_length) {
 				if (p_sample->volume < 0 || p_sample->volume > MAX_VOLUME) {
-					fprintf(stderr,"Modfile corrupt - sample %d volume %d invalid\n", i, p_sample->volume);
+					fprintf(stderr,"Modfile corrupt - sample %d volume %ld invalid\n", i, p_sample->volume);
 					retcode = FILE_CORRUPT;
 				}
 
 				if (retcode == SUCCESS && p_sample->sample_length < 0) {
-					fprintf(stderr,"Modfile corrupt - sample %d length %d invalid\n", i, p_sample->sample_length);
+					fprintf(stderr,"Modfile corrupt - sample %d length %ld invalid\n", i, p_sample->sample_length);
 					retcode = FILE_CORRUPT;
 				}
 
 				if (retcode == SUCCESS && p_sample->repeat_offset > p_sample->sample_length) {
 					fprintf(
-						stderr,"Modfile corrput - sample %d repeat offset %d greater than sample length %d\n",
+						stderr,"Modfile corrput - sample %d repeat offset %ld greater than sample length %ld\n",
 						i, p_sample->repeat_offset, p_sample->sample_length);
 					retcode = FILE_CORRUPT;
 				}
