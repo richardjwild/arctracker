@@ -367,8 +367,7 @@ return_status validate_modfile(
 	sample_details *p_sample,
 	int p_num_samples);
 
-return_status initialise_phase_incrementor_values(
-	long **p_phase_incrementors,
+long* initialise_phase_incrementor_values(
 	unsigned int *p_periods,
 	long p_sample_rate);
 

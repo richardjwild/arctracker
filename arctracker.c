@@ -118,8 +118,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (retcode == SUCCESS)
-		retcode = initialise_phase_incrementor_values(
-			&phase_incrementors,
+		phase_incrementors = initialise_phase_incrementor_values(
 			periods,
 			sample_rate);
 
