@@ -362,11 +362,6 @@ return_status initialise_oss (
 	return (retcode);
 }
 
-/* function initialise_phase_incrementor_values.                                        *
- * Build a table of lookup values for converting sample periods into phase incrementor  *
- * values (the amount you increment the sample pointer by for every frame output to the *
- * audio device).                                                                       */
-
 return_status initialise_phase_incrementor_values (
 	long **p_phase_incrementors,
 	unsigned int *p_periods,
@@ -379,9 +374,7 @@ return_status initialise_phase_incrementor_values (
 		fprintf(stderr,"Cannot allocate memory for phase incrementors array\n");
 		retcode = MEMORY_FAILURE;
 	} else {
-		for (period=1; period</*1021*/ 2048; period++) {
-			/* don't ask me how this conversion works, I *
-			 * copied it from the tracker player source */
+		for (period=1; period<2048; period++) {
 			(*p_phase_incrementors)[period - 1] = (3575872.0/((double)period * (double)p_sample_rate)) * 60000.0;
 		}
 	}
