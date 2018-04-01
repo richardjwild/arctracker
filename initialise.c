@@ -369,8 +369,10 @@ return_status initialise_phase_incrementor_values (
 {
 	return_status retcode = SUCCESS;
 	int period;
+	int array_bytes = 2048 * sizeof(long);
 
-	if ((*p_phase_incrementors = (long *)malloc(2048 * sizeof(long))) == NULL) {
+	*p_phase_incrementors = (long *) malloc(array_bytes);
+	if (*p_phase_incrementors == NULL) {
 		fprintf(stderr,"Cannot allocate memory for phase incrementors array\n");
 		retcode = MEMORY_FAILURE;
 	} else {
