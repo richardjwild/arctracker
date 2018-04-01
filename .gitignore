@@ -16,3 +16,4 @@ config.h.in
 config.status
 configure
 install-sh
+*~

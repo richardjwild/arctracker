@@ -18,6 +18,7 @@
 
 #include "arctracker.h"
 #include "config.h"
+#include "error.h"
 
 /* function get_arguments.                     *
  * Get the arguments passed to the application */
@@ -371,13 +372,11 @@ return_status initialise_phase_incrementor_values (
 	int array_bytes = 2048 * sizeof(long);
 
 	*p_phase_incrementors = (long *) malloc(array_bytes);
-	if (*p_phase_incrementors == NULL) {
-		fprintf(stderr,"Cannot allocate memory for phase incrementors array\n");
-		retcode = MEMORY_FAILURE;
-	} else {
-		for (int period=1; period<2048; period++) {
-			(*p_phase_incrementors)[period - 1] = (3575872.0/((double)period * (double)p_sample_rate)) * 60000.0;
-		}
+	if (*p_phase_incrementors == NULL)
+		error("Cannot allocate memory for phase incrementors array");
+
+	for (int period=1; period<2048; period++) {
+		(*p_phase_incrementors)[period - 1] = (3575872.0/((double)period * (double)p_sample_rate)) * 60000.0;
 	}
 
 	return (retcode);

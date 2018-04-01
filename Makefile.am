@@ -5,13 +5,13 @@ LDFLAGS=@LDFLAGS@
 CLIBS=@LIBS@
 INSTALLDIR=@prefix@
 
-arctracker: arctracker.o initialise.o read_mod.o play_mod.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o $(CLIBS)
+arctracker: arctracker.o initialise.o read_mod.o play_mod.o error.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o error.o $(CLIBS)
 
 arctracker.o: arctracker.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
 
-initialise.o: arctracker.h initialise.c
+initialise.o: arctracker.h initialise.c error.h
 	$(CC) $(CFLAGS) -c initialise.c
 
 read_mod.o: arctracker.h read_mod.c
@@ -19,6 +19,9 @@ read_mod.o: arctracker.h read_mod.c
 
 play_mod.o: arctracker.h log_lin_tab.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
+
+error.o: error.h error.c
+	$(CC) $(CFLAGS) -c error.c
 
 clean:
 	rm -f ./arctracker ./*.o 2>/dev/null
