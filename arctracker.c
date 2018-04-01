@@ -119,9 +119,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (retcode == SUCCESS)
-		phase_incrementors = initialise_phase_incrementor_values(
-			periods,
-			sample_rate);
+		phase_incrementors = initialise_phase_incrementor_values(sample_rate);
 
 	if (retcode == SUCCESS) {
 		if (args.api == OSS) {
