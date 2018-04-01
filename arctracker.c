@@ -18,6 +18,7 @@
 
 #include "arctracker.h"
 #include "config.h"
+#include "resample.h"
 
 int main(int argc, char *argv[])
 {
