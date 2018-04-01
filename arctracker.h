@@ -383,7 +383,7 @@ return_status play_module(
 	mono_stereo p_stereo_mode,
 	program_arguments *p_args);
 
-__inline void initialise_values(
+void initialise_values(
 	mono_stereo p_stereo_mode,
 	format p_sample_format,
 	char *buffer_shifter,
@@ -393,18 +393,18 @@ __inline void initialise_values(
 	yn p_pianola,
 	long p_sample_rate);
 
-__inline yn update_counters(
+yn update_counters(
 	tune_info *p_current_positions,
 	mod_details *p_module,
 	yn p_pianola);
 
-__inline void get_current_pattern_line(
+void get_current_pattern_line(
 	tune_info *p_current_positions,
 	mod_details *p_module,
 	current_event *p_current_pattern_line,
 	yn p_pianola);
 
-__inline void get_new_note(
+void get_new_note(
 	current_event *p_current_event,
 	sample_details *p_sample,
 	channel_info *p_current_voice,
@@ -414,7 +414,7 @@ __inline void get_new_note(
 	module_type p_module_type,
 	long p_num_samples);
 
-__inline void process_tracker_command(
+void process_tracker_command(
 	current_event *p_current_event,
 	channel_info *p_current_voice,
 	tune_info *p_current_positions,
@@ -423,7 +423,7 @@ __inline void process_tracker_command(
 	unsigned int *p_periods,
 	yn on_event);
 
-__inline void process_desktop_tracker_command(
+void process_desktop_tracker_command(
 	current_event *p_current_event,
 	channel_info *p_current_voice,
 	tune_info *p_current_positions,
@@ -433,7 +433,7 @@ __inline void process_desktop_tracker_command(
 	yn on_event,
 	long p_sample_rate);
 
-__inline void prepare_current_frame_sample_data(
+void prepare_current_frame_sample_data(
 	long *p_current_frame_left_channel,
 	long *p_current_frame_right_channel,
 	channel_info *p_voice_info,
@@ -441,7 +441,7 @@ __inline void prepare_current_frame_sample_data(
 	mono_stereo p_stereo_mode,
 	unsigned char p_volume);
 
-__inline void mix_channels(
+void mix_channels(
 	long *p_current_frame_left_channel,
 	long *p_current_frame_right_channel,
 	channel_info *p_voice_info,
@@ -450,7 +450,7 @@ __inline void mix_channels(
 	long *p_right_channel);
 
 /*
-__inline return_status write_audio_data (
+return_status write_audio_data (
 	output_api p_api,
 	format p_sample_format,
 	mono_stereo p_stereo_mode,
@@ -460,7 +460,7 @@ __inline return_status write_audio_data (
 	void *p_ah_ptr)
 */
 
-__inline return_status write_audio_data(
+return_status write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
 	mod_details *p_module,
@@ -471,7 +471,7 @@ __inline return_status write_audio_data(
 	void *p_ah_ptr,
 	long p_nframes);
 
-__inline void write_channel_audio_data(
+void write_channel_audio_data(
 	int p_ch,
 	channel_info *p_voice_info,
 	long p_nframes,
@@ -481,7 +481,7 @@ __inline void write_channel_audio_data(
 	unsigned char p_volume,
 	int stridelen);
 
-__inline return_status output_data(
+return_status output_data(
 	output_api p_api,
 	char p_buffer_shifter,
 	format p_sample_format,

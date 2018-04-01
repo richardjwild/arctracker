@@ -212,7 +212,7 @@ return_status play_module(
 /* initialise_values function.                    *
  * Set up values in preparation for player start. */
 
-__inline void initialise_values(
+void initialise_values(
 	mono_stereo p_stereo_mode,
 	format p_sample_format,
 	char *buffer_shifter,
@@ -260,7 +260,7 @@ __inline void initialise_values(
 
 	if (p_pianola == NO) {
 		printf("Playing position 1 of %d", p_module->tune_length);
-		fflush(stdout);	
+		fflush(stdout);
 	}
 
 	p_current_positions->sps_per_tick = (p_sample_rate << 8)/50;
@@ -270,7 +270,7 @@ __inline void initialise_values(
  * Called every n tracker periods where n is the current tune speed; *
  * updates position in pattern and position in sequence counters.    */
 
-__inline yn update_counters(
+yn update_counters(
 	tune_info *p_current_positions,
 	mod_details *p_module,
 	yn p_pianola)
@@ -278,7 +278,7 @@ __inline yn update_counters(
 	unsigned char *sequence_ptr;
 	void **patterns_list_ptr;
 	yn looped_yet = NO;
-	
+
 	p_current_positions->counter = 0;
 	if (++(p_current_positions->position_in_pattern) ==
 	p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]]) {
@@ -313,7 +313,7 @@ __inline yn update_counters(
  * gets current pattern line from pattern data and reads data into a *
  * structure: note, sample, command, command data.                   */
 
-__inline void get_current_pattern_line(
+void get_current_pattern_line(
 	tune_info *p_current_positions,
 	mod_details *p_module,
 	current_event *p_current_pattern_line,
@@ -437,7 +437,7 @@ __inline void get_current_pattern_line(
  * sample data, sets repeat offset and length if the sample is to repeat, sets phase  *
  * incrementor to the correct value depending on the note (pitch) to be played.       */
 
-__inline void get_new_note(
+void get_new_note(
 	current_event *p_current_event,
 	sample_details *p_sample,
 	channel_info *p_current_voice,
@@ -465,7 +465,7 @@ __inline void get_new_note(
 			p_current_voice->volume = sample_info_ptr->volume;
 			p_current_voice->arpeggio_counter = 0;
 			p_current_voice->note_currently_playing = p_current_event->note;
-							
+
 			if (p_module_type == TRACKER) {
 				if (p_current_voice->repeat_length == 2) {
 					/* tracker module, repeat length 2 means no repeat */
@@ -524,7 +524,7 @@ __inline void get_new_note(
 /* process_tracker_command function.  *
  * process a tracker command.         */
 
-__inline void process_tracker_command(
+void process_tracker_command(
 	current_event *p_current_event,
 	channel_info *p_current_voice,
 	tune_info *p_current_positions,
@@ -667,7 +667,7 @@ __inline void process_tracker_command(
 	}
 }
 
-__inline void process_desktop_tracker_command(
+void process_desktop_tracker_command(
 	current_event *p_current_event,
 	channel_info  *p_current_voice,
 	tune_info     *p_current_positions,
@@ -784,20 +784,20 @@ __inline void process_desktop_tracker_command(
 				else if (p_current_voice->arpeggio_counter == 1) {
 					temporary_note = p_current_voice->note_currently_playing +
 					((data[foo] & 0xf0) >> 4);
-	
+
 					if (temporary_note > 36)
 						temporary_note = p_current_voice->note_currently_playing;
 					} else if (p_current_voice->arpeggio_counter == 2) {
 						temporary_note = p_current_voice->note_currently_playing +
 						(data[foo] & 0xf);
-	
+
 					if (temporary_note > 36)
 						temporary_note = p_current_voice->note_currently_playing;
 				}
-	
+
 				if (++(p_current_voice->arpeggio_counter) == 3)
 					p_current_voice->arpeggio_counter = 0;
-	
+
 				phase_incrementors_ptr = p_phase_incrementors;
 				periods_ptr = p_periods;
 
@@ -873,7 +873,7 @@ __inline void process_desktop_tracker_command(
 /* function write_audio_data            **
 ** write one tick's worth of audio data */
 
-__inline return_status write_audio_data(
+return_status write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
 	mod_details *p_module,
@@ -923,14 +923,14 @@ __inline return_status write_audio_data(
 		}
 		nframes -= frames_written;
 	}
-	
+
 	return (retcode);
 }
 
 /* function write_channel_audio_data                 **
 ** write nframes worth of audio data for one channel */
 
-__inline void write_channel_audio_data(
+void write_channel_audio_data(
 	int p_ch,
 	channel_info *p_voice_info,
 	long p_nframes,
@@ -986,7 +986,7 @@ __inline void write_channel_audio_data(
 ** merge the audio data from the channel buffer into the output buffer **
 ** and send it to the audio device using the appropriate api           */
 
-__inline return_status output_data(
+return_status output_data(
 	output_api p_api,
 	char p_buffer_shifter,
 	format p_sample_format,
@@ -1026,7 +1026,7 @@ __inline return_status output_data(
 		while (i--) {
 			lval = rval = 0;
 			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);	
+				lval+= *(cbptr++);
 				rval+= *(cbptr++);
 			}
 			if (lval > 32767) lval = 32767;
@@ -1046,7 +1046,7 @@ __inline return_status output_data(
 		while (i--) {
 			lval = rval = 0;
 			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);	
+				lval+= *(cbptr++);
 				rval+= *(cbptr++);
 			}
 			if (lval > 32767) lval = 32767;
@@ -1066,7 +1066,7 @@ __inline return_status output_data(
 		while (i--) {
 			lval = rval = 0;
 			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);	
+				lval+= *(cbptr++);
 				rval+= *(cbptr++);
 			}
 			if (lval > 32767) lval = 32767;
@@ -1086,7 +1086,7 @@ __inline return_status output_data(
 		while (i--) {
 			lval = rval = 0;
 			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);	
+				lval+= *(cbptr++);
 				rval+= *(cbptr++);
 			}
 			if (lval > 32767) lval = 32767;
@@ -1106,7 +1106,7 @@ __inline return_status output_data(
 		while (i--) {
 			lval = rval = 0;
 			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);	
+				lval+= *(cbptr++);
 				rval+= *(cbptr++);
 			}
 			if (lval > 32767) lval = 32767;
@@ -1122,7 +1122,7 @@ __inline return_status output_data(
 		while (i--) {
 			lval = rval = 0;
 			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);	
+				lval+= *(cbptr++);
 				rval+= *(cbptr++);
 			}
 			if (lval > 32767) lval = 32767;
