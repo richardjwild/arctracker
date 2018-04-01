@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include "error.h"
 
-long calculate_phase_increment(int p_period, long p_sample_rate)
+#define NO_PHASE_INCREMENTS 2047
+#define PHASE_INCREMENTS_LENGTH_BYTES NO_PHASE_INCREMENTS * sizeof(long)
+
+long phase_increment(int p_period, long p_sample_rate)
 {
     double period = (double) p_period;
     double sample_rate = (double) p_sample_rate;
@@ -9,17 +12,14 @@ long calculate_phase_increment(int p_period, long p_sample_rate)
     return 60000.0 * 3575872.0/(period * sample_rate);
 }
 
-long* initialise_phase_incrementor_values(long p_sample_rate)
+long* calculate_phase_increments(long p_sample_rate)
 {
-	int array_bytes = 2048 * sizeof(long);
+	long* phase_increments = (long*) malloc(PHASE_INCREMENTS_LENGTH_BYTES);
+	if (phase_increments == NULL)
+		error(MALLOC_FAILED);
 
-	long* phase_incrementors = (long *) malloc(array_bytes);
-	if (phase_incrementors == NULL)
-		error("Cannot allocate memory for phase incrementors array");
+	for (int i=0; i<NO_PHASE_INCREMENTS; i++)
+		phase_increments[i] = phase_increment(i + 1, p_sample_rate);
 
-	for (int period=1; period<2048; period++)
-		phase_incrementors[period - 1] = calculate_phase_increment(period, p_sample_rate);
-
-	return phase_incrementors;
+	return phase_increments;
 }
-

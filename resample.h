@@ -1,1 +1,1 @@
-long* initialise_phase_incrementor_values(long p_sample_rate);
+long* calculate_phase_increments(long p_sample_rate);

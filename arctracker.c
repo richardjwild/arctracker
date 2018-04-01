@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	void *modfile = NULL;
 	long modsize = 0;
 	long sample_rate = DEFAULT_SAMPLERATE;
-	long *phase_incrementors;
+	long *phase_increments;
 	int audio_fd;
 	mod_details module;
 	sample_details samples[NUM_SAMPLES];
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (retcode == SUCCESS)
-		phase_incrementors = initialise_phase_incrementor_values(sample_rate);
+		phase_increments = calculate_phase_increments(sample_rate);
 
 	if (retcode == SUCCESS) {
 		if (args.api == OSS) {
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 				samples,
 				&audio_fd,
 				sample_rate,
-				phase_incrementors,
+				phase_increments,
 				periods,
 				sample_format,
 				stereo_mode,
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 				samples,
 				&pb_handle,
 				sample_rate,
-				phase_incrementors,
+				phase_increments,
 				periods,
 				sample_format,
 				stereo_mode,
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 				samples,
 				&stream,
 				sample_rate,
-				phase_incrementors,
+				phase_increments,
 				periods,
 				sample_format,
 				stereo_mode,
