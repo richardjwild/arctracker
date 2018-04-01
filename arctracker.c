@@ -18,7 +18,6 @@
 
 #include "arctracker.h"
 #include "config.h"
-#include "resample.h"
 
 int main(int argc, char *argv[])
 {
@@ -118,9 +117,6 @@ int main(int argc, char *argv[])
 #endif
 	}
 
-	if (retcode == SUCCESS)
-		phase_increments = calculate_phase_increments(sample_rate);
-
 	if (retcode == SUCCESS) {
 		if (args.api == OSS) {
 			retcode = play_module(
@@ -128,7 +124,6 @@ int main(int argc, char *argv[])
 				samples,
 				&audio_fd,
 				sample_rate,
-				phase_increments,
 				periods,
 				sample_format,
 				stereo_mode,
@@ -140,7 +135,6 @@ int main(int argc, char *argv[])
 				samples,
 				&pb_handle,
 				sample_rate,
-				phase_increments,
 				periods,
 				sample_format,
 				stereo_mode,
@@ -155,7 +149,6 @@ int main(int argc, char *argv[])
 				samples,
 				&stream,
 				sample_rate,
-				phase_increments,
 				periods,
 				sample_format,
 				stereo_mode,

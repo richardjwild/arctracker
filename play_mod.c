@@ -19,6 +19,7 @@
 #include "arctracker.h"
 #include "config.h"
 #include "log_lin_tab.h"
+#include "resample.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -42,7 +43,6 @@ return_status play_module(
 	sample_details *p_sample,
 	void *p_ah_ptr,
 	long p_sample_rate,
-	long *p_phase_incrementors,
 	unsigned int *p_periods,
 	format p_sample_format,
 	mono_stereo p_stereo_mode,
@@ -77,6 +77,8 @@ return_status play_module(
 		p_args->pianola,
 		p_sample_rate);
 
+	calculate_phase_increments(p_sample_rate);
+
 	/* loop through whole tune */
 	do {
 		if (++(current_positions.counter) == current_positions.speed) {
@@ -105,7 +107,6 @@ return_status play_module(
 							current_pattern_line_ptr,
 							p_sample,
 							voice_info_ptr,
-							p_phase_incrementors,
 							p_periods,
 							NO,
 							p_module->format,
@@ -115,7 +116,6 @@ return_status play_module(
 							current_pattern_line_ptr,
 							p_sample,
 							voice_info_ptr,
-							p_phase_incrementors,
 							p_periods,
 							YES,
 							p_module->format,
@@ -146,7 +146,6 @@ return_status play_module(
 						current_pattern_line_ptr,
 						voice_info_ptr,
 						&current_positions,
-						p_phase_incrementors,
 						p_module,
 						p_periods,
 						YES);
@@ -155,7 +154,6 @@ return_status play_module(
 						current_pattern_line_ptr,
 						voice_info_ptr,
 						&current_positions,
-						p_phase_incrementors,
 						p_module,
 						p_periods,
 						YES,
@@ -172,7 +170,6 @@ return_status play_module(
 						current_pattern_line_ptr,
 						voice_info_ptr,
 						&current_positions,
-						p_phase_incrementors,
 						p_module,
 						p_periods,
 						NO);
@@ -181,7 +178,6 @@ return_status play_module(
 						current_pattern_line_ptr,
 						voice_info_ptr,
 						&current_positions,
-						p_phase_incrementors,
 						p_module,
 						p_periods,
 						NO,
@@ -441,14 +437,12 @@ void get_new_note(
 	current_event *p_current_event,
 	sample_details *p_sample,
 	channel_info *p_current_voice,
-	long *p_phase_incrementors,
 	unsigned int *p_periods,
 	yn p_tone_portamento,
 	module_type p_module_type,
 	long p_num_samples)
 {
 	unsigned int *periods_ptr;
-	long *phase_incrementors_ptr;
 	sample_details *sample_info_ptr;
 
 	if (p_current_event->sample <= p_num_samples) {
@@ -487,7 +481,6 @@ void get_new_note(
 			}
 
 			/* get period and phase incrementor value */
-			phase_incrementors_ptr = p_phase_incrementors;
 			periods_ptr = p_periods;
 
 			if (p_module_type == TRACKER) {
@@ -497,11 +490,10 @@ void get_new_note(
 				periods_ptr += (p_current_event->note + 13 + (13 - sample_info_ptr->note));
 				p_current_voice->volume = ((p_current_voice->volume + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
 			}
-			phase_incrementors_ptr += *periods_ptr;
 
 			p_current_voice->period = *periods_ptr;
 			p_current_voice->target_period = *periods_ptr;
-			p_current_voice->phase_increment = *phase_incrementors_ptr;
+			p_current_voice->phase_increment = phase_increment_for(*periods_ptr);
 		} else {
 			/* there is a tone portamento command happening; do not play the note immediately *
 			 * but set the pitch as a target and slide up (or down) towards it                */
@@ -528,7 +520,6 @@ void process_tracker_command(
 	current_event *p_current_event,
 	channel_info *p_current_voice,
 	tune_info *p_current_positions,
-	long *p_phase_incrementors,
 	mod_details *p_module,
 	unsigned int *p_periods,
 	yn on_event)
@@ -580,18 +571,14 @@ void process_tracker_command(
 		p_current_voice->period -= p_current_event->data;
 		if (p_current_voice->period < 0x50)
 			p_current_voice->period = 0x50;
-		phase_incrementors_ptr = p_phase_incrementors;
-		phase_incrementors_ptr += p_current_voice->period;
-		p_current_voice->phase_increment = *phase_incrementors_ptr;
+		p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 		break;
 
 	case PORTDOWN_COMMAND:
 		p_current_voice->period += p_current_event->data;
 		if (p_current_voice->period > 0x3f0)
 			p_current_voice->period = 0x3f0;
-		phase_incrementors_ptr = p_phase_incrementors;
-		phase_incrementors_ptr += p_current_voice->period;
-		p_current_voice->phase_increment = *phase_incrementors_ptr;
+		p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 		break;
 
 	case TONEPORT_COMMAND_DSKT:
@@ -611,9 +598,7 @@ void process_tracker_command(
 				p_current_voice->period = p_current_voice->target_period;
 			}
 		}
-		phase_incrementors_ptr = p_phase_incrementors;
-		phase_incrementors_ptr += p_current_voice->period;
-		p_current_voice->phase_increment = *phase_incrementors_ptr;
+		p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 		break;
 
 	case ARPEGGIO_COMMAND:
@@ -638,14 +623,11 @@ void process_tracker_command(
 			if (++(p_current_voice->arpeggio_counter) == 3)
 				p_current_voice->arpeggio_counter = 0;
 
-			phase_incrementors_ptr = p_phase_incrementors;
 			periods_ptr = p_periods;
-
 			periods_ptr += (temporary_note + 12);
-			phase_incrementors_ptr += *periods_ptr;
 
 			p_current_voice->period = *periods_ptr;
-			p_current_voice->phase_increment = *phase_incrementors_ptr;
+			p_current_voice->phase_increment = phase_increment_for(*periods_ptr);
 		}
 		break;
 
@@ -671,7 +653,6 @@ void process_desktop_tracker_command(
 	current_event *p_current_event,
 	channel_info  *p_current_voice,
 	tune_info     *p_current_positions,
-	long          *p_phase_incrementors,
 	mod_details   *p_module,
 	unsigned int  *p_periods,
 	yn            on_event,
@@ -741,18 +722,14 @@ void process_desktop_tracker_command(
 			p_current_voice->period -= data[foo];
 			if (p_current_voice->period < 0x50)
 				p_current_voice->period = 0x50;
-			phase_incrementors_ptr = p_phase_incrementors;
-			phase_incrementors_ptr += p_current_voice->period;
-			p_current_voice->phase_increment = *phase_incrementors_ptr;
+			p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			break;
 
 		case PORTDOWN_COMMAND_DSKT:
 			p_current_voice->period += data[foo];
 			if (p_current_voice->period > 0x3f0)
 				p_current_voice->period = 0x3f0;
-			phase_incrementors_ptr = p_phase_incrementors;
-			phase_incrementors_ptr += p_current_voice->period;
-			p_current_voice->phase_increment = *phase_incrementors_ptr;
+			p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			break;
 
 		case TONEPORT_COMMAND_DSKT:
@@ -772,9 +749,7 @@ void process_desktop_tracker_command(
 					p_current_voice->period = p_current_voice->target_period;
 				}
 			}
-			phase_incrementors_ptr = p_phase_incrementors;
-			phase_incrementors_ptr += p_current_voice->period;
-			p_current_voice->phase_increment = *phase_incrementors_ptr;
+			p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			break;
 
 		case ARPEGGIO_COMMAND_DSKT:
@@ -798,14 +773,11 @@ void process_desktop_tracker_command(
 				if (++(p_current_voice->arpeggio_counter) == 3)
 					p_current_voice->arpeggio_counter = 0;
 
-				phase_incrementors_ptr = p_phase_incrementors;
 				periods_ptr = p_periods;
-
 				periods_ptr += (temporary_note + 13);
-				phase_incrementors_ptr += *periods_ptr;
 
 				p_current_voice->period = *periods_ptr;
-				p_current_voice->phase_increment = *phase_incrementors_ptr;
+				p_current_voice->phase_increment = phase_increment_for(*periods_ptr);
 			}
 			break;
 
@@ -836,9 +808,7 @@ void process_desktop_tracker_command(
 						p_current_voice->period = 0x50;
 					}
 				}
-				phase_incrementors_ptr = p_phase_incrementors;
-				phase_incrementors_ptr += p_current_voice->period;
-				p_current_voice->phase_increment = *phase_incrementors_ptr;
+				p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			}
 			break;
 

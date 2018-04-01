@@ -8,7 +8,7 @@ INSTALLDIR=@prefix@
 arctracker: arctracker.o initialise.o read_mod.o play_mod.o resample.o heap.o error.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o resample.o heap.o error.o $(CLIBS)
 
-arctracker.o: arctracker.h resample.h arctracker.c
+arctracker.o: arctracker.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
 
 resample.o: resample.c heap.h
@@ -23,7 +23,7 @@ initialise.o: arctracker.h initialise.c error.h
 read_mod.o: arctracker.h read_mod.c
 	$(CC) $(CFLAGS) -c read_mod.c
 
-play_mod.o: arctracker.h log_lin_tab.h play_mod.c
+play_mod.o: arctracker.h log_lin_tab.h resample.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
 
 error.o: error.h error.c
