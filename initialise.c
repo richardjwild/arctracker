@@ -368,7 +368,6 @@ return_status initialise_phase_incrementor_values (
 	long p_sample_rate)
 {
 	return_status retcode = SUCCESS;
-	int period;
 	int array_bytes = 2048 * sizeof(long);
 
 	*p_phase_incrementors = (long *) malloc(array_bytes);
@@ -376,7 +375,7 @@ return_status initialise_phase_incrementor_values (
 		fprintf(stderr,"Cannot allocate memory for phase incrementors array\n");
 		retcode = MEMORY_FAILURE;
 	} else {
-		for (period=1; period<2048; period++) {
+		for (int period=1; period<2048; period++) {
 			(*p_phase_incrementors)[period - 1] = (3575872.0/((double)period * (double)p_sample_rate)) * 60000.0;
 		}
 	}
