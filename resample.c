@@ -13,10 +13,10 @@ long phase_increment(int period, long sample_rate)
 
 void calculate_phase_increments(long sample_rate)
 {
-	phase_increments = (long*) allocate_array(PITCH_QUANTA, sizeof(long));
+    phase_increments = (long*) allocate_array(PITCH_QUANTA, sizeof(long));
 
-	for (int period=1; period<=PITCH_QUANTA; period++)
-		phase_increments[period - 1] = phase_increment(period, sample_rate);
+    for (int period=1; period<=PITCH_QUANTA; period++)
+        phase_increments[period - 1] = phase_increment(period, sample_rate);
 }
 
 long phase_increment_for(int period)
