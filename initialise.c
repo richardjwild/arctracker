@@ -207,7 +207,7 @@ return_status initialise_alsa (
 	int err;
 	unsigned int tmp_srate;
 	snd_pcm_hw_params_t *hw_params;
-	
+
 	short audio_buffer[1024];
 
 	tmp_srate = (unsigned int)*p_sample_rate;
@@ -374,19 +374,15 @@ return_status initialise_phase_incrementor_values (
 {
 	return_status retcode = SUCCESS;
 	int period;
-	long *phase_incrementors_ptr;
 
 	if ((*p_phase_incrementors = (long *)malloc(2048 * sizeof(long))) == NULL) {
 		fprintf(stderr,"Cannot allocate memory for phase incrementors array\n");
 		retcode = MEMORY_FAILURE;
 	} else {
-		phase_incrementors_ptr = *p_phase_incrementors;
-
 		for (period=1; period</*1021*/ 2048; period++) {
 			/* don't ask me how this conversion works, I *
 			 * copied it from the tracker player source */
-			*phase_incrementors_ptr = (3575872.0/((double)period * (double)p_sample_rate)) * 60000.0;
-			phase_incrementors_ptr++;
+			(*p_phase_incrementors)[period - 1] = (3575872.0/((double)period * (double)p_sample_rate)) * 60000.0;
 		}
 	}
 
