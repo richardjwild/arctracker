@@ -446,12 +446,12 @@ return_status write_audio_data(
 	long p_nframes);
 
 void write_channel_audio_data(
-	channel_info *p_voice_info,
+	channel_info *voice,
 	long frames_to_write,
-	long p_bufptr,
-	mono_stereo p_stereo_mode,
-	unsigned char p_volume,
-	int stridelen);
+	long channel_buffer_index,
+	mono_stereo stereo_mode,
+	unsigned char master_gain,
+	int stride_length);
 
 return_status output_data(
 	output_api p_api,

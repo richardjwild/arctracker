@@ -893,37 +893,36 @@ return_status write_audio_data(
 ** write nframes worth of audio data for one channel */
 
 void write_channel_audio_data(
-	channel_info *p_voice_info,
+	channel_info* voice,
 	long frames_to_write,
-	long p_bufptr,
-	mono_stereo p_stereo_mode,
-	unsigned char p_volume,
-	int stridelen)
+	long channel_buffer_index,
+	mono_stereo stereo_mode,
+	unsigned char master_gain,
+	int stride_length)
 {
-	long *bptr = channel_buffer + p_bufptr;
-	unsigned char mlaw;
-	long rval, lval;
 
-	unsigned char* resample_buffer = resample(p_voice_info, frames_to_write);
+	unsigned char* resample_buffer = resample(voice, frames_to_write);
 
     for (long frame = 0; frame < frames_to_write; frame++)
     {
-        mlaw = resample_buffer[frame];
-        mlaw = adjust_gain(mlaw, p_voice_info->gain);
+        unsigned char mu_law = resample_buffer[frame];
+        mu_law = adjust_gain(mu_law, voice->gain);
+        long linear_signed = log_lin_tab[mu_law];
 
-        /* convert mu-law to linear signed */
-        rval = lval = *(log_lin_tab + mlaw);
+        long left, right = 0L;
+        if (stereo_mode == STEREO)
+        {
+            left = (linear_signed * voice->left_channel_multiplier) >> 16;
+            right = (linear_signed * voice->right_channel_multiplier) >> 16;
+        }
+        else
+        {
+            left = linear_signed >> 9;
+        }
 
-        /* adjust volume and set stereo */
-        if (p_stereo_mode == STEREO) {
-            lval = (lval * p_voice_info->left_channel_multiplier * p_volume) >> 16;
-            rval = (rval * p_voice_info->right_channel_multiplier * p_volume) >> 16;
-        } else lval = (lval * p_volume) >> 9;
-
-        /* copy values to the channel buffer */
-        *(bptr++) = lval;
-        *(bptr++) = rval;
-        bptr += stridelen;
+        channel_buffer[channel_buffer_index++] = left * master_gain;
+        channel_buffer[channel_buffer_index++] = right * master_gain;
+        channel_buffer_index += stride_length;
     }
 }
 
