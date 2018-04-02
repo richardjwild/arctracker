@@ -8,17 +8,12 @@
 long* phase_increments;
 unsigned char* resample_buffer;
 
-long phase_increment(int period, long sample_rate)
-{
-    return PHASE_INCREMENT_CONVERSION/(period * sample_rate);
-}
-
 void calculate_phase_increments(long sample_rate)
 {
     phase_increments = (long*) allocate_array(PITCH_QUANTA, sizeof(long));
 
     for (int period=1; period<=PITCH_QUANTA; period++)
-        phase_increments[period - 1] = phase_increment(period, sample_rate);
+        phase_increments[period - 1] = PHASE_INCREMENT_CONVERSION/(period * sample_rate);
 }
 
 void allocate_resample_buffer()
@@ -46,11 +41,13 @@ void loop_sample(channel_info *voice)
 unsigned char* resample(channel_info* voice, long frames_to_write)
 {
     unsigned char* sample = voice->sample_pointer;
-    long frames_written;
+    long frame;
 
-    for (frames_written = 0; voice->channel_playing && frames_written < frames_to_write; frames_written++)
+    memset(resample_buffer, 0, BUF_SIZE);
+
+    for (frame = 0; voice->channel_playing && frame < frames_to_write; frame++)
     {
-        resample_buffer[frames_written] = sample[voice->phase_accumulator];
+        resample_buffer[frame] = sample[voice->phase_accumulator];
         increment_phase_accumulator(voice);
         if (end_of_sample(voice))
         {
@@ -59,11 +56,6 @@ unsigned char* resample(channel_info* voice, long frames_to_write)
             else
                 voice->channel_playing = false;
         }
-    }
-
-    for (; frames_written < frames_to_write; frames_written++)
-    {
-        resample_buffer[frames_written] = (unsigned char) 0;
     }
 
     return resample_buffer;
