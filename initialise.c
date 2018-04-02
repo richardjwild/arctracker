@@ -142,7 +142,7 @@ return_status load_file (
 #endif
 
 		do {
-			if ((*p_array_ptr = (void *)realloc(*p_array_ptr, (*p_bytes_loaded)+ARRAY_CHUNK_SIZE)) != NULL) {
+			if ((*p_array_ptr = realloc(*p_array_ptr, (*p_bytes_loaded)+ARRAY_CHUNK_SIZE)) != NULL) {
 				bytes_read = (long)fread((*p_array_ptr + *p_bytes_loaded), 1, ARRAY_CHUNK_SIZE, fp);
 				(*p_bytes_loaded) += bytes_read;
 			} else {
@@ -208,8 +208,6 @@ return_status initialise_alsa (
 	int err;
 	unsigned int tmp_srate;
 	snd_pcm_hw_params_t *hw_params;
-
-	short audio_buffer[1024];
 
 	tmp_srate = (unsigned int)*p_sample_rate;
 

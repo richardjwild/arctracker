@@ -40,13 +40,9 @@ return_status read_file(
         mod_details *p_module,
 	sample_details *p_samples)
 {
-	return_status retcode = SUCCESS;
+	return_status retcode;
 	void *chunk_address;
 	long array_end = (long)p_modfile + p_modsize;
-	long chunk_length;
-	int num_patterns;
-	int num_samples;
-	int i;
 
 	/* get module information */
 
@@ -74,7 +70,6 @@ return_status read_file(
 		} else {
 			printf("File is DESKTOP TRACKER format.\n");
 			if (chunk_address != p_modfile) {
-				array_end+=(chunk_address - p_modfile);
 				p_modfile = chunk_address;
 			}
 			p_module->format = DESKTOP_TRACKER;
@@ -109,13 +104,11 @@ return_status read_tracker_file(
 	mod_details *p_module,
 	sample_details *p_samples)
 {
-	return_status retcode = SUCCESS;
+	return_status retcode;
 	void *chunk_address;
 	long array_end = (long)p_modfile + p_modsize;
-	long chunk_length;
 	int num_patterns;
 	int num_samples;
-	int i;
 
 #ifdef DEVELOPING
 	printf("Found MUSX chunk.\n");
@@ -336,14 +329,8 @@ return_status read_desktop_tracker_file(
 	sample_details *p_samples)
 {
 	return_status retcode = SUCCESS;
-	void *chunk_address;
 	void *tmp_ptr;
-	long array_end = (long)p_modfile + p_modsize;
-	long chunk_length;
 	long foo;
-	long bar;
-	int num_patterns;
-	int num_samples;
 	int i;
 
 #ifdef DEVELOPING
@@ -620,9 +607,8 @@ return_status get_patterns(
 	void **p_patterns,
 	int *p_num_patterns)
 {
-	return_status retcode = SUCCESS;
+	return_status retcode;
 	void *chunk_address;
-	long chunk_length;
 
 	*p_num_patterns = 0;
 
@@ -661,7 +647,7 @@ return_status get_samples(
 	int  *p_samples_found,
 	sample_details *p_samples)
 {
-	return_status retcode = SUCCESS;
+	return_status retcode;
 	int sample_chunks_found = 0;
 	void *chunk_address;
 	long chunk_length;
@@ -678,7 +664,7 @@ return_status get_samples(
 
 		if (retcode == SUCCESS) {
 			sample_chunks_found++;
-			read_nbytes((long *)&chunk_length, chunk_address+CHUNKSIZE, 4);
+			read_nbytes(&chunk_length, chunk_address+CHUNKSIZE, 4);
 			retcode = get_sample_info(
 				chunk_address,
 				(long)chunk_address+chunk_length+8,
@@ -716,7 +702,7 @@ return_status get_sample_info(
 	int p_sample_number)
 {
 	void *chunk_address;
-	return_status retcode = SUCCESS;
+	return_status retcode;
 
 	retcode = search_tff(
 		p_search_from,
@@ -742,7 +728,7 @@ return_status get_sample_info(
 	}
 
 	if (retcode == SUCCESS) {
-		read_nbytes((long *)&p_sample->volume, chunk_address+8, 4);
+		read_nbytes(&p_sample->volume, chunk_address+8, 4);
 
 		retcode = search_tff(
 			p_search_from,
@@ -758,7 +744,7 @@ return_status get_sample_info(
 	}
 
 	if (retcode == SUCCESS) {
-		read_nbytes((long *)&p_sample->sample_length, chunk_address+8, 4);
+		read_nbytes(&p_sample->sample_length, chunk_address+8, 4);
 
 		retcode = search_tff(
 			p_search_from,
@@ -774,7 +760,7 @@ return_status get_sample_info(
 	}
 
 	if (retcode == SUCCESS) {
-		read_nbytes((long *)&p_sample->repeat_offset, chunk_address+8, 4);
+		read_nbytes(&p_sample->repeat_offset, chunk_address+8, 4);
 
 		retcode = search_tff(
 			p_search_from,
@@ -790,7 +776,7 @@ return_status get_sample_info(
 	}
 
 	if (retcode == SUCCESS) {
-		read_nbytes((long *)&p_sample->repeat_length, chunk_address+8, 4);
+		read_nbytes(&p_sample->repeat_length, chunk_address+8, 4);
 
 		retcode = search_tff(
 			p_search_from,

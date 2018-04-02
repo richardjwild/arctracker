@@ -48,12 +48,8 @@ return_status play_module(
 	mono_stereo p_stereo_mode,
 	program_arguments *p_args)
 {
-	return_status retcode = SUCCESS;
+	return_status retcode;
 	int channel;
-	long current_frame_left_channel[MAX_CHANNELS];
-	long current_frame_right_channel[MAX_CHANNELS];
-	long left_channel;
-	long right_channel;
 
 	tune_info current_positions;
 	current_event current_pattern_line[MAX_CHANNELS];
@@ -316,10 +312,7 @@ void get_current_pattern_line(
 	yn p_pianola)
 {
 	int channel;
-	unsigned int tmp;
-	unsigned char *sequence_ptr;
 	void *pattern_line_ptr;
-	void **patterns_list_ptr;
 	current_event *current_pattern_line_ptr;
 
 	if (p_pianola == YES)
@@ -526,7 +519,6 @@ void process_tracker_command(
 {
 	long *left_channel_multiplier_ptr;
 	long *right_channel_multiplier_ptr;
-	long *phase_incrementors_ptr;
 	unsigned char temporary_note;
 	unsigned int *periods_ptr;
 
@@ -660,7 +652,6 @@ void process_desktop_tracker_command(
 {
 	long *left_channel_multiplier_ptr;
 	long *right_channel_multiplier_ptr;
-	long *phase_incrementors_ptr;
 	unsigned char temporary_note;
 	unsigned char command[4];
 	unsigned char data[4];
@@ -962,7 +953,7 @@ return_status output_data(
 {
 	unsigned char *obptr = audio_buffer;
 	long *cbptr = channel_buffer;
-	int nframes = BUF_SIZE >> p_buffer_shifter, i, j, len, err;
+	int nframes, i, j, len, err;
 	long lval, rval;
 
 	int v_audio_fd = *(int *)p_ah_ptr;
