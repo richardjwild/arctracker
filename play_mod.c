@@ -459,19 +459,19 @@ void get_new_note(
 			if (p_module_type == TRACKER) {
 				if (p_current_voice->repeat_length == 2) {
 					/* tracker module, repeat length 2 means no repeat */
-					p_current_voice->sample_repeats = NO;
+					p_current_voice->sample_repeats = false;
 					p_current_voice->sample_length = sample_info_ptr->sample_length;
 				} else {
-					p_current_voice->sample_repeats = YES;
+					p_current_voice->sample_repeats = true;
 					p_current_voice->sample_length = sample_info_ptr->repeat_offset + sample_info_ptr->repeat_length;
 				}
 			} else {
 				if (p_current_voice->repeat_length) {
 					/* desktop tracker module, repeat length 0 means no repeat */
-					p_current_voice->sample_repeats = YES;
+					p_current_voice->sample_repeats = true;
 					p_current_voice->sample_length = sample_info_ptr->repeat_offset + sample_info_ptr->repeat_length;
 				} else {
-					p_current_voice->sample_repeats = NO;
+					p_current_voice->sample_repeats = false;
 					p_current_voice->sample_length = sample_info_ptr->sample_length;
 				}
 			}

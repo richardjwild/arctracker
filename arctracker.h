@@ -250,7 +250,7 @@ typedef struct {
 	unsigned long phase_increment;
 	int period;
 	int target_period;
-	yn sample_repeats;
+	bool sample_repeats;
 	long repeat_offset;
 	long sample_length;
 	long repeat_length;
