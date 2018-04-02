@@ -28,7 +28,7 @@ void allocate_resample_buffer()
 
 void increment_phase_accumulator(channel_info *voice)
 {
-    voice->phase_acc_fraction += voice->phase_increment;
+    voice->phase_acc_fraction += phase_increments[voice->period];
     voice->phase_accumulator += voice->phase_acc_fraction >> 16;
     voice->phase_acc_fraction -= (voice->phase_acc_fraction >> 16) << 16;
 }
@@ -67,9 +67,4 @@ unsigned char* resample(channel_info* voice, long frames_to_write)
     }
 
     return resample_buffer;
-}
-
-long phase_increment_for(int period)
-{
-    return phase_increments[period];
 }

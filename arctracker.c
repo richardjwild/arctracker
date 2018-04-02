@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
 	void *modfile = NULL;
 	long modsize = 0;
 	long sample_rate = DEFAULT_SAMPLERATE;
-	long *phase_increments;
 	int audio_fd;
 	mod_details module;
 	sample_details samples[NUM_SAMPLES];

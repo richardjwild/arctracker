@@ -247,7 +247,6 @@ typedef struct {
 typedef struct {
 	unsigned long phase_accumulator;
 	unsigned long phase_acc_fraction;
-	unsigned long phase_increment;
 	int period;
 	int target_period;
 	bool sample_repeats;

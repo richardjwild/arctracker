@@ -489,7 +489,6 @@ void get_new_note(
 
 			p_current_voice->period = *periods_ptr;
 			p_current_voice->target_period = *periods_ptr;
-			p_current_voice->phase_increment = phase_increment_for(*periods_ptr);
 		} else {
 			/* there is a tone portamento command happening; do not play the note immediately *
 			 * but set the pitch as a target and slide up (or down) towards it                */
@@ -566,14 +565,12 @@ void process_tracker_command(
 		p_current_voice->period -= p_current_event->data;
 		if (p_current_voice->period < 0x50)
 			p_current_voice->period = 0x50;
-		p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 		break;
 
 	case PORTDOWN_COMMAND:
 		p_current_voice->period += p_current_event->data;
 		if (p_current_voice->period > 0x3f0)
 			p_current_voice->period = 0x3f0;
-		p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 		break;
 
 	case TONEPORT_COMMAND_DSKT:
@@ -593,7 +590,6 @@ void process_tracker_command(
 				p_current_voice->period = p_current_voice->target_period;
 			}
 		}
-		p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 		break;
 
 	case ARPEGGIO_COMMAND:
@@ -622,7 +618,6 @@ void process_tracker_command(
 			periods_ptr += (temporary_note + 12);
 
 			p_current_voice->period = *periods_ptr;
-			p_current_voice->phase_increment = phase_increment_for(*periods_ptr);
 		}
 		break;
 
@@ -716,14 +711,12 @@ void process_desktop_tracker_command(
 			p_current_voice->period -= data[foo];
 			if (p_current_voice->period < 0x50)
 				p_current_voice->period = 0x50;
-			p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			break;
 
 		case PORTDOWN_COMMAND_DSKT:
 			p_current_voice->period += data[foo];
 			if (p_current_voice->period > 0x3f0)
 				p_current_voice->period = 0x3f0;
-			p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			break;
 
 		case TONEPORT_COMMAND_DSKT:
@@ -743,7 +736,6 @@ void process_desktop_tracker_command(
 					p_current_voice->period = p_current_voice->target_period;
 				}
 			}
-			p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			break;
 
 		case ARPEGGIO_COMMAND_DSKT:
@@ -771,7 +763,6 @@ void process_desktop_tracker_command(
 				periods_ptr += (temporary_note + 13);
 
 				p_current_voice->period = *periods_ptr;
-				p_current_voice->phase_increment = phase_increment_for(*periods_ptr);
 			}
 			break;
 
@@ -802,7 +793,6 @@ void process_desktop_tracker_command(
 						p_current_voice->period = 0x50;
 					}
 				}
-				p_current_voice->phase_increment = phase_increment_for(p_current_voice->period);
 			}
 			break;
 
