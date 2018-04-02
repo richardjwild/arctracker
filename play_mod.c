@@ -901,43 +901,48 @@ void write_channel_audio_data(
 	unsigned char mlaw;
 	long rval, lval;
 	void *sptr;
+	long frames_written = 0;
 
-	for (long i = 0; i < frames_to_write; i++)
-	{
-		if (p_voice_info->channel_currently_playing == YES) {
-			sptr = p_voice_info->sample_pointer + p_voice_info->phase_accumulator;
-			mlaw = *(unsigned char *)sptr;
+    for (frames_written = 0; frames_written < frames_to_write && p_voice_info->channel_currently_playing == YES; frames_written++)
+    {
+        sptr = p_voice_info->sample_pointer + p_voice_info->phase_accumulator;
+        mlaw = *(unsigned char *)sptr;
 
-			/* adjust volume (NOTE: logarithmic) */
-			if (mlaw > (255 - p_voice_info->volume)) mlaw -= (255 - p_voice_info->volume);
-			else mlaw = 0;
+        /* adjust volume (NOTE: logarithmic) */
+        if (mlaw > (255 - p_voice_info->volume)) mlaw -= (255 - p_voice_info->volume);
+        else mlaw = 0;
 
-			/* increment phase accumulator */
-			p_voice_info->phase_acc_fraction += p_voice_info->phase_increment;
-			p_voice_info->phase_accumulator += p_voice_info->phase_acc_fraction >> 16;
-			p_voice_info->phase_acc_fraction -= (p_voice_info->phase_acc_fraction >> 16) << 16;
+        /* increment phase accumulator */
+        p_voice_info->phase_acc_fraction += p_voice_info->phase_increment;
+        p_voice_info->phase_accumulator += p_voice_info->phase_acc_fraction >> 16;
+        p_voice_info->phase_acc_fraction -= (p_voice_info->phase_acc_fraction >> 16) << 16;
 
-			/* end of sample? */
-			if (p_voice_info->sample_length <= p_voice_info->phase_accumulator)
-				/* if sample repeats then set accumulator back to repeat offset */
-				if (p_voice_info->sample_repeats == YES) p_voice_info->phase_accumulator -= p_voice_info->repeat_length;
-				else p_voice_info->channel_currently_playing = NO;
+        /* end of sample? */
+        if (p_voice_info->sample_length <= p_voice_info->phase_accumulator)
+            /* if sample repeats then set accumulator back to repeat offset */
+            if (p_voice_info->sample_repeats == YES) p_voice_info->phase_accumulator -= p_voice_info->repeat_length;
+            else p_voice_info->channel_currently_playing = NO;
 
-			/* convert mu-law to linear signed */
-			rval = lval = *(log_lin_tab + mlaw);
+        /* convert mu-law to linear signed */
+        rval = lval = *(log_lin_tab + mlaw);
 
-			/* adjust volume and set stereo */
-			if (p_stereo_mode == STEREO) {
-				lval = (lval * p_voice_info->left_channel_multiplier * p_volume) >> 16;
-				rval = (rval * p_voice_info->right_channel_multiplier * p_volume) >> 16;
-			} else lval = (lval * p_volume) >> 9;
-		} else lval = rval = 0; /* silence is golden :) */
+        /* adjust volume and set stereo */
+        if (p_stereo_mode == STEREO) {
+            lval = (lval * p_voice_info->left_channel_multiplier * p_volume) >> 16;
+            rval = (rval * p_voice_info->right_channel_multiplier * p_volume) >> 16;
+        } else lval = (lval * p_volume) >> 9;
 
-		/* copy values to the channel buffer */
-		*(bptr++) = lval;
-		*(bptr++) = rval;
-		bptr += stridelen;
-	}
+        /* copy values to the channel buffer */
+        *(bptr++) = lval;
+        *(bptr++) = rval;
+        bptr += stridelen;
+    }
+    for (; frames_written < frames_to_write; frames_written++)
+    {
+        *(bptr++) = 0L;
+        *(bptr++) = 0L;
+        bptr += stridelen;
+    }
 }
 
 /* function output_data                                                **
