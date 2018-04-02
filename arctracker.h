@@ -463,10 +463,8 @@ return_status write_audio_data(
 	long p_nframes);
 
 void write_channel_audio_data(
-	int p_ch,
 	channel_info *p_voice_info,
 	long p_nframes,
-	char p_buffer_shifter,
 	long p_bufptr,
 	mono_stereo p_stereo_mode,
 	unsigned char p_volume,

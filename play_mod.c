@@ -870,10 +870,8 @@ return_status write_audio_data(
 	while (nframes) {
 		for (ch=0; ch<p_module->num_channels; ch++) {
 			write_channel_audio_data(
-				ch,
 				p_voice_info + ch,
 				nframes>((BUF_SIZE - bufptr)>>p_buffer_shifter)?((BUF_SIZE - bufptr)>>p_buffer_shifter):nframes,
-				p_buffer_shifter,
 				((bufptr>>(p_buffer_shifter-1))*p_module->num_channels)+(ch<<1), /* offset into channel buffer in units (not bytes) */
 				p_stereo_mode,
 				p_volume,
@@ -901,10 +899,8 @@ return_status write_audio_data(
 ** write nframes worth of audio data for one channel */
 
 void write_channel_audio_data(
-	int p_ch,
 	channel_info *p_voice_info,
 	long p_nframes,
-	char p_buffer_shifter,
 	long p_bufptr,
 	mono_stereo p_stereo_mode,
 	unsigned char p_volume,
