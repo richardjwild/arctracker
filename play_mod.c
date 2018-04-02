@@ -891,7 +891,6 @@ void write_channel_audio_data(
 	int stride_length)
 {
     unsigned char* resample_buffer = resample(voice, frames_to_write);
-
     for (long frame = 0; frame < frames_to_write; frame++)
     {
         unsigned char mu_law = resample_buffer[frame];
