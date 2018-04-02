@@ -317,7 +317,6 @@ return_status read_tracker_file(
 
 return_status read_desktop_tracker_file(
 	void *p_modfile,
-	long p_modsize,
 	mod_details *p_module,
 	sample_details *p_samples);
 
@@ -354,8 +353,7 @@ return_status get_samples(
 return_status get_sample_info(
 	void *p_search_from,
 	long p_array_end,
-	sample_details *p_sample,
-	int p_sample_number);
+	sample_details *p_sample);
 
 return_status validate_modfile(
 	mod_details *p_module,

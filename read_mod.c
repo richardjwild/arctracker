@@ -75,7 +75,6 @@ return_status read_file(
 			p_module->format = DESKTOP_TRACKER;
 			retcode = read_desktop_tracker_file(
 				p_modfile,
-				p_modsize,
 				p_module,
 				p_samples);
 		}
@@ -324,7 +323,6 @@ return_status read_tracker_file(
 
 return_status read_desktop_tracker_file(
 	void *p_modfile,
-	long p_modsize,
 	mod_details *p_module,
 	sample_details *p_samples)
 {
@@ -668,8 +666,7 @@ return_status get_samples(
 			retcode = get_sample_info(
 				chunk_address,
 				(long)chunk_address+chunk_length+8,
-				p_samples,
-				sample_chunks_found);
+				p_samples);
 
 			if (retcode == SUCCESS)
 				p_samples++, (*p_samples_found)++; /* if sample corrupt (retcode!=SUCCESS) ignore it */
@@ -698,8 +695,7 @@ return_status get_samples(
 return_status get_sample_info(
 	void *p_search_from,
 	long p_array_end,
-	sample_details *p_sample,
-	int p_sample_number)
+	sample_details *p_sample)
 {
 	void *chunk_address;
 	return_status retcode;
