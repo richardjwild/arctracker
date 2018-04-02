@@ -903,11 +903,10 @@ void write_channel_audio_data(
 	long *bptr = channel_buffer + p_bufptr;
 	unsigned char mlaw;
 	long rval, lval;
-	long frames_written;
 
-	unsigned char* resample_buffer = resample(p_voice_info, frames_to_write, &frames_written);
+	unsigned char* resample_buffer = resample(p_voice_info, frames_to_write);
 
-    for (long frame = 0; frame < frames_written; frame++)
+    for (long frame = 0; frame < frames_to_write; frame++)
     {
         mlaw = resample_buffer[frame];
         mlaw = adjust_gain(mlaw, p_voice_info->gain);
@@ -924,12 +923,6 @@ void write_channel_audio_data(
         /* copy values to the channel buffer */
         *(bptr++) = lval;
         *(bptr++) = rval;
-        bptr += stridelen;
-    }
-    for (; frames_written < frames_to_write; frames_written++)
-    {
-        *(bptr++) = 0L;
-        *(bptr++) = 0L;
         bptr += stridelen;
     }
 }
