@@ -452,7 +452,7 @@ return_status write_audio_data(
 
 void write_channel_audio_data(
 	channel_info *p_voice_info,
-	long p_nframes,
+	long frames_to_write,
 	long p_bufptr,
 	mono_stereo p_stereo_mode,
 	unsigned char p_volume,

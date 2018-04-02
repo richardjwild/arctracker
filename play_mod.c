@@ -891,7 +891,7 @@ return_status write_audio_data(
 
 void write_channel_audio_data(
 	channel_info *p_voice_info,
-	long p_nframes,
+	long frames_to_write,
 	long p_bufptr,
 	mono_stereo p_stereo_mode,
 	unsigned char p_volume,
@@ -899,10 +899,11 @@ void write_channel_audio_data(
 {
 	long *bptr = channel_buffer + p_bufptr;
 	unsigned char mlaw;
-	long i = p_nframes, rval, lval;
+	long rval, lval;
 	void *sptr;
 
-	while (i--) {
+	for (long i = 0; i < frames_to_write; i++)
+	{
 		if (p_voice_info->channel_currently_playing == YES) {
 			sptr = p_voice_info->sample_pointer + p_voice_info->phase_accumulator;
 			mlaw = *(unsigned char *)sptr;
