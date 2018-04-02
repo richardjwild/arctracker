@@ -243,7 +243,7 @@ void initialise_values(
 
 	/* initialise voice info: all voices silent and set initial stereo positions */
 	for (channel = 0; channel < p_module->num_channels; channel++) {
-		p_voice_info[channel].channel_currently_playing = NO;
+		p_voice_info[channel].channel_playing = false;
 		p_voice_info[channel].left_channel_multiplier =
 		left_channel_multiplier[p_module->default_channel_stereo[channel] - 1];
 		p_voice_info[channel].right_channel_multiplier =
@@ -442,8 +442,8 @@ void get_new_note(
 		sample_info_ptr = p_sample;
 		sample_info_ptr += (p_current_event->sample - 1);
 
-		if (p_tone_portamento == NO || p_current_voice->channel_currently_playing == NO) {
-			p_current_voice->channel_currently_playing = YES;
+		if (p_tone_portamento == NO || !p_current_voice->channel_playing) {
+			p_current_voice->channel_playing = true;
 			p_current_voice->sample_pointer = sample_info_ptr->sample_data;
 			p_current_voice->phase_accumulator = 0;
 			p_current_voice->phase_acc_fraction = 0;
@@ -502,7 +502,7 @@ void get_new_note(
 			p_current_voice->target_period = *periods_ptr;
 		}
 	} else {
-		p_current_voice->channel_currently_playing = NO;
+		p_current_voice->channel_playing = false;
 	}
 }
 
@@ -903,7 +903,7 @@ void write_channel_audio_data(
 	void *sptr;
 	long frames_written = 0;
 
-    for (frames_written = 0; frames_written < frames_to_write && p_voice_info->channel_currently_playing == YES; frames_written++)
+    for (frames_written = 0; p_voice_info->channel_playing && frames_written < frames_to_write; frames_written++)
     {
         sptr = p_voice_info->sample_pointer + p_voice_info->phase_accumulator;
         mlaw = *(unsigned char *)sptr;
@@ -921,7 +921,7 @@ void write_channel_audio_data(
         if (p_voice_info->sample_length <= p_voice_info->phase_accumulator)
             /* if sample repeats then set accumulator back to repeat offset */
             if (p_voice_info->sample_repeats == YES) p_voice_info->phase_accumulator -= p_voice_info->repeat_length;
-            else p_voice_info->channel_currently_playing = NO;
+            else p_voice_info->channel_playing = false;
 
         /* convert mu-law to linear signed */
         rval = lval = *(log_lin_tab + mlaw);

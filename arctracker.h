@@ -31,16 +31,11 @@
 
 #ifdef HAVE_LIBASOUND
 #include <alsa/asoundlib.h>
+#include <stdbool.h>
+
 #endif
 
 /* macro definitions */
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 #define READONLY "r"
 #define STRINGS_MATCH 0
@@ -261,7 +256,7 @@ typedef struct {
 	long repeat_length;
 	void *sample_pointer;
 	unsigned char volume;
-	yn channel_currently_playing;
+	bool channel_playing;
 	long left_channel_multiplier;
 	long right_channel_multiplier;
 	unsigned char arpeggio_counter;
