@@ -1102,13 +1102,15 @@ return_status output_data(
 
 	/* send the data to the audio device */
 	if (p_api == OSS) {
-		if ((len = write(v_audio_fd, audio_buffer, BUF_SIZE)) == -1) {
+		len = write(v_audio_fd, audio_buffer, BUF_SIZE);
+		if (len == -1) {
 			perror("audio write");
 			return (AUDIO_WRITE_ERROR); /* bomb out */
 		}
 	} else if (p_api == ALSA) {
 #ifdef HAVE_LIBASOUND
-		if ((err = snd_pcm_writei (v_pb_handle, audio_buffer, nframes)) != nframes) {
+		err = snd_pcm_writei (v_pb_handle, audio_buffer, nframes);
+		if (err != nframes) {
 			fprintf (stderr, "write to audio interface failed (%s)\n", snd_strerror (err));
 			return (ALSA_ERROR); /* bomb out */
 		}
