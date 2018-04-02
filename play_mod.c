@@ -38,6 +38,8 @@ long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
 unsigned char audio_buffer[BUF_SIZE];
 long channel_buffer[BUF_SIZE * MAX_CHANNELS];
 
+unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
+
 return_status play_module(
 	mod_details *p_module,
 	sample_details *p_sample,
@@ -131,9 +133,9 @@ return_status play_module(
 					sample_info_ptr += (current_pattern_line_ptr->sample - 1);
 
 					if (p_module->format == TRACKER)
-						voice_info_ptr->volume = sample_info_ptr->volume;
+						voice_info_ptr->gain = sample_info_ptr->volume;
 					else
-						voice_info_ptr->volume = ((sample_info_ptr->volume + 1) << 1) - 1;
+						voice_info_ptr->gain = ((sample_info_ptr->volume + 1) << 1) - 1;
 				}
 
 				/* new command to execute */
@@ -449,7 +451,7 @@ void get_new_note(
 			p_current_voice->phase_acc_fraction = 0;
 			p_current_voice->repeat_offset = sample_info_ptr->repeat_offset;
 			p_current_voice->repeat_length = sample_info_ptr->repeat_length;
-			p_current_voice->volume = sample_info_ptr->volume;
+			p_current_voice->gain = sample_info_ptr->volume;
 			p_current_voice->arpeggio_counter = 0;
 			p_current_voice->note_currently_playing = p_current_event->note;
 
@@ -481,7 +483,7 @@ void get_new_note(
 			} else {
 				p_current_voice->note_currently_playing += (13 - sample_info_ptr->note);
 				periods_ptr += (p_current_event->note + 13 + (13 - sample_info_ptr->note));
-				p_current_voice->volume = ((p_current_voice->volume + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
+				p_current_voice->gain = ((p_current_voice->gain + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
 			}
 
 			p_current_voice->period = *periods_ptr;
@@ -525,7 +527,7 @@ void process_tracker_command(
 	switch (p_current_event->command) {
 	case VOLUME_COMMAND:
 		if (on_event == YES)
-			p_current_voice->volume = p_current_event->data;
+			p_current_voice->gain = p_current_event->data;
 		break;
 
 	case SPEED_COMMAND:
@@ -546,17 +548,17 @@ void process_tracker_command(
 		break;
 
 	case VOLSLIDEUP_COMMAND:
-		if ((255 - p_current_voice->volume) > p_current_event->data)
-			p_current_voice->volume += p_current_event->data;
+		if ((255 - p_current_voice->gain) > p_current_event->data)
+			p_current_voice->gain += p_current_event->data;
 		else
-			p_current_voice->volume = 255;
+			p_current_voice->gain = 255;
 		break;
 
 	case VOLSLIDEDOWN_COMMAND:
-		if (p_current_voice->volume >= p_current_event->data)
-			p_current_voice->volume -= p_current_event->data;
+		if (p_current_voice->gain >= p_current_event->data)
+			p_current_voice->gain -= p_current_event->data;
 		else
-			p_current_voice->volume = 0;
+			p_current_voice->gain = 0;
 		break;
 
 	case PORTUP_COMMAND:
@@ -674,7 +676,7 @@ void process_desktop_tracker_command(
 		{
 		case VOLUME_COMMAND_DSKT:
 			if (on_event == YES)
-				p_current_voice->volume = ((data[foo] + 1) << 1) - 1;
+				p_current_voice->gain = ((data[foo] + 1) << 1) - 1;
 			break;
 
 		case SPEED_COMMAND_DSKT:
@@ -697,15 +699,15 @@ void process_desktop_tracker_command(
 		case VOLSLIDE_COMMAND_DSKT:
 			bar = (signed char)data[foo] << 1;
 			if (bar > 0) {
-				if ((255 - p_current_voice->volume) > bar)
-					p_current_voice->volume += bar;
+				if ((255 - p_current_voice->gain) > bar)
+					p_current_voice->gain += bar;
 				else
-					p_current_voice->volume = 255;
+					p_current_voice->gain = 255;
 			} else if (bar < 0) {
-				if (p_current_voice->volume >= bar)
-					p_current_voice->volume += bar; /* is -ve value ! */
+				if (p_current_voice->gain >= bar)
+					p_current_voice->gain += bar; /* is -ve value ! */
 				else
-					p_current_voice->volume = 0;
+					p_current_voice->gain = 0;
 			}
 			break;
 
@@ -807,17 +809,17 @@ void process_desktop_tracker_command(
 			if (on_event == YES && data[foo]) {
 				bar = (signed char)data[foo] << 1;
 				if (bar > 0) {
-					if ((255 - p_current_voice->volume) > bar) {
-						p_current_voice->volume += bar;
+					if ((255 - p_current_voice->gain) > bar) {
+						p_current_voice->gain += bar;
 					} else {
-						p_current_voice->volume = 255;
+						p_current_voice->gain = 255;
 					}
 				}
 				else if (bar < 0) {
-					if (p_current_voice->volume >= bar) {
-						p_current_voice->volume += bar; /* is -ve value ! */
+					if (p_current_voice->gain >= bar) {
+						p_current_voice->gain += bar; /* is -ve value ! */
 					} else {
-						p_current_voice->volume = 0;
+						p_current_voice->gain = 0;
 					}
 				}
 			}
@@ -906,11 +908,6 @@ void write_channel_audio_data(
     for (frames_written = 0; p_voice_info->channel_playing && frames_written < frames_to_write; frames_written++)
     {
         sptr = p_voice_info->sample_pointer + p_voice_info->phase_accumulator;
-        mlaw = *(unsigned char *)sptr;
-
-        /* adjust volume (NOTE: logarithmic) */
-        if (mlaw > (255 - p_voice_info->volume)) mlaw -= (255 - p_voice_info->volume);
-        else mlaw = 0;
 
         /* increment phase accumulator */
         p_voice_info->phase_acc_fraction += p_voice_info->phase_increment;
@@ -922,6 +919,9 @@ void write_channel_audio_data(
             /* if sample repeats then set accumulator back to repeat offset */
             if (p_voice_info->sample_repeats == YES) p_voice_info->phase_accumulator -= p_voice_info->repeat_length;
             else p_voice_info->channel_playing = false;
+
+        mlaw = *(unsigned char *)sptr;
+        mlaw = adjust_gain(mlaw, p_voice_info->gain);
 
         /* convert mu-law to linear signed */
         rval = lval = *(log_lin_tab + mlaw);
@@ -943,6 +943,15 @@ void write_channel_audio_data(
         *(bptr++) = 0L;
         bptr += stridelen;
     }
+}
+
+unsigned char adjust_gain(unsigned char mlaw, unsigned char gain)
+{
+    unsigned char adjustment = ((unsigned char) 255) - gain;
+    if (mlaw > adjustment)
+        return mlaw - adjustment;
+    else
+        return 0;
 }
 
 /* function output_data                                                **

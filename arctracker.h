@@ -255,7 +255,7 @@ typedef struct {
 	long sample_length;
 	long repeat_length;
 	void *sample_pointer;
-	unsigned char volume;
+	unsigned char gain;
 	bool channel_playing;
 	long left_channel_multiplier;
 	long right_channel_multiplier;
