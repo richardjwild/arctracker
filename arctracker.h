@@ -355,16 +355,6 @@ return_status get_sample_info(
 	long p_array_end,
 	sample_details *p_sample);
 
-return_status validate_modfile(
-	mod_details *p_module,
-	sample_details *p_samples,
-	int p_num_samples);
-
-return_status validate_modfile(
-	mod_details *p_module,
-	sample_details *p_sample,
-	int p_num_samples);
-
 return_status play_module(
 	mod_details *p_module,
 	sample_details *p_sample,
