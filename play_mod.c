@@ -76,6 +76,7 @@ return_status play_module(
 		p_sample_rate);
 
 	calculate_phase_increments(p_sample_rate);
+	allocate_resample_buffer();
 
 	/* loop through whole tune */
 	do {
@@ -902,25 +903,13 @@ void write_channel_audio_data(
 	long *bptr = channel_buffer + p_bufptr;
 	unsigned char mlaw;
 	long rval, lval;
-	void *sptr;
-	long frames_written = 0;
+	long frames_written;
 
-    for (frames_written = 0; p_voice_info->channel_playing && frames_written < frames_to_write; frames_written++)
+	unsigned char* resample_buffer = resample(p_voice_info, frames_to_write, &frames_written);
+
+    for (long frame = 0; frame < frames_written; frame++)
     {
-        sptr = p_voice_info->sample_pointer + p_voice_info->phase_accumulator;
-
-        /* increment phase accumulator */
-        p_voice_info->phase_acc_fraction += p_voice_info->phase_increment;
-        p_voice_info->phase_accumulator += p_voice_info->phase_acc_fraction >> 16;
-        p_voice_info->phase_acc_fraction -= (p_voice_info->phase_acc_fraction >> 16) << 16;
-
-        /* end of sample? */
-        if (p_voice_info->sample_length <= p_voice_info->phase_accumulator)
-            /* if sample repeats then set accumulator back to repeat offset */
-            if (p_voice_info->sample_repeats == YES) p_voice_info->phase_accumulator -= p_voice_info->repeat_length;
-            else p_voice_info->channel_playing = false;
-
-        mlaw = *(unsigned char *)sptr;
+        mlaw = resample_buffer[frame];
         mlaw = adjust_gain(mlaw, p_voice_info->gain);
 
         /* convert mu-law to linear signed */
