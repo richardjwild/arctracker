@@ -40,12 +40,9 @@ void loop_sample(channel_info *voice)
 
 unsigned char* resample(channel_info* voice, long frames_to_write)
 {
-    unsigned char* sample = voice->sample_pointer;
-    long frame;
-
     memset(resample_buffer, 0, BUF_SIZE);
-
-    for (frame = 0; voice->channel_playing && frame < frames_to_write; frame++)
+    unsigned char* sample = voice->sample_pointer;
+    for (long frame = 0; voice->channel_playing && frame < frames_to_write; frame++)
     {
         resample_buffer[frame] = sample[voice->phase_accumulator];
         increment_phase_accumulator(voice);
@@ -57,6 +54,5 @@ unsigned char* resample(channel_info* voice, long frames_to_write)
                 voice->channel_playing = false;
         }
     }
-
     return resample_buffer;
 }
