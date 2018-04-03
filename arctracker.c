@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
 	int audio_fd;
 	mod_details module;
 	sample_details samples[NUM_SAMPLES];
-	format sample_format;
 
 	short audio_buf[1024];
 	int err;
@@ -90,14 +89,12 @@ int main(int argc, char *argv[])
 		if (args.api == OSS)
 			retcode = initialise_oss(
 				&audio_fd,
-				&sample_rate,
-				&sample_format);
+				&sample_rate);
 		else if (args.api == ALSA)
 #ifdef HAVE_LIBASOUND
 			retcode = initialise_alsa(
 				&pb_handle,
-				&sample_rate,
-				&sample_format);
+				&sample_rate);
 #else
 			1; /* this cannot be called */
 #endif
@@ -105,8 +102,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBARTSC
 			retcode = initialise_arts(
 				&stream,
-				sample_rate,
-				&sample_format);
+				sample_rate);
 #else
 			1; /* this cannot be called */
 #endif
@@ -120,7 +116,6 @@ int main(int argc, char *argv[])
 				&audio_fd,
 				sample_rate,
 				periods,
-				sample_format,
 				&args);
 		} else if (args.api == ALSA) {
 #ifdef HAVE_LIBASOUND
@@ -130,7 +125,6 @@ int main(int argc, char *argv[])
 				&pb_handle,
 				sample_rate,
 				periods,
-				sample_format,
 				&args);
 #else
 			1; /* this should not happen */
@@ -143,7 +137,6 @@ int main(int argc, char *argv[])
 				&stream,
 				sample_rate,
 				periods,
-				sample_format,
 				&args);
 #else
 			1; /* this should not happen */

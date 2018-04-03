@@ -46,7 +46,6 @@ return_status play_module(
 	void *p_ah_ptr,
 	long p_sample_rate,
 	unsigned int *p_periods,
-	format p_sample_format,
 	program_arguments *p_args)
 {
 	return_status retcode;
@@ -60,13 +59,9 @@ return_status play_module(
 
 	sample_details *sample_info_ptr;
 
-	char buffer_shifter;
-
 	yn looped_yet = NO;
 
 	initialise_values(
-		p_sample_format,
-		&buffer_shifter,
 		&current_positions,
 		voice_info,
 		p_module,
@@ -188,8 +183,6 @@ return_status play_module(
 			voice_info,
 			p_module,
 			p_args->volume,
-			p_sample_format,
-			buffer_shifter,
 			p_ah_ptr,
 			current_positions.sps_per_tick);
 	}
@@ -205,8 +198,6 @@ return_status play_module(
  * Set up values in preparation for player start. */
 
 void initialise_values(
-	format p_sample_format,
-	char *buffer_shifter,
 	tune_info *p_current_positions,
 	channel_info *p_voice_info,
 	mod_details *p_module,
@@ -214,11 +205,6 @@ void initialise_values(
 	long p_sample_rate)
 {
 	int channel;
-
-    if ((p_sample_format == BITS_8_SIGNED) || (p_sample_format == BITS_8_UNSIGNED))
-        *buffer_shifter = 1;
-    else
-        *buffer_shifter = 2;
 
 	p_current_positions->position_in_sequence = 0;
 	p_current_positions->position_in_pattern = -1;
@@ -821,8 +807,6 @@ return_status write_audio_data(
 	channel_info *p_voice_info,
 	mod_details *p_module,
 	unsigned char p_volume,
-	format p_sample_format,
-	char p_buffer_shifter,
 	void *p_ah_ptr,
 	long p_nframes)
 {
@@ -843,18 +827,16 @@ return_status write_audio_data(
 		for (ch=0; ch<p_module->num_channels; ch++) {
 			write_channel_audio_data(
 				p_voice_info + ch,
-				nframes>((BUF_SIZE - bufptr)>>p_buffer_shifter)?((BUF_SIZE - bufptr)>>p_buffer_shifter):nframes,
-				((bufptr>>(p_buffer_shifter-1))*p_module->num_channels)+(ch<<1), /* offset into channel buffer in units (not bytes) */
+				nframes>((BUF_SIZE - bufptr)>>2)?((BUF_SIZE - bufptr)>>2):nframes,
+				((bufptr>>1)*p_module->num_channels)+(ch<<1), /* offset into channel buffer in units (not bytes) */
 				p_volume,
 				(p_module->num_channels<<1) - 2); /* channel buffer stride length (for interleaved channels) */
-			frames_written = nframes>((BUF_SIZE - bufptr)>>p_buffer_shifter)?((BUF_SIZE - bufptr)>>p_buffer_shifter):nframes;
+			frames_written = nframes>((BUF_SIZE - bufptr)>>2)?((BUF_SIZE - bufptr)>>2):nframes;
 		}
-		bufptr += frames_written<<p_buffer_shifter;
+		bufptr += frames_written<<2;
 		if (bufptr == BUF_SIZE) {
 			retcode = output_data(
 				p_api,
-				p_buffer_shifter,
-				p_sample_format,
 				p_ah_ptr,
 				p_module->num_channels);
 			bufptr = 0;
@@ -906,8 +888,6 @@ unsigned char adjust_gain(unsigned char mlaw, unsigned char gain)
 
 return_status output_data(
 	output_api p_api,
-	char p_buffer_shifter,
-	format p_sample_format,
 	void *p_ah_ptr,
 	long p_num_channels)
 {
@@ -926,7 +906,7 @@ return_status output_data(
 	arts_stream_t v_stream = *(arts_stream_t *)p_ah_ptr;
 #endif
 
-	i = nframes = BUF_SIZE >> p_buffer_shifter;
+	i = nframes = BUF_SIZE >> 2;
 
 	/*
 	** mix the data from the channel buffer into the output buffer
@@ -938,110 +918,23 @@ return_status output_data(
 	**   etc.
 	*/
 
-    switch (p_sample_format) {
-	case BITS_16_SIGNED_LITTLE_ENDIAN:
-		while (i--) {
-			lval = rval = 0;
-			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);
-				rval+= *(cbptr++);
-			}
-			if (lval > 32767) lval = 32767;
-			if (lval < -32768) lval = -32768;
-			if (rval > 32767) rval = 32767;
-			if (rval < -32768) rval = -32768;
-			*(obptr++) = (unsigned char)(lval & 0xff);
-			*(obptr++) = (unsigned char)((lval >> 8) & 0xff);
-            *(obptr++) = (unsigned char)(rval & 0xff);
-            *(obptr++) = (unsigned char)((rval >> 8) & 0xff);
-		}
-		break;
-
-	case BITS_16_SIGNED_BIG_ENDIAN:
-		while (i--) {
-			lval = rval = 0;
-			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);
-				rval+= *(cbptr++);
-			}
-			if (lval > 32767) lval = 32767;
-			if (lval < -32768) lval = -32768;
-			if (rval > 32767) rval = 32767;
-			if (rval < -32768) rval = -32768;
-			*(obptr++) = (unsigned char)((lval >> 8) & 0xff);
-			*(obptr++) = (unsigned char)(lval & 0xff);
-            *(obptr++) = (unsigned char)((rval >> 8) & 0xff);
-            *(obptr++) = (unsigned char)(rval & 0xff);
-		}
-		break;
-
-	case BITS_16_UNSIGNED_LITTLE_ENDIAN:
-		while (i--) {
-			lval = rval = 0;
-			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);
-				rval+= *(cbptr++);
-			}
-			if (lval > 32767) lval = 32767;
-			if (lval < -32768) lval = -32768;
-			if (rval > 32767) rval = 32767;
-			if (rval < -32768) rval = -32768;
-			*(obptr++) = (unsigned char)((lval ^ 32768) & 0xff);
-			*(obptr++) = (unsigned char)(((lval ^ 32768) >> 8) & 0xff);
-            *(obptr++) = (unsigned char)((rval ^ 32768) & 0xff);
-            *(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
-		}
-		break;
-
-	case BITS_16_UNSIGNED_BIG_ENDIAN:
-		while (i--) {
-			lval = rval = 0;
-			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);
-				rval+= *(cbptr++);
-			}
-			if (lval > 32767) lval = 32767;
-			if (lval < -32768) lval = -32768;
-			if (rval > 32767) rval = 32767;
-			if (rval < -32768) rval = -32768;
-			*(obptr++) = (unsigned char)(((lval ^ 32768) >> 8) & 0xff);
-			*(obptr++) = (unsigned char)((lval ^ 32768) & 0xff);
-            *(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
-            *(obptr++) = (unsigned char)((rval ^ 32768) & 0xff);
-		}
-		break;
-
-	case BITS_8_SIGNED:
-		while (i--) {
-			lval = rval = 0;
-			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);
-				rval+= *(cbptr++);
-			}
-			if (lval > 32767) lval = 32767;
-			if (lval < -32768) lval = -32768;
-			if (rval > 32767) rval = 32767;
-			if (rval < -32768) rval = -32768;
-			*(obptr++) = (char)((lval >> 8) & 0xff);
-			*(obptr++) = (char)((rval >> 8) & 0xff);
-		}
-		break;
-
-	case BITS_8_UNSIGNED:
-		while (i--) {
-			lval = rval = 0;
-			for (j=0; j<p_num_channels; j++) {
-				lval+= *(cbptr++);
-				rval+= *(cbptr++);
-			}
-			if (lval > 32767) lval = 32767;
-			if (lval < -32768) lval = -32768;
-			if (rval > 32767) rval = 32767;
-			if (rval < -32768) rval = -32768;
-			*(obptr++) = (unsigned char)(((lval ^ 32768) >> 8) & 0xff);
-			*(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
-		}
-	}
+    while (i--)
+    {
+        lval = rval = 0;
+        for (j=0; j<p_num_channels; j++)
+        {
+            lval+= *(cbptr++);
+            rval+= *(cbptr++);
+        }
+        if (lval > 32767) lval = 32767;
+        if (lval < -32768) lval = -32768;
+        if (rval > 32767) rval = 32767;
+        if (rval < -32768) rval = -32768;
+        *(obptr++) = (unsigned char)(lval & 0xff);
+        *(obptr++) = (unsigned char)((lval >> 8) & 0xff);
+        *(obptr++) = (unsigned char)(rval & 0xff);
+        *(obptr++) = (unsigned char)((rval >> 8) & 0xff);
+    }
 
 	/* send the data to the audio device */
 	if (p_api == OSS) {

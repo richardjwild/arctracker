@@ -169,13 +169,10 @@ return_status load_file (
 
 return_status initialise_arts (
 	arts_stream_t *p_stream,
-	long p_sample_rate,
-	format *p_sample_format)
+	long p_sample_rate)
 {
 	return_status retcode = SUCCESS;
 	int errorcode;
-
-	*p_sample_format = BITS_16_SIGNED_LITTLE_ENDIAN;
 
 	errorcode = arts_init();
 	if (errorcode < 0) {
@@ -198,8 +195,7 @@ return_status initialise_arts (
 
 return_status initialise_alsa (
 	snd_pcm_t **p_pb_handle,
-	long *p_sample_rate,
-	format *p_sample_format)
+	long *p_sample_rate)
 {
 	return_status retcode = SUCCESS;
 	int err;
@@ -238,7 +234,6 @@ return_status initialise_alsa (
 		}
 
 	if (retcode == SUCCESS) {
-		*p_sample_format = BITS_16_SIGNED_LITTLE_ENDIAN;
 		if ((err = snd_pcm_hw_params_set_rate_near (*p_pb_handle, hw_params, &tmp_srate, 0)) < 0) {
 			fprintf (stderr, "Cannot set sample rate (%s)\n", snd_strerror (err));
 			retcode = ALSA_ERROR;
@@ -279,51 +274,27 @@ return_status initialise_alsa (
 
 return_status initialise_oss (
 	int *p_audio_fd,
-	long *p_sample_rate,
-	format *p_sample_format)
+	long *p_sample_rate)
 {
 	return_status retcode = SUCCESS;
-	int sample_format = AFMT_S16_LE; /* signed 16-bit little-endian */
-	int channels = 2;
 
 	if ((*p_audio_fd = open(DEVICE_NAME, O_WRONLY, 0)) == -1) {
 		perror(DEVICE_NAME);
 		retcode = CANNOT_OPEN_AUDIO_DEVICE;
 	}
 
-	if (retcode == SUCCESS) {
-		if (ioctl(*p_audio_fd, SNDCTL_DSP_SETFMT, &sample_format) == -1) {
-			perror("SNDCTL_DSP_SETFMT");
-			retcode = CANNOT_SET_SAMPLE_FORMAT;
-		}
-
-		switch (sample_format) {
-		case AFMT_S16_LE:
-			*p_sample_format = BITS_16_SIGNED_LITTLE_ENDIAN;
-			break;
-		case AFMT_S16_BE:
-			*p_sample_format = BITS_16_SIGNED_BIG_ENDIAN;
-			break;
-		case AFMT_U8:
-			*p_sample_format = BITS_8_UNSIGNED;
-			break;
-		case AFMT_S8:
-			*p_sample_format = BITS_8_SIGNED;
-			break;
-		case AFMT_U16_LE:
-			*p_sample_format = BITS_16_UNSIGNED_LITTLE_ENDIAN;
-			break;
-		case AFMT_U16_BE:
-			*p_sample_format = BITS_16_UNSIGNED_BIG_ENDIAN;
-			break;
-		default:
-			fprintf(stderr,"Cannot set audio device to suitable sample format\n");
-			retcode = BAD_SAMPLE_FORMAT;
-		}
+	if (retcode == SUCCESS)
+	{
+		int sample_format = AFMT_S16_LE;
+		if (ioctl(*p_audio_fd, SNDCTL_DSP_SETFMT, &sample_format) == -1)
+			system_error("SNDCTL_DSP_SETFMT");
+		else if (sample_format != AFMT_S16_LE)
+			error("Could not set audio device to suitable sample format (16-bit signed little-endian)");
 	}
 
 	if (retcode == SUCCESS)
 	{
+	    int channels = 2;
 		if (ioctl(*p_audio_fd, SNDCTL_DSP_CHANNELS, &channels) == -1)
 			system_error("SNDCTL_DSP_CHANNELS");
 		else if (channels != 2)
@@ -339,7 +310,7 @@ return_status initialise_oss (
 
 #ifdef DEVELOPING
 	printf("Opened audio device %s for output, device parameters are:\n", DEVICE_NAME);
-	printf("Sample format=%d, number of channels=%d, sample rate=%dKHz\n", sample_format, channels, *p_sample_rate);
+	printf("sample rate=%dKHz\n", *p_sample_rate);
 #endif
 
 	return (retcode);

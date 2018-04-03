@@ -149,10 +149,6 @@ enum return_status {
 	NO_PATTERNS_IN_MODULE,
 	NO_SAMPLES_IN_MODULE,
 	CANNOT_OPEN_AUDIO_DEVICE,
-	CANNOT_SET_SAMPLE_FORMAT,
-	BAD_SAMPLE_FORMAT,
-	CANNOT_SET_CHANNELS,
-	BAD_CHANNELS,
 	CANNOT_SET_SAMPLE_RATE,
 	AUDIO_WRITE_ERROR,
 	SAMPLE_INVALID,
@@ -164,17 +160,6 @@ typedef enum return_status return_status;
 
 enum yn {YES, NO};
 typedef enum yn yn;
-
-enum format {
-	BITS_8_UNSIGNED,
-	BITS_8_SIGNED,
-	BITS_16_SIGNED_LITTLE_ENDIAN,
-	BITS_16_SIGNED_BIG_ENDIAN,
-	BITS_16_SIGNED_NATIVE_ENDIAN,
-	BITS_16_UNSIGNED_LITTLE_ENDIAN,
-	BITS_16_UNSIGNED_BIG_ENDIAN
-};
-typedef enum format format;
 
 enum module_type {TRACKER, DESKTOP_TRACKER};
 typedef enum module_type module_type;
@@ -275,21 +260,18 @@ return_status load_file(
 #ifdef HAVE_LIBARTSC
 return_status initialise_arts(
 	arts_stream_t *p_stream,
-	long p_sample_rate,
-	format *p_sample_format);
+	long p_sample_rate);
 #endif
 
 #ifdef HAVE_LIBASOUND
 return_status initialise_alsa(
 	snd_pcm_t **p_pb_handle,
-	long *p_sample_rate,
-	format *p_sample_format);
+	long *p_sample_rate);
 #endif
 
 return_status initialise_oss(
 	int *p_audio_fd,
-	long *p_sample_rate,
-	format *p_sample_format);
+	long *p_sample_rate);
 
 return_status read_file(
 	void *p_modfile,
@@ -349,12 +331,9 @@ return_status play_module(
 	void *p_ah_ptr,
 	long p_sample_rate,
 	unsigned int *p_periods,
-	format p_sample_format,
 	program_arguments *p_args);
 
 void initialise_values(
-	format p_sample_format,
-	char *buffer_shifter,
 	tune_info *p_current_positions,
 	channel_info *p_voice_info,
 	mod_details *p_module,
@@ -428,8 +407,6 @@ return_status write_audio_data(
 	channel_info *p_voice_info,
 	mod_details *p_module,
 	unsigned char p_volume,
-	format p_sample_format,
-	char p_buffer_shifter,
 	void *p_ah_ptr,
 	long p_nframes);
 
@@ -442,7 +419,5 @@ void write_channel_audio_data(
 
 return_status output_data(
 	output_api p_api,
-	char p_buffer_shifter,
-	format p_sample_format,
 	void *p_ah_ptr,
 	long p_num_channels);
