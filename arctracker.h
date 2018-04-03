@@ -165,9 +165,6 @@ typedef enum return_status return_status;
 enum yn {YES, NO};
 typedef enum yn yn;
 
-enum mono_stereo {MONO, STEREO};
-typedef enum mono_stereo mono_stereo;
-
 enum format {
 	BITS_8_UNSIGNED,
 	BITS_8_SIGNED,
@@ -279,7 +276,6 @@ return_status load_file(
 return_status initialise_arts(
 	arts_stream_t *p_stream,
 	long p_sample_rate,
-	mono_stereo *p_stereo_mode,
 	format *p_sample_format);
 #endif
 
@@ -287,14 +283,12 @@ return_status initialise_arts(
 return_status initialise_alsa(
 	snd_pcm_t **p_pb_handle,
 	long *p_sample_rate,
-	mono_stereo *p_stereo_mode,
 	format *p_sample_format);
 #endif
 
 return_status initialise_oss(
 	int *p_audio_fd,
 	long *p_sample_rate,
-	mono_stereo *p_stereo_mode,
 	format *p_sample_format);
 
 return_status read_file(
@@ -356,11 +350,9 @@ return_status play_module(
 	long p_sample_rate,
 	unsigned int *p_periods,
 	format p_sample_format,
-	mono_stereo p_stereo_mode,
 	program_arguments *p_args);
 
 void initialise_values(
-	mono_stereo p_stereo_mode,
 	format p_sample_format,
 	char *buffer_shifter,
 	tune_info *p_current_positions,
@@ -411,7 +403,6 @@ void prepare_current_frame_sample_data(
 	long *p_current_frame_right_channel,
 	channel_info *p_voice_info,
 	mod_details *p_module,
-	mono_stereo p_stereo_mode,
 	unsigned char p_volume);
 
 void mix_channels(
@@ -426,7 +417,6 @@ void mix_channels(
 return_status write_audio_data (
 	output_api p_api,
 	format p_sample_format,
-	mono_stereo p_stereo_mode,
 	long p_left_channel,
 	long p_right_channel,
 	char p_buffer_shifter,
@@ -437,7 +427,6 @@ return_status write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
 	mod_details *p_module,
-	mono_stereo p_stereo_mode,
 	unsigned char p_volume,
 	format p_sample_format,
 	char p_buffer_shifter,
@@ -448,7 +437,6 @@ void write_channel_audio_data(
 	channel_info *voice,
 	long frames_to_write,
 	long channel_buffer_index,
-	mono_stereo stereo_mode,
 	unsigned char master_gain,
 	int stride_length);
 
@@ -456,6 +444,5 @@ return_status output_data(
 	output_api p_api,
 	char p_buffer_shifter,
 	format p_sample_format,
-	mono_stereo p_stereo_mode,
 	void *p_ah_ptr,
 	long p_num_channels);

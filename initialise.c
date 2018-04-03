@@ -170,13 +170,11 @@ return_status load_file (
 return_status initialise_arts (
 	arts_stream_t *p_stream,
 	long p_sample_rate,
-	mono_stereo *p_stereo_mode,
 	format *p_sample_format)
 {
 	return_status retcode = SUCCESS;
 	int errorcode;
 
-	*p_stereo_mode = STEREO;
 	*p_sample_format = BITS_16_SIGNED_LITTLE_ENDIAN;
 
 	errorcode = arts_init();
@@ -201,7 +199,6 @@ return_status initialise_arts (
 return_status initialise_alsa (
 	snd_pcm_t **p_pb_handle,
 	long *p_sample_rate,
-	mono_stereo *p_stereo_mode,
 	format *p_sample_format)
 {
 	return_status retcode = SUCCESS;
@@ -257,7 +254,6 @@ return_status initialise_alsa (
 	}
 
 	if (retcode == SUCCESS) {
-		*p_stereo_mode = STEREO;
 		if ((err = snd_pcm_hw_params (*p_pb_handle, hw_params)) < 0) {
 			fprintf (stderr, "Cannot set parameters (%s)\n", snd_strerror (err));
 			retcode = ALSA_ERROR;
@@ -284,7 +280,6 @@ return_status initialise_alsa (
 return_status initialise_oss (
 	int *p_audio_fd,
 	long *p_sample_rate,
-	mono_stereo *p_stereo_mode,
 	format *p_sample_format)
 {
 	return_status retcode = SUCCESS;
@@ -327,23 +322,12 @@ return_status initialise_oss (
 		}
 	}
 
-	if (retcode == SUCCESS) {
-		if (ioctl(*p_audio_fd, SNDCTL_DSP_CHANNELS, &channels) == -1) {
-			perror("SNDCTL_DSP_CHANNELS");
-			retcode = CANNOT_SET_CHANNELS;
-		}
-
-		switch (channels) {
-		case 1:
-			*p_stereo_mode = MONO;
-			break;
-		case 2:
-			*p_stereo_mode = STEREO;
-			break;
-		default:
-			fprintf(stderr,"Audio output must be in either one or two channels, actual=%d\n", channels);
-			retcode = BAD_CHANNELS;
-		}
+	if (retcode == SUCCESS)
+	{
+		if (ioctl(*p_audio_fd, SNDCTL_DSP_CHANNELS, &channels) == -1)
+			system_error("SNDCTL_DSP_CHANNELS");
+		else if (channels != 2)
+			error("Could not set stereo output");
 	}
 
 	if (retcode == SUCCESS) {

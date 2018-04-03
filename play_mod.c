@@ -47,7 +47,6 @@ return_status play_module(
 	long p_sample_rate,
 	unsigned int *p_periods,
 	format p_sample_format,
-	mono_stereo p_stereo_mode,
 	program_arguments *p_args)
 {
 	return_status retcode;
@@ -66,7 +65,6 @@ return_status play_module(
 	yn looped_yet = NO;
 
 	initialise_values(
-		p_stereo_mode,
 		p_sample_format,
 		&buffer_shifter,
 		&current_positions,
@@ -189,7 +187,6 @@ return_status play_module(
 			p_args->api,
 			voice_info,
 			p_module,
-			p_stereo_mode,
 			p_args->volume,
 			p_sample_format,
 			buffer_shifter,
@@ -208,7 +205,6 @@ return_status play_module(
  * Set up values in preparation for player start. */
 
 void initialise_values(
-	mono_stereo p_stereo_mode,
 	format p_sample_format,
 	char *buffer_shifter,
 	tune_info *p_current_positions,
@@ -219,17 +215,10 @@ void initialise_values(
 {
 	int channel;
 
-	if (p_stereo_mode == STEREO) {
-		if ((p_sample_format == BITS_8_SIGNED) || (p_sample_format == BITS_8_UNSIGNED))
-			*buffer_shifter = 1;
-		else
-			*buffer_shifter = 2;
-	} else {
-		if ((p_sample_format == BITS_8_SIGNED) || (p_sample_format == BITS_8_UNSIGNED))
-			*buffer_shifter = 0;
-		else
-			*buffer_shifter = 1;
-	}
+    if ((p_sample_format == BITS_8_SIGNED) || (p_sample_format == BITS_8_UNSIGNED))
+        *buffer_shifter = 1;
+    else
+        *buffer_shifter = 2;
 
 	p_current_positions->position_in_sequence = 0;
 	p_current_positions->position_in_pattern = -1;
@@ -831,7 +820,6 @@ return_status write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
 	mod_details *p_module,
-	mono_stereo p_stereo_mode,
 	unsigned char p_volume,
 	format p_sample_format,
 	char p_buffer_shifter,
@@ -857,7 +845,6 @@ return_status write_audio_data(
 				p_voice_info + ch,
 				nframes>((BUF_SIZE - bufptr)>>p_buffer_shifter)?((BUF_SIZE - bufptr)>>p_buffer_shifter):nframes,
 				((bufptr>>(p_buffer_shifter-1))*p_module->num_channels)+(ch<<1), /* offset into channel buffer in units (not bytes) */
-				p_stereo_mode,
 				p_volume,
 				(p_module->num_channels<<1) - 2); /* channel buffer stride length (for interleaved channels) */
 			frames_written = nframes>((BUF_SIZE - bufptr)>>p_buffer_shifter)?((BUF_SIZE - bufptr)>>p_buffer_shifter):nframes;
@@ -868,7 +855,6 @@ return_status write_audio_data(
 				p_api,
 				p_buffer_shifter,
 				p_sample_format,
-				p_stereo_mode,
 				p_ah_ptr,
 				p_module->num_channels);
 			bufptr = 0;
@@ -886,7 +872,6 @@ void write_channel_audio_data(
 	channel_info* voice,
 	long frames_to_write,
 	long channel_buffer_index,
-	mono_stereo stereo_mode,
 	unsigned char master_gain,
 	int stride_length)
 {
@@ -897,16 +882,8 @@ void write_channel_audio_data(
         mu_law = adjust_gain(mu_law, voice->gain);
         long linear_signed = log_lin_tab[mu_law];
 
-        long left, right = 0L;
-        if (stereo_mode == STEREO)
-        {
-            left = (linear_signed * voice->left_channel_multiplier) >> 16;
-            right = (linear_signed * voice->right_channel_multiplier) >> 16;
-        }
-        else
-        {
-            left = linear_signed >> 9;
-        }
+        long left = (linear_signed * voice->left_channel_multiplier) >> 16;
+        long right = (linear_signed * voice->right_channel_multiplier) >> 16;
 
         channel_buffer[channel_buffer_index++] = left * master_gain;
         channel_buffer[channel_buffer_index++] = right * master_gain;
@@ -931,7 +908,6 @@ return_status output_data(
 	output_api p_api,
 	char p_buffer_shifter,
 	format p_sample_format,
-	mono_stereo p_stereo_mode,
 	void *p_ah_ptr,
 	long p_num_channels)
 {
@@ -976,10 +952,8 @@ return_status output_data(
 			if (rval < -32768) rval = -32768;
 			*(obptr++) = (unsigned char)(lval & 0xff);
 			*(obptr++) = (unsigned char)((lval >> 8) & 0xff);
-			if (p_stereo_mode == STEREO) {
-				*(obptr++) = (unsigned char)(rval & 0xff);
-				*(obptr++) = (unsigned char)((rval >> 8) & 0xff);
-			}
+            *(obptr++) = (unsigned char)(rval & 0xff);
+            *(obptr++) = (unsigned char)((rval >> 8) & 0xff);
 		}
 		break;
 
@@ -996,10 +970,8 @@ return_status output_data(
 			if (rval < -32768) rval = -32768;
 			*(obptr++) = (unsigned char)((lval >> 8) & 0xff);
 			*(obptr++) = (unsigned char)(lval & 0xff);
-			if (p_stereo_mode == STEREO) {
-				*(obptr++) = (unsigned char)((rval >> 8) & 0xff);
-				*(obptr++) = (unsigned char)(rval & 0xff);
-			}
+            *(obptr++) = (unsigned char)((rval >> 8) & 0xff);
+            *(obptr++) = (unsigned char)(rval & 0xff);
 		}
 		break;
 
@@ -1016,10 +988,8 @@ return_status output_data(
 			if (rval < -32768) rval = -32768;
 			*(obptr++) = (unsigned char)((lval ^ 32768) & 0xff);
 			*(obptr++) = (unsigned char)(((lval ^ 32768) >> 8) & 0xff);
-			if (p_stereo_mode == STEREO) {
-				*(obptr++) = (unsigned char)((rval ^ 32768) & 0xff);
-				*(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
-			}
+            *(obptr++) = (unsigned char)((rval ^ 32768) & 0xff);
+            *(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
 		}
 		break;
 
@@ -1036,10 +1006,8 @@ return_status output_data(
 			if (rval < -32768) rval = -32768;
 			*(obptr++) = (unsigned char)(((lval ^ 32768) >> 8) & 0xff);
 			*(obptr++) = (unsigned char)((lval ^ 32768) & 0xff);
-			if (p_stereo_mode == STEREO) {
-				*(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
-				*(obptr++) = (unsigned char)((rval ^ 32768) & 0xff);
-			}
+            *(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
+            *(obptr++) = (unsigned char)((rval ^ 32768) & 0xff);
 		}
 		break;
 
@@ -1055,7 +1023,7 @@ return_status output_data(
 			if (rval > 32767) rval = 32767;
 			if (rval < -32768) rval = -32768;
 			*(obptr++) = (char)((lval >> 8) & 0xff);
-			if (p_stereo_mode == STEREO) *(obptr++) = (char)((rval >> 8) & 0xff);
+			*(obptr++) = (char)((rval >> 8) & 0xff);
 		}
 		break;
 
@@ -1071,7 +1039,7 @@ return_status output_data(
 			if (rval > 32767) rval = 32767;
 			if (rval < -32768) rval = -32768;
 			*(obptr++) = (unsigned char)(((lval ^ 32768) >> 8) & 0xff);
-			if (p_stereo_mode == STEREO) *(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
+			*(obptr++) = (unsigned char)(((rval ^ 32768) >> 8) & 0xff);
 		}
 	}
 
