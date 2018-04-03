@@ -902,10 +902,6 @@ return_status output_data(
 	snd_pcm_t *v_pb_handle = *(snd_pcm_t **)p_ah_ptr;
 #endif
 
-#ifdef HAVE_LIBARTSC
-	arts_stream_t v_stream = *(arts_stream_t *)p_ah_ptr;
-#endif
-
 	i = nframes = BUF_SIZE >> 2;
 
 	/*
@@ -949,15 +945,6 @@ return_status output_data(
 		if (err != nframes) {
 			fprintf (stderr, "write to audio interface failed (%s)\n", snd_strerror (err));
 			return (ALSA_ERROR); /* bomb out */
-		}
-#else
-		1; /* this should not happen */
-#endif
-	} else /* arts */ {
-#ifdef HAVE_LIBARTSC
-		if ((len = arts_write(v_stream, audio_buffer, BUF_SIZE)) < 0) {
-			fprintf(stderr, "arts_write error: %s\n", arts_error_text(len));
-			return (ARTS_ERROR); /* bomb out */
 		}
 #else
 		1; /* this should not happen */

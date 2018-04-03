@@ -25,10 +25,6 @@
 #include <sys/fcntl.h>
 #include "config.h"
 
-#ifdef HAVE_LIBARTSC
-#include <artsc.h>
-#endif
-
 #ifdef HAVE_LIBASOUND
 #include <alsa/asoundlib.h>
 #include <stdbool.h>
@@ -68,7 +64,6 @@
 #define ARG_PIANOLA "--pianola"
 #define ARG_OSS "--oss"
 #define ARG_ALSA "--alsa"
-#define ARG_ARTS "--arts"
 #define ARG_VOLUME "--volume="
 #define ARG_LOOP "--loop"
 
@@ -152,7 +147,6 @@ enum return_status {
 	CANNOT_SET_SAMPLE_RATE,
 	AUDIO_WRITE_ERROR,
 	SAMPLE_INVALID,
-	ARTS_ERROR,
 	ALSA_ERROR,
 	API_NOT_AVAILABLE
 };
@@ -164,7 +158,7 @@ typedef enum yn yn;
 enum module_type {TRACKER, DESKTOP_TRACKER};
 typedef enum module_type module_type;
 
-enum output_api {NOT_SPECIFIED, OSS, ALSA, ARTS};
+enum output_api {NOT_SPECIFIED, OSS, ALSA};
 typedef enum output_api output_api;
 
 typedef struct {
@@ -256,12 +250,6 @@ return_status load_file(
 	char *p_filename,
 	void **p_array_ptr,
 	long *p_bytes_loaded);
-
-#ifdef HAVE_LIBARTSC
-return_status initialise_arts(
-	arts_stream_t *p_stream,
-	long p_sample_rate);
-#endif
 
 #ifdef HAVE_LIBASOUND
 return_status initialise_alsa(

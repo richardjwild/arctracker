@@ -33,10 +33,6 @@ int main(int argc, char *argv[])
 	short audio_buf[1024];
 	int err;
 
-#ifdef HAVE_LIBARTSC
-	arts_stream_t stream;
-#endif
-
 #ifdef HAVE_LIBASOUND
 	snd_pcm_t *pb_handle;
 #endif
@@ -98,14 +94,6 @@ int main(int argc, char *argv[])
 #else
 			1; /* this cannot be called */
 #endif
-		else if (args.api == ARTS)
-#ifdef HAVE_LIBARTSC
-			retcode = initialise_arts(
-				&stream,
-				sample_rate);
-#else
-			1; /* this cannot be called */
-#endif
 	}
 
 	if (retcode == SUCCESS) {
@@ -123,18 +111,6 @@ int main(int argc, char *argv[])
 				&module,
 				samples,
 				&pb_handle,
-				sample_rate,
-				periods,
-				&args);
-#else
-			1; /* this should not happen */
-#endif
-		} else if (args.api == ARTS) {
-#ifdef HAVE_LIBARTSC
-			retcode = play_module(
-				&module,
-				samples,
-				&stream,
 				sample_rate,
 				periods,
 				&args);

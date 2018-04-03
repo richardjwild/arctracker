@@ -70,18 +70,6 @@ return_status get_arguments(
 						fprintf(stderr, "ALSA sound output not available\n");
 						retcode = API_NOT_AVAILABLE;
 #endif
-					} else if (strcmp(p_argv[i], ARG_ARTS) == 0) {
-#ifdef HAVE_LIBARTSC
-						if (p_args->api == NOT_SPECIFIED)
-							p_args->api = ARTS;
-						else {
-							fprintf(stderr, "Cannot specify output API more than once!\n");
-							retcode = BAD_ARGUMENTS;
-						}
-#else
-						fprintf(stderr, "aRts sound output not available\n");
-						retcode = API_NOT_AVAILABLE;
-#endif
 					} else if (strncmp(p_argv[i], ARG_VOLUME, strlen(ARG_VOLUME)) == 0) {
 						p_argv[i]+=strlen(ARG_VOLUME);
 						p_args->volume = atoi(p_argv[i]);
@@ -103,11 +91,11 @@ return_status get_arguments(
 		}
 
 		if (!(*p_args->mod_filename) && (retcode != BAD_ARGUMENTS) && (retcode != API_NOT_AVAILABLE)) {
-			fprintf(stderr,"Usage: arctracker [--loop] [--pianola] [--oss|--alsa|--arts] [--volume=<volume>] <modfile>\n");
+			fprintf(stderr,"Usage: arctracker [--loop] [--pianola] [--oss|--alsa] [--volume=<volume>] <modfile>\n");
 			retcode = BAD_ARGUMENTS;
 		}
 	} else {
-		fprintf(stderr,"Usage: arctracker [--loop] [--pianola] [--oss|--alsa|--arts] [--volume=<volume>] <modfile>\n");
+		fprintf(stderr,"Usage: arctracker [--loop] [--pianola] [--oss|--alsa] [--volume=<volume>] <modfile>\n");
 		retcode = BAD_ARGUMENTS;
 	}
 
@@ -162,31 +150,6 @@ return_status load_file (
 
 	return (retcode);
 }
-
-#ifdef HAVE_LIBARTSC
-/* function initialise_arts               *
- * Set up an aRts connection for playback */
-
-return_status initialise_arts (
-	arts_stream_t *p_stream,
-	long p_sample_rate)
-{
-	return_status retcode = SUCCESS;
-	int errorcode;
-
-	errorcode = arts_init();
-	if (errorcode < 0) {
-		fprintf(stderr, "arts_init error: %s\n", arts_error_text(errorcode));
-		retcode = ARTS_ERROR;
-	}
-
-	if (retcode == SUCCESS) {
-		*p_stream = arts_play_stream(p_sample_rate, 16, 2, "arctracker");
-	}
-
-	return (retcode);
-}
-#endif
 
 #ifdef HAVE_LIBASOUND
 /* function initialise_alsa.
