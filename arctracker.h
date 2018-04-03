@@ -47,15 +47,11 @@
 #define MAX_LEN_SAMPLENAME_DSKT 32
 
 #define CHUNKSIZE 4
-#define CHUNK_HEADER_SIZE 8
 #define MAX_CHANNELS 8
 #define MAX_CHANNELS_DSKT 16
 #define NUM_PATTERNS 256
 #define MAX_TUNELENGTH 128
 #define NUM_SAMPLES 256
-#define MAX_PATTERNLENGTH 64
-#define MAX_VOLUME 255
-#define MAX_NOTES 36
 #define DEFAULT_SAMPLERATE 44100
 #define DEVICE_NAME "/dev/dsp"
 #define PCM_DEVICE "plughw:0,0"
@@ -68,9 +64,6 @@
 #define ARG_LOOP "--loop"
 
 #define DSKT_CHUNK "DskT"
-#define ESKT_CHUNK "EskT"
-#define DSKS_CHUNK "DskS"
-#define ESKS_CHUNK "EskS"
 #define MUSX_CHUNK "MUSX"
 #define TINF_CHUNK "TINF"
 #define MVOX_CHUNK "MVOX"
@@ -364,31 +357,6 @@ void process_desktop_tracker_command(
 	unsigned int *p_periods,
 	yn on_event,
 	long p_sample_rate);
-
-void prepare_current_frame_sample_data(
-	long *p_current_frame_left_channel,
-	long *p_current_frame_right_channel,
-	channel_info *p_voice_info,
-	mod_details *p_module,
-	unsigned char p_volume);
-
-void mix_channels(
-	long *p_current_frame_left_channel,
-	long *p_current_frame_right_channel,
-	channel_info *p_voice_info,
-	mod_details *p_module,
-	long *p_left_channel,
-	long *p_right_channel);
-
-/*
-return_status write_audio_data (
-	output_api p_api,
-	format p_sample_format,
-	long p_left_channel,
-	long p_right_channel,
-	char p_buffer_shifter,
-	void *p_ah_ptr)
-*/
 
 return_status write_audio_data(
 	output_api p_api,
