@@ -3,14 +3,14 @@
 #include "heap.h"
 
 #define PITCH_QUANTA 2047
-#define PHASE_INCREMENT_CONVERSION (60000L * 3575872L)
+#define PHASE_INCREMENT_CONVERSION 3273808.59375
 
-long* phase_increments;
+double* phase_increments;
 unsigned char* resample_buffer;
 
 void calculate_phase_increments(long sample_rate)
 {
-    phase_increments = (long*) allocate_array(PITCH_QUANTA, sizeof(long));
+    phase_increments = (double*) allocate_array(PITCH_QUANTA, sizeof(double));
 
     for (int period=1; period<=PITCH_QUANTA; period++)
         phase_increments[period - 1] = PHASE_INCREMENT_CONVERSION/(period * sample_rate);
@@ -21,19 +21,17 @@ void allocate_resample_buffer()
     resample_buffer = (unsigned char*) allocate_array(BUF_SIZE, sizeof(unsigned char));
 }
 
-void increment_phase_accumulator(channel_info *voice)
+static inline void increment_phase_accumulator(channel_info *voice)
 {
-    voice->phase_acc_fraction += phase_increments[voice->period];
-    voice->phase_accumulator += voice->phase_acc_fraction >> 16;
-    voice->phase_acc_fraction -= (voice->phase_acc_fraction >> 16) << 16;
+    voice->phase_accumulator += phase_increments[voice->period];
 }
 
-bool end_of_sample(const channel_info *voice)
+static inline bool end_of_sample(const channel_info *voice)
 {
     return voice->phase_accumulator > voice->sample_length;
 }
 
-void loop_sample(channel_info *voice)
+static inline void loop_sample(channel_info *voice)
 {
     voice->phase_accumulator -= voice->repeat_length;
 }
@@ -44,7 +42,7 @@ unsigned char* resample(channel_info* voice, long frames_to_write)
     unsigned char* sample = voice->sample_pointer;
     for (long frame = 0; voice->channel_playing && frame < frames_to_write; frame++)
     {
-        resample_buffer[frame] = sample[voice->phase_accumulator];
+        resample_buffer[frame] = sample[(long) voice->phase_accumulator];
         increment_phase_accumulator(voice);
         if (end_of_sample(voice))
         {

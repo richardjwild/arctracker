@@ -214,8 +214,7 @@ typedef struct {
 } current_event;
 
 typedef struct {
-	unsigned long phase_accumulator;
-	unsigned long phase_acc_fraction;
+	double phase_accumulator;
 	int period;
 	int target_period;
 	bool sample_repeats;

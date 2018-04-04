@@ -423,8 +423,7 @@ void get_new_note(
 		if (p_tone_portamento == NO || !p_current_voice->channel_playing) {
 			p_current_voice->channel_playing = true;
 			p_current_voice->sample_pointer = sample_info_ptr->sample_data;
-			p_current_voice->phase_accumulator = 0;
-			p_current_voice->phase_acc_fraction = 0;
+			p_current_voice->phase_accumulator = 0.0;
 			p_current_voice->repeat_offset = sample_info_ptr->repeat_offset;
 			p_current_voice->repeat_length = sample_info_ptr->repeat_length;
 			p_current_voice->gain = sample_info_ptr->volume;
