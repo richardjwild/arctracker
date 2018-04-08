@@ -18,7 +18,7 @@ short clip(short sample)
         return sample;
 }
 
-unsigned char *mix(long *channel_buffer, long channels_to_mix, int frames_to_mix)
+unsigned char *mix(const long *channel_buffer, const long channels_to_mix, const int frames_to_mix)
 {
     int channel_buffer_index = 0;
     int audio_buffer_index = 0;
