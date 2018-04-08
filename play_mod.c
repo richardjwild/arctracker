@@ -835,7 +835,7 @@ return_status write_audio_data(
 		}
 		bufptr += frames_written<<2;
 		if (bufptr == BUF_SIZE) {
-			__int16_t *audio_buffer = mix(channel_buffer, p_module->num_channels, BUF_SIZE >> 2);
+			__int16_t *audio_buffer = mix(channel_buffer, p_module->num_channels);
 			/* send the data to the audio device */
 			if (p_api == OSS) {
 				ssize_t len = write(*(int *)p_ah_ptr, audio_buffer, BUF_SIZE);

@@ -6,6 +6,7 @@ void allocate_audio_buffer(int no_of_frames)
 {
     const size_t stereo_frame_size = 2 * sizeof(__int16_t);
     audio_buffer = (__int16_t *) allocate_array(no_of_frames, stereo_frame_size);
+    audio_buffer_frames = no_of_frames;
 }
 
 __int16_t clip(__int16_t sample)
@@ -18,11 +19,11 @@ __int16_t clip(__int16_t sample)
         return sample;
 }
 
-__int16_t *mix(const long *channel_buffer, const long channels_to_mix, const int frames_to_mix)
+__int16_t *mix(const long *channel_buffer, const int channels_to_mix)
 {
     int input_i = 0;
     int output_i = 0;
-    for (int frame = 0; frame < frames_to_mix; frame++)
+    for (int frame = 0; frame < audio_buffer_frames; frame++)
     {
         __int16_t l_sample = 0, r_sample = 0;
         for (int channel = 0; channel < channels_to_mix; channel++)
