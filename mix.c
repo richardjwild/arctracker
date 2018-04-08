@@ -1,14 +1,15 @@
 #include <stdlib.h>
 #include "heap.h"
 
-unsigned char *audio_buffer;
+__int16_t *audio_buffer;
 
 void allocate_audio_buffer(int no_of_frames)
 {
-    audio_buffer = (unsigned char *) allocate_array(no_of_frames * 4, sizeof(unsigned char));
+    const size_t stereo_frame_size = 2 * sizeof(__int16_t);
+    audio_buffer = (__int16_t *) allocate_array(no_of_frames, stereo_frame_size);
 }
 
-short clip(short sample)
+__int16_t clip(__int16_t sample)
 {
     if (sample > 32767)
         return 32767;
@@ -18,24 +19,20 @@ short clip(short sample)
         return sample;
 }
 
-unsigned char *mix(const long *channel_buffer, const long channels_to_mix, const int frames_to_mix)
+__int16_t *mix(const long *channel_buffer, const long channels_to_mix, const int frames_to_mix)
 {
     int channel_buffer_index = 0;
     int audio_buffer_index = 0;
     for (int frame = 0; frame < frames_to_mix; frame++)
     {
-        long lval = 0, rval = 0;
+        __int16_t lval = 0, rval = 0;
         for (int channel = 0; channel < channels_to_mix; channel++)
         {
             lval += channel_buffer[channel_buffer_index++];
             rval += channel_buffer[channel_buffer_index++];
         }
-        lval = clip(lval);
-        rval = clip(rval);
-        audio_buffer[audio_buffer_index++] = (unsigned char) (lval & 0xff);
-        audio_buffer[audio_buffer_index++] = (unsigned char) ((lval >> 8) & 0xff);
-        audio_buffer[audio_buffer_index++] = (unsigned char) (rval & 0xff);
-        audio_buffer[audio_buffer_index++] = (unsigned char) ((rval >> 8) & 0xff);
+        audio_buffer[audio_buffer_index++] = clip(lval);
+        audio_buffer[audio_buffer_index++] = clip(rval);
     }
     return audio_buffer;
 }

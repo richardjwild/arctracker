@@ -835,17 +835,17 @@ return_status write_audio_data(
 		}
 		bufptr += frames_written<<2;
 		if (bufptr == BUF_SIZE) {
-			unsigned char *audio_buffer = mix(channel_buffer, p_module->num_channels, BUF_SIZE >> 2);
+			__int16_t *audio_buffer = mix(channel_buffer, p_module->num_channels, BUF_SIZE >> 2);
 			/* send the data to the audio device */
 			if (p_api == OSS) {
-				int len = write(*(int *)p_ah_ptr, audio_buffer, BUF_SIZE);
+				ssize_t len = write(*(int *)p_ah_ptr, audio_buffer, BUF_SIZE);
 				if (len == -1) {
 					perror("audio write");
 					return (AUDIO_WRITE_ERROR); /* bomb out */
 				}
 			} else if (p_api == ALSA) {
 #ifdef HAVE_LIBASOUND
-				int err = snd_pcm_writei (*(snd_pcm_t **)p_ah_ptr, audio_buffer, nframes);
+				snd_pcm_sframes_t err = snd_pcm_writei (*(snd_pcm_t **)p_ah_ptr, audio_buffer, nframes);
 				if (err != nframes) {
 					fprintf (stderr, "write to audio interface failed (%s)\n", snd_strerror (err));
 					return (ALSA_ERROR); /* bomb out */
