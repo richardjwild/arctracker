@@ -20,6 +20,7 @@
 #include "config.h"
 #include "log_lin_tab.h"
 #include "resample.h"
+#include "mix.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -35,7 +36,6 @@ char alphanum[] = {'-',
 long left_channel_multiplier[] = {256, 212, 172, 128, 84, 44, 0};
 long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
 
-unsigned char audio_buffer[BUF_SIZE];
 long channel_buffer[BUF_SIZE * MAX_CHANNELS];
 
 unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
@@ -70,6 +70,7 @@ return_status play_module(
 
 	calculate_phase_increments(p_sample_rate);
 	allocate_resample_buffer();
+    allocate_audio_buffer(BUF_SIZE);
 
 	/* loop through whole tune */
 	do {
@@ -834,10 +835,26 @@ return_status write_audio_data(
 		}
 		bufptr += frames_written<<2;
 		if (bufptr == BUF_SIZE) {
-			retcode = output_data(
-				p_api,
-				p_ah_ptr,
-				p_module->num_channels);
+			unsigned char *audio_buffer = mix(channel_buffer, p_module->num_channels, BUF_SIZE >> 2);
+			/* send the data to the audio device */
+			if (p_api == OSS) {
+				int len = write(*(int *)p_ah_ptr, audio_buffer, BUF_SIZE);
+				if (len == -1) {
+					perror("audio write");
+					return (AUDIO_WRITE_ERROR); /* bomb out */
+				}
+			} else if (p_api == ALSA) {
+#ifdef HAVE_LIBASOUND
+				int err = snd_pcm_writei (*(snd_pcm_t **)p_ah_ptr, audio_buffer, nframes);
+				if (err != nframes) {
+					fprintf (stderr, "write to audio interface failed (%s)\n", snd_strerror (err));
+					return (ALSA_ERROR); /* bomb out */
+				}
+#else
+				1; /* this should not happen */
+#endif
+			}
+
 			bufptr = 0;
 		}
 		nframes -= frames_written;
@@ -879,75 +896,4 @@ unsigned char adjust_gain(unsigned char mlaw, unsigned char gain)
         return mlaw - adjustment;
     else
         return 0;
-}
-
-/* function output_data                                                **
-** merge the audio data from the channel buffer into the output buffer **
-** and send it to the audio device using the appropriate api           */
-
-return_status output_data(
-	output_api p_api,
-	void *p_ah_ptr,
-	long p_num_channels)
-{
-	unsigned char *obptr = audio_buffer;
-	long *cbptr = channel_buffer;
-	int nframes, i, j, len, err;
-	long lval, rval;
-
-	int v_audio_fd = *(int *)p_ah_ptr;
-
-#ifdef HAVE_LIBASOUND
-	snd_pcm_t *v_pb_handle = *(snd_pcm_t **)p_ah_ptr;
-#endif
-
-	i = nframes = BUF_SIZE >> 2;
-
-	/*
-	** mix the data from the channel buffer into the output buffer
-	** the channel buffer data is interleaved short ints:
-	**   chan 0 left, chan 0 right,
-	**   chan 1 left, chan 1 right,
-	**   chan 2 left, chan 2 right,
-	**   chan 3 left, chan 3 right,
-	**   etc.
-	*/
-
-    while (i--)
-    {
-        lval = rval = 0;
-        for (j=0; j<p_num_channels; j++)
-        {
-            lval+= *(cbptr++);
-            rval+= *(cbptr++);
-        }
-        if (lval > 32767) lval = 32767;
-        if (lval < -32768) lval = -32768;
-        if (rval > 32767) rval = 32767;
-        if (rval < -32768) rval = -32768;
-        *(obptr++) = (unsigned char)(lval & 0xff);
-        *(obptr++) = (unsigned char)((lval >> 8) & 0xff);
-        *(obptr++) = (unsigned char)(rval & 0xff);
-        *(obptr++) = (unsigned char)((rval >> 8) & 0xff);
-    }
-
-	/* send the data to the audio device */
-	if (p_api == OSS) {
-		len = write(v_audio_fd, audio_buffer, BUF_SIZE);
-		if (len == -1) {
-			perror("audio write");
-			return (AUDIO_WRITE_ERROR); /* bomb out */
-		}
-	} else if (p_api == ALSA) {
-#ifdef HAVE_LIBASOUND
-		err = snd_pcm_writei (v_pb_handle, audio_buffer, nframes);
-		if (err != nframes) {
-			fprintf (stderr, "write to audio interface failed (%s)\n", snd_strerror (err));
-			return (ALSA_ERROR); /* bomb out */
-		}
-#else
-		1; /* this should not happen */
-#endif
-	}
-	return (SUCCESS);
 }

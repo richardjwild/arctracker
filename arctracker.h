@@ -371,8 +371,3 @@ void write_channel_audio_data(
 	long channel_buffer_index,
 	unsigned char master_gain,
 	int stride_length);
-
-return_status output_data(
-	output_api p_api,
-	void *p_ah_ptr,
-	long p_num_channels);
