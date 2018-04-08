@@ -11,10 +11,10 @@ void allocate_audio_buffer(int no_of_frames)
 
 __int16_t clip(__int16_t sample)
 {
-    if (sample > DBFS_0_POSITIVE)
-        return DBFS_0_POSITIVE;
-    else if (sample < DBFS_0_NEGATIVE)
-        return DBFS_0_NEGATIVE;
+    if (sample > POSITIVE_0dBFS)
+        return POSITIVE_0dBFS;
+    else if (sample < NEGATIVE_0dBFS)
+        return NEGATIVE_0dBFS;
     else
         return sample;
 }

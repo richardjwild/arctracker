@@ -1,5 +1,5 @@
-static const int DBFS_0_POSITIVE = 32767;
-static const int DBFS_0_NEGATIVE = -32768;
+static const int POSITIVE_0dBFS = 32767;
+static const int NEGATIVE_0dBFS = -32768;
 
 static __int16_t *audio_buffer;
 static int audio_buffer_frames;
