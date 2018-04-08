@@ -1,5 +1,9 @@
 #include <stdlib.h>
 #include "heap.h"
+#include "mix.h"
+
+static const int DBFS_0_POSITIVE = 32767;
+static const int DBFS_0_NEGATIVE = -32768;
 
 __int16_t *audio_buffer;
 
@@ -11,28 +15,28 @@ void allocate_audio_buffer(int no_of_frames)
 
 __int16_t clip(__int16_t sample)
 {
-    if (sample > 32767)
-        return 32767;
-    else if (sample < -32768)
-        return -32768;
+    if (sample > DBFS_0_POSITIVE)
+        return DBFS_0_POSITIVE;
+    else if (sample < DBFS_0_NEGATIVE)
+        return DBFS_0_NEGATIVE;
     else
         return sample;
 }
 
 __int16_t *mix(const long *channel_buffer, const long channels_to_mix, const int frames_to_mix)
 {
-    int channel_buffer_index = 0;
-    int audio_buffer_index = 0;
+    int input_i = 0;
+    int output_i = 0;
     for (int frame = 0; frame < frames_to_mix; frame++)
     {
-        __int16_t lval = 0, rval = 0;
+        __int16_t l_sample = 0, r_sample = 0;
         for (int channel = 0; channel < channels_to_mix; channel++)
         {
-            lval += channel_buffer[channel_buffer_index++];
-            rval += channel_buffer[channel_buffer_index++];
+            l_sample += channel_buffer[input_i++];
+            r_sample += channel_buffer[input_i++];
         }
-        audio_buffer[audio_buffer_index++] = clip(lval);
-        audio_buffer[audio_buffer_index++] = clip(rval);
+        audio_buffer[output_i++] = clip(l_sample);
+        audio_buffer[output_i++] = clip(r_sample);
     }
     return audio_buffer;
 }
