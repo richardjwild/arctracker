@@ -15,12 +15,14 @@ void allocate_resample_buffer()
     resample_buffer = (unsigned char *) allocate_array(BUF_SIZE, sizeof(unsigned char));
 }
 
-static inline bool end_of_sample(const channel_info *voice)
+static inline
+bool end_of_sample(const channel_info *voice)
 {
     return voice->phase_accumulator > voice->sample_length;
 }
 
-static inline void loop_sample(channel_info *voice)
+static inline
+void loop_sample(channel_info *voice)
 {
     voice->phase_accumulator -= voice->repeat_length;
 }

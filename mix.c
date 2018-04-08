@@ -9,6 +9,7 @@ void allocate_audio_buffer(int no_of_frames)
     audio_buffer_frames = no_of_frames;
 }
 
+static inline
 __int16_t clip(__int16_t sample)
 {
     if (sample > POSITIVE_0dBFS)
