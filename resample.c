@@ -1,17 +1,11 @@
 #include <stdlib.h>
 #include "arctracker.h"
 #include "heap.h"
-
-#define PITCH_QUANTA 2047
-#define PHASE_INCREMENT_CONVERSION 3273808.59375
-
-double *phase_increments;
-unsigned char *resample_buffer;
+#include "resample.h"
 
 void calculate_phase_increments(const long sample_rate)
 {
     phase_increments = (double *) allocate_array(PITCH_QUANTA, sizeof(double));
-
     for (int period = 1; period <= PITCH_QUANTA; period++)
         phase_increments[period - 1] = PHASE_INCREMENT_CONVERSION / (period * sample_rate);
 }
