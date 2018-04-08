@@ -2,11 +2,6 @@
 #include "heap.h"
 #include "mix.h"
 
-static const int DBFS_0_POSITIVE = 32767;
-static const int DBFS_0_NEGATIVE = -32768;
-
-__int16_t *audio_buffer;
-
 void allocate_audio_buffer(int no_of_frames)
 {
     const size_t stereo_frame_size = 2 * sizeof(__int16_t);
