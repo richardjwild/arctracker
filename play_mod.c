@@ -21,6 +21,7 @@
 #include "log_lin_tab.h"
 #include "resample.h"
 #include "mix.h"
+#include "error.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -36,7 +37,7 @@ char alphanum[] = {'-',
 long left_channel_multiplier[] = {256, 212, 172, 128, 84, 44, 0};
 long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
 
-long channel_buffer[AUDIO_BUFFER_FRAMES * MAX_CHANNELS * 2];
+long channel_buffer[AUDIO_BUFFER_SIZE_FRAMES * MAX_CHANNELS * 2];
 
 unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
 
@@ -69,8 +70,8 @@ return_status play_module(
 		p_sample_rate);
 
 	calculate_phase_increments(p_sample_rate);
-	allocate_resample_buffer(AUDIO_BUFFER_FRAMES);
-    allocate_audio_buffer(AUDIO_BUFFER_FRAMES);
+	allocate_resample_buffer(AUDIO_BUFFER_SIZE_FRAMES);
+    allocate_audio_buffer(AUDIO_BUFFER_SIZE_FRAMES);
 
 	/* loop through whole tune */
 	do {
@@ -179,7 +180,7 @@ return_status play_module(
 		}
 
 		/* write one tick's worth of audio data */
-		retcode = write_audio_data(
+		write_audio_data(
 			p_args->api,
 			voice_info,
 			p_module,
@@ -802,7 +803,7 @@ void process_desktop_tracker_command(
 /* function write_audio_data            **
 ** write one tick's worth of audio data */
 
-return_status write_audio_data(
+void write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
 	mod_details *p_module,
@@ -810,57 +811,56 @@ return_status write_audio_data(
 	void *p_ah_ptr,
 	long p_nframes)
 {
-	return_status retcode = SUCCESS;
 	static int nframes_fraction = 0;
-	static long bufptr = 0;
-	int ch;
-	long nframes, frames_written;
+	static long audio_buffer_filled = 0;
+	long frames_requested;
+	const int channel_buffer_stride_length = ((int) p_module->num_channels - 1) * 2;
 
-	nframes = p_nframes >> 8;
-	nframes_fraction += p_nframes - (nframes << 8);
+	frames_requested = p_nframes >> 8;
+	nframes_fraction += p_nframes - (frames_requested << 8);
 	if (nframes_fraction > 256) {
-		nframes++;
+		frames_requested++;
 		nframes_fraction -= 256;
 	}
 
-	while (nframes) {
-		for (ch=0; ch<p_module->num_channels; ch++) {
+	while (frames_requested > 0)
+    {
+        const long audio_buffer_unfilled = AUDIO_BUFFER_SIZE_FRAMES - audio_buffer_filled;
+        const long frames_to_write = frames_requested > audio_buffer_unfilled
+               ? audio_buffer_unfilled
+               : frames_requested;
+		for (int channel = 0; channel < p_module->num_channels; channel++)
+		{
+		    long channel_buffer_index = ((audio_buffer_filled * p_module->num_channels) + channel) * 2;
 			write_channel_audio_data(
-				p_voice_info + ch,
-				nframes>((AUDIO_BUFFER_BYTES - bufptr)>>2)?((AUDIO_BUFFER_BYTES - bufptr)>>2):nframes,
-				((bufptr>>1)*p_module->num_channels)+(ch<<1), /* offset into channel buffer in units (not bytes) */
+				&p_voice_info[channel],
+                frames_to_write,
+				channel_buffer_index,
 				p_volume,
-				(p_module->num_channels<<1) - 2); /* channel buffer stride length (for interleaved channels) */
-			frames_written = nframes>((AUDIO_BUFFER_BYTES - bufptr)>>2)?((AUDIO_BUFFER_BYTES - bufptr)>>2):nframes;
+                channel_buffer_stride_length);
 		}
-		bufptr += frames_written<<2;
-		if (bufptr == AUDIO_BUFFER_BYTES) {
+		audio_buffer_filled += frames_to_write;
+		if (audio_buffer_filled == AUDIO_BUFFER_SIZE_FRAMES)
+		{
 			__int16_t *audio_buffer = mix(channel_buffer, p_module->num_channels);
 			/* send the data to the audio device */
-			if (p_api == OSS) {
-				ssize_t len = write(*(int *)p_ah_ptr, audio_buffer, AUDIO_BUFFER_BYTES);
-				if (len == -1) {
-					perror("audio write");
-					return (AUDIO_WRITE_ERROR); /* bomb out */
-				}
-			} else if (p_api == ALSA) {
+			if (p_api == OSS)
+			{
+				if (write(*(int *)p_ah_ptr, audio_buffer, AUDIO_BUFFER_SIZE_BYTES) == -1)
+                    system_error("audio write");
+			}
+			else if (p_api == ALSA)
+			{
 #ifdef HAVE_LIBASOUND
-				snd_pcm_sframes_t err = snd_pcm_writei (*(snd_pcm_t **)p_ah_ptr, audio_buffer, nframes);
-				if (err != nframes) {
-					fprintf (stderr, "write to audio interface failed (%s)\n", snd_strerror (err));
-					return (ALSA_ERROR); /* bomb out */
-				}
-#else
-				1; /* this should not happen */
+				snd_pcm_sframes_t err = snd_pcm_writei(*(snd_pcm_t **)p_ah_ptr, audio_buffer, AUDIO_BUFFER_SIZE_FRAMES);
+				if (err < 0)
+					error_with_detail("snd_pcm_writei failed", snd_strerror(err));
 #endif
 			}
-
-			bufptr = 0;
+			audio_buffer_filled = 0;
 		}
-		nframes -= frames_written;
+		frames_requested -= frames_to_write;
 	}
-
-	return (retcode);
 }
 
 /* function write_channel_audio_data                 **

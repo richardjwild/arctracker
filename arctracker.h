@@ -55,8 +55,8 @@
 #define DEFAULT_SAMPLERATE 44100
 #define DEVICE_NAME "/dev/dsp"
 #define PCM_DEVICE "plughw:0,0"
-#define AUDIO_BUFFER_FRAMES 1024
-#define AUDIO_BUFFER_BYTES (AUDIO_BUFFER_FRAMES * 4)
+#define AUDIO_BUFFER_SIZE_FRAMES 1024
+#define AUDIO_BUFFER_SIZE_BYTES (AUDIO_BUFFER_SIZE_FRAMES * 4)
 
 #define ARG_PIANOLA "--pianola"
 #define ARG_OSS "--oss"
@@ -358,7 +358,7 @@ void process_desktop_tracker_command(
 	yn on_event,
 	long p_sample_rate);
 
-return_status write_audio_data(
+void write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
 	mod_details *p_module,
