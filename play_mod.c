@@ -36,7 +36,7 @@ char alphanum[] = {'-',
 long left_channel_multiplier[] = {256, 212, 172, 128, 84, 44, 0};
 long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
 
-long channel_buffer[BUF_SIZE * MAX_CHANNELS];
+long channel_buffer[BUF_SIZE * MAX_CHANNELS * 2];
 
 unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
 
