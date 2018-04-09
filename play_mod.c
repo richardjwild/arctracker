@@ -192,7 +192,7 @@ return_status play_module(
 		write_audio_data(
 			p_args->api,
 			voice_info,
-			p_module,
+			p_module->num_channels,
 			p_args->volume,
 			p_ah_ptr,
             (current_positions.sps_per_tick >> 8) + extra_frame);
@@ -815,13 +815,13 @@ void process_desktop_tracker_command(
 void write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
-	mod_details *p_module,
+	int channels,
 	unsigned char p_volume,
 	void *p_ah_ptr,
 	long frames_requested)
 {
 	static long audio_buffer_filled = 0;
-	const int channel_buffer_stride_length = ((int) p_module->num_channels - 1) * 2;
+	const int channel_buffer_stride_length = (channels - 1) * 2;
 
 	while (frames_requested > 0)
     {
@@ -829,9 +829,9 @@ void write_audio_data(
         const long frames_to_write = frames_requested > audio_buffer_unfilled
                ? audio_buffer_unfilled
                : frames_requested;
-		for (int channel = 0; channel < p_module->num_channels; channel++)
+		for (int channel = 0; channel < channels; channel++)
 		{
-		    long channel_buffer_index = ((audio_buffer_filled * p_module->num_channels) + channel) * 2;
+		    long channel_buffer_index = ((audio_buffer_filled * channels) + channel) * 2;
 			write_channel_audio_data(
 				&p_voice_info[channel],
                 frames_to_write,
@@ -842,7 +842,7 @@ void write_audio_data(
 		audio_buffer_filled += frames_to_write;
 		if (audio_buffer_filled == AUDIO_BUFFER_SIZE_FRAMES)
 		{
-			__int16_t *audio_buffer = mix(channel_buffer, p_module->num_channels);
+			__int16_t *audio_buffer = mix(channel_buffer, channels);
 			/* send the data to the audio device */
 			if (p_api == OSS)
 			{

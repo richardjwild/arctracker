@@ -361,7 +361,7 @@ void process_desktop_tracker_command(
 void write_audio_data(
 	output_api p_api,
 	channel_info *p_voice_info,
-	mod_details *p_module,
+	int channels,
 	unsigned char p_volume,
 	void *p_ah_ptr,
 	long p_nframes);
