@@ -57,8 +57,9 @@ return_status play_module(
 	current_event *current_pattern_line_ptr;
 	channel_info voice_info[MAX_CHANNELS];
 	channel_info *voice_info_ptr;
+    int nframes_fraction = 0;
 
-	sample_details *sample_info_ptr;
+    sample_details *sample_info_ptr;
 
 	yn looped_yet = NO;
 
@@ -179,14 +180,22 @@ return_status play_module(
 			}
 		}
 
-		/* write one tick's worth of audio data */
+        int extra_frame = 0;
+        nframes_fraction += current_positions.sps_per_tick;
+        nframes_fraction -= current_positions.sps_per_tick & 0xffffffffffffff00;
+        if (nframes_fraction > 256) {
+            extra_frame = 1;
+            nframes_fraction -= 256;
+        }
+
+        /* write one tick's worth of audio data */
 		write_audio_data(
 			p_args->api,
 			voice_info,
 			p_module,
 			p_args->volume,
 			p_ah_ptr,
-			current_positions.sps_per_tick);
+            (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
 	while (((looped_yet == NO) || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
 
@@ -809,19 +818,10 @@ void write_audio_data(
 	mod_details *p_module,
 	unsigned char p_volume,
 	void *p_ah_ptr,
-	long p_nframes)
+	long frames_requested)
 {
-	static int nframes_fraction = 0;
 	static long audio_buffer_filled = 0;
-	long frames_requested;
 	const int channel_buffer_stride_length = ((int) p_module->num_channels - 1) * 2;
-
-	frames_requested = p_nframes >> 8;
-	nframes_fraction += p_nframes - (frames_requested << 8);
-	if (nframes_fraction > 256) {
-		frames_requested++;
-		nframes_fraction -= 256;
-	}
 
 	while (frames_requested > 0)
     {
