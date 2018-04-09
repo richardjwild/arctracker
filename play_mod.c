@@ -36,7 +36,7 @@ char alphanum[] = {'-',
 long left_channel_multiplier[] = {256, 212, 172, 128, 84, 44, 0};
 long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
 
-long channel_buffer[BUF_SIZE * MAX_CHANNELS * 2];
+long channel_buffer[AUDIO_BUFFER_FRAMES * MAX_CHANNELS * 2];
 
 unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
 
@@ -69,8 +69,8 @@ return_status play_module(
 		p_sample_rate);
 
 	calculate_phase_increments(p_sample_rate);
-	allocate_resample_buffer();
-    allocate_audio_buffer(BUF_SIZE);
+	allocate_resample_buffer(AUDIO_BUFFER_FRAMES);
+    allocate_audio_buffer(AUDIO_BUFFER_FRAMES);
 
 	/* loop through whole tune */
 	do {
@@ -827,18 +827,18 @@ return_status write_audio_data(
 		for (ch=0; ch<p_module->num_channels; ch++) {
 			write_channel_audio_data(
 				p_voice_info + ch,
-				nframes>((BUF_SIZE - bufptr)>>2)?((BUF_SIZE - bufptr)>>2):nframes,
+				nframes>((AUDIO_BUFFER_BYTES - bufptr)>>2)?((AUDIO_BUFFER_BYTES - bufptr)>>2):nframes,
 				((bufptr>>1)*p_module->num_channels)+(ch<<1), /* offset into channel buffer in units (not bytes) */
 				p_volume,
 				(p_module->num_channels<<1) - 2); /* channel buffer stride length (for interleaved channels) */
-			frames_written = nframes>((BUF_SIZE - bufptr)>>2)?((BUF_SIZE - bufptr)>>2):nframes;
+			frames_written = nframes>((AUDIO_BUFFER_BYTES - bufptr)>>2)?((AUDIO_BUFFER_BYTES - bufptr)>>2):nframes;
 		}
 		bufptr += frames_written<<2;
-		if (bufptr == BUF_SIZE) {
+		if (bufptr == AUDIO_BUFFER_BYTES) {
 			__int16_t *audio_buffer = mix(channel_buffer, p_module->num_channels);
 			/* send the data to the audio device */
 			if (p_api == OSS) {
-				ssize_t len = write(*(int *)p_ah_ptr, audio_buffer, BUF_SIZE);
+				ssize_t len = write(*(int *)p_ah_ptr, audio_buffer, AUDIO_BUFFER_BYTES);
 				if (len == -1) {
 					perror("audio write");
 					return (AUDIO_WRITE_ERROR); /* bomb out */

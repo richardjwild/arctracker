@@ -55,7 +55,8 @@
 #define DEFAULT_SAMPLERATE 44100
 #define DEVICE_NAME "/dev/dsp"
 #define PCM_DEVICE "plughw:0,0"
-#define BUF_SIZE 4096
+#define AUDIO_BUFFER_FRAMES 1024
+#define AUDIO_BUFFER_BYTES (AUDIO_BUFFER_FRAMES * 4)
 
 #define ARG_PIANOLA "--pianola"
 #define ARG_OSS "--oss"

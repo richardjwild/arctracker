@@ -2,7 +2,7 @@
 #include "heap.h"
 #include "mix.h"
 
-void allocate_audio_buffer(int no_of_frames)
+void allocate_audio_buffer(const int no_of_frames)
 {
     const size_t stereo_frame_size = 2 * sizeof(__int16_t);
     audio_buffer = (__int16_t *) allocate_array(no_of_frames, stereo_frame_size);
@@ -10,7 +10,7 @@ void allocate_audio_buffer(int no_of_frames)
 }
 
 static inline
-__int16_t clip(__int16_t sample)
+__int16_t clip(const __int16_t sample)
 {
     if (sample > POSITIVE_0dBFS)
         return POSITIVE_0dBFS;
