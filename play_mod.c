@@ -813,51 +813,51 @@ void process_desktop_tracker_command(
 ** write one tick's worth of audio data */
 
 void write_audio_data(
-	output_api p_api,
-	channel_info *p_voice_info,
+	output_api api,
+	channel_info *voice,
 	int channels,
-	unsigned char p_volume,
-	void *p_ah_ptr,
+	unsigned char master_gain,
+	void *audio_handle,
 	long frames_requested)
 {
-	static long audio_buffer_filled = 0;
+	static long frames_filled = 0;
 	const int channel_buffer_stride_length = (channels - 1) * 2;
 
 	while (frames_requested > 0)
     {
-        const long audio_buffer_unfilled = AUDIO_BUFFER_SIZE_FRAMES - audio_buffer_filled;
-        const long frames_to_write = frames_requested > audio_buffer_unfilled
-               ? audio_buffer_unfilled
+        const long frames_unfilled = AUDIO_BUFFER_SIZE_FRAMES - frames_filled;
+        const long frames_to_write = frames_requested > frames_unfilled
+               ? frames_unfilled
                : frames_requested;
 		for (int channel = 0; channel < channels; channel++)
 		{
-		    long channel_buffer_index = ((audio_buffer_filled * channels) + channel) * 2;
+		    long channel_buffer_index = ((frames_filled * channels) + channel) * 2;
 			write_channel_audio_data(
-				&p_voice_info[channel],
+				&voice[channel],
                 frames_to_write,
 				channel_buffer_index,
-				p_volume,
+				master_gain,
                 channel_buffer_stride_length);
 		}
-		audio_buffer_filled += frames_to_write;
-		if (audio_buffer_filled == AUDIO_BUFFER_SIZE_FRAMES)
+		frames_filled += frames_to_write;
+		if (frames_filled == AUDIO_BUFFER_SIZE_FRAMES)
 		{
 			__int16_t *audio_buffer = mix(channel_buffer, channels);
 			/* send the data to the audio device */
-			if (p_api == OSS)
+			if (api == OSS)
 			{
-				if (write(*(int *)p_ah_ptr, audio_buffer, AUDIO_BUFFER_SIZE_BYTES) == -1)
+				if (write(*(int *)audio_handle, audio_buffer, AUDIO_BUFFER_SIZE_BYTES) == -1)
                     system_error("audio write");
 			}
-			else if (p_api == ALSA)
+			else if (api == ALSA)
 			{
 #ifdef HAVE_LIBASOUND
-				snd_pcm_sframes_t err = snd_pcm_writei(*(snd_pcm_t **)p_ah_ptr, audio_buffer, AUDIO_BUFFER_SIZE_FRAMES);
+				snd_pcm_sframes_t err = snd_pcm_writei(*(snd_pcm_t **)audio_handle, audio_buffer, AUDIO_BUFFER_SIZE_FRAMES);
 				if (err < 0)
 					error_with_detail("snd_pcm_writei failed", snd_strerror(err));
 #endif
 			}
-			audio_buffer_filled = 0;
+			frames_filled = 0;
 		}
 		frames_requested -= frames_to_write;
 	}

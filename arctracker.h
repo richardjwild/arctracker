@@ -359,11 +359,11 @@ void process_desktop_tracker_command(
 	long p_sample_rate);
 
 void write_audio_data(
-	output_api p_api,
-	channel_info *p_voice_info,
+	output_api api,
+	channel_info *voice,
 	int channels,
-	unsigned char p_volume,
-	void *p_ah_ptr,
+	unsigned char master_gain,
+	void *audio_handle,
 	long p_nframes);
 
 void write_channel_audio_data(
