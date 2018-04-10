@@ -829,13 +829,13 @@ void write_audio_data(
         const long frames_to_write = frames_requested > frames_unfilled
                ? frames_unfilled
                : frames_requested;
+        const long channel_buffer_offset = frames_filled * channels * 2;
 		for (int channel = 0; channel < channels; channel++)
 		{
-		    long channel_buffer_index = ((frames_filled * channels) + channel) * 2;
 			write_channel_audio_data(
 				&voice[channel],
                 frames_to_write,
-				channel_buffer_index,
+				channel_buffer_offset + (channel * 2),
 				master_gain,
                 channel_buffer_stride_length);
 		}
