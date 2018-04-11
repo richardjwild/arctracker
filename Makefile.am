@@ -5,8 +5,8 @@ LDFLAGS=@LDFLAGS@
 CLIBS=@LIBS@
 INSTALLDIR=@prefix@
 
-arctracker: arctracker.o initialise.o read_mod.o play_mod.o resample.o mix.o oss.o heap.o error.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o resample.o mix.o oss.o heap.o error.o $(CLIBS)
+arctracker: arctracker.o initialise.o read_mod.o play_mod.o write_audio.o resample.o mix.o oss.o heap.o error.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o initialise.o read_mod.o play_mod.o write_audio.o resample.o mix.o oss.o heap.o error.o $(CLIBS)
 
 arctracker.o: arctracker.h audio_api.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
@@ -23,11 +23,14 @@ heap.o: heap.c
 initialise.o: arctracker.h initialise.c error.h
 	$(CC) $(CFLAGS) -c initialise.c
 
-read_mod.o: arctracker.h read_mod.c
+read_mod.o: arctracker.h read_mod.h read_mod.c
 	$(CC) $(CFLAGS) -c read_mod.c
 
-play_mod.o: arctracker.h log_lin_tab.h resample.h play_mod.c
+play_mod.o: arctracker.h log_lin_tab.h resample.h play_mod.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
+
+write_audio.o: write_audio.c
+	$(CC) $(CFLAGS) -c write_audio.c
 
 oss.o: audio_api.h oss.c
 	$(CC) $(CFLAGS) -c oss.c

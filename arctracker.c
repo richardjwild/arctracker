@@ -18,6 +18,8 @@
 
 #include "arctracker.h"
 #include "config.h"
+#include "read_mod.h"
+#include "play_mod.h"
 #include "oss.h"
 #include "audio_api.h"
 

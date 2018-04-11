@@ -16,6 +16,9 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
+#ifndef ARCTRACKER_H
+#define ARCTRACKER_H
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -57,7 +60,6 @@
 #define DEVICE_NAME "/dev/dsp"
 #define PCM_DEVICE "plughw:0,0"
 #define AUDIO_BUFFER_SIZE_FRAMES 1024
-#define AUDIO_BUFFER_SIZE_BYTES (AUDIO_BUFFER_SIZE_FRAMES * 4)
 
 #define ARG_PIANOLA "--pianola"
 #define ARG_OSS "--oss"
@@ -215,25 +217,6 @@ typedef struct {
 	unsigned char data3;
 } current_event;
 
-typedef struct {
-	double phase_accumulator;
-	int period;
-	int target_period;
-	bool sample_repeats;
-	long repeat_offset;
-	long sample_length;
-	long repeat_length;
-	void *sample_pointer;
-	unsigned char gain;
-	bool channel_playing;
-	long left_channel_multiplier;
-	long right_channel_multiplier;
-	unsigned char arpeggio_counter;
-	unsigned char last_data_byte;
-	unsigned char note_currently_playing;
-} channel_info;
-
-
 /* function prototypes */
 return_status get_arguments(
 	int p_argc,
@@ -251,120 +234,4 @@ return_status initialise_alsa(
 	long *p_sample_rate);
 #endif
 
-return_status read_file(
-	void *p_modfile,
-	long p_modsize,
-	mod_details *p_module,
-	sample_details *p_samples);
-
-return_status read_tracker_file(
-	void *p_modfile,
-	long p_modsize,
-	mod_details *p_module,
-	sample_details *p_samples);
-
-return_status read_desktop_tracker_file(
-	void *p_modfile,
-	mod_details *p_module,
-	sample_details *p_samples);
-
-return_status search_tff(
-	void *p_searchfrom,
-	void **p_chunk_address,
-	long p_array_end,
-	char *p_chunk,
-	long p_occurrence);
-
-void read_nchar(
-	char *p_output,
-	void *p_input,
-	int p_num_chars,
-	yn p_null_term);
-
-void read_nbytes(
-	long *p_output,
-	void *p_input,
-	int p_num_bytes);
-
-return_status get_patterns(
-	void *p_search_from,
-	long p_array_end,
-	void **p_patterns,
-	int *p_num_patterns);
-
-return_status get_samples(
-	void *p_search_from,
-	long p_array_end,
-	int *p_samples_found,
-	sample_details *p_samples);
-
-return_status get_sample_info(
-	void *p_search_from,
-	long p_array_end,
-	sample_details *p_sample);
-
-return_status play_module(
-	mod_details *p_module,
-	sample_details *p_sample,
-	audio_api_t audio_api,
-	long p_sample_rate,
-	unsigned int *p_periods,
-	program_arguments *p_args);
-
-void initialise_values(
-	tune_info *p_current_positions,
-	channel_info *p_voice_info,
-	mod_details *p_module,
-	yn p_pianola,
-	long p_sample_rate);
-
-yn update_counters(
-	tune_info *p_current_positions,
-	mod_details *p_module,
-	yn p_pianola);
-
-void get_current_pattern_line(
-	tune_info *p_current_positions,
-	mod_details *p_module,
-	current_event *p_current_pattern_line,
-	yn p_pianola);
-
-void get_new_note(
-	current_event *p_current_event,
-	sample_details *p_sample,
-	channel_info *p_current_voice,
-	unsigned int *p_periods,
-	yn p_tone_portamento,
-	module_type p_module_type,
-	long p_num_samples);
-
-void process_tracker_command(
-	current_event *p_current_event,
-	channel_info *p_current_voice,
-	tune_info *p_current_positions,
-	mod_details *p_module,
-	unsigned int *p_periods,
-	yn on_event);
-
-void process_desktop_tracker_command(
-	current_event *p_current_event,
-	channel_info *p_current_voice,
-	tune_info *p_current_positions,
-	mod_details *p_module,
-	unsigned int *p_periods,
-	yn on_event,
-	long p_sample_rate);
-
-void write_audio_data(
-	audio_api_t audio_api,
-	channel_info *voice,
-	int channels,
-	unsigned char master_gain,
-	long p_nframes);
-
-void write_channel_audio_data(
-	channel_info *voice,
-	long frames_to_write,
-	long channel_buffer_index,
-	unsigned char master_gain,
-	int stride_length);
+#endif // ARCTRACKER_H

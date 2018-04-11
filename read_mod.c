@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
 #include "arctracker.h"
+#include "read_mod.h"
 #include "config.h"
 
 char *notes_x[] = {"---",

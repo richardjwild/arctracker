@@ -16,13 +16,12 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
+#include <stdbool.h>
 #include "arctracker.h"
+#include "play_mod.h"
 #include "config.h"
-#include "log_lin_tab.h"
-#include "resample.h"
-#include "mix.h"
 #include "error.h"
-#include "audio_api.h"
+#include "write_audio.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -38,9 +37,49 @@ char alphanum[] = {'-',
 long left_channel_multiplier[] = {256, 212, 172, 128, 84, 44, 0};
 long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
 
-long channel_buffer[AUDIO_BUFFER_SIZE_FRAMES * MAX_CHANNELS * 2];
+void initialise_values(
+        tune_info *p_current_positions,
+        channel_info *p_voice_info,
+        mod_details *p_module,
+        yn p_pianola,
+        long p_sample_rate);
 
-unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
+yn update_counters(
+        tune_info *p_current_positions,
+        mod_details *p_module,
+        yn p_pianola);
+
+void get_current_pattern_line(
+        tune_info *p_current_positions,
+        mod_details *p_module,
+        current_event *p_current_pattern_line,
+        yn p_pianola);
+
+void get_new_note(
+        current_event *p_current_event,
+        sample_details *p_sample,
+        channel_info *p_current_voice,
+        unsigned int *p_periods,
+        yn p_tone_portamento,
+        module_type p_module_type,
+        long p_num_samples);
+
+void process_tracker_command(
+        current_event *p_current_event,
+        channel_info *p_current_voice,
+        tune_info *p_current_positions,
+        mod_details *p_module,
+        unsigned int *p_periods,
+        yn on_event);
+
+void process_desktop_tracker_command(
+        current_event *p_current_event,
+        channel_info *p_current_voice,
+        tune_info *p_current_positions,
+        mod_details *p_module,
+        unsigned int *p_periods,
+        yn on_event,
+        long p_sample_rate);
 
 return_status play_module(
 	mod_details *p_module,
@@ -71,9 +110,7 @@ return_status play_module(
 		p_args->pianola,
 		p_sample_rate);
 
-	calculate_phase_increments(p_sample_rate);
-	allocate_resample_buffer(audio_api.buffer_size_frames);
-    allocate_audio_buffer(audio_api.buffer_size_frames);
+	initialise_audio(audio_api, p_module->num_channels, p_sample_rate);
 
 	/* loop through whole tune */
 	do {
@@ -807,84 +844,4 @@ void process_desktop_tracker_command(
 #endif
 		}
 	} /* end for (foo) */
-}
-
-/* function write_audio_data            **
-** write one tick's worth of audio data */
-
-static inline
-long channel_buffer_offset(long frames_filled, int no_of_channels, int channel)
-{
-    return ((frames_filled * no_of_channels) + channel) * 2;
-}
-
-void write_audio_data(
-        audio_api_t audio_output,
-        channel_info *voices,
-        int channels,
-        unsigned char master_gain,
-        long frames_requested)
-{
-    static long frames_filled = 0;
-    const int channel_buffer_stride_length = (channels - 1) * 2;
-
-    while (frames_requested > 0)
-    {
-        const long frames_unfilled = audio_output.buffer_size_frames - frames_filled;
-        const long frames_to_write = frames_requested > frames_unfilled
-                 ? frames_unfilled
-                 : frames_requested;
-        for (int channel = 0; channel < channels; channel++)
-        {
-            write_channel_audio_data(
-                    &voices[channel],
-                    frames_to_write,
-                    channel_buffer_offset(frames_filled, channels, channel),
-                    master_gain,
-                    channel_buffer_stride_length);
-        }
-        frames_filled += frames_to_write;
-        if (frames_filled == audio_output.buffer_size_frames)
-        {
-            __int16_t *audio_buffer = mix(channel_buffer, channels);
-            audio_output.write(audio_buffer);
-            frames_filled = 0;
-        }
-        frames_requested -= frames_to_write;
-    }
-}
-
-/* function write_channel_audio_data                 **
-** write nframes worth of audio data for one channel */
-
-void write_channel_audio_data(
-	channel_info* voice,
-	long frames_to_write,
-	long channel_buffer_index,
-	unsigned char master_gain,
-	int stride_length)
-{
-    unsigned char* resample_buffer = resample(voice, frames_to_write);
-    for (long frame = 0; frame < frames_to_write; frame++)
-    {
-        unsigned char mu_law = resample_buffer[frame];
-        mu_law = adjust_gain(mu_law, voice->gain);
-        long linear_signed = log_lin_tab[mu_law];
-
-        long left = (linear_signed * voice->left_channel_multiplier) >> 16;
-        long right = (linear_signed * voice->right_channel_multiplier) >> 16;
-
-        channel_buffer[channel_buffer_index++] = left * master_gain;
-        channel_buffer[channel_buffer_index++] = right * master_gain;
-        channel_buffer_index += stride_length;
-    }
-}
-
-unsigned char adjust_gain(unsigned char mlaw, unsigned char gain)
-{
-    unsigned char adjustment = ((unsigned char) 255) - gain;
-    if (mlaw > adjustment)
-        return mlaw - adjustment;
-    else
-        return 0;
 }
