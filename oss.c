@@ -48,8 +48,8 @@ void set_audio_buffer_size(int audio_buffer_frames)
 
 audio_api_t audio_api(int audio_buffer_frames)
 {
-    oss_audio_api.write_audio = &write_audio;
-    oss_audio_api.audio_buffer_frames = audio_buffer_frames;
+    oss_audio_api.write = &write_audio;
+    oss_audio_api.buffer_size_frames = audio_buffer_frames;
     return oss_audio_api;
 }
 

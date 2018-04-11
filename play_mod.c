@@ -72,8 +72,8 @@ return_status play_module(
 		p_sample_rate);
 
 	calculate_phase_increments(p_sample_rate);
-	allocate_resample_buffer(audio_api.audio_buffer_frames);
-    allocate_audio_buffer(audio_api.audio_buffer_frames);
+	allocate_resample_buffer(audio_api.buffer_size_frames);
+    allocate_audio_buffer(audio_api.buffer_size_frames);
 
 	/* loop through whole tune */
 	do {
@@ -819,7 +819,7 @@ long channel_buffer_offset(long frames_filled, int no_of_channels, int channel)
 }
 
 void write_audio_data(
-        audio_api_t audio_api,
+        audio_api_t audio_output,
         channel_info *voices,
         int channels,
         unsigned char master_gain,
@@ -830,7 +830,7 @@ void write_audio_data(
 
     while (frames_requested > 0)
     {
-        const long frames_unfilled = audio_api.audio_buffer_frames - frames_filled;
+        const long frames_unfilled = audio_output.buffer_size_frames - frames_filled;
         const long frames_to_write = frames_requested > frames_unfilled
                  ? frames_unfilled
                  : frames_requested;
@@ -844,10 +844,10 @@ void write_audio_data(
                     channel_buffer_stride_length);
         }
         frames_filled += frames_to_write;
-        if (frames_filled == audio_api.audio_buffer_frames)
+        if (frames_filled == audio_output.buffer_size_frames)
         {
             __int16_t *audio_buffer = mix(channel_buffer, channels);
-            audio_api.write_audio(audio_buffer);
+            audio_output.write(audio_buffer);
             frames_filled = 0;
         }
         frames_requested -= frames_to_write;
