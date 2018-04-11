@@ -812,41 +812,46 @@ void process_desktop_tracker_command(
 /* function write_audio_data            **
 ** write one tick's worth of audio data */
 
-void write_audio_data(
-    audio_api_t audio_api,
-	channel_info *voices,
-	int channels,
-	unsigned char master_gain,
-	long frames_requested)
+static inline
+long channel_buffer_offset(long frames_filled, int no_of_channels, int channel)
 {
-	static long frames_filled = 0;
-	const int channel_buffer_stride_length = (channels - 1) * 2;
+    return ((frames_filled * no_of_channels) + channel) * 2;
+}
 
-	while (frames_requested > 0)
+void write_audio_data(
+        audio_api_t audio_api,
+        channel_info *voices,
+        int channels,
+        unsigned char master_gain,
+        long frames_requested)
+{
+    static long frames_filled = 0;
+    const int channel_buffer_stride_length = (channels - 1) * 2;
+
+    while (frames_requested > 0)
     {
         const long frames_unfilled = audio_api.audio_buffer_frames - frames_filled;
         const long frames_to_write = frames_requested > frames_unfilled
-               ? frames_unfilled
-               : frames_requested;
-        const long channel_buffer_offset = frames_filled * channels * 2;
-		for (int channel = 0; channel < channels; channel++)
-		{
-			write_channel_audio_data(
-				&voices[channel],
-                frames_to_write,
-				channel_buffer_offset + (channel * 2),
-				master_gain,
-                channel_buffer_stride_length);
-		}
-		frames_filled += frames_to_write;
-		if (frames_filled == audio_api.audio_buffer_frames)
-		{
-			__int16_t *audio_buffer = mix(channel_buffer, channels);
+                 ? frames_unfilled
+                 : frames_requested;
+        for (int channel = 0; channel < channels; channel++)
+        {
+            write_channel_audio_data(
+                    &voices[channel],
+                    frames_to_write,
+                    channel_buffer_offset(frames_filled, channels, channel),
+                    master_gain,
+                    channel_buffer_stride_length);
+        }
+        frames_filled += frames_to_write;
+        if (frames_filled == audio_api.audio_buffer_frames)
+        {
+            __int16_t *audio_buffer = mix(channel_buffer, channels);
             audio_api.write_audio(audio_buffer);
-			frames_filled = 0;
-		}
-		frames_requested -= frames_to_write;
-	}
+            frames_filled = 0;
+        }
+        frames_requested -= frames_to_write;
+    }
 }
 
 /* function write_channel_audio_data                 **
