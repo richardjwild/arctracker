@@ -18,6 +18,8 @@
 
 #include "arctracker.h"
 #include "config.h"
+#include "oss.h"
+#include "audio_api.h"
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +34,7 @@ int main(int argc, char *argv[])
 
 	short audio_buf[1024];
 	int err;
+	audio_api_t audio_api;
 
 #ifdef HAVE_LIBASOUND
 	snd_pcm_t *pb_handle;
@@ -81,43 +84,28 @@ int main(int argc, char *argv[])
 			&module,
 			samples);
 
-	if (retcode == SUCCESS) {
+	if (retcode == SUCCESS)
+	{
 		if (args.api == OSS)
-			retcode = initialise_oss(
-				&audio_fd,
-				&sample_rate);
-		else if (args.api == ALSA)
-#ifdef HAVE_LIBASOUND
-			retcode = initialise_alsa(
-				&pb_handle,
-				&sample_rate);
-#else
-			1; /* this cannot be called */
-#endif
+			audio_api = initialise_oss(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
+//		else if (args.api == ALSA)
+//#ifdef HAVE_LIBASOUND
+//			retcode = initialise_alsa(
+//				&pb_handle,
+//				&sample_rate);
+//#else
+//			1; /* this cannot be called */
+//#endif
 	}
 
 	if (retcode == SUCCESS) {
-		if (args.api == OSS) {
 			retcode = play_module(
 				&module,
 				samples,
-				&audio_fd,
+				audio_api,
 				sample_rate,
 				periods,
 				&args);
-		} else if (args.api == ALSA) {
-#ifdef HAVE_LIBASOUND
-			retcode = play_module(
-				&module,
-				samples,
-				&pb_handle,
-				sample_rate,
-				periods,
-				&args);
-#else
-			1; /* this should not happen */
-#endif
-		}
 	}
 
 	if (modfile != NULL)

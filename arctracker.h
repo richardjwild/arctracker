@@ -24,6 +24,7 @@
 #include <sys/unistd.h>
 #include <sys/fcntl.h>
 #include "config.h"
+#include "audio_api.h"
 
 #ifdef HAVE_LIBASOUND
 #include <alsa/asoundlib.h>
@@ -250,10 +251,6 @@ return_status initialise_alsa(
 	long *p_sample_rate);
 #endif
 
-return_status initialise_oss(
-	int *p_audio_fd,
-	long *p_sample_rate);
-
 return_status read_file(
 	void *p_modfile,
 	long p_modsize,
@@ -309,7 +306,7 @@ return_status get_sample_info(
 return_status play_module(
 	mod_details *p_module,
 	sample_details *p_sample,
-	void *p_ah_ptr,
+	audio_api_t audio_api,
 	long p_sample_rate,
 	unsigned int *p_periods,
 	program_arguments *p_args);
@@ -359,11 +356,10 @@ void process_desktop_tracker_command(
 	long p_sample_rate);
 
 void write_audio_data(
-	output_api api,
+	audio_api_t audio_api,
 	channel_info *voice,
 	int channels,
 	unsigned char master_gain,
-	void *audio_handle,
 	long p_nframes);
 
 void write_channel_audio_data(

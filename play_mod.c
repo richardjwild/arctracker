@@ -22,6 +22,7 @@
 #include "resample.h"
 #include "mix.h"
 #include "error.h"
+#include "audio_api.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -44,7 +45,7 @@ unsigned char adjust_gain(unsigned char mlaw, unsigned char gain);
 return_status play_module(
 	mod_details *p_module,
 	sample_details *p_sample,
-	void *p_ah_ptr,
+    audio_api_t audio_api,
 	long p_sample_rate,
 	unsigned int *p_periods,
 	program_arguments *p_args)
@@ -190,11 +191,10 @@ return_status play_module(
 
         /* write one tick's worth of audio data */
 		write_audio_data(
-			p_args->api,
+		    audio_api,
 			voice_info,
 			p_module->num_channels,
 			p_args->volume,
-			p_ah_ptr,
             (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
 	while (((looped_yet == NO) || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
@@ -813,11 +813,10 @@ void process_desktop_tracker_command(
 ** write one tick's worth of audio data */
 
 void write_audio_data(
-	output_api api,
+    audio_api_t audio_api,
 	channel_info *voice,
 	int channels,
 	unsigned char master_gain,
-	void *audio_handle,
 	long frames_requested)
 {
 	static long frames_filled = 0;
@@ -843,20 +842,7 @@ void write_audio_data(
 		if (frames_filled == AUDIO_BUFFER_SIZE_FRAMES)
 		{
 			__int16_t *audio_buffer = mix(channel_buffer, channels);
-			/* send the data to the audio device */
-			if (api == OSS)
-			{
-				if (write(*(int *)audio_handle, audio_buffer, AUDIO_BUFFER_SIZE_BYTES) == -1)
-                    system_error("audio write");
-			}
-			else if (api == ALSA)
-			{
-#ifdef HAVE_LIBASOUND
-				snd_pcm_sframes_t err = snd_pcm_writei(*(snd_pcm_t **)audio_handle, audio_buffer, AUDIO_BUFFER_SIZE_FRAMES);
-				if (err < 0)
-					error_with_detail("snd_pcm_writei failed", snd_strerror(err));
-#endif
-			}
+            audio_api.write_audio(audio_buffer);
 			frames_filled = 0;
 		}
 		frames_requested -= frames_to_write;
