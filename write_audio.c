@@ -6,9 +6,10 @@
 #include "heap.h"
 #include "play_mod.h"
 
-void initialise_audio(audio_api_t audio_api, long number_of_channels)
+void initialise_audio(audio_api_t audio_api, long number_of_channels, int volume)
 {
     channels = (int) number_of_channels;
+    master_gain = volume;
     channel_buffer = allocate_array(audio_api.buffer_size_frames * channels * 2, sizeof(long));
     calculate_phase_increments(audio_api.sample_rate);
     allocate_resample_buffer(audio_api.buffer_size_frames);
@@ -30,7 +31,6 @@ void write_channel_audio_data(
         channel_info* voice,
         long frames_to_write,
         long channel_buffer_index,
-        unsigned char master_gain,
         int stride_length)
 {
     unsigned char* resample_buffer = resample(voice, frames_to_write);
@@ -73,7 +73,6 @@ long frames_can_be_written(audio_api_t audio_output, long frames_requested)
 void write_audio_data(
         audio_api_t audio_output,
         channel_info *voices,
-        unsigned char master_gain,
         long frames_requested)
 {
     while (frames_requested > 0)
@@ -85,7 +84,6 @@ void write_audio_data(
                     &voices[channel],
                     frames_to_write,
                     channel_buffer_offset(frames_filled, channel),
-                    master_gain,
                     channel_buffer_stride_length);
         }
         frames_filled += frames_to_write;

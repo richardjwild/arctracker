@@ -109,7 +109,7 @@ return_status play_module(
 		p_args->pianola,
 		audio_api.sample_rate);
 
-	initialise_audio(audio_api, p_module->num_channels);
+	initialise_audio(audio_api, p_module->num_channels, p_args->volume);
 
 	/* loop through whole tune */
 	do {
@@ -229,7 +229,6 @@ return_status play_module(
 		write_audio_data(
 		    audio_api,
 			voice_info,
-			p_args->volume,
             (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
 	while (((looped_yet == NO) || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
