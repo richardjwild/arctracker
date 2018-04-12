@@ -25,7 +25,6 @@ return_status play_module(
         mod_details *p_module,
         sample_details *p_sample,
         audio_api_t audio_api,
-        long p_sample_rate,
         unsigned int *p_periods,
         program_arguments *p_args);
 

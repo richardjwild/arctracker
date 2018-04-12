@@ -5,7 +5,7 @@
 
 static long *channel_buffer;
 
-void initialise_audio(audio_api_t audio_api, long channels, long p_sample_rate);
+void initialise_audio(audio_api_t audio_api, long channels);
 
 void write_audio_data(
         audio_api_t audio_api,

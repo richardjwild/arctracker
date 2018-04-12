@@ -85,7 +85,6 @@ return_status play_module(
 	mod_details *p_module,
 	sample_details *p_sample,
     audio_api_t audio_api,
-	long p_sample_rate,
 	unsigned int *p_periods,
 	program_arguments *p_args)
 {
@@ -108,9 +107,9 @@ return_status play_module(
 		voice_info,
 		p_module,
 		p_args->pianola,
-		p_sample_rate);
+		audio_api.sample_rate);
 
-	initialise_audio(audio_api, p_module->num_channels, p_sample_rate);
+	initialise_audio(audio_api, p_module->num_channels);
 
 	/* loop through whole tune */
 	do {
@@ -190,7 +189,7 @@ return_status play_module(
 						p_module,
 						p_periods,
 						YES,
-						p_sample_rate);
+						audio_api.sample_rate);
 			}
 		} else {
 			/* no note as this is between events, but we may have some commands to process */
@@ -214,7 +213,7 @@ return_status play_module(
 						p_module,
 						p_periods,
 						NO,
-						p_sample_rate);
+						audio_api.sample_rate);
 			}
 		}
 

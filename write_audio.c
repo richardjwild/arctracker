@@ -6,10 +6,10 @@
 #include "heap.h"
 #include "play_mod.h"
 
-void initialise_audio(audio_api_t audio_api, long channels, long p_sample_rate)
+void initialise_audio(audio_api_t audio_api, long channels)
 {
     channel_buffer = allocate_array(audio_api.buffer_size_frames * channels * 2, sizeof(long));
-    calculate_phase_increments(p_sample_rate);
+    calculate_phase_increments(audio_api.sample_rate);
     allocate_resample_buffer(audio_api.buffer_size_frames);
     allocate_audio_buffer(audio_api.buffer_size_frames);
 }

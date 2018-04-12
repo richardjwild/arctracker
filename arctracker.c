@@ -105,7 +105,6 @@ int main(int argc, char *argv[])
 				&module,
 				samples,
 				audio_api,
-				sample_rate,
 				periods,
 				&args);
 	}

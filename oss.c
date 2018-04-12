@@ -46,10 +46,11 @@ void set_audio_buffer_size(int audio_buffer_frames)
     audio_buffer_size_bytes = audio_buffer_frames * 2 * sizeof(__int16_t);
 }
 
-audio_api_t audio_api(int audio_buffer_frames)
+audio_api_t audio_api(int audio_buffer_frames, long sample_rate)
 {
     oss_audio_api.write = &write_audio;
     oss_audio_api.buffer_size_frames = audio_buffer_frames;
+    oss_audio_api.sample_rate = sample_rate;
     return oss_audio_api;
 }
 
@@ -60,5 +61,5 @@ audio_api_t initialise_oss(long sample_rate, int audio_buffer_frames)
     set_number_of_channels();
     set_sample_rate(sample_rate);
     set_audio_buffer_size(audio_buffer_frames);
-    return audio_api(audio_buffer_frames);
+    return audio_api(audio_buffer_frames, sample_rate);
 }
