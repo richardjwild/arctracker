@@ -4,6 +4,8 @@
 #define ARCTRACKER_WRITE_AUDIO_H
 
 static long *channel_buffer;
+static long frames_filled;
+static int channel_buffer_stride_length;
 
 void initialise_audio(audio_api_t audio_api, long channels);
 

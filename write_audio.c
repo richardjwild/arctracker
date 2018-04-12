@@ -8,10 +8,12 @@
 
 void initialise_audio(audio_api_t audio_api, long channels)
 {
-    channel_buffer = allocate_array(audio_api.buffer_size_frames * channels * 2, sizeof(long));
+    channel_buffer = allocate_array(audio_api.buffer_size_frames * (int) channels * 2, sizeof(long));
     calculate_phase_increments(audio_api.sample_rate);
     allocate_resample_buffer(audio_api.buffer_size_frames);
     allocate_audio_buffer(audio_api.buffer_size_frames);
+    channel_buffer_stride_length = ((int) channels - 1) * 2;
+    frames_filled = 0;
 }
 
 unsigned char adjust_gain(unsigned char mlaw, unsigned char gain)
@@ -52,6 +54,21 @@ long channel_buffer_offset(long frames_filled, int no_of_channels, int channel)
     return ((frames_filled * no_of_channels) + channel) * 2;
 }
 
+static inline
+long frames_unfilled(audio_api_t audio_output)
+{
+    return audio_output.buffer_size_frames - frames_filled;
+}
+
+static inline
+long frames_can_be_written(audio_api_t audio_output, long frames_requested)
+{
+    const long frames_left_in_buffer = frames_unfilled(audio_output);
+    return frames_requested > frames_left_in_buffer
+           ? frames_left_in_buffer
+           : frames_requested;
+}
+
 void write_audio_data(
         audio_api_t audio_output,
         channel_info *voices,
@@ -59,15 +76,9 @@ void write_audio_data(
         unsigned char master_gain,
         long frames_requested)
 {
-    static long frames_filled = 0;
-    const int channel_buffer_stride_length = (channels - 1) * 2;
-
     while (frames_requested > 0)
     {
-        const long frames_unfilled = audio_output.buffer_size_frames - frames_filled;
-        const long frames_to_write = frames_requested > frames_unfilled
-                                     ? frames_unfilled
-                                     : frames_requested;
+        const long frames_to_write = frames_can_be_written(audio_output, frames_requested);
         for (int channel = 0; channel < channels; channel++)
         {
             write_channel_audio_data(
