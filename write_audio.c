@@ -6,13 +6,14 @@
 #include "heap.h"
 #include "play_mod.h"
 
-void initialise_audio(audio_api_t audio_api, long channels)
+void initialise_audio(audio_api_t audio_api, long number_of_channels)
 {
-    channel_buffer = allocate_array(audio_api.buffer_size_frames * (int) channels * 2, sizeof(long));
+    channels = (int) number_of_channels;
+    channel_buffer = allocate_array(audio_api.buffer_size_frames * channels * 2, sizeof(long));
     calculate_phase_increments(audio_api.sample_rate);
     allocate_resample_buffer(audio_api.buffer_size_frames);
     allocate_audio_buffer(audio_api.buffer_size_frames);
-    channel_buffer_stride_length = ((int) channels - 1) * 2;
+    channel_buffer_stride_length = (channels - 1) * 2;
     frames_filled = 0;
 }
 
@@ -49,9 +50,9 @@ void write_channel_audio_data(
 }
 
 static inline
-long channel_buffer_offset(long frames_filled, int no_of_channels, int channel)
+long channel_buffer_offset(long frames_filled, int channel)
 {
-    return ((frames_filled * no_of_channels) + channel) * 2;
+    return ((frames_filled * channels) + channel) * 2;
 }
 
 static inline
@@ -72,7 +73,6 @@ long frames_can_be_written(audio_api_t audio_output, long frames_requested)
 void write_audio_data(
         audio_api_t audio_output,
         channel_info *voices,
-        int channels,
         unsigned char master_gain,
         long frames_requested)
 {
@@ -84,7 +84,7 @@ void write_audio_data(
             write_channel_audio_data(
                     &voices[channel],
                     frames_to_write,
-                    channel_buffer_offset(frames_filled, channels, channel),
+                    channel_buffer_offset(frames_filled, channel),
                     master_gain,
                     channel_buffer_stride_length);
         }

@@ -229,7 +229,6 @@ return_status play_module(
 		write_audio_data(
 		    audio_api,
 			voice_info,
-			p_module->num_channels,
 			p_args->volume,
             (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
