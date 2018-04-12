@@ -226,10 +226,7 @@ return_status play_module(
         }
 
         /* write one tick's worth of audio data */
-		write_audio_data(
-		    audio_api,
-			voice_info,
-            (current_positions.sps_per_tick >> 8) + extra_frame);
+		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
 	while (((looped_yet == NO) || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
 
