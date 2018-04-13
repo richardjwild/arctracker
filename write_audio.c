@@ -6,28 +6,26 @@
 #include "play_mod.h"
 #include "gain.h"
 
-static long *channel_buffer;
+static stereo_frame_t *channel_buffer;
 static audio_api_t audio_output;
 static long frames_filled;
 static int channels;
-static int channel_buffer_stride_length;
 
 void initialise_audio(audio_api_t audio_output_in, long channels_in)
 {
     audio_output = audio_output_in;
     channels = (int) channels_in;
-    channel_buffer = allocate_array(audio_output_in.buffer_size_frames * channels * 2, sizeof(long));
+    channel_buffer = allocate_array(audio_output_in.buffer_size_frames * channels, sizeof(stereo_frame_t));
     calculate_phase_increments(audio_output_in.sample_rate);
     allocate_resample_buffer(audio_output_in.buffer_size_frames);
     allocate_audio_buffer(audio_output_in.buffer_size_frames);
-    channel_buffer_stride_length = (channels - 1) * 2;
     frames_filled = 0;
 }
 
 static inline
 long buffer_offset_for(int channel)
 {
-    return ((frames_filled * channels) + channel) * 2;
+    return (frames_filled * channels) + channel;
 }
 
 void write_frames_for_channel(channel_info *voices, const int channel, const long frames_to_fill)
@@ -39,9 +37,8 @@ void write_frames_for_channel(channel_info *voices, const int channel, const lon
     {
         unsigned char mu_law = resample_buffer[frame];
         stereo_frame_t stereo_frame = apply_gain(mu_law, voice);
-        channel_buffer[offset++] = stereo_frame.l;
-        channel_buffer[offset++] = stereo_frame.r;
-        offset += channel_buffer_stride_length;
+        channel_buffer[offset] = stereo_frame;
+        offset += channels;
     }
 }
 

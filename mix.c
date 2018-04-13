@@ -20,7 +20,7 @@ __int16_t clip(const __int16_t sample)
         return sample;
 }
 
-__int16_t *mix(const long *channel_buffer, const int channels_to_mix)
+__int16_t *mix(const stereo_frame_t *channel_buffer, const int channels_to_mix)
 {
     int input_i = 0;
     int output_i = 0;
@@ -29,8 +29,9 @@ __int16_t *mix(const long *channel_buffer, const int channels_to_mix)
         __int16_t l_sample = 0, r_sample = 0;
         for (int channel = 0; channel < channels_to_mix; channel++)
         {
-            l_sample += channel_buffer[input_i++];
-            r_sample += channel_buffer[input_i++];
+            const stereo_frame_t stereo_frame = channel_buffer[input_i++];
+            l_sample += stereo_frame.l;
+            r_sample += stereo_frame.r;
         }
         audio_buffer[output_i++] = clip(l_sample);
         audio_buffer[output_i++] = clip(r_sample);
