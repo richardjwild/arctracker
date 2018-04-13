@@ -13,7 +13,7 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 
 #include <alsa/asoundlib.h>
 
-static snd_pcm_t *audio_handle;
+static snd_pcm_t *pcm_handle;
 static snd_pcm_uframes_t audio_buffer_size_frames;
 static audio_api_t alsa_audio_api;
 static int err;
@@ -22,7 +22,7 @@ static
 void write_audio(__int16_t *audio_buffer)
 {
     snd_pcm_sframes_t err = snd_pcm_writei(
-            audio_handle,
+            pcm_handle,
             audio_buffer,
             audio_buffer_size_frames);
     if (err < 0)
@@ -32,7 +32,7 @@ void write_audio(__int16_t *audio_buffer)
 static
 void open_device()
 {
-    if ((err = snd_pcm_open(&audio_handle, PCM_DEVICE, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+    if ((err = snd_pcm_open(&pcm_handle, PCM_DEVICE, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
         error_with_detail("Cannot open audio device", snd_strerror(err));
 }
 
@@ -42,7 +42,7 @@ snd_pcm_hw_params_t *initialise_hardware_params()
     snd_pcm_hw_params_t *hw_params;
     if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0)
         error_with_detail("Cannot allocate hardware parameter structure", snd_strerror(err));
-    if ((err = snd_pcm_hw_params_any(audio_handle, hw_params)) < 0)
+    if ((err = snd_pcm_hw_params_any(pcm_handle, hw_params)) < 0)
         error_with_detail("Cannot initialize hardware parameter structure", snd_strerror(err));
     return hw_params;
 }
@@ -50,14 +50,14 @@ snd_pcm_hw_params_t *initialise_hardware_params()
 static
 void set_access_type(snd_pcm_hw_params_t *hw_params)
 {
-    if ((err = snd_pcm_hw_params_set_access(audio_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
+    if ((err = snd_pcm_hw_params_set_access(pcm_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
         error_with_detail("Cannot set access type", snd_strerror(err));
 }
 
 static
 void set_sample_format(snd_pcm_hw_params_t *hw_params)
 {
-    if ((err = snd_pcm_hw_params_set_format(audio_handle, hw_params, SND_PCM_FORMAT_S16_LE)) < 0)
+    if ((err = snd_pcm_hw_params_set_format(pcm_handle, hw_params, SND_PCM_FORMAT_S16_LE)) < 0)
         error_with_detail("Cannot set sample format", snd_strerror(err));
 }
 
@@ -65,7 +65,7 @@ static
 unsigned int set_sample_rate(long sample_rate_in, snd_pcm_hw_params_t *hw_params)
 {
     unsigned int sample_rate = (unsigned int) sample_rate_in;
-    if ((err = snd_pcm_hw_params_set_rate_near(audio_handle, hw_params, &sample_rate, 0)) < 0)
+    if ((err = snd_pcm_hw_params_set_rate_near(pcm_handle, hw_params, &sample_rate, 0)) < 0)
         error_with_detail("Cannot set sample rate", snd_strerror(err));
     else
         return sample_rate;
@@ -74,14 +74,14 @@ unsigned int set_sample_rate(long sample_rate_in, snd_pcm_hw_params_t *hw_params
 static
 void set_number_of_channels(snd_pcm_hw_params_t *hw_params)
 {
-    if ((err = snd_pcm_hw_params_set_channels(audio_handle, hw_params, 2)) < 0)
+    if ((err = snd_pcm_hw_params_set_channels(pcm_handle, hw_params, 2)) < 0)
         error_with_detail("Cannot set channel count", snd_strerror(err));
 }
 
 static
 void set_parameters(snd_pcm_hw_params_t *hw_params)
 {
-    if ((err = snd_pcm_hw_params(audio_handle, hw_params)) < 0)
+    if ((err = snd_pcm_hw_params(pcm_handle, hw_params)) < 0)
         error_with_detail("Cannot set parameters", snd_strerror(err));
     else
         snd_pcm_hw_params_free(hw_params);
@@ -90,7 +90,7 @@ void set_parameters(snd_pcm_hw_params_t *hw_params)
 static
 void prepare_audio_device()
 {
-    if ((err = snd_pcm_prepare(audio_handle)) < 0)
+    if ((err = snd_pcm_prepare(pcm_handle)) < 0)
         error_with_detail("Cannot prepare audio interface for use", snd_strerror(err));
 }
 
