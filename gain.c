@@ -1,6 +1,13 @@
 #include "gain.h"
 #include "log_lin_tab.h"
 
+static int master_gain;
+
+void set_master_gain(int gain)
+{
+    master_gain = gain;
+}
+
 static inline
 unsigned char adjust_logarithmic_gain(const unsigned char mlaw, const unsigned char gain)
 {
@@ -16,7 +23,7 @@ stereo_frame_t apply_gain(unsigned char mu_law_sample, channel_info *voice)
     stereo_frame_t stereo_frame;
     mu_law_sample = adjust_logarithmic_gain(mu_law_sample, voice->gain);
     long linear_pcm = log_lin_tab[mu_law_sample];
-    stereo_frame.l = (linear_pcm * voice->left_gain) >> 16;
-    stereo_frame.r = (linear_pcm * voice->right_gain) >> 16;
+    stereo_frame.l = master_gain * (linear_pcm * voice->left_gain) >> 16;
+    stereo_frame.r = master_gain * (linear_pcm * voice->right_gain) >> 16;
     return stereo_frame;
 }

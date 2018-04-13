@@ -8,9 +8,8 @@ static audio_api_t audio_output;
 static long frames_filled;
 static int channels;
 static int channel_buffer_stride_length;
-static int master_gain;
 
-void initialise_audio(audio_api_t audio_output, long channels, int master_gain);
+void initialise_audio(audio_api_t audio_output, long channels);
 
 void write_audio_data(channel_info *voices, long frames_requested);
 

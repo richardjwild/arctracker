@@ -22,6 +22,7 @@
 #include "config.h"
 #include "error.h"
 #include "write_audio.h"
+#include "gain.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -109,7 +110,8 @@ return_status play_module(
 		p_args->pianola,
 		audio_api.sample_rate);
 
-	initialise_audio(audio_api, p_module->num_channels, p_args->volume);
+	initialise_audio(audio_api, p_module->num_channels);
+	set_master_gain(p_args->volume);
 
 	/* loop through whole tune */
 	do {

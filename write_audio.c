@@ -6,11 +6,10 @@
 #include "play_mod.h"
 #include "gain.h"
 
-void initialise_audio(audio_api_t audio_output_in, long channels_in, int master_gain_in)
+void initialise_audio(audio_api_t audio_output_in, long channels_in)
 {
     audio_output = audio_output_in;
     channels = (int) channels_in;
-    master_gain = master_gain_in;
     channel_buffer = allocate_array(audio_output_in.buffer_size_frames * channels * 2, sizeof(long));
     calculate_phase_increments(audio_output_in.sample_rate);
     allocate_resample_buffer(audio_output_in.buffer_size_frames);
@@ -34,8 +33,8 @@ void write_frames_for_channel(channel_info *voices, const int channel, const lon
     {
         unsigned char mu_law = resample_buffer[frame];
         stereo_frame_t stereo_frame = apply_gain(mu_law, voice);
-        channel_buffer[offset++] = stereo_frame.l * master_gain;
-        channel_buffer[offset++] = stereo_frame.r * master_gain;
+        channel_buffer[offset++] = stereo_frame.l;
+        channel_buffer[offset++] = stereo_frame.r;
         offset += channel_buffer_stride_length;
     }
 }
