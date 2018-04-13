@@ -21,6 +21,7 @@
 #include "read_mod.h"
 #include "play_mod.h"
 #include "oss.h"
+#include "alsa.h"
 #include "audio_api.h"
 
 int main(int argc, char *argv[])
@@ -37,10 +38,6 @@ int main(int argc, char *argv[])
 	short audio_buf[1024];
 	int err;
 	audio_api_t audio_api;
-
-#ifdef HAVE_LIBASOUND
-	snd_pcm_t *pb_handle;
-#endif
 
 	/* Sample periods - one for each of the 36 notes.  The reason why we don't store   *
 	 * phase increment values directly is because the portamento up and down commands  *
@@ -90,14 +87,8 @@ int main(int argc, char *argv[])
 	{
 		if (args.api == OSS)
 			audio_api = initialise_oss(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
-//		else if (args.api == ALSA)
-//#ifdef HAVE_LIBASOUND
-//			retcode = initialise_alsa(
-//				&pb_handle,
-//				&sample_rate);
-//#else
-//			1; /* this cannot be called */
-//#endif
+		else if (args.api == ALSA)
+            audio_api = initialise_alsa(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
 	}
 
 	if (retcode == SUCCESS) {

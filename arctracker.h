@@ -22,18 +22,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
 #include <sys/unistd.h>
 #include <sys/fcntl.h>
 #include "config.h"
 #include "audio_api.h"
-
-#ifdef HAVE_LIBASOUND
-#include <alsa/asoundlib.h>
-#include <stdbool.h>
-
-#endif
 
 /* macro definitions */
 
@@ -57,8 +52,6 @@
 #define MAX_TUNELENGTH 128
 #define NUM_SAMPLES 256
 #define DEFAULT_SAMPLERATE 44100
-#define DEVICE_NAME "/dev/dsp"
-#define PCM_DEVICE "plughw:0,0"
 #define AUDIO_BUFFER_SIZE_FRAMES 1024
 
 #define ARG_PIANOLA "--pianola"
@@ -227,11 +220,5 @@ return_status load_file(
 	char *p_filename,
 	void **p_array_ptr,
 	long *p_bytes_loaded);
-
-#ifdef HAVE_LIBASOUND
-return_status initialise_alsa(
-	snd_pcm_t **p_pb_handle,
-	long *p_sample_rate);
-#endif
 
 #endif // ARCTRACKER_H

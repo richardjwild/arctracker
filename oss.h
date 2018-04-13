@@ -1,7 +1,10 @@
+#ifndef ARCTRACKER_OSS_H
+#define ARCTRACKER_OSS_H
+
 #include "audio_api.h"
 
-static int audio_handle;
-static int audio_buffer_size_bytes;
-static audio_api_t oss_audio_api;
+#define DEVICE_NAME "/dev/dsp"
 
-audio_api_t initialise_oss(long p_sample_rate, int audio_buffer_frames);
+audio_api_t initialise_oss(long sample_rate, int audio_buffer_frames);
+
+#endif // ARCTRACKER_OSS_H

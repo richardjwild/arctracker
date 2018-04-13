@@ -5,10 +5,14 @@
 #include "oss.h"
 #include "error.h"
 
-void write_audio(__int16_t *audio_buffer)
+static int audio_handle;
+static int audio_buffer_size_bytes;
+static audio_api_t oss_audio_api;
+
+static void write_audio(__int16_t *audio_buffer)
 {
     if (write(audio_handle, audio_buffer, audio_buffer_size_bytes) == -1)
-        system_error("audio write");
+        system_error("audio write failed");
 }
 
 void open_device()

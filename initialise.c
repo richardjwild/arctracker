@@ -59,17 +59,12 @@ return_status get_arguments(
 							retcode = BAD_ARGUMENTS;
 						}
 					} else if (strcmp(p_argv[i], ARG_ALSA) == 0) {
-#ifdef HAVE_LIBASOUND
 						if (p_args->api == NOT_SPECIFIED)
 							p_args->api = ALSA;
 						else {
 							fprintf(stderr, "Cannot specify output API more than once!\n");
 							retcode = BAD_ARGUMENTS;
 						}
-#else
-						fprintf(stderr, "ALSA sound output not available\n");
-						retcode = API_NOT_AVAILABLE;
-#endif
 					} else if (strncmp(p_argv[i], ARG_VOLUME, strlen(ARG_VOLUME)) == 0) {
 						p_argv[i]+=strlen(ARG_VOLUME);
 						p_args->volume = atoi(p_argv[i]);
@@ -150,83 +145,3 @@ return_status load_file (
 
 	return (retcode);
 }
-
-#ifdef HAVE_LIBASOUND
-/* function initialise_alsa.
- * Open the audio device for output using the ALSA api, and set *
- * the device parameters (format, channels, sample rate)        */
-
-return_status initialise_alsa (
-	snd_pcm_t **p_pb_handle,
-	long *p_sample_rate)
-{
-	return_status retcode = SUCCESS;
-	int err;
-	unsigned int tmp_srate;
-	snd_pcm_hw_params_t *hw_params;
-
-	tmp_srate = (unsigned int)*p_sample_rate;
-
-	if ((err = snd_pcm_open(p_pb_handle, PCM_DEVICE, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
-		fprintf(stderr, "Cannot open audio device %s (%s)\n", PCM_DEVICE, snd_strerror(err));
-		retcode = ALSA_ERROR;
-	}
-
-	if (retcode == SUCCESS)
-		if ((err = snd_pcm_hw_params_malloc (&hw_params)) < 0) {
-			fprintf (stderr, "Cannot allocate hardware parameter structure (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-
-	if (retcode == SUCCESS)
-		if ((err = snd_pcm_hw_params_any (*p_pb_handle, hw_params)) < 0) {
-			fprintf (stderr, "Cannot initialize hardware parameter structure (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-
-	if (retcode == SUCCESS)
-		if ((err = snd_pcm_hw_params_set_access (*p_pb_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0) {
-			fprintf (stderr, "Cannot set access type (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-
-	if (retcode == SUCCESS)
-		if ((err = snd_pcm_hw_params_set_format (*p_pb_handle, hw_params, SND_PCM_FORMAT_S16_LE)) < 0) {
-			fprintf (stderr, "Cannot set sample format (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-
-	if (retcode == SUCCESS) {
-		if ((err = snd_pcm_hw_params_set_rate_near (*p_pb_handle, hw_params, &tmp_srate, 0)) < 0) {
-			fprintf (stderr, "Cannot set sample rate (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-	}
-
-	if (retcode == SUCCESS) {
-		*p_sample_rate = (long)tmp_srate;
-		if ((err = snd_pcm_hw_params_set_channels (*p_pb_handle, hw_params, 2)) < 0) {
-			fprintf (stderr, "Cannot set channel count (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-	}
-
-	if (retcode == SUCCESS) {
-		if ((err = snd_pcm_hw_params (*p_pb_handle, hw_params)) < 0) {
-			fprintf (stderr, "Cannot set parameters (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-	}
-
-	if (retcode == SUCCESS) {
-		snd_pcm_hw_params_free (hw_params);
-
-		if ((err = snd_pcm_prepare (*p_pb_handle)) < 0) {
-			fprintf (stderr, "Cannot prepare audio interface for use (%s)\n", snd_strerror (err));
-			retcode = ALSA_ERROR;
-		}
-	}
-
-	return (retcode);
-}
-#endif

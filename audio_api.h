@@ -1,5 +1,7 @@
 #ifndef INCLUDE_AUDIO_API_H
 
+#include <bits/types.h>
+
 typedef struct {
     void (*write)(__int16_t *audio_buffer);
     int buffer_size_frames;
