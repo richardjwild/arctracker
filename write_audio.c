@@ -6,6 +6,12 @@
 #include "play_mod.h"
 #include "gain.h"
 
+static long *channel_buffer;
+static audio_api_t audio_output;
+static long frames_filled;
+static int channels;
+static int channel_buffer_stride_length;
+
 void initialise_audio(audio_api_t audio_output_in, long channels_in)
 {
     audio_output = audio_output_in;
