@@ -264,9 +264,9 @@ void initialise_values(
 	/* initialise voice info: all voices silent and set initial stereo positions */
 	for (channel = 0; channel < p_module->num_channels; channel++) {
 		p_voice_info[channel].channel_playing = false;
-		p_voice_info[channel].left_channel_multiplier =
+		p_voice_info[channel].left_gain =
 		left_channel_multiplier[p_module->default_channel_stereo[channel] - 1];
-		p_voice_info[channel].right_channel_multiplier =
+		p_voice_info[channel].right_gain =
 		right_channel_multiplier[p_module->default_channel_stereo[channel] - 1];
 	}
 
@@ -558,8 +558,8 @@ void process_tracker_command(
 			right_channel_multiplier_ptr = right_channel_multiplier;
 			left_channel_multiplier_ptr += (p_current_event->data - 1);
 			right_channel_multiplier_ptr += (p_current_event->data - 1);
-			p_current_voice->left_channel_multiplier = *left_channel_multiplier_ptr;
-			p_current_voice->right_channel_multiplier = *right_channel_multiplier_ptr;
+			p_current_voice->left_gain = *left_channel_multiplier_ptr;
+			p_current_voice->right_gain = *right_channel_multiplier_ptr;
 		}
 		break;
 
@@ -703,8 +703,8 @@ void process_desktop_tracker_command(
 				right_channel_multiplier_ptr = right_channel_multiplier;
 				left_channel_multiplier_ptr += (data[foo] - 1);
 				right_channel_multiplier_ptr += (data[foo] - 1);
-				p_current_voice->left_channel_multiplier = *left_channel_multiplier_ptr;
-				p_current_voice->right_channel_multiplier = *right_channel_multiplier_ptr;
+				p_current_voice->left_gain = *left_channel_multiplier_ptr;
+				p_current_voice->right_gain = *right_channel_multiplier_ptr;
 			}
 			break;
 

@@ -2,9 +2,9 @@
 #include "audio_api.h"
 #include "mix.h"
 #include "resample.h"
-#include "log_lin_tab.h"
 #include "heap.h"
 #include "play_mod.h"
+#include "gain.h"
 
 void initialise_audio(audio_api_t audio_output_in, long channels_in, int master_gain_in)
 {
@@ -17,15 +17,6 @@ void initialise_audio(audio_api_t audio_output_in, long channels_in, int master_
     allocate_audio_buffer(audio_output_in.buffer_size_frames);
     channel_buffer_stride_length = (channels - 1) * 2;
     frames_filled = 0;
-}
-
-unsigned char adjust_gain(unsigned char mlaw, unsigned char gain)
-{
-    unsigned char adjustment = ((unsigned char) 255) - gain;
-    if (mlaw > adjustment)
-        return mlaw - adjustment;
-    else
-        return 0;
 }
 
 static inline
@@ -42,14 +33,9 @@ void write_frames_for_channel(channel_info *voices, const int channel, const lon
     for (long frame = 0; frame < frames_to_fill; frame++)
     {
         unsigned char mu_law = resample_buffer[frame];
-        mu_law = adjust_gain(mu_law, voice->gain);
-        long linear_signed = log_lin_tab[mu_law];
-
-        long left = (linear_signed * voice->left_channel_multiplier) >> 16;
-        long right = (linear_signed * voice->right_channel_multiplier) >> 16;
-
-        channel_buffer[offset++] = left * master_gain;
-        channel_buffer[offset++] = right * master_gain;
+        stereo_frame_t stereo_frame = apply_gain(mu_law, voice);
+        channel_buffer[offset++] = stereo_frame.l * master_gain;
+        channel_buffer[offset++] = stereo_frame.r * master_gain;
         offset += channel_buffer_stride_length;
     }
 }
