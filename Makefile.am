@@ -26,7 +26,7 @@ initialise.o: arctracker.h initialise.c error.h
 read_mod.o: arctracker.h read_mod.h read_mod.c
 	$(CC) $(CFLAGS) -c read_mod.c
 
-play_mod.o: arctracker.h log_lin_tab.h resample.h play_mod.h play_mod.c
+play_mod.o: arctracker.h mu_law.h resample.h play_mod.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
 
 write_audio.o: write_audio.c

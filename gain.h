@@ -11,6 +11,6 @@ typedef struct
 
 void set_master_gain(int gain);
 
-stereo_frame_t apply_gain(unsigned char mu_law_sample, channel_info *voice);
+stereo_frame_t apply_gain(unsigned char mu_law, channel_info *voice);
 
 #endif //ARCTRACKER_GAIN_H
