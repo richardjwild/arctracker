@@ -14,7 +14,7 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 #include <alsa/asoundlib.h>
 
 static snd_pcm_t *audio_handle;
-static int audio_buffer_size_bytes;
+static snd_pcm_uframes_t audio_buffer_size_frames;
 static audio_api_t alsa_audio_api;
 static int err;
 
@@ -24,7 +24,7 @@ void write_audio(__int16_t *audio_buffer)
     snd_pcm_sframes_t err = snd_pcm_writei(
             audio_handle,
             audio_buffer,
-            alsa_audio_api.buffer_size_frames);
+            audio_buffer_size_frames);
     if (err < 0)
         error_with_detail("audio write failed", snd_strerror(err));
 }
@@ -97,6 +97,7 @@ void prepare_audio_device()
 static
 audio_api_t audio_api(int audio_buffer_frames, int sample_rate)
 {
+    audio_buffer_size_frames = (snd_pcm_uframes_t) audio_buffer_frames;
     alsa_audio_api.buffer_size_frames = audio_buffer_frames;
     alsa_audio_api.sample_rate = (long) sample_rate;
     alsa_audio_api.write = &write_audio;
