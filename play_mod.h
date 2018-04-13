@@ -14,8 +14,7 @@ typedef struct {
     void *sample_pointer;
     unsigned char gain;
     bool channel_playing;
-    long left_gain;
-    long right_gain;
+    int panning;
     unsigned char arpeggio_counter;
     unsigned char last_data_byte;
     unsigned char note_currently_playing;

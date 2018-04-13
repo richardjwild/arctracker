@@ -35,9 +35,6 @@ char alphanum[] = {'-',
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
 	'U', 'V', 'W', 'X', 'Y', 'Z'};
 
-long left_channel_multiplier[] = {256, 212, 172, 128, 84, 44, 0};
-long right_channel_multiplier[] = {0, 44, 84, 128, 172, 212, 256};
-
 void initialise_values(
         tune_info *p_current_positions,
         channel_info *p_voice_info,
@@ -266,10 +263,7 @@ void initialise_values(
 	/* initialise voice info: all voices silent and set initial stereo positions */
 	for (channel = 0; channel < p_module->num_channels; channel++) {
 		p_voice_info[channel].channel_playing = false;
-		p_voice_info[channel].left_gain =
-		left_channel_multiplier[p_module->default_channel_stereo[channel] - 1];
-		p_voice_info[channel].right_gain =
-		right_channel_multiplier[p_module->default_channel_stereo[channel] - 1];
+		p_voice_info[channel].panning = p_module->default_channel_stereo[channel] - 1;
 	}
 
 	if (p_pianola == NO) {
@@ -537,8 +531,6 @@ void process_tracker_command(
 	unsigned int *p_periods,
 	yn on_event)
 {
-	long *left_channel_multiplier_ptr;
-	long *right_channel_multiplier_ptr;
 	unsigned char temporary_note;
 	unsigned int *periods_ptr;
 
@@ -556,12 +548,7 @@ void process_tracker_command(
 
 	case STEREO_COMMAND:
 		if (on_event == YES) {
-			left_channel_multiplier_ptr = left_channel_multiplier;
-			right_channel_multiplier_ptr = right_channel_multiplier;
-			left_channel_multiplier_ptr += (p_current_event->data - 1);
-			right_channel_multiplier_ptr += (p_current_event->data - 1);
-			p_current_voice->left_gain = *left_channel_multiplier_ptr;
-			p_current_voice->right_gain = *right_channel_multiplier_ptr;
+		    p_current_voice->panning = p_current_event->data - 1;
 		}
 		break;
 
@@ -666,8 +653,6 @@ void process_desktop_tracker_command(
 	yn            on_event,
 	long          p_sample_rate)
 {
-	long *left_channel_multiplier_ptr;
-	long *right_channel_multiplier_ptr;
 	unsigned char temporary_note;
 	unsigned char command[4];
 	unsigned char data[4];
@@ -701,12 +686,7 @@ void process_desktop_tracker_command(
 
 		case STEREO_COMMAND_DSKT:
 			if (on_event == YES) {
-				left_channel_multiplier_ptr = left_channel_multiplier;
-				right_channel_multiplier_ptr = right_channel_multiplier;
-				left_channel_multiplier_ptr += (data[foo] - 1);
-				right_channel_multiplier_ptr += (data[foo] - 1);
-				p_current_voice->left_gain = *left_channel_multiplier_ptr;
-				p_current_voice->right_gain = *right_channel_multiplier_ptr;
+			    p_current_voice->panning = data[foo] - 1;
 			}
 			break;
 
