@@ -9,18 +9,21 @@ static int audio_handle;
 static int audio_buffer_size_bytes;
 static audio_api_t oss_audio_api;
 
-static void write_audio(__int16_t *audio_buffer)
+static
+void write_audio(__int16_t *audio_buffer)
 {
     if (write(audio_handle, audio_buffer, audio_buffer_size_bytes) == -1)
         system_error("audio write failed");
 }
 
+static
 void open_device()
 {
     if ((audio_handle = open("/dev/dsp", O_WRONLY, 0)) == -1)
         system_error("/dev/dsp");
 }
 
+static
 void set_sample_format()
 {
     int sample_format = AFMT_S16_LE;
@@ -30,6 +33,7 @@ void set_sample_format()
         error("Could not set audio device to suitable sample format (16-bit signed little-endian)");
 }
 
+static
 void set_number_of_channels()
 {
     int channels = 2;
@@ -39,17 +43,20 @@ void set_number_of_channels()
         error("Could not set stereo output");
 }
 
+static
 void set_sample_rate(long sample_rate)
 {
     if (ioctl(audio_handle, SNDCTL_DSP_SPEED, &sample_rate) == -1)
         system_error("SNDCTL_DSP_SPEED");
 }
 
+static
 void set_audio_buffer_size(int audio_buffer_frames)
 {
     audio_buffer_size_bytes = audio_buffer_frames * 2 * sizeof(__int16_t);
 }
 
+static
 audio_api_t audio_api(int audio_buffer_frames, long sample_rate)
 {
     oss_audio_api.write = &write_audio;
