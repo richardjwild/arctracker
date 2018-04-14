@@ -1,6 +1,7 @@
 #include "alsa.h"
 #include "error.h"
 #include "config.h"
+#include "audio_api.h"
 
 #ifndef HAVE_LIBASOUND
 
@@ -13,20 +14,21 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 
 #include <alsa/asoundlib.h>
 
+#define SILENT 1
+
 static snd_pcm_t *pcm_handle;
-static snd_pcm_uframes_t audio_buffer_size_frames;
 static audio_api_t alsa_audio_api;
 static int err;
 
 static
 void write_audio(__int16_t *audio_buffer)
 {
-    snd_pcm_sframes_t err = snd_pcm_writei(
+    snd_pcm_sframes_t frames_written = snd_pcm_writei(
             pcm_handle,
             audio_buffer,
-            audio_buffer_size_frames);
-    if (err < 0)
-        error_with_detail("audio write failed", snd_strerror(err));
+            (snd_pcm_uframes_t) alsa_audio_api.buffer_size_frames);
+    if (frames_written < 0)
+        snd_pcm_recover(pcm_handle, (int) frames_written, SILENT);
 }
 
 static
@@ -97,7 +99,6 @@ void prepare_audio_device()
 static
 audio_api_t audio_api(int audio_buffer_frames, int sample_rate)
 {
-    audio_buffer_size_frames = (snd_pcm_uframes_t) audio_buffer_frames;
     alsa_audio_api.buffer_size_frames = audio_buffer_frames;
     alsa_audio_api.sample_rate = (long) sample_rate;
     alsa_audio_api.write = &write_audio;

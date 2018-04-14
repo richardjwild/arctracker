@@ -15,10 +15,10 @@ void initialise_audio(audio_api_t audio_output_in, long channels_in)
 {
     audio_output = audio_output_in;
     channels = (int) channels_in;
-    channel_buffer = allocate_array(audio_output_in.buffer_size_frames * channels, sizeof(stereo_frame_t));
-    calculate_phase_increments(audio_output_in.sample_rate);
-    allocate_resample_buffer(audio_output_in.buffer_size_frames);
-    allocate_audio_buffer(audio_output_in.buffer_size_frames);
+    channel_buffer = allocate_array(audio_output.buffer_size_frames * channels, sizeof(stereo_frame_t));
+    calculate_phase_increments(audio_output.sample_rate);
+    allocate_resample_buffer(audio_output.buffer_size_frames);
+    allocate_audio_buffer(audio_output.buffer_size_frames);
     frames_filled = 0;
 }
 
