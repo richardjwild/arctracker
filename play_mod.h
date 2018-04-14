@@ -27,5 +27,6 @@ return_status play_module(
         unsigned int *p_periods,
         program_arguments *p_args);
 
+void stop_playback();
 
 #endif //ARCTRACKER_PLAY_MOD_H

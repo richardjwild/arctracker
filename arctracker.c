@@ -16,6 +16,7 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
+#include <signal.h>
 #include "arctracker.h"
 #include "config.h"
 #include "read_mod.h"
@@ -23,6 +24,11 @@
 #include "oss.h"
 #include "alsa.h"
 #include "audio_api.h"
+
+void handle_sigint(int signal)
+{
+	stop_playback();
+}
 
 int main(int argc, char *argv[])
 {
@@ -90,6 +96,10 @@ int main(int argc, char *argv[])
 		else if (args.api == ALSA)
             audio_api = initialise_alsa(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
 	}
+
+	struct sigaction act;
+	act.sa_handler = handle_sigint;
+	sigaction(SIGINT, &act, NULL);
 
 	if (retcode == SUCCESS) {
 			retcode = play_module(
