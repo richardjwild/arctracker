@@ -110,6 +110,8 @@ int main(int argc, char *argv[])
 				&args);
 	}
 
+	audio_api.finish();
+
 	if (modfile != NULL)
 		free(modfile);
 }

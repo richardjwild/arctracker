@@ -7,7 +7,6 @@
 
 static int audio_handle;
 static int audio_buffer_size_bytes;
-static audio_api_t oss_audio_api;
 
 static
 void write_audio(__int16_t *audio_buffer)
@@ -15,6 +14,12 @@ void write_audio(__int16_t *audio_buffer)
     if (write(audio_handle, audio_buffer, audio_buffer_size_bytes) == -1)
         system_error("audio write failed");
 }
+
+static
+void close_oss()
+{
+    close(audio_handle);
+};
 
 static
 void open_device()
@@ -61,6 +66,7 @@ audio_api_t audio_api(int audio_buffer_frames, long sample_rate)
 {
     audio_api_t oss_audio_api = {
             .write = write_audio,
+            .finish = close_oss,
             .buffer_size_frames = audio_buffer_frames,
             .sample_rate = sample_rate
     };

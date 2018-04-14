@@ -32,6 +32,12 @@ void write_audio(__int16_t *audio_buffer)
 }
 
 static
+void close_alsa()
+{
+    snd_pcm_close(pcm_handle);
+}
+
+static
 void open_device()
 {
     if ((err = snd_pcm_open(&pcm_handle, PCM_DEVICE, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
@@ -101,6 +107,7 @@ audio_api_t audio_api(int audio_buffer_frames, int sample_rate)
 {
     audio_api_t alsa_audio_api = {
             .write = write_audio,
+            .finish = close_alsa,
             .buffer_size_frames = audio_buffer_frames,
             .sample_rate = (long) sample_rate
     };
