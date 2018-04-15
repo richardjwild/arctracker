@@ -58,7 +58,7 @@ void get_new_note(
         sample_details *p_sample,
         channel_info *p_current_voice,
         unsigned int *p_periods,
-        yn p_tone_portamento,
+        bool p_tone_portamento,
         module_type p_module_type,
         long p_num_samples);
 
@@ -93,9 +93,7 @@ return_status play_module(
 
 	tune_info current_positions;
 	current_event current_pattern_line[MAX_CHANNELS];
-	current_event *current_pattern_line_ptr;
 	channel_info voice_info[MAX_CHANNELS];
-	channel_info *voice_info_ptr;
     int nframes_fraction = 0;
 
     sample_details *sample_info_ptr;
@@ -114,6 +112,7 @@ return_status play_module(
 
 	/* loop through whole tune */
 	do {
+	    bool on_event = false;
 		if (++(current_positions.counter) == current_positions.speed) {
 			/* new event. update counters: current position in pattern, position in sequence */
 			looped_yet = update_counters(
@@ -130,31 +129,21 @@ return_status play_module(
 
 			/* current pattern line now held in current_pattern_line */
 
-			for (channel = 0, current_pattern_line_ptr=current_pattern_line, voice_info_ptr=voice_info;
-			channel < p_module->num_channels;
-			channel++, current_pattern_line_ptr++, voice_info_ptr++) {
-				if (current_pattern_line_ptr->note) {
-					/* new note to play - get sample details */
-					if (current_pattern_line_ptr->command != TONEPORT_COMMAND_DSKT) {
-						get_new_note(
-							current_pattern_line_ptr,
-							p_sample,
-							voice_info_ptr,
-							p_periods,
-							NO,
-							p_module->format,
-							p_module->num_samples);
-					} else {
-						get_new_note(
-							current_pattern_line_ptr,
-							p_sample,
-							voice_info_ptr,
-							p_periods,
-							YES,
-							p_module->format,
-							p_module->num_samples);
-					}
-				} else if (current_pattern_line_ptr->sample) {
+			for (channel = 0; channel < p_module->num_channels; channel++)
+			{
+                if (current_pattern_line[channel].note)
+                {
+                    get_new_note(
+                            &current_pattern_line[channel],
+                            p_sample,
+                            &voice_info[channel],
+                            p_periods,
+                            current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT,
+                            p_module->format,
+                            p_module->num_samples);
+                }
+				else if (current_pattern_line[channel].sample)
+				{
 					/* this was a strange feature of tracker (and soundtracker) - I never knew *
 					 * whether it was meant or an accident.  If a sample number is specified   *
 					 * although no note is present, it resets the volume back to the sample's  *
@@ -164,59 +153,37 @@ return_status play_module(
 					 * have used this effect in a few modfiles, so I am implementing the same  *
 					 * behaviour here.                                                         */
 
-					sample_info_ptr = p_sample;
-					sample_info_ptr += (current_pattern_line_ptr->sample - 1);
+					sample_info_ptr = p_sample + current_pattern_line[channel].sample - 1;
 
 					if (p_module->format == TRACKER)
-						voice_info_ptr->gain = sample_info_ptr->volume;
+						voice_info[channel].gain = sample_info_ptr->volume;
 					else
-						voice_info_ptr->gain = ((sample_info_ptr->volume + 1) << 1) - 1;
+						voice_info[channel].gain = ((sample_info_ptr->volume + 1) << 1) - 1;
 				}
-
-				/* new command to execute */
-				if (p_module->format == TRACKER)
-					process_tracker_command(
-						current_pattern_line_ptr,
-						voice_info_ptr,
-						&current_positions,
-						p_module,
-						p_periods,
-						YES);
-				else
-					process_desktop_tracker_command(
-						current_pattern_line_ptr,
-						voice_info_ptr,
-						&current_positions,
-						p_module,
-						p_periods,
-						YES,
-						audio_api.sample_rate);
 			}
-		} else {
-			/* no note as this is between events, but we may have some commands to process */
-			for (channel = 0, current_pattern_line_ptr=current_pattern_line, voice_info_ptr=voice_info;
-			channel < p_module->num_channels;
-			channel++, current_pattern_line_ptr++, voice_info_ptr++) {
-				/* new command to execute */
-				if (p_module->format == TRACKER)
-					process_tracker_command(
-						current_pattern_line_ptr,
-						voice_info_ptr,
-						&current_positions,
-						p_module,
-						p_periods,
-						NO);
-				else
-					process_desktop_tracker_command(
-						current_pattern_line_ptr,
-						voice_info_ptr,
-						&current_positions,
-						p_module,
-						p_periods,
-						NO,
-						audio_api.sample_rate);
-			}
+			on_event = true;
 		}
+
+        for (channel = 0; channel < p_module->num_channels; channel++)
+        {
+            if (p_module->format == TRACKER)
+                process_tracker_command(
+                    &current_pattern_line[channel],
+                    &voice_info[channel],
+                    &current_positions,
+                    p_module,
+                    p_periods,
+                    on_event ? YES : NO);
+            else
+                process_desktop_tracker_command(
+                    &current_pattern_line[channel],
+                    &voice_info[channel],
+                    &current_positions,
+                    p_module,
+                    p_periods,
+                    on_event ? YES : NO,
+                    audio_api.sample_rate);
+        }
 
         int extra_frame = 0;
         nframes_fraction += current_positions.sps_per_tick;
@@ -455,7 +422,7 @@ void get_new_note(
 	sample_details *p_sample,
 	channel_info *p_current_voice,
 	unsigned int *p_periods,
-	yn p_tone_portamento,
+	bool p_tone_portamento,
 	module_type p_module_type,
 	long p_num_samples)
 {
@@ -466,7 +433,7 @@ void get_new_note(
 		sample_info_ptr = p_sample;
 		sample_info_ptr += (p_current_event->sample - 1);
 
-		if (p_tone_portamento == NO || !p_current_voice->channel_playing) {
+		if (!p_tone_portamento || !p_current_voice->channel_playing) {
 			p_current_voice->channel_playing = true;
 			p_current_voice->sample_pointer = sample_info_ptr->sample_data;
 			p_current_voice->phase_accumulator = 0.0;
