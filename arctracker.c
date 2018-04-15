@@ -97,8 +97,9 @@ int main(int argc, char *argv[])
             audio_api = initialise_alsa(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
 	}
 
-	struct sigaction act;
-	act.sa_handler = handle_sigint;
+	struct sigaction act = {
+			.sa_handler = handle_sigint
+	};
 	sigaction(SIGINT, &act, NULL);
 
 	if (retcode == SUCCESS) {
