@@ -48,6 +48,12 @@ bool buffer_filled()
     return frames_filled == audio_output.buffer_size_frames;
 }
 
+void mix_and_send()
+{
+    __int16_t *audio_buffer = mix(channel_buffer, channels);
+    audio_output.write(audio_buffer, frames_filled);
+}
+
 void fill_frames(channel_info *voices, const long frames_to_fill)
 {
     for (int channel = 0; channel < channels; channel++)
@@ -57,8 +63,7 @@ void fill_frames(channel_info *voices, const long frames_to_fill)
     frames_filled += frames_to_fill;
     if (buffer_filled())
     {
-        __int16_t *audio_buffer = mix(channel_buffer, channels);
-        audio_output.write(audio_buffer, frames_filled);
+        mix_and_send();
         frames_filled = 0;
     }
 }
@@ -93,8 +98,5 @@ void write_audio_data(channel_info *voices, const long frames_requested)
 void send_remaining_audio()
 {
     if (frames_filled > 0)
-    {
-        __int16_t *audio_buffer = mix(channel_buffer, channels);
-        audio_output.write(audio_buffer, frames_filled);
-    }
+        mix_and_send();
 }
