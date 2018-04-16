@@ -2,9 +2,11 @@
 #include "heap.h"
 #include "mix.h"
 
+static const size_t stereo_frame_size = 2 * sizeof(__int16_t);
+static __int16_t *audio_buffer;
+
 void allocate_audio_buffer(const int no_of_frames)
 {
-    const size_t stereo_frame_size = 2 * sizeof(__int16_t);
     audio_buffer = (__int16_t *) allocate_array(no_of_frames, stereo_frame_size);
     audio_buffer_frames = no_of_frames;
 }
@@ -36,5 +38,11 @@ __int16_t *mix(const stereo_frame_t *channel_buffer, const int channels_to_mix)
         audio_buffer[output_i++] = clip(l_sample);
         audio_buffer[output_i++] = clip(r_sample);
     }
+    return audio_buffer;
+}
+
+__int16_t *silence(const int no_of_frames)
+{
+    memset(audio_buffer, 0, sizeof(__int16_t) * 2 * no_of_frames);
     return audio_buffer;
 }

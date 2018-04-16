@@ -11,6 +11,13 @@ static audio_api_t audio_output;
 static long frames_filled;
 static int channels;
 
+void write_silence(audio_api_t audio_output)
+{
+    __int16_t *audio_buffer = silence(audio_output.buffer_size_frames);
+    for (int i = 0; i < 16; i++)
+        audio_output.write(audio_buffer, audio_output.buffer_size_frames);
+}
+
 void initialise_audio(audio_api_t audio_output_in, long channels_in)
 {
     audio_output = audio_output_in;
@@ -19,6 +26,7 @@ void initialise_audio(audio_api_t audio_output_in, long channels_in)
     calculate_phase_increments(audio_output.sample_rate);
     allocate_resample_buffer(audio_output.buffer_size_frames);
     allocate_audio_buffer(audio_output.buffer_size_frames);
+    write_silence(audio_output);
     frames_filled = 0;
 }
 

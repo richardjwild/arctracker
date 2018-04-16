@@ -33,6 +33,7 @@ void write_audio(__int16_t *audio_buffer, long frames_in_buffer)
 static
 void close_alsa()
 {
+    snd_pcm_drain(pcm_handle);
     snd_pcm_close(pcm_handle);
 }
 
