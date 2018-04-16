@@ -6,12 +6,12 @@
 #include "error.h"
 
 static int audio_handle;
-static int audio_buffer_size_bytes;
 
 static
-void write_audio(__int16_t *audio_buffer)
+void write_audio(__int16_t *audio_buffer, long frames_in_buffer)
 {
-    if (write(audio_handle, audio_buffer, audio_buffer_size_bytes) == -1)
+    const size_t bytes_to_write = frames_in_buffer * 2 * sizeof(__int16_t);
+    if (write(audio_handle, audio_buffer, bytes_to_write) == -1)
         system_error("audio write failed");
 }
 
@@ -56,12 +56,6 @@ void set_sample_rate(long sample_rate)
 }
 
 static
-void set_audio_buffer_size(int audio_buffer_frames)
-{
-    audio_buffer_size_bytes = audio_buffer_frames * 2 * sizeof(__int16_t);
-}
-
-static
 audio_api_t audio_api(int audio_buffer_frames, long sample_rate)
 {
     audio_api_t oss_audio_api = {
@@ -79,6 +73,5 @@ audio_api_t initialise_oss(long sample_rate, int audio_buffer_frames)
     set_sample_format();
     set_number_of_channels();
     set_sample_rate(sample_rate);
-    set_audio_buffer_size(audio_buffer_frames);
     return audio_api(audio_buffer_frames, sample_rate);
 }

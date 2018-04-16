@@ -197,6 +197,7 @@ return_status play_module(
 		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
 	while (!interrupted && ((looped_yet == NO) || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
+    send_remaining_audio();
 
 	if (p_args->pianola == NO)
 		printf("\n");

@@ -16,17 +16,16 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 
 #define SILENT 1
 
-static snd_pcm_uframes_t audio_buffer_size_frames;
 static snd_pcm_t *pcm_handle;
 static int err;
 
 static
-void write_audio(__int16_t *audio_buffer)
+void write_audio(__int16_t *audio_buffer, long frames_in_buffer)
 {
     snd_pcm_sframes_t frames_written = snd_pcm_writei(
             pcm_handle,
             audio_buffer,
-            audio_buffer_size_frames);
+            (snd_pcm_uframes_t) frames_in_buffer);
     if (frames_written < 0)
         snd_pcm_recover(pcm_handle, (int) frames_written, SILENT);
 }
@@ -116,7 +115,6 @@ audio_api_t audio_api(int audio_buffer_frames, int sample_rate)
 
 audio_api_t initialise_alsa(long sample_rate_in, int audio_buffer_frames)
 {
-    audio_buffer_size_frames = (snd_pcm_uframes_t) audio_buffer_frames;
     open_device();
     snd_pcm_hw_params_t *hw_params = initialise_hardware_params();
     set_access_type(hw_params);
