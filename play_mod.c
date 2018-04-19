@@ -426,62 +426,65 @@ void get_new_note(
 		sample_info_ptr = p_sample;
 		sample_info_ptr += (p_current_event->sample - 1);
 
-		if (!p_tone_portamento || !p_current_voice->channel_playing) {
-			p_current_voice->channel_playing = true;
-			p_current_voice->sample_pointer = sample_info_ptr->sample_data;
-			p_current_voice->phase_accumulator = 0.0;
-			p_current_voice->repeat_offset = sample_info_ptr->repeat_offset;
-			p_current_voice->repeat_length = sample_info_ptr->repeat_length;
-			p_current_voice->gain = sample_info_ptr->volume;
-			p_current_voice->arpeggio_counter = 0;
-			p_current_voice->note_currently_playing = p_current_event->note;
+		if (p_tone_portamento && p_current_voice->channel_playing)
+		{
+            /* there is a tone portamento command happening; do not play the note immediately *
+             * but set the pitch as a target and slide up (or down) towards it                */
+            periods_ptr = p_periods;
 
-			if (p_module_type == TRACKER) {
-				if (p_current_voice->repeat_length == 2) {
-					/* tracker module, repeat length 2 means no repeat */
-					p_current_voice->sample_repeats = false;
-					p_current_voice->sample_length = sample_info_ptr->sample_length;
-				} else {
-					p_current_voice->sample_repeats = true;
-					p_current_voice->sample_length = sample_info_ptr->repeat_offset + sample_info_ptr->repeat_length;
-				}
-			} else {
-				if (p_current_voice->repeat_length) {
-					/* desktop tracker module, repeat length 0 means no repeat */
-					p_current_voice->sample_repeats = true;
-					p_current_voice->sample_length = sample_info_ptr->repeat_offset + sample_info_ptr->repeat_length;
-				} else {
-					p_current_voice->sample_repeats = false;
-					p_current_voice->sample_length = sample_info_ptr->sample_length;
-				}
-			}
+            if (p_module_type == TRACKER) {
+                periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
+            } else {
+                p_current_voice->note_currently_playing += (13 - sample_info_ptr->note);
+                periods_ptr += (p_current_event->note + 13 + (13 - sample_info_ptr->note));
+            }
 
-			/* get period and phase incrementor value */
-			periods_ptr = p_periods;
+            p_current_voice->target_period = *periods_ptr;
+		}
+		else
+		{
+            p_current_voice->channel_playing = true;
+            p_current_voice->sample_pointer = sample_info_ptr->sample_data;
+            p_current_voice->phase_accumulator = 0.0;
+            p_current_voice->repeat_offset = sample_info_ptr->repeat_offset;
+            p_current_voice->repeat_length = sample_info_ptr->repeat_length;
+            p_current_voice->gain = sample_info_ptr->volume;
+            p_current_voice->arpeggio_counter = 0;
+            p_current_voice->note_currently_playing = p_current_event->note;
 
-			if (p_module_type == TRACKER) {
-				periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
-			} else {
-				p_current_voice->note_currently_playing += (13 - sample_info_ptr->note);
-				periods_ptr += (p_current_event->note + 13 + (13 - sample_info_ptr->note));
-				p_current_voice->gain = ((p_current_voice->gain + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
-			}
+            if (p_module_type == TRACKER) {
+                if (p_current_voice->repeat_length == 2) {
+                    /* tracker module, repeat length 2 means no repeat */
+                    p_current_voice->sample_repeats = false;
+                    p_current_voice->sample_length = sample_info_ptr->sample_length;
+                } else {
+                    p_current_voice->sample_repeats = true;
+                    p_current_voice->sample_length = sample_info_ptr->repeat_offset + sample_info_ptr->repeat_length;
+                }
+            } else {
+                if (p_current_voice->repeat_length) {
+                    /* desktop tracker module, repeat length 0 means no repeat */
+                    p_current_voice->sample_repeats = true;
+                    p_current_voice->sample_length = sample_info_ptr->repeat_offset + sample_info_ptr->repeat_length;
+                } else {
+                    p_current_voice->sample_repeats = false;
+                    p_current_voice->sample_length = sample_info_ptr->sample_length;
+                }
+            }
 
-			p_current_voice->period = *periods_ptr;
-			p_current_voice->target_period = *periods_ptr;
-		} else {
-			/* there is a tone portamento command happening; do not play the note immediately *
-			 * but set the pitch as a target and slide up (or down) towards it                */
-			periods_ptr = p_periods;
+            /* get period and phase incrementor value */
+            periods_ptr = p_periods;
 
-			if (p_module_type == TRACKER) {
-				periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
-			} else {
-				p_current_voice->note_currently_playing += (13 - sample_info_ptr->note);
-				periods_ptr += (p_current_event->note + 13 + (13 - sample_info_ptr->note));
-			}
+            if (p_module_type == TRACKER) {
+                periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
+            } else {
+                p_current_voice->note_currently_playing += (13 - sample_info_ptr->note);
+                periods_ptr += (p_current_event->note + 13 + (13 - sample_info_ptr->note));
+                p_current_voice->gain = ((p_current_voice->gain + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
+            }
 
-			p_current_voice->target_period = *periods_ptr;
+            p_current_voice->period = *periods_ptr;
+            p_current_voice->target_period = *periods_ptr;
 		}
 	} else {
 		p_current_voice->channel_playing = false;
