@@ -426,18 +426,16 @@ void get_new_note(
 
 		if (p_tone_portamento && p_current_voice->channel_playing)
 		{
-            /* there is a tone portamento command happening; do not play the note immediately *
-             * but set the pitch as a target and slide up (or down) towards it                */
-            periods_ptr = p_periods;
-
-            if (p_module_type == TRACKER) {
-                periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
-            } else {
+            if (p_module_type == TRACKER)
+            {
+                p_current_voice->target_period = p_periods[p_current_event->note + 12];
+            }
+            else
+            {
                 p_current_voice->note_currently_playing += (13 - sample.note);
-                periods_ptr += (p_current_event->note + 13 + (13 - sample.note));
+                p_current_voice->target_period = p_periods[p_current_event->note + 13 + (13 - sample.note)];
             }
 
-            p_current_voice->target_period = *periods_ptr;
 		}
 		else
 		{
