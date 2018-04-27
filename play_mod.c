@@ -432,8 +432,8 @@ void get_new_note(
             }
             else
             {
-                p_current_voice->note_currently_playing += (13 - sample.note);
-                p_current_voice->target_period = p_periods[p_current_event->note + 13 + (13 - sample.note)];
+                p_current_voice->note_currently_playing += sample.transpose;
+                p_current_voice->target_period = p_periods[p_current_event->note + 13 + sample.transpose];
             }
 
 		}
@@ -474,8 +474,8 @@ void get_new_note(
             if (p_module_type == TRACKER) {
                 periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
             } else {
-                p_current_voice->note_currently_playing += (13 - sample.note);
-                periods_ptr += (p_current_event->note + 13 + (13 - sample.note));
+                p_current_voice->note_currently_playing += sample.transpose;
+                periods_ptr += (p_current_event->note + 13 + sample.transpose);
                 p_current_voice->gain = ((p_current_voice->gain + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
             }
 

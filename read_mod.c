@@ -441,7 +441,7 @@ return_status read_desktop_tracker_file(
 #endif
 
 	for (i=0; i<p_module->num_samples; i++) {
-		p_samples[i].note = *(unsigned char *)tmp_ptr++;
+		p_samples[i].transpose = 13 - *(unsigned char *)tmp_ptr++;
 		p_samples[i].volume = *(unsigned char *)tmp_ptr;
 		tmp_ptr+=3;
 		read_nbytes(&(p_samples[i].period), tmp_ptr, 4);
