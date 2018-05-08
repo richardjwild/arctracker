@@ -405,6 +405,13 @@ void get_current_pattern_line(
 	p_current_positions->pattern_line_ptr = pattern_line_ptr;
 }
 
+static inline
+bool sample_repeats(sample_details sample, module_type mod_type)
+{
+    return (mod_type == TRACKER && sample.repeat_length != 2)
+           || (mod_type == DESKTOP_TRACKER && sample.repeat_length != 0);
+}
+
 /* get_new_note function.                                                             *
  * sets up voice to play a new note: sets sample pointer to the start of the relevant *
  * sample data, sets repeat offset and length if the sample is to repeat, sets phase  *
@@ -438,31 +445,20 @@ void get_new_note(
             p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
             p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
             p_current_voice->target_period = p_current_voice->period;
-            if (p_module_type == TRACKER)
+            if (sample_repeats(sample, p_module_type))
             {
-                p_current_voice->gain = sample.volume;
-                if (p_current_voice->repeat_length == 2) {
-                    // repeat length 2 = no repeat
-                    p_current_voice->sample_repeats = false;
-                    p_current_voice->sample_length = sample.sample_length;
-                } else {
-                    p_current_voice->sample_repeats = true;
-                    p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
-                }
+                p_current_voice->sample_repeats = true;
+                p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
             }
             else
             {
-                // desktop tracker volumes from 0..127 not 0..255 */
-                p_current_voice->gain = (sample.volume * 2) + 1;
-                if (p_current_voice->repeat_length == 0) {
-                    // repeat length 0 = no repeat
-                    p_current_voice->sample_repeats = false;
-                    p_current_voice->sample_length = sample.sample_length;
-                } else {
-                    p_current_voice->sample_repeats = true;
-                    p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
-                }
+                p_current_voice->sample_repeats = false;
+                p_current_voice->sample_length = sample.sample_length;
             }
+            if (p_module_type == TRACKER)
+                p_current_voice->gain = sample.volume;
+            else
+                p_current_voice->gain = (sample.volume * 2) + 1;
 		}
 	}
 	else
