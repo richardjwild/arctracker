@@ -181,7 +181,7 @@ typedef struct {
 	long sample_length;
 	long repeat_offset;
 	long repeat_length;
-	long transpose;
+	unsigned char transpose;
 	long period;
 	long sustain_start;
 	long sustain_length;

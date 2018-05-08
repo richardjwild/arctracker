@@ -419,23 +419,13 @@ void get_new_note(
 	module_type p_module_type,
 	long p_num_samples)
 {
-	unsigned int *periods_ptr;
-
-	if (p_current_event->sample <= p_num_samples) {
+	if (p_current_event->sample <= p_num_samples)
+	{
 		sample_details sample = p_sample[p_current_event->sample - 1];
 
 		if (p_tone_portamento && p_current_voice->channel_playing)
 		{
-            if (p_module_type == TRACKER)
-            {
-                p_current_voice->target_period = p_periods[p_current_event->note + 12];
-            }
-            else
-            {
-                p_current_voice->note_currently_playing += sample.transpose;
-                p_current_voice->target_period = p_periods[p_current_event->note + 13 + sample.transpose];
-            }
-
+                p_current_voice->target_period = p_periods[p_current_event->note + sample.transpose];
 		}
 		else
 		{
@@ -446,7 +436,7 @@ void get_new_note(
             p_current_voice->repeat_length = sample.repeat_length;
             p_current_voice->gain = sample.volume;
             p_current_voice->arpeggio_counter = 0;
-            p_current_voice->note_currently_playing = p_current_event->note;
+            p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
 
             if (p_module_type == TRACKER) {
                 if (p_current_voice->repeat_length == 2) {
@@ -468,21 +458,17 @@ void get_new_note(
                 }
             }
 
-            /* get period and phase incrementor value */
-            periods_ptr = p_periods;
-
-            if (p_module_type == TRACKER) {
-                periods_ptr += (p_current_event->note + 12); /* desktop tracker has greater chromatic range */
-            } else {
-                p_current_voice->note_currently_playing += sample.transpose;
-                periods_ptr += (p_current_event->note + 13 + sample.transpose);
+            if (p_module_type == DESKTOP_TRACKER)
+            {
                 p_current_voice->gain = ((p_current_voice->gain + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
             }
 
-            p_current_voice->period = *periods_ptr;
-            p_current_voice->target_period = *periods_ptr;
+            p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
+            p_current_voice->target_period = p_current_voice->period;
 		}
-	} else {
+	}
+	else
+	{
 		p_current_voice->channel_playing = false;
 	}
 }

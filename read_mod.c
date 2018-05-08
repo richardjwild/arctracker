@@ -441,7 +441,7 @@ return_status read_desktop_tracker_file(
 #endif
 
 	for (i=0; i<p_module->num_samples; i++) {
-		p_samples[i].transpose = 13 - *(unsigned char *)tmp_ptr++;
+		p_samples[i].transpose = 26 - *(unsigned char *)tmp_ptr++;
 		p_samples[i].volume = *(unsigned char *)tmp_ptr;
 		tmp_ptr+=3;
 		read_nbytes(&(p_samples[i].period), tmp_ptr, 4);
@@ -707,6 +707,10 @@ return_status get_sample_info(
 		p_array_end,
 		SNAM_CHUNK,
 		1);
+
+	// transpose all notes up an octave when playing a Tracker module
+	// compensating for the greater chromatic range in a Desktop Tracker module
+	p_sample->transpose = 12;
 
 	if (retcode == SUCCESS) {
 		read_nchar(p_sample->name, chunk_address+8, MAX_LEN_SAMPLENAME, YES);
