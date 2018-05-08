@@ -440,7 +440,7 @@ void get_new_note(
 
             if (p_module_type == TRACKER) {
                 if (p_current_voice->repeat_length == 2) {
-                    /* tracker module, repeat length 2 means no repeat */
+                    // repeat length 2 = no repeat
                     p_current_voice->sample_repeats = false;
                     p_current_voice->sample_length = sample.sample_length;
                 } else {
@@ -448,13 +448,13 @@ void get_new_note(
                     p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
                 }
             } else {
-                if (p_current_voice->repeat_length) {
-                    /* desktop tracker module, repeat length 0 means no repeat */
-                    p_current_voice->sample_repeats = true;
-                    p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
-                } else {
+                if (p_current_voice->repeat_length == 0) {
+                    // repeat length 0 = no repeat
                     p_current_voice->sample_repeats = false;
                     p_current_voice->sample_length = sample.sample_length;
+                } else {
+                    p_current_voice->sample_repeats = true;
+                    p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
                 }
             }
 
