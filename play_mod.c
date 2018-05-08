@@ -434,7 +434,6 @@ void get_new_note(
             p_current_voice->phase_accumulator = 0.0;
             p_current_voice->repeat_offset = sample.repeat_offset;
             p_current_voice->repeat_length = sample.repeat_length;
-            p_current_voice->gain = sample.volume;
             p_current_voice->arpeggio_counter = 0;
             p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
 
@@ -458,10 +457,10 @@ void get_new_note(
                 }
             }
 
-            if (p_module_type == DESKTOP_TRACKER)
-            {
-                p_current_voice->gain = ((p_current_voice->gain + 1) << 1) - 1; /* desktop tracker volumes from 0..127 not 0..255 */
-            }
+            if (p_module_type == TRACKER)
+                p_current_voice->gain = sample.volume;
+            else
+                p_current_voice->gain = (sample.volume * 2) + 1; // desktop tracker volumes from 0..127 not 0..255 */
 
             p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
             p_current_voice->target_period = p_current_voice->period;
