@@ -436,8 +436,11 @@ void get_new_note(
             p_current_voice->repeat_length = sample.repeat_length;
             p_current_voice->arpeggio_counter = 0;
             p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
-
-            if (p_module_type == TRACKER) {
+            p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
+            p_current_voice->target_period = p_current_voice->period;
+            if (p_module_type == TRACKER)
+            {
+                p_current_voice->gain = sample.volume;
                 if (p_current_voice->repeat_length == 2) {
                     // repeat length 2 = no repeat
                     p_current_voice->sample_repeats = false;
@@ -446,7 +449,11 @@ void get_new_note(
                     p_current_voice->sample_repeats = true;
                     p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
                 }
-            } else {
+            }
+            else
+            {
+                // desktop tracker volumes from 0..127 not 0..255 */
+                p_current_voice->gain = (sample.volume * 2) + 1;
                 if (p_current_voice->repeat_length == 0) {
                     // repeat length 0 = no repeat
                     p_current_voice->sample_repeats = false;
@@ -456,14 +463,6 @@ void get_new_note(
                     p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
                 }
             }
-
-            if (p_module_type == TRACKER)
-                p_current_voice->gain = sample.volume;
-            else
-                p_current_voice->gain = (sample.volume * 2) + 1; // desktop tracker volumes from 0..127 not 0..255 */
-
-            p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
-            p_current_voice->target_period = p_current_voice->period;
 		}
 	}
 	else
