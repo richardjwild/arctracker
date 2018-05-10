@@ -53,12 +53,17 @@ void get_current_pattern_line(
         current_event *p_current_pattern_line,
         yn p_pianola);
 
+void set_portamento_target(
+        current_event *event,
+        sample_details sample,
+        channel_info *voice,
+        unsigned int *periods);
+
 void get_new_note(
         current_event *p_current_event,
         sample_details *p_sample,
         channel_info *p_current_voice,
         unsigned int *p_periods,
-        bool p_tone_portamento,
         module_type p_module_type,
         long p_num_samples);
 
@@ -131,14 +136,20 @@ return_status play_module(
 			{
                 if (current_pattern_line[channel].note)
                 {
-                    get_new_note(
-                            &current_pattern_line[channel],
-                            p_sample,
-                            &voice_info[channel],
-                            p_periods,
-                            current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT,
-                            p_module->format,
-                            p_module->num_samples);
+                    if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
+                        set_portamento_target(
+                                &current_pattern_line[channel],
+                                p_sample[current_pattern_line[channel].sample - 1],
+                                &voice_info[channel],
+                                p_periods);
+                    else
+                        get_new_note(
+                                &current_pattern_line[channel],
+                                p_sample,
+                                &voice_info[channel],
+                                p_periods,
+                                p_module->format,
+                                p_module->num_samples);
                 }
 				else if (current_pattern_line[channel].sample)
 				{
@@ -405,6 +416,15 @@ void get_current_pattern_line(
 	p_current_positions->pattern_line_ptr = pattern_line_ptr;
 }
 
+void set_portamento_target(
+        current_event *event,
+        sample_details sample,
+        channel_info *voice,
+        unsigned int *periods)
+{
+    voice->target_period = periods[event->note + sample.transpose];
+}
+
 static inline
 bool sample_repeats(sample_details sample, module_type mod_type)
 {
@@ -422,7 +442,6 @@ void get_new_note(
 	sample_details *p_sample,
 	channel_info *p_current_voice,
 	unsigned int *p_periods,
-	bool p_tone_portamento,
 	module_type p_module_type,
 	long p_num_samples)
 {
@@ -430,36 +449,29 @@ void get_new_note(
 	{
 		sample_details sample = p_sample[p_current_event->sample - 1];
 
-		if (p_tone_portamento && p_current_voice->channel_playing)
-		{
-                p_current_voice->target_period = p_periods[p_current_event->note + sample.transpose];
-		}
-		else
-		{
-            p_current_voice->channel_playing = true;
-            p_current_voice->sample_pointer = sample.sample_data;
-            p_current_voice->phase_accumulator = 0.0;
-            p_current_voice->repeat_offset = sample.repeat_offset;
-            p_current_voice->repeat_length = sample.repeat_length;
-            p_current_voice->arpeggio_counter = 0;
-            p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
-            p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
-            p_current_voice->target_period = p_current_voice->period;
-            if (sample_repeats(sample, p_module_type))
-            {
-                p_current_voice->sample_repeats = true;
-                p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
-            }
-            else
-            {
-                p_current_voice->sample_repeats = false;
-                p_current_voice->sample_length = sample.sample_length;
-            }
-            if (p_module_type == TRACKER)
-                p_current_voice->gain = sample.volume;
-            else
-                p_current_voice->gain = (sample.volume * 2) + 1;
-		}
+        p_current_voice->channel_playing = true;
+        p_current_voice->sample_pointer = sample.sample_data;
+        p_current_voice->phase_accumulator = 0.0;
+        p_current_voice->repeat_offset = sample.repeat_offset;
+        p_current_voice->repeat_length = sample.repeat_length;
+        p_current_voice->arpeggio_counter = 0;
+        p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
+        p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
+        p_current_voice->target_period = p_current_voice->period;
+        if (sample_repeats(sample, p_module_type))
+        {
+            p_current_voice->sample_repeats = true;
+            p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
+        }
+        else
+        {
+            p_current_voice->sample_repeats = false;
+            p_current_voice->sample_length = sample.sample_length;
+        }
+        if (p_module_type == TRACKER)
+            p_current_voice->gain = sample.volume;
+        else
+            p_current_voice->gain = (sample.volume * 2) + 1;
 	}
 	else
 	{
