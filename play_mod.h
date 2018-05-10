@@ -8,7 +8,6 @@ typedef struct {
     int period;
     int target_period;
     bool sample_repeats;
-    long repeat_offset;
     long sample_length;
     long repeat_length;
     void *sample_pointer;

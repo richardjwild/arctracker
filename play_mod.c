@@ -447,13 +447,12 @@ void trigger_new_note(
 	voice->channel_playing = true;
 	voice->sample_pointer = sample.sample_data;
 	voice->phase_accumulator = 0.0;
-	voice->repeat_offset = sample.repeat_offset;
-	voice->repeat_length = sample.repeat_length;
 	voice->arpeggio_counter = 0;
 	voice->note_currently_playing = event.note + sample.transpose;
 	voice->period = periods[voice->note_currently_playing];
 	voice->target_period = voice->period;
 	voice->sample_repeats = sample_repeats(sample, p_module_type);
+	voice->repeat_length = sample.repeat_length;
 	voice->sample_length = voice->sample_repeats
 			? sample.repeat_offset + sample.repeat_length
 			: sample.sample_length;
