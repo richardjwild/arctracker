@@ -54,10 +54,10 @@ void get_current_pattern_line(
         yn p_pianola);
 
 void set_portamento_target(
-        current_event *event,
+        current_event event,
         sample_details sample,
         channel_info *voice,
-        unsigned int *periods);
+        const unsigned int *periods);
 
 void get_new_note(
         current_event *p_current_event,
@@ -138,7 +138,7 @@ return_status play_module(
                 {
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
                         set_portamento_target(
-                                &current_pattern_line[channel],
+                                current_pattern_line[channel],
                                 p_sample[current_pattern_line[channel].sample - 1],
                                 &voice_info[channel],
                                 p_periods);
@@ -417,12 +417,12 @@ void get_current_pattern_line(
 }
 
 void set_portamento_target(
-        current_event *event,
+        current_event event,
         sample_details sample,
         channel_info *voice,
-        unsigned int *periods)
+        const unsigned int *periods)
 {
-    voice->target_period = periods[event->note + sample.transpose];
+    voice->target_period = periods[event.note + sample.transpose];
 }
 
 static inline
