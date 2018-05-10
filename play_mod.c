@@ -60,12 +60,12 @@ void set_portamento_target(
         const unsigned int *periods);
 
 void get_new_note(
-        current_event *p_current_event,
-        sample_details *p_sample,
-        channel_info *p_current_voice,
-        unsigned int *p_periods,
+        current_event event,
+        sample_details sample,
+        channel_info *voice,
+        unsigned int *periods,
         module_type p_module_type,
-        long p_num_samples);
+        long num_samples);
 
 void process_tracker_command(
         current_event *p_current_event,
@@ -136,16 +136,18 @@ return_status play_module(
 			{
                 if (current_pattern_line[channel].note)
                 {
+                    sample_details sample = p_sample[current_pattern_line[channel].sample - 1];
+                    
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
                         set_portamento_target(
                                 current_pattern_line[channel],
-                                p_sample[current_pattern_line[channel].sample - 1],
+                                sample,
                                 &voice_info[channel],
                                 p_periods);
                     else
                         get_new_note(
-                                &current_pattern_line[channel],
-                                p_sample,
+                                current_pattern_line[channel],
+                                sample,
                                 &voice_info[channel],
                                 p_periods,
                                 p_module->format,
@@ -438,24 +440,22 @@ bool sample_repeats(sample_details sample, module_type mod_type)
  * incrementor to the correct value depending on the note (pitch) to be played.       */
 
 void get_new_note(
-	current_event *p_current_event,
-	sample_details *p_sample,
+	current_event event,
+	sample_details sample,
 	channel_info *p_current_voice,
 	unsigned int *p_periods,
 	module_type p_module_type,
-	long p_num_samples)
+	long num_samples)
 {
-	if (p_current_event->sample <= p_num_samples)
+	if (event.sample <= num_samples)
 	{
-		sample_details sample = p_sample[p_current_event->sample - 1];
-
         p_current_voice->channel_playing = true;
         p_current_voice->sample_pointer = sample.sample_data;
         p_current_voice->phase_accumulator = 0.0;
         p_current_voice->repeat_offset = sample.repeat_offset;
         p_current_voice->repeat_length = sample.repeat_length;
         p_current_voice->arpeggio_counter = 0;
-        p_current_voice->note_currently_playing = p_current_event->note + sample.transpose;
+        p_current_voice->note_currently_playing = event.note + sample.transpose;
         p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
         p_current_voice->target_period = p_current_voice->period;
         if (sample_repeats(sample, p_module_type))
