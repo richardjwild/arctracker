@@ -19,7 +19,7 @@ void allocate_resample_buffer(const int no_of_frames)
 static inline
 bool end_of_sample(const channel_info *voice)
 {
-    return voice->phase_accumulator > voice->sample_length;
+    return voice->phase_accumulator > voice->sample_end;
 }
 
 static inline

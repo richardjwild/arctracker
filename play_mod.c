@@ -453,7 +453,7 @@ void trigger_new_note(
 	voice->target_period = voice->period;
 	voice->sample_repeats = sample_repeats(sample, p_module_type);
 	voice->repeat_length = sample.repeat_length;
-	voice->sample_length = voice->sample_repeats
+	voice->sample_end = voice->sample_repeats
 			? sample.repeat_offset + sample.repeat_length
 			: sample.sample_length;
 	voice->gain = p_module_type == TRACKER
