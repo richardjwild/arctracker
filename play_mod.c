@@ -59,7 +59,7 @@ void set_portamento_target(
         channel_info *voice,
         const unsigned int *periods);
 
-void get_new_note(
+void set_new_note(
         current_event event,
         sample_details sample,
         channel_info *voice,
@@ -137,7 +137,7 @@ return_status play_module(
                 if (current_pattern_line[channel].note)
                 {
                     sample_details sample = p_sample[current_pattern_line[channel].sample - 1];
-                    
+
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
                         set_portamento_target(
                                 current_pattern_line[channel],
@@ -145,7 +145,7 @@ return_status play_module(
                                 &voice_info[channel],
                                 p_periods);
                     else
-                        get_new_note(
+                        set_new_note(
                                 current_pattern_line[channel],
                                 sample,
                                 &voice_info[channel],
@@ -434,18 +434,18 @@ bool sample_repeats(sample_details sample, module_type mod_type)
            || (mod_type == DESKTOP_TRACKER && sample.repeat_length != 0);
 }
 
-/* get_new_note function.                                                             *
+/* set_new_note function.                                                             *
  * sets up voice to play a new note: sets sample pointer to the start of the relevant *
  * sample data, sets repeat offset and length if the sample is to repeat, sets phase  *
  * incrementor to the correct value depending on the note (pitch) to be played.       */
 
-void get_new_note(
-	current_event event,
-	sample_details sample,
-	channel_info *p_current_voice,
-	unsigned int *p_periods,
-	module_type p_module_type,
-	long num_samples)
+void set_new_note(
+        current_event event,
+        sample_details sample,
+        channel_info *p_current_voice,
+        unsigned int *p_periods,
+        module_type p_module_type,
+        long num_samples)
 {
 	if (event.sample <= num_samples)
 	{
