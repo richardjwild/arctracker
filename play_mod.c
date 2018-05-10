@@ -59,13 +59,13 @@ void set_portamento_target(
         channel_info *voice,
         const unsigned int *periods);
 
-void set_new_note(
-        current_event event,
-        sample_details sample,
-        channel_info *voice,
-        unsigned int *periods,
-        module_type p_module_type,
-        long num_samples);
+void trigger_new_note(
+		current_event event,
+		sample_details sample,
+		channel_info *voice,
+		unsigned int *periods,
+		module_type p_module_type,
+		long num_samples);
 
 void process_tracker_command(
         current_event *p_current_event,
@@ -86,7 +86,7 @@ void process_desktop_tracker_command(
 
 return_status play_module(
 	mod_details *p_module,
-	sample_details *p_sample,
+	sample_details *samples,
     audio_api_t audio_api,
 	unsigned int *p_periods,
 	program_arguments *p_args)
@@ -98,8 +98,6 @@ return_status play_module(
 	current_event current_pattern_line[MAX_CHANNELS];
 	channel_info voice_info[MAX_CHANNELS];
     int nframes_fraction = 0;
-
-    sample_details *sample_info_ptr;
 
 	yn looped_yet = NO;
 
@@ -136,7 +134,7 @@ return_status play_module(
 			{
                 if (current_pattern_line[channel].note)
                 {
-                    sample_details sample = p_sample[current_pattern_line[channel].sample - 1];
+                    sample_details sample = samples[current_pattern_line[channel].sample - 1];
 
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
                         set_portamento_target(
@@ -145,13 +143,13 @@ return_status play_module(
                                 &voice_info[channel],
                                 p_periods);
                     else
-                        set_new_note(
-                                current_pattern_line[channel],
-                                sample,
-                                &voice_info[channel],
-                                p_periods,
-                                p_module->format,
-                                p_module->num_samples);
+						trigger_new_note(
+								current_pattern_line[channel],
+								sample,
+								&voice_info[channel],
+								p_periods,
+								p_module->format,
+								p_module->num_samples);
                 }
 				else if (current_pattern_line[channel].sample)
 				{
@@ -164,12 +162,12 @@ return_status play_module(
 					 * have used this effect in a few modfiles, so I am implementing the same  *
 					 * behaviour here.                                                         */
 
-					sample_info_ptr = p_sample + current_pattern_line[channel].sample - 1;
+					sample_details sample = samples[current_pattern_line[channel].sample - 1];
 
 					if (p_module->format == TRACKER)
-						voice_info[channel].gain = sample_info_ptr->volume;
+						voice_info[channel].gain = sample.volume;
 					else
-						voice_info[channel].gain = ((sample_info_ptr->volume + 1) << 1) - 1;
+						voice_info[channel].gain = (sample.volume * 2) + 1;
 				}
 			}
 			on_event = true;
@@ -434,18 +432,18 @@ bool sample_repeats(sample_details sample, module_type mod_type)
            || (mod_type == DESKTOP_TRACKER && sample.repeat_length != 0);
 }
 
-/* set_new_note function.                                                             *
+/* trigger_new_note function.                                                             *
  * sets up voice to play a new note: sets sample pointer to the start of the relevant *
  * sample data, sets repeat offset and length if the sample is to repeat, sets phase  *
  * incrementor to the correct value depending on the note (pitch) to be played.       */
 
-void set_new_note(
-        current_event event,
-        sample_details sample,
-        channel_info *p_current_voice,
-        unsigned int *p_periods,
-        module_type p_module_type,
-        long num_samples)
+void trigger_new_note(
+		current_event event,
+		sample_details sample,
+		channel_info *p_current_voice,
+		unsigned int *p_periods,
+		module_type p_module_type,
+		long num_samples)
 {
 	if (event.sample <= num_samples)
 	{

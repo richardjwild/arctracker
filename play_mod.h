@@ -22,7 +22,7 @@ typedef struct {
 
 return_status play_module(
         mod_details *p_module,
-        sample_details *p_sample,
+        sample_details *samples,
         audio_api_t audio_api,
         unsigned int *p_periods,
         program_arguments *p_args);
