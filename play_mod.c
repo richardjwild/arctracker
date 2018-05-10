@@ -440,33 +440,26 @@ bool sample_repeats(sample_details sample, module_type mod_type)
 void trigger_new_note(
 		current_event event,
 		sample_details sample,
-		channel_info *p_current_voice,
-		unsigned int *p_periods,
+		channel_info *voice,
+		unsigned int *periods,
 		module_type p_module_type)
 {
-	p_current_voice->channel_playing = true;
-	p_current_voice->sample_pointer = sample.sample_data;
-	p_current_voice->phase_accumulator = 0.0;
-	p_current_voice->repeat_offset = sample.repeat_offset;
-	p_current_voice->repeat_length = sample.repeat_length;
-	p_current_voice->arpeggio_counter = 0;
-	p_current_voice->note_currently_playing = event.note + sample.transpose;
-	p_current_voice->period = p_periods[p_current_voice->note_currently_playing];
-	p_current_voice->target_period = p_current_voice->period;
-	if (sample_repeats(sample, p_module_type))
-	{
-		p_current_voice->sample_repeats = true;
-		p_current_voice->sample_length = sample.repeat_offset + sample.repeat_length;
-	}
-	else
-	{
-		p_current_voice->sample_repeats = false;
-		p_current_voice->sample_length = sample.sample_length;
-	}
-	if (p_module_type == TRACKER)
-		p_current_voice->gain = sample.volume;
-	else
-		p_current_voice->gain = (sample.volume * 2) + 1;
+	voice->channel_playing = true;
+	voice->sample_pointer = sample.sample_data;
+	voice->phase_accumulator = 0.0;
+	voice->repeat_offset = sample.repeat_offset;
+	voice->repeat_length = sample.repeat_length;
+	voice->arpeggio_counter = 0;
+	voice->note_currently_playing = event.note + sample.transpose;
+	voice->period = periods[voice->note_currently_playing];
+	voice->target_period = voice->period;
+	voice->sample_repeats = sample_repeats(sample, p_module_type);
+	voice->sample_length = voice->sample_repeats
+			? sample.repeat_offset + sample.repeat_length
+			: sample.sample_length;
+	voice->gain = p_module_type == TRACKER
+			? sample.volume
+			: (sample.volume * 2) + 1;
 }
 
 /* process_tracker_command function.  *
