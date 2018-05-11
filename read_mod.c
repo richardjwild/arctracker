@@ -125,7 +125,7 @@ return_status read_tracker_file(
 		fprintf(stderr,"Modfile corrupt - TINF chunk not found\n");
 		retcode = FILE_CORRUPT;
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->tracker_version, chunk_address+8, 4, YES);
+		read_nchar(p_module->tracker_version, chunk_address+8, 4, true);
 #ifdef DEVELOPING
 		printf("Found TINF chunk.  Tracker version=%s\n", p_module->tracker_version);
 #endif
@@ -159,7 +159,7 @@ return_status read_tracker_file(
 		fprintf(stderr,"Modfile corrupt - STER chunk not found\n");
 		retcode = FILE_CORRUPT;
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->default_channel_stereo, chunk_address+8, MAX_CHANNELS, NO);
+		read_nchar(p_module->default_channel_stereo, chunk_address+8, MAX_CHANNELS, false);
 #ifdef DEVELOPING
 		printf(
 			"Found STER chunk.  Default stereo positions:\n"
@@ -193,7 +193,7 @@ return_status read_tracker_file(
 		fprintf(stderr,"Modfile corrupt - MNAM chunk not found\n");
 		retcode = FILE_CORRUPT;
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->name, chunk_address+8, MAX_LEN_TUNENAME, YES);
+		read_nchar(p_module->name, chunk_address+8, MAX_LEN_TUNENAME, true);
 #ifdef DEVELOPING
 		printf("Found MNAM chunk.  Tune name = %s\n", p_module->name);
 #endif
@@ -210,7 +210,7 @@ return_status read_tracker_file(
 		fprintf(stderr,"Modfile corrupt - ANAM chunk not found\n");
 		retcode = FILE_CORRUPT;
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->author, chunk_address+8, MAX_LEN_AUTHOR, YES);
+		read_nchar(p_module->author, chunk_address+8, MAX_LEN_AUTHOR, true);
 #ifdef DEVELOPING
 		printf("Found ANAM chunk.  Author = %s\n", p_module->author);
 #endif
@@ -261,7 +261,7 @@ return_status read_tracker_file(
 		fprintf(stderr,"Modfile corrupt - PLEN chunk not found\n");
 		retcode = FILE_CORRUPT;
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->pattern_length, chunk_address+8, NUM_PATTERNS, NO);
+		read_nchar(p_module->pattern_length, chunk_address+8, NUM_PATTERNS, false);
 #ifdef DEVELOPING
 		printf("Found PLEN chunk.  Pattern lengths:\n");
 
@@ -283,7 +283,7 @@ return_status read_tracker_file(
 		fprintf(stderr,"Modfile corrupt - SEQU chunk not found\n");
 		retcode = FILE_CORRUPT;
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->sequence, chunk_address+8, MAX_TUNELENGTH, NO);
+		read_nchar(p_module->sequence, chunk_address+8, MAX_TUNELENGTH, false);
 #ifdef DEVELOPING
 		printf("Found SEQU chunk.  Sequence:\n");
 
@@ -337,12 +337,12 @@ return_status read_desktop_tracker_file(
 	FILE *fp;
 #endif
 
-	read_nchar(p_module->name, p_modfile+4, MAX_LEN_TUNENAME_DSKT, YES);
+	read_nchar(p_module->name, p_modfile+4, MAX_LEN_TUNENAME_DSKT, true);
 #ifdef DEVELOPING
 	printf("Tune name is: %s\n", p_module->name);
 #endif
 
-	read_nchar(p_module->author, p_modfile+68, MAX_LEN_AUTHOR_DSKT, YES);
+	read_nchar(p_module->author, p_modfile+68, MAX_LEN_AUTHOR_DSKT, true);
 #ifdef DEVELOPING
 	printf("Author is: %s\n", p_module->author);
 #endif
@@ -357,7 +357,7 @@ return_status read_desktop_tracker_file(
 	printf("Tune length = %d\n", p_module->tune_length);
 #endif
 
-	read_nchar(p_module->default_channel_stereo, p_modfile+144, MAX_CHANNELS_DSKT, NO);
+	read_nchar(p_module->default_channel_stereo, p_modfile+144, MAX_CHANNELS_DSKT, false);
 #ifdef DEVELOPING
 	printf(
 		"Default stereo positions: %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
@@ -394,7 +394,7 @@ return_status read_desktop_tracker_file(
 	printf("Number of samples = %d\n", p_module->num_samples);
 #endif
 
-	read_nchar(p_module->sequence, p_modfile+168, p_module->tune_length, NO);
+	read_nchar(p_module->sequence, p_modfile+168, p_module->tune_length, false);
 #ifdef DEVELOPING
 	printf("Sequence: ");
 	for (i=0; i<p_module->tune_length; i++)
@@ -456,7 +456,7 @@ return_status read_desktop_tracker_file(
 		tmp_ptr+=4;
 		read_nbytes(&(p_samples[i].sample_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nchar(p_samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, YES);
+		read_nchar(p_samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
 		tmp_ptr+=MAX_LEN_SAMPLENAME_DSKT;
 		read_nbytes(&foo, tmp_ptr, 4);
 		p_samples[i].sample_data = p_modfile + foo;
@@ -542,7 +542,7 @@ return_status search_tff(
 	char current_chunk[CHUNKSIZE+1] = "xxxx"; /* ensure that null terminator is already present */
 
 	do {
-		read_nchar(current_chunk, p_searchfrom, CHUNKSIZE, YES);
+		read_nchar(current_chunk, p_searchfrom, CHUNKSIZE, true);
 
 		if (strcmp(p_chunk, current_chunk) == STRINGS_MATCH) {
 			if (--p_occurrence == 0) {
@@ -570,14 +570,14 @@ void read_nchar(
 	char *p_output,
 	void *p_input,
 	int p_num_chars,
-	yn p_null_term)
+	bool p_null_term)
 {
 	int i;
 
 	for (i=0; i<p_num_chars; i++)
 		p_output[i] = *(((char *)p_input) + i);
 
-	if (p_null_term == YES)
+	if (p_null_term)
 		p_output[p_num_chars] = '\0';
 }
 
@@ -713,7 +713,7 @@ return_status get_sample_info(
 	p_sample->transpose = 12;
 
 	if (retcode == SUCCESS) {
-		read_nchar(p_sample->name, chunk_address+8, MAX_LEN_SAMPLENAME, YES);
+		read_nchar(p_sample->name, chunk_address+8, MAX_LEN_SAMPLENAME, true);
 
 		retcode = search_tff(
 			p_search_from,

@@ -142,9 +142,6 @@ enum return_status {
 };
 typedef enum return_status return_status;
 
-enum yn {YES, NO};
-typedef enum yn yn;
-
 enum module_type {TRACKER, DESKTOP_TRACKER};
 typedef enum module_type module_type_t;
 

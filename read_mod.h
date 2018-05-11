@@ -29,7 +29,7 @@ void read_nchar(
         char *p_output,
         void *p_input,
         int p_num_chars,
-        yn p_null_term);
+        bool p_null_term);
 
 void read_nbytes(
         long *p_output,
