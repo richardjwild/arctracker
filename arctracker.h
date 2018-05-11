@@ -156,7 +156,7 @@ typedef struct {
 	int volume;
 	yn pianola;
 	output_api api;
-	yn loop_forever;
+	bool loop_forever;
 } args_t;
 
 typedef struct {

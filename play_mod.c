@@ -205,7 +205,7 @@ return_status play_module(
         /* write one tick's worth of audio data */
 		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
-	while ((!looped_yet || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
+	while ((!looped_yet || p_args->loop_forever) && (retcode == SUCCESS));
     send_remaining_audio();
 
 	if (p_args->pianola == NO)

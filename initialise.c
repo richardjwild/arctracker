@@ -36,7 +36,7 @@ return_status get_arguments(
 	p_args->pianola = NO;
 	p_args->api = NOT_SPECIFIED;
 	p_args->mod_filename = "";
-	p_args->loop_forever = NO;
+	p_args->loop_forever = false;
 
         /* ignore first argument (i=1) as this is the executable name ("arctracker") */
 
@@ -50,7 +50,7 @@ return_status get_arguments(
 					if (strcmp(p_argv[i], ARG_PIANOLA) == 0) {
 						p_args->pianola = YES;
 					} else if (strcmp(p_argv[i], ARG_LOOP) == 0) {
-						p_args->loop_forever = YES;
+						p_args->loop_forever = true;
 					} else if (strcmp(p_argv[i], ARG_OSS) == 0) {
 						if (p_args->api == NOT_SPECIFIED)
 							p_args->api = OSS;
