@@ -72,7 +72,7 @@ void process_tracker_command(
         positions_t *p_current_positions,
         module_t *p_module,
         unsigned int *p_periods,
-        yn on_event);
+        bool on_event);
 
 void process_desktop_tracker_command(
         channel_event_t *p_current_event,
@@ -80,7 +80,7 @@ void process_desktop_tracker_command(
         positions_t *p_current_positions,
         module_t *p_module,
         unsigned int *p_periods,
-        yn on_event,
+        bool on_event,
         long p_sample_rate);
 
 void play_module(
@@ -181,7 +181,7 @@ void play_module(
                     &current_positions,
                     p_module,
                     p_periods,
-                    on_event ? YES : NO);
+                    on_event);
             else
                 process_desktop_tracker_command(
                     &current_pattern_line[channel],
@@ -189,7 +189,7 @@ void play_module(
                     &current_positions,
                     p_module,
                     p_periods,
-                    on_event ? YES : NO,
+                    on_event,
                     audio_api.sample_rate);
         }
 
@@ -467,25 +467,24 @@ void process_tracker_command(
 	positions_t *p_current_positions,
 	module_t *p_module,
 	unsigned int *p_periods,
-	yn on_event)
+	bool on_event)
 {
 	unsigned char temporary_note;
 	unsigned int *periods_ptr;
 
 	switch (p_current_event->command) {
 	case VOLUME_COMMAND:
-		if (on_event == YES)
+		if (on_event)
 			p_current_voice->gain = p_current_event->data;
 		break;
 
 	case SPEED_COMMAND:
-		if (p_current_event->data /* ensure an "S00" command does not hang player! */
-		    && (on_event == YES))
+		if (on_event && p_current_event->data) /* ensure an "S00" command does not hang player! */
 			p_current_positions->speed = p_current_event->data;
 		break;
 
 	case STEREO_COMMAND:
-		if (on_event == YES) {
+		if (on_event) {
 		    p_current_voice->panning = p_current_event->data - 1;
 		}
 		break;
@@ -566,14 +565,14 @@ void process_tracker_command(
 
 	case BREAK_COMMAND:
 		/* jog position (in pattern) to last event */
-		if (on_event == YES)
+		if (on_event)
 			p_current_positions->position_in_pattern =
 				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
 		break;
 
 	case JUMP_COMMAND:
 		/* move position to last event before the requested sequence position */
-		if (on_event == YES) {
+		if (on_event) {
 			p_current_positions->position_in_sequence = p_current_event->data - 1;
 			p_current_positions->position_in_pattern =
 				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
@@ -588,7 +587,7 @@ void process_desktop_tracker_command(
 	positions_t     *p_current_positions,
 	module_t   *p_module,
 	unsigned int  *p_periods,
-	yn            on_event,
+	bool            on_event,
 	long          p_sample_rate)
 {
 	unsigned char temporary_note;
@@ -612,18 +611,17 @@ void process_desktop_tracker_command(
 		switch (command[foo])
 		{
 		case VOLUME_COMMAND_DSKT:
-			if (on_event == YES)
+			if (on_event)
 				p_current_voice->gain = ((data[foo] + 1) << 1) - 1;
 			break;
 
 		case SPEED_COMMAND_DSKT:
-			if (data[foo] /* ensure an "S00" command does not hang player! */
-		    	&& (on_event == YES))
+			if (on_event && data[foo]) /* ensure an "S00" command does not hang player! */
 				p_current_positions->speed = data[foo];
 			break;
 
 		case STEREO_COMMAND_DSKT:
-			if (on_event == YES) {
+			if (on_event) {
 			    p_current_voice->panning = data[foo] - 1;
 			}
 			break;
@@ -704,7 +702,7 @@ void process_desktop_tracker_command(
 
 		case JUMP_COMMAND_DSKT:
 			/* move position to last event before the requested sequence position */
-			if (on_event == YES) {
+			if (on_event) {
 				p_current_positions->position_in_sequence = data[foo] - 1;
 				p_current_positions->position_in_pattern =
 				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
@@ -712,12 +710,12 @@ void process_desktop_tracker_command(
 			break;
 
 		case SETFINETEMPO_COMMAND_DSKT:
-			if (on_event == YES && data[foo])
+			if (on_event && data[foo])
 				p_current_positions->sps_per_tick = (p_sample_rate << 8)/(data[foo]);
 			break;
 
 		case FINEPORTAMENTO_COMMAND_DSKT:
-			if (on_event == YES && data[foo]) {
+			if (on_event && data[foo]) {
 				bar = (unsigned char)data[foo];
 				p_current_voice->period += bar;
 				if (bar > 0) {
@@ -733,7 +731,7 @@ void process_desktop_tracker_command(
 			break;
 
 		case FINEVOLSLIDE_COMMAND_DSKT:
-			if (on_event == YES && data[foo]) {
+			if (on_event && data[foo]) {
 				bar = (signed char)data[foo] << 1;
 				if (bar > 0) {
 					if ((255 - p_current_voice->gain) > bar) {
@@ -754,7 +752,7 @@ void process_desktop_tracker_command(
 
 #ifdef DEVELOPING
 		default:
-			if (on_event == YES) printf("| %2X %2X\n",command[foo],data[foo]);
+			if (on_event) printf("| %2X %2X\n",command[foo],data[foo]);
 #endif
 		}
 	} /* end for (foo) */
