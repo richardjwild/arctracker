@@ -154,7 +154,7 @@ typedef enum output_api output_api;
 typedef struct {
 	char *mod_filename;
 	int volume;
-	yn pianola;
+	bool pianola;
 	output_api api;
 	bool loop_forever;
 } args_t;

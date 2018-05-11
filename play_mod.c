@@ -39,19 +39,19 @@ void initialise_values(
         positions_t *p_current_positions,
         voice_t *p_voice_info,
         module_t *p_module,
-        yn p_pianola,
+        bool p_pianola,
         long p_sample_rate);
 
 bool update_counters(
         positions_t *p_current_positions,
         module_t *p_module,
-        yn p_pianola);
+        bool p_pianola);
 
 void get_current_pattern_line(
         positions_t *p_current_positions,
         module_t *p_module,
         channel_event_t *p_current_pattern_line,
-        yn p_pianola);
+        bool p_pianola);
 
 void set_portamento_target(
         channel_event_t event,
@@ -207,7 +207,7 @@ void play_module(
 	while (!looped_yet || p_args->loop_forever);
     send_remaining_audio();
 
-	if (p_args->pianola == NO)
+	if (!p_args->pianola)
 		printf("\n");
 }
 
@@ -218,7 +218,7 @@ void initialise_values(
 	positions_t *p_current_positions,
 	voice_t *p_voice_info,
 	module_t *p_module,
-	yn p_pianola,
+	bool p_pianola,
 	long p_sample_rate)
 {
 	int channel;
@@ -230,9 +230,9 @@ void initialise_values(
 	p_current_positions->pattern_line_ptr = p_module->patterns[p_module->sequence[0]];
 
 #ifdef DEVELOPING
-	if (p_pianola == YES)
+	if (p_pianola)
 		printf("Pianola mode on\n");
-	else if (p_pianola == NO)
+	else
 		printf("Pianola mode off\n");
 #endif
 
@@ -242,7 +242,7 @@ void initialise_values(
 		p_voice_info[channel].panning = p_module->default_channel_stereo[channel] - 1;
 	}
 
-	if (p_pianola == NO) {
+	if (!p_pianola) {
 		printf("Playing position 1 of %ld", p_module->tune_length);
 		fflush(stdout);
 	}
@@ -257,7 +257,7 @@ void initialise_values(
 bool update_counters(
 	positions_t *p_current_positions,
 	module_t *p_module,
-	yn p_pianola)
+	bool p_pianola)
 {
 	unsigned char *sequence_ptr;
 	void **patterns_list_ptr;
@@ -279,7 +279,7 @@ bool update_counters(
 		patterns_list_ptr += *sequence_ptr;
 		p_current_positions->pattern_line_ptr = *patterns_list_ptr;
 
-		if (p_pianola == NO) {
+		if (!p_pianola) {
 			printf(
 				"%cPlaying position %d of %ld ",
 				13,
@@ -301,13 +301,13 @@ void get_current_pattern_line(
 	positions_t *p_current_positions,
 	module_t *p_module,
 	channel_event_t *p_current_pattern_line,
-	yn p_pianola)
+	bool p_pianola)
 {
 	int channel;
 	void *pattern_line_ptr;
 	channel_event_t *current_pattern_line_ptr;
 
-	if (p_pianola == YES)
+	if (p_pianola)
 		printf(
 			"%2d %2d | ",
 			p_current_positions->position_in_sequence,
@@ -390,7 +390,7 @@ void get_current_pattern_line(
 #endif
 		}
 
-		if (p_pianola == YES) {
+		if (p_pianola) {
 			if (p_module->format == TRACKER)
 				printf(
 					"%s %c%c%X%X | ",
@@ -406,7 +406,7 @@ void get_current_pattern_line(
 					current_pattern_line_ptr->sample);
 		}
 	}
-	if (p_pianola == YES)
+	if (p_pianola)
 		printf("\n");
 
 	/* remember pattern line address for next event */

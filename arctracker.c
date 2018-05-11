@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (retcode == SUCCESS) {
-			retcode = play_module(
+		play_module(
 				&module,
 				samples,
 				audio_api,

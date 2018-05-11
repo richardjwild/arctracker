@@ -33,7 +33,7 @@ return_status get_arguments(
 
 	/* defaults */
 	p_args->volume = 128;
-	p_args->pianola = NO;
+	p_args->pianola = false;
 	p_args->api = NOT_SPECIFIED;
 	p_args->mod_filename = "";
 	p_args->loop_forever = false;
@@ -48,7 +48,7 @@ return_status get_arguments(
 					retcode = BAD_ARGUMENTS;
 				} else if (*(p_argv[i]) == '-') {
 					if (strcmp(p_argv[i], ARG_PIANOLA) == 0) {
-						p_args->pianola = YES;
+						p_args->pianola = true;
 					} else if (strcmp(p_argv[i], ARG_LOOP) == 0) {
 						p_args->loop_forever = true;
 					} else if (strcmp(p_argv[i], ARG_OSS) == 0) {
