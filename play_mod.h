@@ -19,7 +19,7 @@ typedef struct {
     unsigned char note_currently_playing;
 } voice_t;
 
-return_status play_module(
+void play_module(
         module_t *p_module,
         sample_t *samples,
         audio_api_t audio_api,

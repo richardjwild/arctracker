@@ -83,14 +83,13 @@ void process_desktop_tracker_command(
         yn on_event,
         long p_sample_rate);
 
-return_status play_module(
+void play_module(
 	module_t *p_module,
 	sample_t *samples,
     audio_api_t audio_api,
 	unsigned int *p_periods,
 	args_t *p_args)
 {
-	return_status retcode;
 	int channel;
 
 	positions_t current_positions;
@@ -205,13 +204,11 @@ return_status play_module(
         /* write one tick's worth of audio data */
 		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
-	while ((!looped_yet || p_args->loop_forever) && (retcode == SUCCESS));
+	while (!looped_yet || p_args->loop_forever);
     send_remaining_audio();
 
 	if (p_args->pianola == NO)
 		printf("\n");
-
-	return (retcode);
 }
 
 /* initialise_values function.                    *
