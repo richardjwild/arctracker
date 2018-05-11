@@ -42,7 +42,7 @@ void initialise_values(
         yn p_pianola,
         long p_sample_rate);
 
-yn update_counters(
+bool update_counters(
         positions_t *p_current_positions,
         module_t *p_module,
         yn p_pianola);
@@ -98,7 +98,7 @@ return_status play_module(
 	voice_t voice_info[MAX_CHANNELS];
     int nframes_fraction = 0;
 
-	yn looped_yet = NO;
+	bool looped_yet = false;
 
 	initialise_values(
 		&current_positions,
@@ -205,7 +205,7 @@ return_status play_module(
         /* write one tick's worth of audio data */
 		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
-	while (((looped_yet == NO) || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
+	while ((!looped_yet || (p_args->loop_forever == YES)) && (retcode == SUCCESS));
     send_remaining_audio();
 
 	if (p_args->pianola == NO)
@@ -257,21 +257,21 @@ void initialise_values(
  * Called every n tracker periods where n is the current tune speed; *
  * updates position in pattern and position in sequence counters.    */
 
-yn update_counters(
+bool update_counters(
 	positions_t *p_current_positions,
 	module_t *p_module,
 	yn p_pianola)
 {
 	unsigned char *sequence_ptr;
 	void **patterns_list_ptr;
-	yn looped_yet = NO;
+	bool looped_yet = false;
 
 	p_current_positions->counter = 0;
 	if (++(p_current_positions->position_in_pattern) ==
 	p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]]) {
 		if (++p_current_positions->position_in_sequence == p_module->tune_length) {
 			p_current_positions->position_in_sequence = 0;
-			looped_yet = YES;
+			looped_yet = true;
 		}
 		p_current_positions->position_in_pattern = 0;
 
