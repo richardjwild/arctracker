@@ -28,13 +28,13 @@
 int main(int argc, char *argv[])
 {
 	return_status retcode = SUCCESS;
-	program_arguments args;
+	args_t args;
 	void *modfile = NULL;
 	long modsize = 0;
 	long sample_rate = DEFAULT_SAMPLERATE;
 	int audio_fd;
-	mod_details module;
-	sample_details samples[NUM_SAMPLES];
+	module_t module;
+	sample_t samples[NUM_SAMPLES];
 
 	short audio_buf[1024];
 	int err;

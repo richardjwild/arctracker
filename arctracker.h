@@ -146,7 +146,7 @@ enum yn {YES, NO};
 typedef enum yn yn;
 
 enum module_type {TRACKER, DESKTOP_TRACKER};
-typedef enum module_type module_type;
+typedef enum module_type module_type_t;
 
 enum output_api {NOT_SPECIFIED, OSS, ALSA};
 typedef enum output_api output_api;
@@ -157,10 +157,10 @@ typedef struct {
 	yn pianola;
 	output_api api;
 	yn loop_forever;
-} program_arguments;
+} args_t;
 
 typedef struct {
-	module_type format;
+	module_type_t format;
 	char tracker_version[LEN_TRACKER_VERSION+1];
 	char name[MAX_LEN_TUNENAME_DSKT+1];
 	char author[MAX_LEN_AUTHOR_DSKT+1];
@@ -173,7 +173,7 @@ typedef struct {
 	unsigned char pattern_length[NUM_PATTERNS];
 	unsigned char sequence[MAX_TUNELENGTH];
 	void *patterns[NUM_PATTERNS];
-} mod_details;
+} module_t;
 
 typedef struct {
 	char name[MAX_LEN_SAMPLENAME_DSKT+1];
@@ -186,7 +186,7 @@ typedef struct {
 	long sustain_start;
 	long sustain_length;
 	void *sample_data;
-} sample_details;
+} sample_t;
 
 typedef struct {
 	int position_in_sequence;
@@ -195,7 +195,7 @@ typedef struct {
 	int counter;
 	int speed;
 	long sps_per_tick;
-} tune_info;
+} positions_t;
 
 typedef struct {
 	unsigned char note;
@@ -208,13 +208,13 @@ typedef struct {
 	unsigned char data2;
 	unsigned char command3;
 	unsigned char data3;
-} current_event;
+} channel_event_t;
 
 /* function prototypes */
 return_status get_arguments(
 	int p_argc,
 	char *p_argv[],
-	program_arguments *p_args);
+	args_t *p_args);
 
 return_status load_file(
 	char *p_filename,

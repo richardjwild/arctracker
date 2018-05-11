@@ -4,19 +4,19 @@
 return_status read_file(
         void *p_modfile,
         long p_modsize,
-        mod_details *p_module,
-        sample_details *p_samples);
+        module_t *p_module,
+        sample_t *p_samples);
 
 return_status read_tracker_file(
         void *p_modfile,
         long p_modsize,
-        mod_details *p_module,
-        sample_details *p_samples);
+        module_t *p_module,
+        sample_t *p_samples);
 
 return_status read_desktop_tracker_file(
         void *p_modfile,
-        mod_details *p_module,
-        sample_details *p_samples);
+        module_t *p_module,
+        sample_t *p_samples);
 
 return_status search_tff(
         void *p_searchfrom,
@@ -46,11 +46,11 @@ return_status get_samples(
         void *p_search_from,
         long p_array_end,
         int *p_samples_found,
-        sample_details *p_samples);
+        sample_t *p_samples);
 
 return_status get_sample_info(
         void *p_search_from,
         long p_array_end,
-        sample_details *p_sample);
+        sample_t *p_sample);
 
 #endif //ARCTRACKER_READ_MOD_H

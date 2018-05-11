@@ -23,7 +23,7 @@ unsigned char adjust_logarithmic_gain(const unsigned char mlaw, const unsigned c
         return 0;
 }
 
-stereo_frame_t apply_gain(unsigned char mu_law, channel_info *voice)
+stereo_frame_t apply_gain(unsigned char mu_law, voice_t *voice)
 {
     stereo_frame_t stereo_frame;
     mu_law = adjust_logarithmic_gain(mu_law, voice->gain);

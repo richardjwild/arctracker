@@ -26,7 +26,7 @@
 return_status get_arguments(
 	int p_argc,
 	char *p_argv[],
-	program_arguments *p_args)
+	args_t *p_args)
 {
 	return_status retcode = SUCCESS;
         int i;

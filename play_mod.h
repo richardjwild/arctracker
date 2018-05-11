@@ -17,14 +17,14 @@ typedef struct {
     unsigned char arpeggio_counter;
     unsigned char last_data_byte;
     unsigned char note_currently_playing;
-} channel_info;
+} voice_t;
 
 return_status play_module(
-        mod_details *p_module,
-        sample_details *samples,
+        module_t *p_module,
+        sample_t *samples,
         audio_api_t audio_api,
         unsigned int *p_periods,
-        program_arguments *p_args);
+        args_t *p_args);
 
 void stop_playback();
 

@@ -36,66 +36,66 @@ char alphanum[] = {'-',
 	'U', 'V', 'W', 'X', 'Y', 'Z'};
 
 void initialise_values(
-        tune_info *p_current_positions,
-        channel_info *p_voice_info,
-        mod_details *p_module,
+        positions_t *p_current_positions,
+        voice_t *p_voice_info,
+        module_t *p_module,
         yn p_pianola,
         long p_sample_rate);
 
 yn update_counters(
-        tune_info *p_current_positions,
-        mod_details *p_module,
+        positions_t *p_current_positions,
+        module_t *p_module,
         yn p_pianola);
 
 void get_current_pattern_line(
-        tune_info *p_current_positions,
-        mod_details *p_module,
-        current_event *p_current_pattern_line,
+        positions_t *p_current_positions,
+        module_t *p_module,
+        channel_event_t *p_current_pattern_line,
         yn p_pianola);
 
 void set_portamento_target(
-        current_event event,
-        sample_details sample,
-        channel_info *voice,
+        channel_event_t event,
+        sample_t sample,
+        voice_t *voice,
         const unsigned int *periods);
 
 void trigger_new_note(
-		current_event event,
-		sample_details sample,
-		channel_info *voice,
+		channel_event_t event,
+		sample_t sample,
+		voice_t *voice,
 		unsigned int *periods,
-		module_type p_module_type);
+		module_type_t p_module_type);
 
 void process_tracker_command(
-        current_event *p_current_event,
-        channel_info *p_current_voice,
-        tune_info *p_current_positions,
-        mod_details *p_module,
+        channel_event_t *p_current_event,
+        voice_t *p_current_voice,
+        positions_t *p_current_positions,
+        module_t *p_module,
         unsigned int *p_periods,
         yn on_event);
 
 void process_desktop_tracker_command(
-        current_event *p_current_event,
-        channel_info *p_current_voice,
-        tune_info *p_current_positions,
-        mod_details *p_module,
+        channel_event_t *p_current_event,
+        voice_t *p_current_voice,
+        positions_t *p_current_positions,
+        module_t *p_module,
         unsigned int *p_periods,
         yn on_event,
         long p_sample_rate);
 
 return_status play_module(
-	mod_details *p_module,
-	sample_details *samples,
+	module_t *p_module,
+	sample_t *samples,
     audio_api_t audio_api,
 	unsigned int *p_periods,
-	program_arguments *p_args)
+	args_t *p_args)
 {
 	return_status retcode;
 	int channel;
 
-	tune_info current_positions;
-	current_event current_pattern_line[MAX_CHANNELS];
-	channel_info voice_info[MAX_CHANNELS];
+	positions_t current_positions;
+	channel_event_t current_pattern_line[MAX_CHANNELS];
+	voice_t voice_info[MAX_CHANNELS];
     int nframes_fraction = 0;
 
 	yn looped_yet = NO;
@@ -133,7 +133,7 @@ return_status play_module(
 			{
                 if (current_pattern_line[channel].note)
                 {
-                    sample_details sample = samples[current_pattern_line[channel].sample - 1];
+                    sample_t sample = samples[current_pattern_line[channel].sample - 1];
 
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
                         set_portamento_target(
@@ -162,7 +162,7 @@ return_status play_module(
 					 * have used this effect in a few modfiles, so I am implementing the same  *
 					 * behaviour here.                                                         */
 
-					sample_details sample = samples[current_pattern_line[channel].sample - 1];
+					sample_t sample = samples[current_pattern_line[channel].sample - 1];
 
 					if (p_module->format == TRACKER)
 						voice_info[channel].gain = sample.volume;
@@ -218,9 +218,9 @@ return_status play_module(
  * Set up values in preparation for player start. */
 
 void initialise_values(
-	tune_info *p_current_positions,
-	channel_info *p_voice_info,
-	mod_details *p_module,
+	positions_t *p_current_positions,
+	voice_t *p_voice_info,
+	module_t *p_module,
 	yn p_pianola,
 	long p_sample_rate)
 {
@@ -258,8 +258,8 @@ void initialise_values(
  * updates position in pattern and position in sequence counters.    */
 
 yn update_counters(
-	tune_info *p_current_positions,
-	mod_details *p_module,
+	positions_t *p_current_positions,
+	module_t *p_module,
 	yn p_pianola)
 {
 	unsigned char *sequence_ptr;
@@ -301,14 +301,14 @@ yn update_counters(
  * structure: note, sample, command, command data.                   */
 
 void get_current_pattern_line(
-	tune_info *p_current_positions,
-	mod_details *p_module,
-	current_event *p_current_pattern_line,
+	positions_t *p_current_positions,
+	module_t *p_module,
+	channel_event_t *p_current_pattern_line,
 	yn p_pianola)
 {
 	int channel;
 	void *pattern_line_ptr;
-	current_event *current_pattern_line_ptr;
+	channel_event_t *current_pattern_line_ptr;
 
 	if (p_pianola == YES)
 		printf(
@@ -417,16 +417,16 @@ void get_current_pattern_line(
 }
 
 void set_portamento_target(
-        current_event event,
-        sample_details sample,
-        channel_info *voice,
+        channel_event_t event,
+        sample_t sample,
+        voice_t *voice,
         const unsigned int *periods)
 {
     voice->target_period = periods[event.note + sample.transpose];
 }
 
 static inline
-bool sample_repeats(sample_details sample, module_type mod_type)
+bool sample_repeats(sample_t sample, module_type_t mod_type)
 {
     return (mod_type == TRACKER && sample.repeat_length != 2)
            || (mod_type == DESKTOP_TRACKER && sample.repeat_length != 0);
@@ -438,11 +438,11 @@ bool sample_repeats(sample_details sample, module_type mod_type)
  * incrementor to the correct value depending on the note (pitch) to be played.       */
 
 void trigger_new_note(
-		current_event event,
-		sample_details sample,
-		channel_info *voice,
+		channel_event_t event,
+		sample_t sample,
+		voice_t *voice,
 		unsigned int *periods,
-		module_type p_module_type)
+		module_type_t p_module_type)
 {
 	voice->channel_playing = true;
 	voice->sample_pointer = sample.sample_data;
@@ -465,10 +465,10 @@ void trigger_new_note(
  * process a tracker command.         */
 
 void process_tracker_command(
-	current_event *p_current_event,
-	channel_info *p_current_voice,
-	tune_info *p_current_positions,
-	mod_details *p_module,
+	channel_event_t *p_current_event,
+	voice_t *p_current_voice,
+	positions_t *p_current_positions,
+	module_t *p_module,
 	unsigned int *p_periods,
 	yn on_event)
 {
@@ -586,10 +586,10 @@ void process_tracker_command(
 }
 
 void process_desktop_tracker_command(
-	current_event *p_current_event,
-	channel_info  *p_current_voice,
-	tune_info     *p_current_positions,
-	mod_details   *p_module,
+	channel_event_t *p_current_event,
+	voice_t  *p_current_voice,
+	positions_t     *p_current_positions,
+	module_t   *p_module,
 	unsigned int  *p_periods,
 	yn            on_event,
 	long          p_sample_rate)

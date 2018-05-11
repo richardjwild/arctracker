@@ -38,8 +38,8 @@ char *alphanum_x[] = {"--",
 return_status read_file(
 	void *p_modfile,
         long p_modsize,
-        mod_details *p_module,
-	sample_details *p_samples)
+        module_t *p_module,
+	sample_t *p_samples)
 {
 	return_status retcode;
 	void *chunk_address;
@@ -101,8 +101,8 @@ return_status read_file(
 return_status read_tracker_file(
 	void *p_modfile,
 	long p_modsize,
-	mod_details *p_module,
-	sample_details *p_samples)
+	module_t *p_module,
+	sample_t *p_samples)
 {
 	return_status retcode;
 	void *chunk_address;
@@ -324,8 +324,8 @@ return_status read_tracker_file(
 
 return_status read_desktop_tracker_file(
 	void *p_modfile,
-	mod_details *p_module,
-	sample_details *p_samples)
+	module_t *p_module,
+	sample_t *p_samples)
 {
 	return_status retcode = SUCCESS;
 	void *tmp_ptr;
@@ -644,7 +644,7 @@ return_status get_samples(
 	void *p_search_from,
 	long p_array_end,
 	int  *p_samples_found,
-	sample_details *p_samples)
+	sample_t *p_samples)
 {
 	return_status retcode;
 	int sample_chunks_found = 0;
@@ -696,7 +696,7 @@ return_status get_samples(
 return_status get_sample_info(
 	void *p_search_from,
 	long p_array_end,
-	sample_details *p_sample)
+	sample_t *p_sample)
 {
 	void *chunk_address;
 	return_status retcode;

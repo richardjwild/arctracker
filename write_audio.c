@@ -36,9 +36,9 @@ long buffer_offset_for(int channel)
     return (frames_filled * channels) + channel;
 }
 
-void write_frames_for_channel(channel_info *voices, const int channel, const long frames_to_fill)
+void write_frames_for_channel(voice_t *voices, const int channel, const long frames_to_fill)
 {
-    channel_info *voice = voices + channel;
+    voice_t *voice = voices + channel;
     long offset = buffer_offset_for(channel);
     unsigned char *resample_buffer = resample(voice, frames_to_fill);
     for (long frame = 0; frame < frames_to_fill; frame++)
@@ -62,7 +62,7 @@ void mix_and_send()
     audio_output.write(audio_buffer, frames_filled);
 }
 
-void fill_frames(channel_info *voices, const long frames_to_fill)
+void fill_frames(voice_t *voices, const long frames_to_fill)
 {
     for (int channel = 0; channel < channels; channel++)
     {
@@ -92,7 +92,7 @@ long can_be_filled(const long frames_requested)
         return frames_requested;
 }
 
-void write_audio_data(channel_info *voices, const long frames_requested)
+void write_audio_data(voice_t *voices, const long frames_requested)
 {
     long frames_left = frames_requested;
     while (frames_left)
