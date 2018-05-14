@@ -119,10 +119,9 @@ void play_module(
 
 			for (channel = 0; channel < p_module->num_channels; channel++)
 			{
+				sample_t sample = samples[current_pattern_line[channel].sample - 1];
                 if (current_pattern_line[channel].note)
                 {
-                    sample_t sample = samples[current_pattern_line[channel].sample - 1];
-
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
                         set_portamento_target(
                                 current_pattern_line[channel],
@@ -146,13 +145,7 @@ void play_module(
 					 * for free: the command field is free for another effect to be used. I    *
 					 * have used this effect in a few modfiles, so I am implementing the same  *
 					 * behaviour here.                                                         */
-
-					sample_t sample = samples[current_pattern_line[channel].sample - 1];
-
-					if (p_module->format == TRACKER)
-						voice_info[channel].gain = sample.default_gain;
-					else
-						voice_info[channel].gain = (sample.default_gain * 2) + 1;
+					voice_info[channel].gain = sample.default_gain;
 				}
 			}
 			on_event = true;
