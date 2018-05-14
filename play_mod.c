@@ -54,15 +54,9 @@ void get_current_pattern_line(
         channel_event_t *p_current_pattern_line,
         bool p_pianola);
 
-void set_portamento_target(
-        channel_event_t event,
-        sample_t sample,
-        voice_t *voice);
+void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice);
 
-void trigger_new_note(
-		channel_event_t event,
-		sample_t sample,
-		voice_t *voice);
+void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
 
 void process_tracker_command(
         channel_event_t *p_current_event,
@@ -403,18 +397,12 @@ void get_current_pattern_line(
 	p_current_positions->pattern_line_ptr = pattern_line_ptr;
 }
 
-void set_portamento_target(
-        channel_event_t event,
-        sample_t sample,
-        voice_t *voice)
+void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice)
 {
     voice->target_period = period_for_note(event.note + sample.transpose);
 }
 
-void trigger_new_note(
-		channel_event_t event,
-		sample_t sample,
-		voice_t *voice)
+void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
 {
 	voice->channel_playing = true;
 	voice->sample_pointer = sample.sample_data;
