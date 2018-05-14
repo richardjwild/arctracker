@@ -63,8 +63,7 @@ void trigger_new_note(
 		channel_event_t event,
 		sample_t sample,
 		voice_t *voice,
-		unsigned int *periods,
-		module_type_t p_module_type);
+		unsigned int *periods);
 
 void process_tracker_command(
         channel_event_t *p_current_event,
@@ -147,8 +146,7 @@ void play_module(
 								current_pattern_line[channel],
 								sample,
 								&voice_info[channel],
-								p_periods,
-								p_module->format);
+								p_periods);
                 }
 				else if (current_pattern_line[channel].sample)
 				{
@@ -431,8 +429,7 @@ void trigger_new_note(
 		channel_event_t event,
 		sample_t sample,
 		voice_t *voice,
-		unsigned int *periods,
-		module_type_t p_module_type)
+		unsigned int *periods)
 {
 	voice->channel_playing = true;
 	voice->sample_pointer = sample.sample_data;
