@@ -420,11 +420,6 @@ void set_portamento_target(
     voice->target_period = periods[event.note + sample.transpose];
 }
 
-/* trigger_new_note function.                                                             *
- * sets up voice to play a new note: sets sample pointer to the start of the relevant *
- * sample data, sets repeat offset and length if the sample is to repeat, sets phase  *
- * incrementor to the correct value depending on the note (pitch) to be played.       */
-
 void trigger_new_note(
 		channel_event_t event,
 		sample_t sample,
