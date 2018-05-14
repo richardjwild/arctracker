@@ -174,7 +174,7 @@ typedef struct {
 
 typedef struct {
 	char name[MAX_LEN_SAMPLENAME_DSKT+1];
-	long volume;
+	long default_gain;
 	long sample_length;
 	bool repeats;
 	long repeat_offset;

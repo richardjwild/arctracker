@@ -442,7 +442,8 @@ return_status read_desktop_tracker_file(
 
 	for (i=0; i<p_module->num_samples; i++) {
 		p_samples[i].transpose = 26 - *(unsigned char *)tmp_ptr++;
-		p_samples[i].volume = *(unsigned char *)tmp_ptr;
+		unsigned char sample_volume = *(unsigned char *)tmp_ptr;
+		p_samples[i].default_gain = (sample_volume * 2) + 1;
 		tmp_ptr+=3;
 		read_nbytes(&(p_samples[i].period), tmp_ptr, 4);
 		tmp_ptr+=4;
@@ -730,7 +731,7 @@ return_status get_sample_info(
 	}
 
 	if (retcode == SUCCESS) {
-		read_nbytes(&p_sample->volume, chunk_address+8, 4);
+		read_nbytes(&p_sample->default_gain, chunk_address+8, 4);
 
 		retcode = search_tff(
 			p_search_from,

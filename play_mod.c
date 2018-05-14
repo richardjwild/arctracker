@@ -164,9 +164,9 @@ void play_module(
 					sample_t sample = samples[current_pattern_line[channel].sample - 1];
 
 					if (p_module->format == TRACKER)
-						voice_info[channel].gain = sample.volume;
+						voice_info[channel].gain = sample.default_gain;
 					else
-						voice_info[channel].gain = (sample.volume * 2) + 1;
+						voice_info[channel].gain = (sample.default_gain * 2) + 1;
 				}
 			}
 			on_event = true;
@@ -441,14 +441,12 @@ void trigger_new_note(
 	voice->note_currently_playing = event.note + sample.transpose;
 	voice->period = periods[voice->note_currently_playing];
 	voice->target_period = voice->period;
+	voice->gain = sample.default_gain;
 	voice->sample_repeats = sample.repeats;
 	voice->repeat_length = sample.repeat_length;
 	voice->sample_end = voice->sample_repeats
 			? sample.repeat_offset + sample.repeat_length
 			: sample.sample_length;
-	voice->gain = p_module_type == TRACKER
-			? sample.volume
-			: (sample.volume * 2) + 1;
 }
 
 /* process_tracker_command function.  *
