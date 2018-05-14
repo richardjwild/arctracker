@@ -54,6 +54,8 @@ void get_current_pattern_line(
         channel_event_t *p_current_pattern_line,
         bool p_pianola);
 
+void reset_gain_to_sample_default(voice_t *voice, sample_t sample);
+
 void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice);
 
 void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
@@ -137,15 +139,7 @@ void play_module(
                 }
 				else if (current_pattern_line[channel].sample)
 				{
-					/* this was a strange feature of tracker (and soundtracker) - I never knew *
-					 * whether it was meant or an accident.  If a sample number is specified   *
-					 * although no note is present, it resets the volume back to the sample's  *
-					 * default.  The phase accumulator is left alone, i.e. the sample is not   *
-					 * retriggered.  This was useful, as it was effectively a "volume" command *
-					 * for free: the command field is free for another effect to be used. I    *
-					 * have used this effect in a few modfiles, so I am implementing the same  *
-					 * behaviour here.                                                         */
-					voice_info[channel].gain = sample.default_gain;
+					reset_gain_to_sample_default(&voice_info[channel], sample);
 				}
 			}
 			on_event = true;
@@ -186,6 +180,11 @@ void play_module(
 
 	if (!p_args->pianola)
 		printf("\n");
+}
+
+void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
+{
+	voice->gain = sample.default_gain;
 }
 
 /* initialise_values function.                    *
