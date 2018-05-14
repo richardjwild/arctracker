@@ -54,6 +54,8 @@ void get_current_pattern_line(
         channel_event_t *p_current_pattern_line,
         bool p_pianola);
 
+void silence_channel(voice_t *voice);
+
 void reset_gain_to_sample_default(voice_t *voice, sample_t sample);
 
 void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice);
@@ -117,25 +119,29 @@ void play_module(
 				current_pattern_line,
 				p_args->pianola);
 
-			/* current pattern line now held in current_pattern_line */
-
 			for (channel = 0; channel < p_module->num_channels; channel++)
 			{
 				sample_t sample = samples[current_pattern_line[channel].sample - 1];
                 if (current_pattern_line[channel].note)
                 {
                     if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
-                        set_portamento_target(
-                                current_pattern_line[channel],
-                                sample,
-                                &voice_info[channel]);
+					{
+						set_portamento_target(
+								current_pattern_line[channel],
+								sample,
+								&voice_info[channel]);
+					}
                     else if (current_pattern_line[channel].sample > p_module->num_samples)
-						voice_info[channel].channel_playing = false;
+					{
+						silence_channel(&voice_info[channel]);
+					}
                     else
+					{
 						trigger_new_note(
 								current_pattern_line[channel],
 								sample,
 								&voice_info[channel]);
+					}
                 }
 				else if (current_pattern_line[channel].sample)
 				{
@@ -180,6 +186,11 @@ void play_module(
 
 	if (!p_args->pianola)
 		printf("\n");
+}
+
+void silence_channel(voice_t *voice)
+{
+	voice->channel_playing = false;
 }
 
 void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
