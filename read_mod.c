@@ -460,6 +460,7 @@ return_status read_desktop_tracker_file(
 		tmp_ptr+=MAX_LEN_SAMPLENAME_DSKT;
 		read_nbytes(&foo, tmp_ptr, 4);
 		p_samples[i].sample_data = p_modfile + foo;
+		p_samples[i].repeats = (p_samples[i].repeat_length != 0);
 		tmp_ptr+=4;
 
 #ifdef DEVELOPING
@@ -814,6 +815,8 @@ return_status get_sample_info(
 			p_sample->sample_data);
 	}
 #endif
+
+    p_sample->repeats = (p_sample->repeat_length != 2);
 
 	return (retcode);
 }

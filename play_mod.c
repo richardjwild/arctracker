@@ -422,13 +422,6 @@ void set_portamento_target(
     voice->target_period = periods[event.note + sample.transpose];
 }
 
-static inline
-bool sample_repeats(sample_t sample, module_type_t mod_type)
-{
-    return (mod_type == TRACKER && sample.repeat_length != 2)
-           || (mod_type == DESKTOP_TRACKER && sample.repeat_length != 0);
-}
-
 /* trigger_new_note function.                                                             *
  * sets up voice to play a new note: sets sample pointer to the start of the relevant *
  * sample data, sets repeat offset and length if the sample is to repeat, sets phase  *
@@ -448,7 +441,7 @@ void trigger_new_note(
 	voice->note_currently_playing = event.note + sample.transpose;
 	voice->period = periods[voice->note_currently_playing];
 	voice->target_period = voice->period;
-	voice->sample_repeats = sample_repeats(sample, p_module_type);
+	voice->sample_repeats = sample.repeats;
 	voice->repeat_length = sample.repeat_length;
 	voice->sample_end = voice->sample_repeats
 			? sample.repeat_offset + sample.repeat_length
