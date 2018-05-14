@@ -23,6 +23,7 @@
 #include "error.h"
 #include "write_audio.h"
 #include "gain.h"
+#include "period.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -56,21 +57,18 @@ void get_current_pattern_line(
 void set_portamento_target(
         channel_event_t event,
         sample_t sample,
-        voice_t *voice,
-        const unsigned int *periods);
+        voice_t *voice);
 
 void trigger_new_note(
 		channel_event_t event,
 		sample_t sample,
-		voice_t *voice,
-		unsigned int *periods);
+		voice_t *voice);
 
 void process_tracker_command(
         channel_event_t *p_current_event,
         voice_t *p_current_voice,
         positions_t *p_current_positions,
         module_t *p_module,
-        unsigned int *p_periods,
         bool on_event);
 
 void process_desktop_tracker_command(
@@ -78,7 +76,6 @@ void process_desktop_tracker_command(
         voice_t *p_current_voice,
         positions_t *p_current_positions,
         module_t *p_module,
-        unsigned int *p_periods,
         bool on_event,
         long p_sample_rate);
 
@@ -86,7 +83,6 @@ void play_module(
 	module_t *p_module,
 	sample_t *samples,
     audio_api_t audio_api,
-	unsigned int *p_periods,
 	args_t *p_args)
 {
 	int channel;
@@ -137,16 +133,14 @@ void play_module(
                         set_portamento_target(
                                 current_pattern_line[channel],
                                 sample,
-                                &voice_info[channel],
-                                p_periods);
+                                &voice_info[channel]);
                     else if (current_pattern_line[channel].sample > p_module->num_samples)
 						voice_info[channel].channel_playing = false;
                     else
 						trigger_new_note(
 								current_pattern_line[channel],
 								sample,
-								&voice_info[channel],
-								p_periods);
+								&voice_info[channel]);
                 }
 				else if (current_pattern_line[channel].sample)
 				{
@@ -178,7 +172,6 @@ void play_module(
                     &voice_info[channel],
                     &current_positions,
                     p_module,
-                    p_periods,
                     on_event);
             else
                 process_desktop_tracker_command(
@@ -186,7 +179,6 @@ void play_module(
                     &voice_info[channel],
                     &current_positions,
                     p_module,
-                    p_periods,
                     on_event,
                     audio_api.sample_rate);
         }
@@ -414,24 +406,22 @@ void get_current_pattern_line(
 void set_portamento_target(
         channel_event_t event,
         sample_t sample,
-        voice_t *voice,
-        const unsigned int *periods)
+        voice_t *voice)
 {
-    voice->target_period = periods[event.note + sample.transpose];
+    voice->target_period = period_for_note(event.note + sample.transpose);
 }
 
 void trigger_new_note(
 		channel_event_t event,
 		sample_t sample,
-		voice_t *voice,
-		unsigned int *periods)
+		voice_t *voice)
 {
 	voice->channel_playing = true;
 	voice->sample_pointer = sample.sample_data;
 	voice->phase_accumulator = 0.0;
 	voice->arpeggio_counter = 0;
 	voice->note_currently_playing = event.note + sample.transpose;
-	voice->period = periods[voice->note_currently_playing];
+	voice->period = period_for_note(voice->note_currently_playing);
 	voice->target_period = voice->period;
 	voice->gain = sample.default_gain;
 	voice->sample_repeats = sample.repeats;
@@ -449,11 +439,9 @@ void process_tracker_command(
 	voice_t *p_current_voice,
 	positions_t *p_current_positions,
 	module_t *p_module,
-	unsigned int *p_periods,
 	bool on_event)
 {
 	unsigned char temporary_note;
-	unsigned int *periods_ptr;
 
 	switch (p_current_event->command) {
 	case VOLUME_COMMAND:
@@ -539,10 +527,7 @@ void process_tracker_command(
 			if (++(p_current_voice->arpeggio_counter) == 3)
 				p_current_voice->arpeggio_counter = 0;
 
-			periods_ptr = p_periods;
-			periods_ptr += (temporary_note + 12);
-
-			p_current_voice->period = *periods_ptr;
+			p_current_voice->period = period_for_note(temporary_note + 12);
 		}
 		break;
 
@@ -569,14 +554,12 @@ void process_desktop_tracker_command(
 	voice_t  *p_current_voice,
 	positions_t     *p_current_positions,
 	module_t   *p_module,
-	unsigned int  *p_periods,
 	bool            on_event,
 	long          p_sample_rate)
 {
 	unsigned char temporary_note;
 	unsigned char command[4];
 	unsigned char data[4];
-	unsigned int *periods_ptr;
 	int foo;
 	int bar;
 
@@ -676,10 +659,7 @@ void process_desktop_tracker_command(
 				if (++(p_current_voice->arpeggio_counter) == 3)
 					p_current_voice->arpeggio_counter = 0;
 
-				periods_ptr = p_periods;
-				periods_ptr += (temporary_note + 13);
-
-				p_current_voice->period = *periods_ptr;
+				p_current_voice->period = period_for_note(temporary_note + 13);
 			}
 			break;
 

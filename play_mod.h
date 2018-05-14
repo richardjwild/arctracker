@@ -23,7 +23,6 @@ void play_module(
         module_t *p_module,
         sample_t *samples,
         audio_api_t audio_api,
-        unsigned int *p_periods,
         args_t *p_args);
 
 void stop_playback();

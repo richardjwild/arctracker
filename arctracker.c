@@ -40,32 +40,6 @@ int main(int argc, char *argv[])
 	int err;
 	audio_api_t audio_api;
 
-	/* Sample periods - one for each of the 36 notes.  The reason why we don't store   *
-	 * phase increment values directly is because the portamento up and down commands  *
-	 * operate on this period value, which is used to obtain the phase increment later *
-	 * by looking up from a table.  We implement it the same way to ensure maximum     *
-	 * fidelity to the original tracker playback.                                      */
-
-	unsigned int periods[] =
-		{0x06A0,0x0650,0x05F4,0x05A0,
-		0x054C,0x0500,0x04B8,0x0474,
-		0x0434,0x03F8,0x03C0,0x038A,
-
-		0x0358,0x0328,0x02FA,0x02D0,
-		0x02A6,0x0280,0x025C,0x023A,
-		0x021A,0x01FC,0x01E0,0x01C5,
-		0x01AC,0x0194,0x017D,0x0168,
-		0x0153,0x0140,0x012E,0x011D,
-		0x010D,0x00FE,0x00F0,0x00E2,
-		0x00D6,0x00CA,0x00BE,0x00B4,
-		0x00AA,0x00A0,0x0097,0x008F,
-		0x0087,0x007F,0x0078,0x0071,
-		0x006B,
-		0x0065,0x005E,0x005A,
-		0x0055,0x0050,0x004C,0x0048,
-		0x0044,0x0040,0x003C,0x0039,
-		0x0036};
-
 	retcode = get_arguments(
 		argc,
 		argv,
@@ -97,7 +71,6 @@ int main(int argc, char *argv[])
 				&module,
 				samples,
 				audio_api,
-				periods,
 				&args);
 	}
 
