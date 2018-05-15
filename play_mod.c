@@ -121,29 +121,30 @@ void play_module(
 
 			for (channel = 0; channel < p_module->num_channels; channel++)
 			{
-				sample_t sample = samples[current_pattern_line[channel].sample - 1];
-                if (current_pattern_line[channel].note)
+				channel_event_t event = current_pattern_line[channel];
+				sample_t sample = samples[event.sample - 1];
+                if (event.note)
                 {
-                    if (current_pattern_line[channel].command == TONEPORT_COMMAND_DSKT)
+                    if (event.command == TONEPORT_COMMAND_DSKT)
 					{
 						set_portamento_target(
-								current_pattern_line[channel],
+								event,
 								sample,
 								&voice_info[channel]);
 					}
-                    else if (current_pattern_line[channel].sample > p_module->num_samples)
+                    else if (event.sample > p_module->num_samples)
 					{
 						silence_channel(&voice_info[channel]);
 					}
                     else
 					{
 						trigger_new_note(
-								current_pattern_line[channel],
+								event,
 								sample,
 								&voice_info[channel]);
 					}
                 }
-				else if (current_pattern_line[channel].sample)
+				else if (event.sample)
 				{
 					reset_gain_to_sample_default(&voice_info[channel], sample);
 				}
@@ -153,16 +154,17 @@ void play_module(
 
         for (channel = 0; channel < p_module->num_channels; channel++)
         {
+			channel_event_t event = current_pattern_line[channel];
             if (p_module->format == TRACKER)
                 process_tracker_command(
-                    &current_pattern_line[channel],
+                    &event,
                     &voice_info[channel],
                     &current_positions,
                     p_module,
                     on_event);
             else
                 process_desktop_tracker_command(
-                    &current_pattern_line[channel],
+                    &event,
                     &voice_info[channel],
                     &current_positions,
                     p_module,
