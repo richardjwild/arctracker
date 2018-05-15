@@ -123,6 +123,7 @@ void play_module(
 			{
 				channel_event_t event = current_pattern_line[channel];
 				sample_t sample = samples[event.sample - 1];
+				voice_t voice = voice_info[channel];
                 if (event.note)
                 {
                     if (event.command == TONEPORT_COMMAND_DSKT)
@@ -130,24 +131,25 @@ void play_module(
 						set_portamento_target(
 								event,
 								sample,
-								&voice_info[channel]);
+								&voice);
 					}
                     else if (event.sample > p_module->num_samples)
 					{
-						silence_channel(&voice_info[channel]);
+						silence_channel(&voice);
 					}
                     else
 					{
 						trigger_new_note(
 								event,
 								sample,
-								&voice_info[channel]);
+								&voice);
 					}
                 }
 				else if (event.sample)
 				{
-					reset_gain_to_sample_default(&voice_info[channel], sample);
+					reset_gain_to_sample_default(&voice, sample);
 				}
+				voice_info[channel] = voice;
 			}
 			on_event = true;
 		}
