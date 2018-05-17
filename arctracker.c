@@ -59,10 +59,15 @@ int main(int argc, char *argv[])
 
 	if (retcode == SUCCESS)
 	{
-		if (args.api == OSS)
-			audio_api = initialise_oss(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
-		else if (args.api == ALSA)
-            audio_api = initialise_alsa(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
+		switch (configuration().api)
+		{
+			case OSS:
+				audio_api = initialise_oss(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
+				break;
+			case ALSA:
+				audio_api = initialise_alsa(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
+				break;
+		}
 	}
 
 	if (retcode == SUCCESS) {
