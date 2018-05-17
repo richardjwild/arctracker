@@ -77,6 +77,12 @@ void process_desktop_tracker_command(
         bool on_event,
         long p_sample_rate);
 
+static inline
+bool portamento(channel_event_t event)
+{
+	return event.command == TONEPORT_COMMAND_DSKT;
+}
+
 void play_module(
 	module_t *p_module,
 	sample_t *samples,
@@ -126,7 +132,7 @@ void play_module(
 				voice_t voice = voice_info[channel];
                 if (event.note)
                 {
-                    if (event.command == TONEPORT_COMMAND_DSKT)
+                    if (portamento(event))
 						set_portamento_target(event, sample, &voice);
                     else if (event.sample > p_module->num_samples)
 						silence_channel(&voice);
