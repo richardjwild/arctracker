@@ -95,8 +95,6 @@ void play_module(
     audio_api_t audio_api,
 	args_t *p_args)
 {
-	int channel;
-
 	positions_t current_positions;
 	channel_event_t current_pattern_line[MAX_CHANNELS];
 	voice_t voice_info[MAX_CHANNELS];
@@ -117,8 +115,9 @@ void play_module(
 	/* loop through whole tune */
 	do {
 	    current_positions.counter++;
-	    bool new_event = current_positions.counter == current_positions.speed;
-		if (new_event) {
+	    bool new_event = (current_positions.counter == current_positions.speed);
+		if (new_event)
+		{
 			/* new event. update counters: current position in pattern, position in sequence */
 			looped_yet = update_counters(
 				&current_positions,
@@ -131,47 +130,48 @@ void play_module(
 				p_module,
 				current_pattern_line,
 				p_args->pianola);
-
-			for (channel = 0; channel < p_module->num_channels; channel++)
-			{
-				channel_event_t event = current_pattern_line[channel];
-				sample_t sample = samples[event.sample - 1];
-				voice_t voice = voice_info[channel];
+		}
+        for (int channel = 0; channel < p_module->num_channels; channel++)
+        {
+            channel_event_t event = current_pattern_line[channel];
+            sample_t sample = samples[event.sample - 1];
+            voice_t voice = voice_info[channel];
+            if (new_event)
+            {
                 if (event.note)
                 {
                     if (portamento(event))
-						set_portamento_target(event, sample, &voice);
+                        set_portamento_target(event, sample, &voice);
                     else if (sample_out_of_range(event, *p_module))
-						silence_channel(&voice);
+                        silence_channel(&voice);
                     else
-						trigger_new_note(event, sample, &voice);
+                        trigger_new_note(event, sample, &voice);
                 }
-				else if (event.sample)
-				{
-					reset_gain_to_sample_default(&voice, sample);
-				}
-				voice_info[channel] = voice;
-			}
-		}
-
-        for (channel = 0; channel < p_module->num_channels; channel++)
-        {
-			channel_event_t event = current_pattern_line[channel];
+                else if (event.sample)
+                {
+                    reset_gain_to_sample_default(&voice, sample);
+                }
+            }
             if (p_module->format == TRACKER)
+            {
                 process_tracker_command(
-                    &event,
-                    &voice_info[channel],
-                    &current_positions,
-                    p_module,
-                    new_event);
+                        &event,
+                        &voice,
+                        &current_positions,
+                        p_module,
+                        new_event);
+            }
             else
+            {
                 process_desktop_tracker_command(
-                    &event,
-                    &voice_info[channel],
-                    &current_positions,
-                    p_module,
-                    new_event,
-                    audio_api.sample_rate);
+                        &event,
+                        &voice,
+                        &current_positions,
+                        p_module,
+                        new_event,
+                        audio_api.sample_rate);
+            }
+            voice_info[channel] = voice;
         }
 
         int extra_frame = 0;
