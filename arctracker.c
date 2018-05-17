@@ -24,6 +24,7 @@
 #include "oss.h"
 #include "alsa.h"
 #include "audio_api.h"
+#include "configuration.h"
 
 int main(int argc, char *argv[])
 {
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
 	int err;
 	audio_api_t audio_api;
 
+	read_configuration(argc, argv);
 	retcode = get_arguments(
 		argc,
 		argv,
