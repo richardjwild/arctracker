@@ -116,8 +116,9 @@ void play_module(
 
 	/* loop through whole tune */
 	do {
+	    current_positions.counter++;
 	    bool on_event = false;
-		if (++(current_positions.counter) == current_positions.speed) {
+		if (current_positions.counter == current_positions.speed) {
 			/* new event. update counters: current position in pattern, position in sequence */
 			looped_yet = update_counters(
 				&current_positions,
