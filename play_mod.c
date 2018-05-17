@@ -117,8 +117,8 @@ void play_module(
 	/* loop through whole tune */
 	do {
 	    current_positions.counter++;
-	    bool on_event = false;
-		if (current_positions.counter == current_positions.speed) {
+	    bool new_event = current_positions.counter == current_positions.speed;
+		if (new_event) {
 			/* new event. update counters: current position in pattern, position in sequence */
 			looped_yet = update_counters(
 				&current_positions,
@@ -152,7 +152,6 @@ void play_module(
 				}
 				voice_info[channel] = voice;
 			}
-			on_event = true;
 		}
 
         for (channel = 0; channel < p_module->num_channels; channel++)
@@ -164,14 +163,14 @@ void play_module(
                     &voice_info[channel],
                     &current_positions,
                     p_module,
-                    on_event);
+                    new_event);
             else
                 process_desktop_tracker_command(
                     &event,
                     &voice_info[channel],
                     &current_positions,
                     p_module,
-                    on_event,
+                    new_event,
                     audio_api.sample_rate);
         }
 
