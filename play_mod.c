@@ -83,6 +83,12 @@ bool portamento(channel_event_t event)
 	return event.command == TONEPORT_COMMAND_DSKT;
 }
 
+static inline
+bool sample_out_of_range(channel_event_t event, module_t module)
+{
+	return event.sample > module.num_samples;
+}
+
 void play_module(
 	module_t *p_module,
 	sample_t *samples,
@@ -134,7 +140,7 @@ void play_module(
                 {
                     if (portamento(event))
 						set_portamento_target(event, sample, &voice);
-                    else if (event.sample > p_module->num_samples)
+                    else if (sample_out_of_range(event, *p_module))
 						silence_channel(&voice);
                     else
 						trigger_new_note(event, sample, &voice);
