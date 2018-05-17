@@ -127,23 +127,11 @@ void play_module(
                 if (event.note)
                 {
                     if (event.command == TONEPORT_COMMAND_DSKT)
-					{
-						set_portamento_target(
-								event,
-								sample,
-								&voice);
-					}
+						set_portamento_target(event, sample, &voice);
                     else if (event.sample > p_module->num_samples)
-					{
 						silence_channel(&voice);
-					}
                     else
-					{
-						trigger_new_note(
-								event,
-								sample,
-								&voice);
-					}
+						trigger_new_note(event, sample, &voice);
                 }
 				else if (event.sample)
 				{
