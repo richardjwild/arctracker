@@ -23,7 +23,7 @@ mix.o: mix.c
 heap.o: heap.c
 	$(CC) $(CFLAGS) -c heap.c
 
-initialise.o: arctracker.h initialise.c error.h
+initialise.o: arctracker.h configuration.h initialise.c error.h
 	$(CC) $(CFLAGS) -c initialise.c
 
 read_mod.o: arctracker.h read_mod.h read_mod.c

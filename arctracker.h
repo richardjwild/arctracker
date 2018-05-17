@@ -214,9 +214,6 @@ return_status get_arguments(
 	char *p_argv[],
 	args_t *p_args);
 
-return_status load_file(
-	char *p_filename,
-	void **p_array_ptr,
-	long *p_bytes_loaded);
+return_status load_file(void **p_array_ptr, long *p_bytes_loaded);
 
 #endif // ARCTRACKER_H

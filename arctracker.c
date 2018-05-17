@@ -48,10 +48,7 @@ int main(int argc, char *argv[])
 		&args);
 
 	if (retcode == SUCCESS)
-		retcode = load_file(
-			args.mod_filename,
-			&modfile,
-			&modsize);
+		retcode = load_file(&modfile, &modsize);
 
 	if (retcode == SUCCESS)
 		retcode = read_file(

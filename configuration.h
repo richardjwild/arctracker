@@ -3,7 +3,6 @@
 
 #include "arctracker.h"
 
-static inline
 args_t configuration();
 
 void read_configuration(int p_argc, char *p_argv[]);

@@ -19,6 +19,7 @@
 #include "arctracker.h"
 #include "config.h"
 #include "error.h"
+#include "configuration.h"
 
 /* function get_arguments.                     *
  * Get the arguments passed to the application */
@@ -103,17 +104,14 @@ return_status get_arguments(
 /* function load_file.                                    *
  * Allocate memory and load modfile into the memory space */
 
-return_status load_file (
-	char *p_filename,
-	void **p_array_ptr,
-	long *p_bytes_loaded)
+return_status load_file (void **p_array_ptr, long *p_bytes_loaded)
 {
 	return_status retcode = SUCCESS;
 	FILE *fp;
 	long bytes_read = 0;
 
 	/* open the file for reading */
-	fp = fopen(p_filename, READONLY);
+	fp = fopen(configuration().mod_filename, READONLY);
 
 	if (fp == NULL) {
 		fprintf(stderr,"Cannot open file.\n");

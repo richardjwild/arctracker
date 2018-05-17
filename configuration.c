@@ -2,8 +2,7 @@
 #include "arctracker.h"
 #include "error.h"
 
-static
-args_t config = {
+static args_t config = {
         .volume = 64,
         .pianola = false,
         .api = ALSA,
@@ -11,7 +10,6 @@ args_t config = {
         .loop_forever = false
 };
 
-static inline
 args_t configuration()
 {
     return config;
