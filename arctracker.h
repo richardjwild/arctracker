@@ -189,6 +189,6 @@ typedef struct {
 	unsigned char data3;
 } channel_event_t;
 
-return_status load_file(void **p_array_ptr, long *p_bytes_loaded);
+void load_file(void **p_array_ptr, size_t *p_bytes_loaded);
 
 #endif // ARCTRACKER_H

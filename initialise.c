@@ -16,50 +16,32 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/mman.h>
 #include "arctracker.h"
 #include "config.h"
 #include "error.h"
 #include "configuration.h"
 
-/* function load_file.                                    *
- * Allocate memory and load modfile into the memory space */
-
-return_status load_file (void **p_array_ptr, long *p_bytes_loaded)
+size_t file_size(int fd)
 {
-	return_status retcode = SUCCESS;
-	FILE *fp;
-	long bytes_read = 0;
+    struct stat statbuf;
+    if (fstat(fd, &statbuf) == -1)
+        system_error("Error reading file status");
+    return (size_t) statbuf.st_size;
+}
 
-	/* open the file for reading */
-	fp = fopen(configuration().mod_filename, READONLY);
-
-	if (fp == NULL) {
-		fprintf(stderr,"Cannot open file.\n");
-		retcode = BAD_FILE;
-	} else {
-
-#ifdef DEVELOPING
-	printf("Successfully opened file for reading.\n");
-#endif
-
-		do {
-			if ((*p_array_ptr = realloc(*p_array_ptr, (*p_bytes_loaded)+ARRAY_CHUNK_SIZE)) != NULL) {
-				bytes_read = (long)fread((*p_array_ptr + *p_bytes_loaded), 1, ARRAY_CHUNK_SIZE, fp);
-				(*p_bytes_loaded) += bytes_read;
-			} else {
-				fprintf(stderr, "Failed to allocate memory.\n");
-				retcode = MEMORY_FAILURE;
-			}
-		}
-		while ((retcode == SUCCESS) && (bytes_read == ARRAY_CHUNK_SIZE));
-
-		fclose(fp);
-	}
-
-#ifdef DEVELOPING
-	if (retcode == SUCCESS)
-		printf("File successfully loaded at address %d, bytes loaded=%d\n", *p_array_ptr, *p_bytes_loaded);
-#endif
-
-	return (retcode);
+void load_file(void **addr, size_t *bytes_loaded)
+{
+	FILE *fp = fopen(configuration().mod_filename, READONLY);
+	if (fp != NULL)
+    {
+        int fd = fileno(fp);
+        *bytes_loaded = file_size(fd);
+        *addr = mmap(NULL, *bytes_loaded, PROT_READ, MAP_SHARED, fd, 0);
+    }
+    else
+        error("Cannot open file.");
 }
