@@ -11,7 +11,7 @@ arctracker: arctracker.o configuration.o initialise.o read_mod.o play_mod.o peri
 arctracker.o: arctracker.h audio_api.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
 
-configuration.o: arctracker.h configuration.h error.h configuration.c
+configuration.o: configuration.h error.h configuration.c
 	$(CC) $(CFLAGS) -c configuration.c
 
 resample.o: resample.c heap.h

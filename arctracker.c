@@ -29,7 +29,6 @@
 int main(int argc, char *argv[])
 {
 	return_status retcode = SUCCESS;
-	args_t args;
 	void *modfile = NULL;
 	long modsize = 0;
 	long sample_rate = DEFAULT_SAMPLERATE;
@@ -42,10 +41,6 @@ int main(int argc, char *argv[])
 	audio_api_t audio_api;
 
 	read_configuration(argc, argv);
-	retcode = get_arguments(
-		argc,
-		argv,
-		&args);
 
 	if (retcode == SUCCESS)
 		retcode = load_file(&modfile, &modsize);

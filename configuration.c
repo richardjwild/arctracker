@@ -1,5 +1,7 @@
+#include <stddef.h>
+#include <memory.h>
+#include <stdlib.h>
 #include "configuration.h"
-#include "arctracker.h"
 #include "error.h"
 
 static args_t config = {

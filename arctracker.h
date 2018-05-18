@@ -54,12 +54,6 @@
 #define DEFAULT_SAMPLERATE 44100
 #define AUDIO_BUFFER_SIZE_FRAMES 1024
 
-#define ARG_PIANOLA "--pianola"
-#define ARG_OSS "--oss"
-#define ARG_ALSA "--alsa"
-#define ARG_VOLUME "--volume="
-#define ARG_LOOP "--loop"
-
 #define DSKT_CHUNK "DskT"
 #define MUSX_CHUNK "MUSX"
 #define TINF_CHUNK "TINF"
@@ -145,17 +139,6 @@ typedef enum return_status return_status;
 enum module_type {TRACKER, DESKTOP_TRACKER};
 typedef enum module_type module_type_t;
 
-enum output_api {NOT_SPECIFIED, OSS, ALSA};
-typedef enum output_api output_api;
-
-typedef struct {
-	char *mod_filename;
-	int volume;
-	bool pianola;
-	output_api api;
-	bool loop_forever;
-} args_t;
-
 typedef struct {
 	module_type_t format;
 	char tracker_version[LEN_TRACKER_VERSION+1];
@@ -207,12 +190,6 @@ typedef struct {
 	unsigned char command3;
 	unsigned char data3;
 } channel_event_t;
-
-/* function prototypes */
-return_status get_arguments(
-	int p_argc,
-	char *p_argv[],
-	args_t *p_args);
 
 return_status load_file(void **p_array_ptr, long *p_bytes_loaded);
 
