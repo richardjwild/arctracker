@@ -67,11 +67,11 @@ audio_api_t audio_api(int audio_buffer_frames, long sample_rate)
     return oss_audio_api;
 }
 
-audio_api_t initialise_oss(long sample_rate, int audio_buffer_frames)
+audio_api_t initialise_oss()
 {
     open_device();
     set_sample_format();
     set_number_of_channels();
-    set_sample_rate(sample_rate);
-    return audio_api(audio_buffer_frames, sample_rate);
+    set_sample_rate(DEFAULT_SAMPLERATE);
+    return audio_api(AUDIO_BUFFER_SIZE_FRAMES, DEFAULT_SAMPLERATE);
 }

@@ -5,6 +5,6 @@
 
 #define PCM_DEVICE "plughw:0,0"
 
-audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames);
+audio_api_t initialise_alsa();
 
 #endif //ARCTRACKER_ALSA_H

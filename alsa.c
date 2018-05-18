@@ -114,17 +114,17 @@ audio_api_t audio_api(int audio_buffer_frames, int sample_rate)
     return alsa_audio_api;
 }
 
-audio_api_t initialise_alsa(long sample_rate_in, int audio_buffer_frames)
+audio_api_t initialise_alsa()
 {
     open_device();
     snd_pcm_hw_params_t *hw_params = initialise_hardware_params();
     set_access_type(hw_params);
     set_sample_format(hw_params);
-    unsigned int sample_rate = set_sample_rate(sample_rate_in, hw_params);
+    unsigned int sample_rate = set_sample_rate(DEFAULT_SAMPLERATE, hw_params);
     set_number_of_channels(hw_params);
     set_parameters(hw_params);
     prepare_audio_device();
-    return audio_api(audio_buffer_frames, sample_rate);
+    return audio_api(AUDIO_BUFFER_SIZE_FRAMES, sample_rate);
 }
 
 #endif

@@ -51,10 +51,10 @@ int main(int argc, char *argv[])
 		switch (configuration().api)
 		{
 			case OSS:
-				audio_api = initialise_oss(DEFAULT_SAMPLERATE, AUDIO_BUFFER_SIZE_FRAMES);
+				audio_api = initialise_oss();
 				break;
 			case ALSA:
-				audio_api = initialise_alsa(DEFAULT_SAMPLERATE, AUDIO_BUFFER_SIZE_FRAMES);
+				audio_api = initialise_alsa();
 				break;
 		}
 	}

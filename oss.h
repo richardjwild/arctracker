@@ -5,6 +5,6 @@
 
 #define DEVICE_NAME "/dev/dsp"
 
-audio_api_t initialise_oss(long sample_rate, int audio_buffer_frames);
+audio_api_t initialise_oss();
 
 #endif // ARCTRACKER_OSS_H
