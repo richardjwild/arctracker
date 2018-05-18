@@ -28,22 +28,16 @@
 
 int main(int argc, char *argv[])
 {
-	return_status retcode = SUCCESS;
-	void *modfile = NULL;
-	long modsize = 0;
-	long sample_rate = DEFAULT_SAMPLERATE;
-	int audio_fd;
+	return_status retcode;
+	void *modfile;
+	long modsize;
 	module_t module;
 	sample_t samples[NUM_SAMPLES];
-
-	short audio_buf[1024];
-	int err;
 	audio_api_t audio_api;
 
 	read_configuration(argc, argv);
 
-	if (retcode == SUCCESS)
-		retcode = load_file(&modfile, &modsize);
+	retcode = load_file(&modfile, &modsize);
 
 	if (retcode == SUCCESS)
 		retcode = read_file(
@@ -57,10 +51,10 @@ int main(int argc, char *argv[])
 		switch (configuration().api)
 		{
 			case OSS:
-				audio_api = initialise_oss(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
+				audio_api = initialise_oss(DEFAULT_SAMPLERATE, AUDIO_BUFFER_SIZE_FRAMES);
 				break;
 			case ALSA:
-				audio_api = initialise_alsa(sample_rate, AUDIO_BUFFER_SIZE_FRAMES);
+				audio_api = initialise_alsa(DEFAULT_SAMPLERATE, AUDIO_BUFFER_SIZE_FRAMES);
 				break;
 		}
 	}
