@@ -27,17 +27,13 @@ int main(int argc, char *argv[])
 {
 	return_status retcode;
 	void *modfile;
-	size_t modsize;
 	module_t module;
 	sample_t samples[NUM_SAMPLES];
 	audio_api_t audio_api;
 
 	read_configuration(argc, argv);
 
-	load_file(&modfile, &modsize);
     retcode = read_file(
-        modfile,
-        modsize,
         &module,
         samples);
 

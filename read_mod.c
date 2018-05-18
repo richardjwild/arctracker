@@ -16,9 +16,13 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include "arctracker.h"
-#include "read_mod.h"
 #include "config.h"
+#include "error.h"
+#include "configuration.h"
+#include "read_mod.h"
 
 char *notes_x[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -35,20 +39,47 @@ char *alphanum_x[] = {"--",
  * Read tracker modfile that is loaded in memory, and obtain its details; store information *
  * in structures for easier subsequent processing                                           */
 
-return_status read_file(
-	void *p_modfile,
-        long p_modsize,
-        module_t *p_module,
-	sample_t *p_samples)
+typedef struct {
+	void *addr;
+	size_t size;
+} mapped_file_t;
+
+size_t file_size(int fd)
 {
+	struct stat statbuf;
+	if (fstat(fd, &statbuf) == -1)
+		system_error("Error reading file status");
+	return (size_t) statbuf.st_size;
+}
+
+mapped_file_t load_file(char *filename)
+{
+	mapped_file_t mapped_file;
+	FILE *fp = fopen(filename, READONLY);
+	if (fp == NULL)
+	{
+		error("Cannot open file.");
+	}
+	else
+	{
+		int fd = fileno(fp);
+		mapped_file.size = file_size(fd);
+		mapped_file.addr = mmap(NULL, mapped_file.size, PROT_READ, MAP_SHARED, fd, 0);
+	}
+	return mapped_file;
+}
+
+return_status read_file(module_t *p_module, sample_t *p_samples)
+{
+	mapped_file_t file = load_file(configuration().mod_filename);
 	return_status retcode;
 	void *chunk_address;
-	long array_end = (long)p_modfile + p_modsize;
+	long array_end = (long)file.addr + file.size;
 
 	/* get module information */
 
 	retcode = search_tff(
-		p_modfile,
+		file.addr,
 		&chunk_address,
 		array_end,
 		MUSX_CHUNK,
@@ -59,7 +90,7 @@ return_status read_file(
 		printf("MUSX chunk not found, looking for DskT chunk...\n");
 #endif
 		retcode = search_tff(
-			p_modfile,
+            file.addr,
 			&chunk_address,
 			array_end,
 			DSKT_CHUNK,
@@ -70,12 +101,12 @@ return_status read_file(
 			retcode = NOT_MODULE;
 		} else {
 			printf("File is DESKTOP TRACKER format.\n");
-			if (chunk_address != p_modfile) {
-				p_modfile = chunk_address;
+			if (chunk_address != file.addr) {
+                file.addr = chunk_address;
 			}
 			p_module->format = DESKTOP_TRACKER;
 			retcode = read_desktop_tracker_file(
-				p_modfile,
+                file.addr,
 				p_module,
 				p_samples);
 		}
@@ -83,8 +114,8 @@ return_status read_file(
 		printf("File is TRACKER format.\n");
 		p_module->format = TRACKER;
 		retcode = read_tracker_file(
-			p_modfile,
-			p_modsize,
+            file.addr,
+            file.size,
 			p_module,
 			p_samples);
 	}

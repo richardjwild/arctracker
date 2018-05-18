@@ -1,9 +1,9 @@
 #ifndef ARCTRACKER_READ_MOD_H
 #define ARCTRACKER_READ_MOD_H
 
+#define READONLY "r"
+
 return_status read_file(
-        void *p_modfile,
-        long p_modsize,
         module_t *p_module,
         sample_t *p_samples);
 

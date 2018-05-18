@@ -32,10 +32,7 @@
 
 /* macro definitions */
 
-#define READONLY "r"
 #define STRINGS_MATCH 0
-
-#define ARRAY_CHUNK_SIZE 16384
 
 #define LEN_TRACKER_VERSION 4
 #define MAX_LEN_TUNENAME 32
@@ -117,20 +114,12 @@
 /* type definitions */
 enum return_status {
 	SUCCESS,
-	BAD_ARGUMENTS,
-	BAD_FILE,
-	MEMORY_FAILURE,
 	CHUNK_NOT_FOUND,
 	NOT_MODULE,
 	FILE_CORRUPT,
 	NO_PATTERNS_IN_MODULE,
 	NO_SAMPLES_IN_MODULE,
-	CANNOT_OPEN_AUDIO_DEVICE,
-	CANNOT_SET_SAMPLE_RATE,
-	AUDIO_WRITE_ERROR,
-	SAMPLE_INVALID,
-	ALSA_ERROR,
-	API_NOT_AVAILABLE
+	SAMPLE_INVALID
 };
 typedef enum return_status return_status;
 
@@ -188,7 +177,5 @@ typedef struct {
 	unsigned char command3;
 	unsigned char data3;
 } channel_event_t;
-
-void load_file(void **p_array_ptr, size_t *p_bytes_loaded);
 
 #endif // ARCTRACKER_H
