@@ -64,4 +64,6 @@ int main(int argc, char *argv[])
 
 	if (modfile != NULL)
 		free(modfile);
+
+	exit(EXIT_SUCCESS);
 }
