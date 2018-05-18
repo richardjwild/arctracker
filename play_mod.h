@@ -22,9 +22,6 @@ typedef struct {
 void play_module(
         module_t *p_module,
         sample_t *samples,
-        audio_api_t audio_api,
-        args_t *p_args);
-
-void stop_playback();
+        audio_api_t audio_api);
 
 #endif //ARCTRACKER_PLAY_MOD_H

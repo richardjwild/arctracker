@@ -24,6 +24,7 @@
 #include "write_audio.h"
 #include "gain.h"
 #include "period.h"
+#include "configuration.h"
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -45,14 +46,12 @@ void initialise_values(
 
 bool update_counters(
         positions_t *p_current_positions,
-        module_t *p_module,
-        bool p_pianola);
+        module_t *p_module);
 
 void get_current_pattern_line(
         positions_t *p_current_positions,
         module_t *p_module,
-        channel_event_t *p_current_pattern_line,
-        bool p_pianola);
+        channel_event_t *p_current_pattern_line);
 
 void silence_channel(voice_t *voice);
 
@@ -77,6 +76,8 @@ void process_desktop_tracker_command(
         bool on_event,
         long p_sample_rate);
 
+static args_t config;
+
 static inline
 bool portamento(channel_event_t event)
 {
@@ -92,9 +93,9 @@ bool sample_out_of_range(channel_event_t event, module_t module)
 void play_module(
 	module_t *p_module,
 	sample_t *samples,
-    audio_api_t audio_api,
-	args_t *p_args)
+    audio_api_t audio_api)
 {
+    config = configuration();
 	positions_t current_positions;
 	channel_event_t current_pattern_line[MAX_CHANNELS];
 	voice_t voice_info[MAX_CHANNELS];
@@ -106,11 +107,11 @@ void play_module(
 		&current_positions,
 		voice_info,
 		p_module,
-		p_args->pianola,
+		configuration().pianola,
 		audio_api.sample_rate);
 
 	initialise_audio(audio_api, p_module->num_channels);
-	set_master_gain(p_args->volume);
+	set_master_gain(config.volume);
 
 	/* loop through whole tune */
 	do {
@@ -121,15 +122,13 @@ void play_module(
 			/* new event. update counters: current position in pattern, position in sequence */
 			looped_yet = update_counters(
 				&current_positions,
-				p_module,
-				p_args->pianola);
+				p_module);
 
 			/* we have a new pattern line to process */
 			get_current_pattern_line(
 				&current_positions,
 				p_module,
-				current_pattern_line,
-				p_args->pianola);
+				current_pattern_line);
 		}
         for (int channel = 0; channel < p_module->num_channels; channel++)
         {
@@ -185,10 +184,10 @@ void play_module(
         /* write one tick's worth of audio data */
 		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
 	}
-	while (!looped_yet || p_args->loop_forever);
+	while (!looped_yet || config.loop_forever);
     send_remaining_audio();
 
-	if (!p_args->pianola)
+	if (!config.pianola)
 		printf("\n");
 }
 
@@ -247,8 +246,7 @@ void initialise_values(
 
 bool update_counters(
 	positions_t *p_current_positions,
-	module_t *p_module,
-	bool p_pianola)
+	module_t *p_module)
 {
 	unsigned char *sequence_ptr;
 	void **patterns_list_ptr;
@@ -270,7 +268,7 @@ bool update_counters(
 		patterns_list_ptr += *sequence_ptr;
 		p_current_positions->pattern_line_ptr = *patterns_list_ptr;
 
-		if (!p_pianola) {
+		if (!config.pianola) {
 			printf(
 				"%cPlaying position %d of %ld ",
 				13,
@@ -291,14 +289,13 @@ bool update_counters(
 void get_current_pattern_line(
 	positions_t *p_current_positions,
 	module_t *p_module,
-	channel_event_t *p_current_pattern_line,
-	bool p_pianola)
+	channel_event_t *p_current_pattern_line)
 {
 	int channel;
 	void *pattern_line_ptr;
 	channel_event_t *current_pattern_line_ptr;
 
-	if (p_pianola)
+	if (config.pianola)
 		printf(
 			"%2d %2d | ",
 			p_current_positions->position_in_sequence,
@@ -381,7 +378,7 @@ void get_current_pattern_line(
 #endif
 		}
 
-		if (p_pianola) {
+		if (config.pianola) {
 			if (p_module->format == TRACKER)
 				printf(
 					"%s %c%c%X%X | ",
@@ -397,7 +394,7 @@ void get_current_pattern_line(
 					current_pattern_line_ptr->sample);
 		}
 	}
-	if (p_pianola)
+	if (config.pianola)
 		printf("\n");
 
 	/* remember pattern line address for next event */
