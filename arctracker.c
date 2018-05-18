@@ -16,15 +16,12 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
-#include <signal.h>
 #include "arctracker.h"
-#include "config.h"
+#include "configuration.h"
 #include "read_mod.h"
 #include "play_mod.h"
 #include "oss.h"
 #include "alsa.h"
-#include "audio_api.h"
-#include "configuration.h"
 
 int main(int argc, char *argv[])
 {
