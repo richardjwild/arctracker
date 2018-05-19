@@ -3,9 +3,7 @@
 
 #define READONLY "r"
 
-return_status read_file(
-        module_t *p_module,
-        sample_t *p_samples);
+return_status read_file(module_t *p_module);
 
 return_status read_tracker_file(
         void *p_modfile,

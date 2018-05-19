@@ -28,14 +28,11 @@ int main(int argc, char *argv[])
 	return_status retcode;
 	void *modfile;
 	module_t module;
-	sample_t samples[NUM_SAMPLES];
 	audio_api_t audio_api;
 
 	read_configuration(argc, argv);
 
-    retcode = read_file(
-        &module,
-        samples);
+    retcode = read_file(&module);
 
 	if (retcode == SUCCESS)
 	{

@@ -70,7 +70,7 @@ mapped_file_t load_file(char *filename)
 	return mapped_file;
 }
 
-return_status read_file(module_t *p_module, sample_t *p_samples)
+return_status read_file(module_t *p_module)
 {
 	mapped_file_t file = load_file(configuration().mod_filename);
 	return_status retcode;
