@@ -108,8 +108,7 @@ return_status read_file(module_t *p_module, sample_t *p_samples)
 			p_module->format = DESKTOP_TRACKER;
 			retcode = read_desktop_tracker_file(
                 file.addr,
-				p_module,
-				p_samples);
+				p_module);
 		}
 	} else {
 		printf("File is TRACKER format.\n");
@@ -117,8 +116,7 @@ return_status read_file(module_t *p_module, sample_t *p_samples)
 		retcode = read_tracker_file(
             file.addr,
             file.size,
-			p_module,
-			p_samples);
+			p_module);
 	}
 
 	if (retcode == SUCCESS) {
@@ -133,8 +131,7 @@ return_status read_file(module_t *p_module, sample_t *p_samples)
 return_status read_tracker_file(
 	void *p_modfile,
 	long p_modsize,
-	module_t *p_module,
-	sample_t *p_samples)
+	module_t *p_module)
 {
 	return_status retcode;
 	void *chunk_address;
@@ -357,8 +354,7 @@ return_status read_tracker_file(
 
 return_status read_desktop_tracker_file(
 	void *p_modfile,
-	module_t *p_module,
-	sample_t *p_samples)
+	module_t *p_module)
 {
 	return_status retcode = SUCCESS;
 	void *tmp_ptr;
