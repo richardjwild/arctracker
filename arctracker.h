@@ -127,22 +127,6 @@ enum module_type {TRACKER, DESKTOP_TRACKER};
 typedef enum module_type module_type_t;
 
 typedef struct {
-	module_type_t format;
-	char tracker_version[LEN_TRACKER_VERSION+1];
-	char name[MAX_LEN_TUNENAME_DSKT+1];
-	char author[MAX_LEN_AUTHOR_DSKT+1];
-	long num_channels;
-	unsigned char default_channel_stereo[MAX_CHANNELS_DSKT];
-	long initial_speed;
-	long tune_length;
-	long num_patterns;
-	long num_samples;
-	unsigned char pattern_length[NUM_PATTERNS];
-	unsigned char sequence[MAX_TUNELENGTH];
-	void *patterns[NUM_PATTERNS];
-} module_t;
-
-typedef struct {
 	char name[MAX_LEN_SAMPLENAME_DSKT+1];
 	long default_gain;
 	long sample_length;
@@ -155,6 +139,23 @@ typedef struct {
 	long sustain_length;
 	void *sample_data;
 } sample_t;
+
+typedef struct {
+	module_type_t format;
+	char tracker_version[LEN_TRACKER_VERSION+1];
+	char name[MAX_LEN_TUNENAME_DSKT+1];
+	char author[MAX_LEN_AUTHOR_DSKT+1];
+	long num_channels;
+	unsigned char default_channel_stereo[MAX_CHANNELS_DSKT];
+	long initial_speed;
+	long tune_length;
+	long num_patterns;
+	long num_samples;
+	sample_t *samples;
+	unsigned char pattern_length[NUM_PATTERNS];
+	unsigned char sequence[MAX_TUNELENGTH];
+	void *patterns[NUM_PATTERNS];
+} module_t;
 
 typedef struct {
 	int position_in_sequence;

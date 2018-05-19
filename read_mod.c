@@ -23,6 +23,7 @@
 #include "error.h"
 #include "configuration.h"
 #include "read_mod.h"
+#include "heap.h"
 
 char *notes_x[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
@@ -336,12 +337,13 @@ return_status read_tracker_file(
 
 	/* get sample information */
 
+    p_module->samples = allocate_array(36, sizeof(sample_t));
 	if (retcode == SUCCESS)
 		retcode = get_samples(
 			p_modfile,
 			array_end,
 			&num_samples,
-			p_samples);
+			p_module->samples);
 
 	if (retcode == SUCCESS)
 		p_module->num_samples = num_samples;
@@ -471,45 +473,46 @@ return_status read_desktop_tracker_file(
 	printf("to %d\n", tmp_ptr);
 #endif
 
+	p_module->samples = allocate_array(p_module->num_samples, sizeof(sample_t));
 	for (i=0; i<p_module->num_samples; i++) {
-		p_samples[i].transpose = 26 - *(unsigned char *)tmp_ptr++;
+        p_module->samples[i].transpose = 26 - *(unsigned char *)tmp_ptr++;
 		unsigned char sample_volume = *(unsigned char *)tmp_ptr;
-		p_samples[i].default_gain = (sample_volume * 2) + 1;
+        p_module->samples[i].default_gain = (sample_volume * 2) + 1;
 		tmp_ptr+=3;
-		read_nbytes(&(p_samples[i].period), tmp_ptr, 4);
+		read_nbytes(&(p_module->samples[i].period), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_samples[i].sustain_start), tmp_ptr, 4);
+		read_nbytes(&(p_module->samples[i].sustain_start), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_samples[i].sustain_length), tmp_ptr, 4);
+		read_nbytes(&(p_module->samples[i].sustain_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_samples[i].repeat_offset), tmp_ptr, 4);
+		read_nbytes(&(p_module->samples[i].repeat_offset), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_samples[i].repeat_length), tmp_ptr, 4);
+		read_nbytes(&(p_module->samples[i].repeat_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_samples[i].sample_length), tmp_ptr, 4);
+		read_nbytes(&(p_module->samples[i].sample_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nchar(p_samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
+		read_nchar(p_module->samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
 		tmp_ptr+=MAX_LEN_SAMPLENAME_DSKT;
 		read_nbytes(&foo, tmp_ptr, 4);
-		p_samples[i].sample_data = p_modfile + foo;
-		p_samples[i].repeats = (p_samples[i].repeat_length != 0);
+        p_module->samples[i].sample_data = p_modfile + foo;
+        p_module->samples[i].repeats = (p_module->samples[i].repeat_length != 0);
 		tmp_ptr+=4;
 
 #ifdef DEVELOPING
 		printf(
-			"%d.  %s: note=%d volume=%d period=%d sustain start=%d sustain end=%d "
-			"repeat offset=%d repeat length=%d sample length=%d sample data=%d\n",
+			"%d.  %s: transpose=%d default gain=%ld period=%ld sustain start=%ld sustain end=%ld "
+			"repeat offset=%ld repeat length=%ld sample length=%ld sample data=%ld\n",
 			i,
-			p_samples[i].name,
-			p_samples[i].note,
-			p_samples[i].volume,
-			p_samples[i].period,
-			p_samples[i].sustain_start,
-			p_samples[i].sustain_length,
-			p_samples[i].repeat_offset,
-			p_samples[i].repeat_length,
-			p_samples[i].sample_length,
-			p_samples[i].sample_data);
+            p_module->samples[i].name,
+            p_module->samples[i].transpose,
+            p_module->samples[i].default_gain,
+            p_module->samples[i].period,
+            p_module->samples[i].sustain_start,
+            p_module->samples[i].sustain_length,
+            p_module->samples[i].repeat_offset,
+            p_module->samples[i].repeat_length,
+            p_module->samples[i].sample_length,
+            p_module->samples[i].sample_data);
 #endif
 
 #ifdef DEVELOPING

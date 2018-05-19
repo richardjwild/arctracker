@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (retcode == SUCCESS) {
-		play_module(&module, samples, audio_api);
+		play_module(&module, audio_api);
 	}
 
 	audio_api.finish();
