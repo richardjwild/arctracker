@@ -1,21 +1,3 @@
-/* Copyright (c) Richard Wild 2004, 2005                                   *
- *                                                                         *
- * This file is part of Arctracker.                                        *
- *                                                                         *
- * Arctracker is free software; you can redistribute it and/or modify      *
- * it under the terms of the GNU General Public License as published by    *
- * the Free Software Foundation; either version 2 of the License, or       *
- * (at your option) any later version.                                     *
- *                                                                         *
- * Arctracker is distributed in the hope that it will be useful,           *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
- * GNU General Public License for more details.                            *
- *                                                                         *
- * You should have received a copy of the GNU General Public License       *
- * along with Arctracker; if not, write to the Free Software               *
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
-
 #include "arctracker.h"
 #include "configuration.h"
 #include "read_mod.h"
@@ -23,27 +5,25 @@
 #include "oss.h"
 #include "alsa.h"
 
+audio_api_t initialise_audio_api();
+
 int main(int argc, char *argv[])
 {
-	audio_api_t audio_api;
-
 	read_configuration(argc, argv);
-
     module_t module = read_file();
+    audio_api_t audio_api = initialise_audio_api();
+	play_module(&module, audio_api);
+	audio_api.finish();
+	exit(EXIT_SUCCESS);
+}
 
+audio_api_t initialise_audio_api()
+{
 	switch (configuration().api)
 	{
 		case OSS:
-			audio_api = initialise_oss();
-			break;
+			return initialise_oss();
 		case ALSA:
-			audio_api = initialise_alsa();
-			break;
+			return initialise_alsa();
 	}
-
-	play_module(&module, audio_api);
-
-	audio_api.finish();
-
-	exit(EXIT_SUCCESS);
 }
