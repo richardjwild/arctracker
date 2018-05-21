@@ -105,14 +105,10 @@ return_status read_file(module_t *p_module)
 			if (chunk_address != file.addr) {
                 file.addr = chunk_address;
 			}
-			p_module->format = DESKTOP_TRACKER;
-			retcode = read_desktop_tracker_file(
-                file.addr,
-				p_module);
+			*p_module = read_desktop_tracker_file(file.addr);
 		}
 	} else {
 		printf("File is TRACKER format.\n");
-//		p_module->format = TRACKER;
 		*p_module = read_tracker_file(file.addr, file.size);
 	}
 
@@ -186,212 +182,80 @@ module_t read_tracker_file(void *p_modfile, long p_modsize)
 	return module;
 }
 
-return_status read_desktop_tracker_file(
-	void *p_modfile,
-	module_t *p_module)
+module_t read_desktop_tracker_file(void *p_modfile)
 {
 	return_status retcode = SUCCESS;
 	void *tmp_ptr;
 	long foo;
 	int i;
+    module_t module = {
+            .format = DESKTOP_TRACKER,
+            .initial_speed = 6
+    };
 
-#ifdef DEVELOPING
-	char filename[2048];
-	FILE *fp;
-#endif
+	read_nchar(module.name, p_modfile+4, MAX_LEN_TUNENAME_DSKT, true);
 
-	read_nchar(p_module->name, p_modfile+4, MAX_LEN_TUNENAME_DSKT, true);
-#ifdef DEVELOPING
-	printf("Tune name is: %s\n", p_module->name);
-#endif
+	read_nchar(module.author, p_modfile+68, MAX_LEN_AUTHOR_DSKT, true);
 
-	read_nchar(p_module->author, p_modfile+68, MAX_LEN_AUTHOR_DSKT, true);
-#ifdef DEVELOPING
-	printf("Author is: %s\n", p_module->author);
-#endif
+	read_nbytes(&module.num_channels, p_modfile+136, 4);
 
-	read_nbytes(&(p_module->num_channels), p_modfile+136, 4);
-#ifdef DEVELOPING
-	printf("Number of voices = %d\n", p_module->num_channels);
-#endif
+	read_nbytes(&module.tune_length, p_modfile+140, 4);
 
-	read_nbytes(&(p_module->tune_length), p_modfile+140, 4);
-#ifdef DEVELOPING
-	printf("Tune length = %d\n", p_module->tune_length);
-#endif
+	read_nchar(module.default_channel_stereo, p_modfile+144, MAX_CHANNELS_DSKT, false);
 
-	read_nchar(p_module->default_channel_stereo, p_modfile+144, MAX_CHANNELS_DSKT, false);
-#ifdef DEVELOPING
-	printf(
-		"Default stereo positions: %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
-		p_module->default_channel_stereo[0],
-		p_module->default_channel_stereo[1],
-		p_module->default_channel_stereo[2],
-		p_module->default_channel_stereo[3],
-		p_module->default_channel_stereo[4],
-		p_module->default_channel_stereo[5],
-		p_module->default_channel_stereo[6],
-		p_module->default_channel_stereo[7],
-		p_module->default_channel_stereo[8],
-		p_module->default_channel_stereo[9],
-		p_module->default_channel_stereo[10],
-		p_module->default_channel_stereo[11],
-		p_module->default_channel_stereo[12],
-		p_module->default_channel_stereo[13],
-		p_module->default_channel_stereo[14],
-		p_module->default_channel_stereo[15]);
-#endif
+	read_nbytes(&module.initial_speed, p_modfile+152, 4);
 
-	read_nbytes(&(p_module->initial_speed), p_modfile+152, 4);
-#ifdef DEVELOPING
-	printf("Initial speed = %d\n", p_module->initial_speed);
-#endif
+	read_nbytes(&module.num_patterns, p_modfile+160, 4);
 
-	read_nbytes(&(p_module->num_patterns), p_modfile+160, 4);
-#ifdef DEVELOPING
-	printf("Number of patterns = %d\n", p_module->num_patterns);
-#endif
+	read_nbytes(&module.num_samples, p_modfile+164, 4);
 
-	read_nbytes(&(p_module->num_samples), p_modfile+164, 4);
-#ifdef DEVELOPING
-	printf("Number of samples = %d\n", p_module->num_samples);
-#endif
+	read_nchar(module.sequence, p_modfile+168, module.tune_length, false);
 
-	read_nchar(p_module->sequence, p_modfile+168, p_module->tune_length, false);
-#ifdef DEVELOPING
-	printf("Sequence: ");
-	for (i=0; i<p_module->tune_length; i++)
-		printf("%d ",p_module->sequence[i]);
-	printf("\n");
-#endif
-
-	tmp_ptr = p_modfile + 168 + (((p_module->tune_length + 3)>>2)<<2); /* align to word boundary */
-	for (i=0; i<p_module->num_patterns; i++) {
+	tmp_ptr = p_modfile + 168 + (((module.tune_length + 3)>>2)<<2); /* align to word boundary */
+	for (i=0; i<module.num_patterns; i++)
+	{
 		read_nbytes(&foo, tmp_ptr, 4);
-		p_module->patterns[i] = p_modfile + foo;
-#ifdef DEVELOPING
-		printf(
-			"Got pattern %d at offset %d, address %d, previous %d\n",
-			i,
-			foo,
-			p_module->patterns[i],
-			p_module->patterns[i]-p_module->patterns[i-1]);
-#endif
+		module.patterns[i] = p_modfile + foo;
 		tmp_ptr += 4;
 	}
 
-#ifdef DEVELOPING
-	printf("Pattern lengths:");
-#endif
-	for (i=0; i<p_module->num_patterns; i++) {
-		p_module->pattern_length[i] = *(unsigned char *)tmp_ptr;
-#ifdef DEVELOPING
-		printf(" %d", p_module->pattern_length[i]);
-#endif
+	for (i=0; i<module.num_patterns; i++)
+	{
+		module.pattern_length[i] = *(unsigned char *)tmp_ptr;
 		tmp_ptr++;
 	}
-#ifdef DEVELOPING
-	printf("\n");
-#endif
 
-#ifdef DEVELOPING
-	printf("Aligning pointer %d ", tmp_ptr);
-#endif
-	if (p_module->num_patterns % 4)
-		tmp_ptr = tmp_ptr + (4 - (p_module->num_patterns % 4));
-#ifdef DEVELOPING
-	printf("to %d\n", tmp_ptr);
-#endif
+	if (module.num_patterns % 4)
+		tmp_ptr = tmp_ptr + (4 - (module.num_patterns % 4));
 
-	p_module->samples = allocate_array(p_module->num_samples, sizeof(sample_t));
-	for (i=0; i<p_module->num_samples; i++) {
-        p_module->samples[i].transpose = 26 - *(unsigned char *)tmp_ptr++;
+	module.samples = allocate_array(module.num_samples, sizeof(sample_t));
+	for (i=0; i<module.num_samples; i++)
+	{
+        module.samples[i].transpose = 26 - *(unsigned char *)tmp_ptr++;
 		unsigned char sample_volume = *(unsigned char *)tmp_ptr;
-        p_module->samples[i].default_gain = (sample_volume * 2) + 1;
+        module.samples[i].default_gain = (sample_volume * 2) + 1;
 		tmp_ptr+=3;
-		read_nbytes(&(p_module->samples[i].period), tmp_ptr, 4);
+		read_nbytes(&(module.samples[i].period), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_module->samples[i].sustain_start), tmp_ptr, 4);
+		read_nbytes(&(module.samples[i].sustain_start), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_module->samples[i].sustain_length), tmp_ptr, 4);
+		read_nbytes(&(module.samples[i].sustain_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_module->samples[i].repeat_offset), tmp_ptr, 4);
+		read_nbytes(&(module.samples[i].repeat_offset), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_module->samples[i].repeat_length), tmp_ptr, 4);
+		read_nbytes(&(module.samples[i].repeat_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(p_module->samples[i].sample_length), tmp_ptr, 4);
+		read_nbytes(&(module.samples[i].sample_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nchar(p_module->samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
+		read_nchar(module.samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
 		tmp_ptr+=MAX_LEN_SAMPLENAME_DSKT;
 		read_nbytes(&foo, tmp_ptr, 4);
-        p_module->samples[i].sample_data = p_modfile + foo;
-        p_module->samples[i].repeats = (p_module->samples[i].repeat_length != 0);
+        module.samples[i].sample_data = p_modfile + foo;
+        module.samples[i].repeats = (module.samples[i].repeat_length != 0);
 		tmp_ptr+=4;
-
-#ifdef DEVELOPING
-		printf(
-			"%d.  %s: transpose=%d default gain=%ld period=%ld sustain start=%ld sustain end=%ld "
-			"repeat offset=%ld repeat length=%ld sample length=%ld sample data=%ld\n",
-			i,
-            p_module->samples[i].name,
-            p_module->samples[i].transpose,
-            p_module->samples[i].default_gain,
-            p_module->samples[i].period,
-            p_module->samples[i].sustain_start,
-            p_module->samples[i].sustain_length,
-            p_module->samples[i].repeat_offset,
-            p_module->samples[i].repeat_length,
-            p_module->samples[i].sample_length,
-            p_module->samples[i].sample_data);
-#endif
-
-#ifdef DEVELOPING
-		strcpy(filename, p_samples[i].name);
-		strcat(filename, ".smp");
-		fp = fopen(filename, "w");
-		fwrite(p_samples[i].sample_data, 1, p_samples[i].sample_length, fp);
-		fclose(fp);
-#endif
 	}
 
-#ifdef DEVELOPING
-	/* print out first pattern for debugging purposes */
-	tmp_ptr = p_module->patterns[2];
-	printf("attempting to print pattern data at address %d\n", tmp_ptr);
-	for (i=0; i<p_module->pattern_length[2]; i++) {
-		for (foo=0; foo<p_module->num_channels; foo++) {
-			read_nbytes(&bar, tmp_ptr, 4);
-
-			if (bar & 0xfe000000) {
-				tmp_ptr+=4; /* is four effects */
-
-				printf(
-					"%s %s%s",
-					notes_x[((bar & 4032) >> 6)],
-					alphanum_x[(bar & 63)],
-					alphanum_x[((bar & 0x1f000) >> 12) + 1]);
-
-				read_nbytes(&bar, tmp_ptr, 4);
-				tmp_ptr+=4;
-
-				printf(" %8X | ", bar);
-			} else {
-				tmp_ptr+=4; /* is one effect */
-
-				printf(
-					"%s %s%s%X%X | ",
-					notes_x[((bar & 4032) >> 6)],
-					alphanum_x[(bar & 63)],
-					alphanum_x[((bar & 0x1f000) >> 12) + 1],
-					(bar & 0xf0000000) >> 28,
-					(bar & 0xf000000) >> 24);
-			}
-		} /* end for foo */
-		printf("\n");
-	} /* end for i */
-#endif
-
-	return (retcode);
+	return module;
 }
 
 /* function search_tff.                                            *
