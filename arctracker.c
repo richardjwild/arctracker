@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
 	read_configuration(argc, argv);
 
-    retcode = read_file(&module);
+    module = read_file();
 
 	if (retcode == SUCCESS)
 	{

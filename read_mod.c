@@ -70,55 +70,51 @@ mapped_file_t load_file(char *filename)
 	return mapped_file;
 }
 
-return_status read_file(module_t *p_module)
+module_t read_file()
 {
-	mapped_file_t file = load_file(configuration().mod_filename);
-	return_status retcode;
-	void *chunk_address;
-	long array_end = (long)file.addr + file.size;
+    mapped_file_t file = load_file(configuration().mod_filename);
+    return_status retcode;
+    module_t module;
+    void *chunk_address;
+    long array_end = (long) file.addr + file.size;
 
-	/* get module information */
-
-	retcode = search_tff(
-		file.addr,
-		&chunk_address,
-		array_end,
-		MUSX_CHUNK,
-		1);
-
-	if (retcode == CHUNK_NOT_FOUND)	{
-#ifdef DEVELOPING
-		printf("MUSX chunk not found, looking for DskT chunk...\n");
-#endif
-		retcode = search_tff(
+    retcode = search_tff(
             file.addr,
-			&chunk_address,
-			array_end,
-			DSKT_CHUNK,
-			1);
+            &chunk_address,
+            array_end,
+            MUSX_CHUNK,
+            1);
 
-		if (retcode == CHUNK_NOT_FOUND) {
-			fprintf(stderr,"File type not recognised\n");
-			retcode = NOT_MODULE;
-		} else {
-			printf("File is DESKTOP TRACKER format.\n");
-			if (chunk_address != file.addr) {
+    if (retcode == CHUNK_NOT_FOUND)
+    {
+        retcode = search_tff(
+                file.addr,
+                &chunk_address,
+                array_end,
+                DSKT_CHUNK,
+                1);
+
+        if (retcode == SUCCESS)
+        {
+            printf("File is DESKTOP TRACKER format.\n");
+            if (chunk_address != file.addr)
+            {
                 file.addr = chunk_address;
-			}
-			*p_module = read_desktop_tracker_file(file.addr);
-		}
-	} else {
-		printf("File is TRACKER format.\n");
-		*p_module = read_tracker_file(file.addr, file.size);
-	}
+            }
+            module = read_desktop_tracker_file(file.addr);
+        }
+        else
+            error("File type not recognised");
+    }
+    else
+    {
+        printf("File is TRACKER format.\n");
+        module = read_tracker_file(file.addr, file.size);
+    }
 
-	if (retcode == SUCCESS) {
-		printf("Module name: %s\nAuthor: %s\n",
-		       p_module->name,
-		       p_module->author);
-	}
+    printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
 
-	return (retcode);
+    return module;
 }
 
 module_t read_tracker_file(void *p_modfile, long p_modsize)

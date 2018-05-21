@@ -3,7 +3,7 @@
 
 #define READONLY "r"
 
-return_status read_file(module_t *p_module);
+module_t read_file();
 
 module_t read_tracker_file(void *p_modfile, long p_modsize);
 
