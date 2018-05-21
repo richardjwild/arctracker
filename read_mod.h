@@ -5,10 +5,7 @@
 
 return_status read_file(module_t *p_module);
 
-return_status read_tracker_file(
-        void *p_modfile,
-        long p_modsize,
-        module_t *p_module);
+module_t read_tracker_file(void *p_modfile, long p_modsize);
 
 return_status read_desktop_tracker_file(
         void *p_modfile,

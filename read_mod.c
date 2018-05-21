@@ -112,11 +112,8 @@ return_status read_file(module_t *p_module)
 		}
 	} else {
 		printf("File is TRACKER format.\n");
-		p_module->format = TRACKER;
-		retcode = read_tracker_file(
-            file.addr,
-            file.size,
-			p_module);
+//		p_module->format = TRACKER;
+		*p_module = read_tracker_file(file.addr, file.size);
 	}
 
 	if (retcode == SUCCESS) {
@@ -128,11 +125,9 @@ return_status read_file(module_t *p_module)
 	return (retcode);
 }
 
-return_status read_tracker_file(
-	void *p_modfile,
-	long p_modsize,
-	module_t *p_module)
+module_t read_tracker_file(void *p_modfile, long p_modsize)
 {
+    module_t module;
 	return_status retcode;
 	void *chunk_address;
 	long array_end = (long)p_modfile + p_modsize;
@@ -143,6 +138,8 @@ return_status read_tracker_file(
 	printf("Found MUSX chunk.\n");
 #endif
 
+	module.format = TRACKER;
+
 	retcode = search_tff(
 		p_modfile,
 		&chunk_address,
@@ -151,10 +148,9 @@ return_status read_tracker_file(
 		1);
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - TINF chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - TINF chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->tracker_version, chunk_address+8, 4, true);
+		read_nchar(module.tracker_version, chunk_address+8, 4, true);
 #ifdef DEVELOPING
 		printf("Found TINF chunk.  Tracker version=%s\n", p_module->tracker_version);
 #endif
@@ -168,10 +164,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - MVOX chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - MVOX chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nbytes(&(p_module->num_channels), chunk_address+8, 4);
+		read_nbytes(&module.num_channels, chunk_address+8, 4);
 #ifdef DEVELOPING
 		printf("Found MVOX chunk.  Number of voices=%d\n", p_module->num_channels);
 #endif
@@ -185,10 +180,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - STER chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - STER chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->default_channel_stereo, chunk_address+8, MAX_CHANNELS, false);
+		read_nchar(module.default_channel_stereo, chunk_address+8, MAX_CHANNELS, false);
 #ifdef DEVELOPING
 		printf(
 			"Found STER chunk.  Default stereo positions:\n"
@@ -219,10 +213,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - MNAM chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - MNAM chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->name, chunk_address+8, MAX_LEN_TUNENAME, true);
+		read_nchar(module.name, chunk_address+8, MAX_LEN_TUNENAME, true);
 #ifdef DEVELOPING
 		printf("Found MNAM chunk.  Tune name = %s\n", p_module->name);
 #endif
@@ -236,10 +229,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - ANAM chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - ANAM chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->author, chunk_address+8, MAX_LEN_AUTHOR, true);
+		read_nchar(module.author, chunk_address+8, MAX_LEN_AUTHOR, true);
 #ifdef DEVELOPING
 		printf("Found ANAM chunk.  Author = %s\n", p_module->author);
 #endif
@@ -253,10 +245,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - MLEN chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - MLEN chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nbytes(&(p_module->tune_length), chunk_address+8, 4);
+		read_nbytes(&module.tune_length, chunk_address+8, 4);
 #ifdef DEVELOPING
 		printf("Found MLEN chunk.  Tune length = %d patterns\n", p_module->tune_length);
 #endif
@@ -270,10 +261,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - PNUM chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - PNUM chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nbytes(&(p_module->num_patterns), chunk_address+8, 4);
+		read_nbytes(&module.num_patterns, chunk_address+8, 4);
 #ifdef DEVELOPING
 		printf("Found PNUM chunk.  Number of patterns = %d\n", p_module->num_patterns);
 #endif
@@ -287,10 +277,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - PLEN chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - PLEN chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->pattern_length, chunk_address+8, NUM_PATTERNS, false);
+		read_nchar(module.pattern_length, chunk_address+8, NUM_PATTERNS, false);
 #ifdef DEVELOPING
 		printf("Found PLEN chunk.  Pattern lengths:\n");
 
@@ -309,10 +298,9 @@ return_status read_tracker_file(
 	}
 
 	if (retcode == CHUNK_NOT_FOUND) {
-		fprintf(stderr,"Modfile corrupt - SEQU chunk not found\n");
-		retcode = FILE_CORRUPT;
+		error("Modfile corrupt - SEQU chunk not found");
 	} else if (retcode == SUCCESS) {
-		read_nchar(p_module->sequence, chunk_address+8, MAX_TUNELENGTH, false);
+		read_nchar(module.sequence, chunk_address+8, MAX_TUNELENGTH, false);
 #ifdef DEVELOPING
 		printf("Found SEQU chunk.  Sequence:\n");
 
@@ -329,27 +317,27 @@ return_status read_tracker_file(
 		retcode = get_patterns(
 			p_modfile,
 			array_end,
-			p_module->patterns,
+			module.patterns,
 			&num_patterns);
 
 	/* get sample information */
 
-    p_module->samples = allocate_array(36, sizeof(sample_t));
+    module.samples = allocate_array(36, sizeof(sample_t));
 	if (retcode == SUCCESS)
 		retcode = get_samples(
 			p_modfile,
 			array_end,
 			&num_samples,
-			p_module->samples);
+			module.samples);
 
 	if (retcode == SUCCESS)
-		p_module->num_samples = num_samples;
+		module.num_samples = num_samples;
 
 	/* set default value for initial speed */
 	if (retcode == SUCCESS)
-		p_module->initial_speed = 6;
+		module.initial_speed = 6;
 
-	return (retcode);
+	return module;
 }
 
 return_status read_desktop_tracker_file(
