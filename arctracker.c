@@ -25,36 +25,25 @@
 
 int main(int argc, char *argv[])
 {
-	return_status retcode;
-	void *modfile;
-	module_t module;
 	audio_api_t audio_api;
 
 	read_configuration(argc, argv);
 
-    module = read_file();
+    module_t module = read_file();
 
-	if (retcode == SUCCESS)
+	switch (configuration().api)
 	{
-		switch (configuration().api)
-		{
-			case OSS:
-				audio_api = initialise_oss();
-				break;
-			case ALSA:
-				audio_api = initialise_alsa();
-				break;
-		}
+		case OSS:
+			audio_api = initialise_oss();
+			break;
+		case ALSA:
+			audio_api = initialise_alsa();
+			break;
 	}
 
-	if (retcode == SUCCESS) {
-		play_module(&module, audio_api);
-	}
+	play_module(&module, audio_api);
 
 	audio_api.finish();
-
-	if (modfile != NULL)
-		free(modfile);
 
 	exit(EXIT_SUCCESS);
 }
