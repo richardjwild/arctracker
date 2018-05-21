@@ -127,215 +127,61 @@ return_status read_file(module_t *p_module)
 
 module_t read_tracker_file(void *p_modfile, long p_modsize)
 {
-    module_t module;
-	return_status retcode;
 	void *chunk_address;
 	long array_end = (long)p_modfile + p_modsize;
-	int num_patterns;
-	int num_samples;
+    module_t module = {
+            .format = TRACKER,
+            .initial_speed = 6,
+            .samples = allocate_array(36, sizeof(sample_t))
+    };
 
-#ifdef DEVELOPING
-	printf("Found MUSX chunk.\n");
-#endif
-
-	module.format = TRACKER;
-
-	retcode = search_tff(
-		p_modfile,
-		&chunk_address,
-		array_end,
-		TINF_CHUNK,
-		1);
-
-	if (retcode == CHUNK_NOT_FOUND) {
+	if (search_tff(p_modfile, &chunk_address, array_end, TINF_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - TINF chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nchar(module.tracker_version, chunk_address+8, 4, true);
-#ifdef DEVELOPING
-		printf("Found TINF chunk.  Tracker version=%s\n", p_module->tracker_version);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			MVOX_CHUNK,
-			1);
-	}
+    read_nchar(module.tracker_version, chunk_address + 8, 4, true);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, MVOX_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MVOX chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nbytes(&module.num_channels, chunk_address+8, 4);
-#ifdef DEVELOPING
-		printf("Found MVOX chunk.  Number of voices=%d\n", p_module->num_channels);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			STER_CHUNK,
-			1);
-	}
+    read_nbytes(&module.num_channels, chunk_address + 8, 4);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, STER_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - STER chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nchar(module.default_channel_stereo, chunk_address+8, MAX_CHANNELS, false);
-#ifdef DEVELOPING
-		printf(
-			"Found STER chunk.  Default stereo positions:\n"
-			"channel 1 = %d\n"
-			"channel 2 = %d\n"
-			"channel 3 = %d\n"
-			"channel 4 = %d\n"
-			"channel 5 = %d\n"
-			"channel 6 = %d\n"
-			"channel 7 = %d\n"
-			"channel 8 = %d\n",
-			p_module->default_channel_stereo[0],
-			p_module->default_channel_stereo[1],
-			p_module->default_channel_stereo[2],
-			p_module->default_channel_stereo[3],
-			p_module->default_channel_stereo[4],
-			p_module->default_channel_stereo[5],
-			p_module->default_channel_stereo[6],
-			p_module->default_channel_stereo[7]);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			MNAM_CHUNK,
-			1);
-	}
+    read_nchar(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS, false);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, MNAM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MNAM chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nchar(module.name, chunk_address+8, MAX_LEN_TUNENAME, true);
-#ifdef DEVELOPING
-		printf("Found MNAM chunk.  Tune name = %s\n", p_module->name);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			ANAM_CHUNK,
-			1);
-	}
+    read_nchar(module.name, chunk_address + 8, MAX_LEN_TUNENAME, true);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, ANAM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - ANAM chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nchar(module.author, chunk_address+8, MAX_LEN_AUTHOR, true);
-#ifdef DEVELOPING
-		printf("Found ANAM chunk.  Author = %s\n", p_module->author);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			MLEN_CHUNK,
-			1);
-	}
+    read_nchar(module.author, chunk_address + 8, MAX_LEN_AUTHOR, true);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, MLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MLEN chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nbytes(&module.tune_length, chunk_address+8, 4);
-#ifdef DEVELOPING
-		printf("Found MLEN chunk.  Tune length = %d patterns\n", p_module->tune_length);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			PNUM_CHUNK,
-			1);
-	}
+    read_nbytes(&module.tune_length, chunk_address + 8, 4);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, PNUM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - PNUM chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nbytes(&module.num_patterns, chunk_address+8, 4);
-#ifdef DEVELOPING
-		printf("Found PNUM chunk.  Number of patterns = %d\n", p_module->num_patterns);
-#endif
 
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			PLEN_CHUNK,
-			1);
-	}
+    read_nbytes(&module.num_patterns, chunk_address + 8, 4);
 
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, PLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - PLEN chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nchar(module.pattern_length, chunk_address+8, NUM_PATTERNS, false);
-#ifdef DEVELOPING
-		printf("Found PLEN chunk.  Pattern lengths:\n");
 
-		for (i=0; i<NUM_PATTERNS; i++)
-			printf("%d=%d ", i, p_module->pattern_length[i]);
+    read_nchar(module.pattern_length, chunk_address + 8, NUM_PATTERNS, false);
 
-		printf("\n");
-#endif
-
-		retcode = search_tff(
-			p_modfile,
-			&chunk_address,
-			array_end,
-			SEQU_CHUNK,
-			1);
-	}
-
-	if (retcode == CHUNK_NOT_FOUND) {
+    if (search_tff(p_modfile, &chunk_address, array_end, SEQU_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - SEQU chunk not found");
-	} else if (retcode == SUCCESS) {
-		read_nchar(module.sequence, chunk_address+8, MAX_TUNELENGTH, false);
-#ifdef DEVELOPING
-		printf("Found SEQU chunk.  Sequence:\n");
 
-		for (i=0; i<p_module->tune_length; i++)
-			printf("%d ",p_module->sequence[i]);
+    read_nchar(module.sequence, chunk_address + 8, MAX_TUNELENGTH, false);
 
-		printf("\n");
-#endif
-	}
-
-	/* get pattern information */
-
-	if (retcode == SUCCESS)
-		retcode = get_patterns(
-			p_modfile,
-			array_end,
-			module.patterns,
-			&num_patterns);
-
-	/* get sample information */
-
-    module.samples = allocate_array(36, sizeof(sample_t));
-	if (retcode == SUCCESS)
-		retcode = get_samples(
-			p_modfile,
-			array_end,
-			&num_samples,
-			module.samples);
-
-	if (retcode == SUCCESS)
-		module.num_samples = num_samples;
-
-	/* set default value for initial speed */
-	if (retcode == SUCCESS)
-		module.initial_speed = 6;
+    get_patterns(p_modfile, array_end, module.patterns);
+	module.num_samples = get_samples(p_modfile, array_end, module.samples);
 
 	return module;
 }
@@ -617,97 +463,41 @@ void read_nbytes(
 	}
 }
 
-/* function get_patterns.                                                        *
- * Search for all PATT chunks in modfile and set pointers to each pattern's data */
-
-return_status get_patterns(
-	void *p_search_from,
-	long p_array_end,
-	void **p_patterns,
-	int *p_num_patterns)
+void get_patterns(void *p_search_from, long p_array_end, void **p_patterns)
 {
-	return_status retcode;
+	int pattern = 1;
 	void *chunk_address;
-
-	*p_num_patterns = 0;
-
-	do {
-		retcode = search_tff(p_search_from,
-		                     &chunk_address,
-				     p_array_end,
-				     PATT_CHUNK,
-				     (*p_num_patterns)+1);
-
-		if (retcode == SUCCESS) {
-			(*p_num_patterns)++;
-			*(p_patterns++) = chunk_address+8;
-#ifdef DEVELOPING
-			printf("Found pattern %d at address %d\n", *p_num_patterns, chunk_address+8);
-#endif
-		}
-	}
-	while (retcode == SUCCESS);
-
-	if (!*p_num_patterns) {
-		fprintf(stderr,"Modfile corrupt - no patterns in module\n");
-		retcode = NO_PATTERNS_IN_MODULE;
-	} else
-		retcode = SUCCESS;
-
-	return (retcode);
+    while (search_tff(p_search_from, &chunk_address, p_array_end, PATT_CHUNK, pattern) == SUCCESS)
+    {
+        pattern++;
+        *(p_patterns++) = chunk_address + 8;
+    }
+	if (pattern == 1)
+        error("Modfile corrupt - no patterns in module");
 }
 
-/* function get_samples.                                                      *
- * Search for all SAMP chunks in modfile, obtain sample information and store */
-
-return_status get_samples(
-	void *p_search_from,
-	long p_array_end,
-	int  *p_samples_found,
-	sample_t *p_samples)
+int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples)
 {
-	return_status retcode;
-	int sample_chunks_found = 0;
-	void *chunk_address;
-	long chunk_length;
-
-	*p_samples_found = 0;
-
-	do {
-		retcode = search_tff(
-			p_search_from,
-			&chunk_address,
-			p_array_end,
-			SAMP_CHUNK,
-			sample_chunks_found+1);
-
-		if (retcode == SUCCESS) {
-			sample_chunks_found++;
-			read_nbytes(&chunk_length, chunk_address+CHUNKSIZE, 4);
-			retcode = get_sample_info(
-				chunk_address,
-				(long)chunk_address+chunk_length+8,
-				p_samples);
-
-			if (retcode == SUCCESS)
-				p_samples++, (*p_samples_found)++; /* if sample corrupt (retcode!=SUCCESS) ignore it */
-			else if (retcode == SAMPLE_INVALID) {
-				/* if sample corrupt (retcode!=SUCCESS) ignore it */
-				/* prevent a retcode != SUCCESS from propagating out of the function *
-				 * where it will cause the player to reject the modfile              */
-				retcode = SUCCESS;
-			}
-		}
-	}
-	while ((retcode != CHUNK_NOT_FOUND) && (sample_chunks_found < NUM_SAMPLES));
-
-	if (!sample_chunks_found) {
-		fprintf(stderr,"Mofile corrupt - no samples in module\n");
-		retcode = NO_SAMPLES_IN_MODULE;
-	} else if (retcode == CHUNK_NOT_FOUND)
-		retcode = SUCCESS; /* make sure function returns SUCCESS if less than 36 sample chunks in modfile */
-
-	return (retcode);
+    int chunks_found = 0;
+    int samples_found = 0;
+    void *chunk_address;
+    while (search_tff(p_search_from, &chunk_address, p_array_end, SAMP_CHUNK, chunks_found + 1) == SUCCESS
+           && chunks_found < NUM_SAMPLES)
+    {
+        chunks_found++;
+        long chunk_length;
+        read_nbytes(&chunk_length, chunk_address + CHUNKSIZE, 4);
+        if (get_sample_info(chunk_address, (long) chunk_address + chunk_length + 8, p_samples) == SUCCESS)
+        {
+            p_samples++;
+            samples_found++;
+        }
+    }
+    if (chunks_found == 0)
+    {
+        error("Modfile corrupt - no samples in module");
+    }
+    return samples_found;
 }
 
 /* function get_sample_info.                      *

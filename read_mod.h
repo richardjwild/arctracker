@@ -29,17 +29,9 @@ void read_nbytes(
         void *p_input,
         int p_num_bytes);
 
-return_status get_patterns(
-        void *p_search_from,
-        long p_array_end,
-        void **p_patterns,
-        int *p_num_patterns);
+void get_patterns(void *p_search_from, long p_array_end, void **p_patterns);
 
-return_status get_samples(
-        void *p_search_from,
-        long p_array_end,
-        int *p_samples_found,
-        sample_t *p_samples);
+int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples);
 
 return_status get_sample_info(
         void *p_search_from,
