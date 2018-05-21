@@ -40,17 +40,17 @@ char alphanum[] = {'-',
 void initialise_values(
         positions_t *p_current_positions,
         voice_t *p_voice_info,
-        module_t *p_module,
+        const module_t *p_module,
         bool p_pianola,
         long p_sample_rate);
 
 bool update_counters(
         positions_t *p_current_positions,
-        module_t *p_module);
+        const module_t *p_module);
 
 void get_current_pattern_line(
         positions_t *p_current_positions,
-        module_t *p_module,
+        const module_t *p_module,
         channel_event_t *p_current_pattern_line);
 
 void silence_channel(voice_t *voice);
@@ -65,34 +65,32 @@ void process_tracker_command(
         channel_event_t *p_current_event,
         voice_t *p_current_voice,
         positions_t *p_current_positions,
-        module_t *p_module,
+        const module_t *p_module,
         bool on_event);
 
 void process_desktop_tracker_command(
         channel_event_t *p_current_event,
         voice_t *p_current_voice,
         positions_t *p_current_positions,
-        module_t *p_module,
+        const module_t *p_module,
         bool on_event,
         long p_sample_rate);
 
 static args_t config;
 
 static inline
-bool portamento(channel_event_t event)
+bool portamento(const channel_event_t event)
 {
 	return event.command == TONEPORT_COMMAND_DSKT;
 }
 
 static inline
-bool sample_out_of_range(channel_event_t event, module_t module)
+bool sample_out_of_range(const channel_event_t event, const module_t module)
 {
 	return event.sample > module.num_samples;
 }
 
-void play_module(
-	module_t *p_module,
-    audio_api_t audio_api)
+void play_module(const module_t *p_module, audio_api_t audio_api)
 {
     config = configuration();
 	positions_t current_positions;
@@ -206,7 +204,7 @@ void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
 void initialise_values(
 	positions_t *p_current_positions,
 	voice_t *p_voice_info,
-	module_t *p_module,
+	const module_t *p_module,
 	bool p_pianola,
 	long p_sample_rate)
 {
@@ -245,10 +243,8 @@ void initialise_values(
 
 bool update_counters(
 	positions_t *p_current_positions,
-	module_t *p_module)
+	const module_t *p_module)
 {
-	unsigned char *sequence_ptr;
-	void **patterns_list_ptr;
 	bool looped_yet = false;
 
 	p_current_positions->counter = 0;
@@ -260,12 +256,8 @@ bool update_counters(
 		}
 		p_current_positions->position_in_pattern = 0;
 
-		/* get address of pattern */
-		patterns_list_ptr = p_module->patterns;
-		sequence_ptr = p_module->sequence;
-		sequence_ptr += p_current_positions->position_in_sequence;
-		patterns_list_ptr += *sequence_ptr;
-		p_current_positions->pattern_line_ptr = *patterns_list_ptr;
+		int pattern = p_module->sequence[p_current_positions->position_in_sequence];
+		p_current_positions->pattern_line_ptr = p_module->patterns[pattern];
 
 		if (!config.pianola) {
 			printf(
@@ -287,7 +279,7 @@ bool update_counters(
 
 void get_current_pattern_line(
 	positions_t *p_current_positions,
-	module_t *p_module,
+	const module_t *p_module,
 	channel_event_t *p_current_pattern_line)
 {
 	int channel;
@@ -429,7 +421,7 @@ void process_tracker_command(
 	channel_event_t *p_current_event,
 	voice_t *p_current_voice,
 	positions_t *p_current_positions,
-	module_t *p_module,
+	const module_t *p_module,
 	bool on_event)
 {
 	unsigned char temporary_note;
@@ -544,7 +536,7 @@ void process_desktop_tracker_command(
 	channel_event_t *p_current_event,
 	voice_t  *p_current_voice,
 	positions_t     *p_current_positions,
-	module_t   *p_module,
+	const module_t   *p_module,
 	bool            on_event,
 	long          p_sample_rate)
 {
