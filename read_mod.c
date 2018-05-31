@@ -20,7 +20,7 @@ return_status search_tff(
         void *p_searchfrom,
         void **p_chunk_address,
         long p_array_end,
-        char *p_chunk,
+        void *p_chunk,
         long p_occurrence);
 
 void read_nchar(
@@ -253,16 +253,13 @@ return_status search_tff(
 	void *p_searchfrom,
 	void **p_chunk_address,
 	long p_array_end,
-	char *p_chunk,
+	void *p_chunk,
 	long p_occurrence)
 {
 	return_status retcode = CHUNK_NOT_FOUND;
-	char current_chunk[CHUNKSIZE+1] = "xxxx"; /* ensure that null terminator is already present */
 
 	do {
-		read_nchar(current_chunk, p_searchfrom, CHUNKSIZE, true);
-
-		if (strcmp(p_chunk, current_chunk) == STRINGS_MATCH) {
+		if (memcmp(p_chunk, p_searchfrom, CHUNKSIZE) == 0) {
 			if (--p_occurrence == 0) {
 				retcode          = SUCCESS;
 				*p_chunk_address = p_searchfrom;
