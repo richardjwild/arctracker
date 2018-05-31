@@ -258,17 +258,21 @@ return_status search_tff(
 {
 	return_status retcode = CHUNK_NOT_FOUND;
 
-	do {
-		if (memcmp(p_chunk, p_searchfrom, CHUNKSIZE) == 0) {
-			if (--p_occurrence == 0) {
-				retcode          = SUCCESS;
+	do
+	{
+		if (memcmp(p_chunk, p_searchfrom, CHUNKSIZE) == 0)
+		{
+			if (--p_occurrence == 0)
+			{
+				retcode = SUCCESS;
 				*p_chunk_address = p_searchfrom;
-			} else
+			}
+			else
 				p_searchfrom++;
-		} else
+		}
+		else
 			p_searchfrom++;
-	}
-	while ((retcode == CHUNK_NOT_FOUND) && ((long)p_searchfrom <= (p_array_end-CHUNKSIZE)));
+	} while ((retcode == CHUNK_NOT_FOUND) && ((long) p_searchfrom <= (p_array_end - CHUNKSIZE)));
 
 	return (retcode);
 }
