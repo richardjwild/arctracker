@@ -56,15 +56,10 @@ mapped_file_t load_file(char *filename)
 	mapped_file_t mapped_file;
 	FILE *fp = fopen(filename, READONLY);
 	if (fp == NULL)
-	{
 		error("Cannot open file.");
-	}
-	else
-	{
-		int fd = fileno(fp);
-		mapped_file.size = file_size(fd);
-		mapped_file.addr = mmap(NULL, mapped_file.size, PROT_READ, MAP_SHARED, fd, 0);
-	}
+    int fd = fileno(fp);
+    mapped_file.size = file_size(fd);
+    mapped_file.addr = mmap(NULL, mapped_file.size, PROT_READ, MAP_SHARED, fd, 0);
 	return mapped_file;
 }
 
@@ -277,10 +272,6 @@ return_status search_tff(
 			p_searchfrom++;
 	}
 	while ((retcode == CHUNK_NOT_FOUND) && ((long)p_searchfrom <= (p_array_end-CHUNKSIZE)));
-#ifdef DEVELOPING
-	if (retcode == CHUNK_NOT_FOUND)
-		printf("Gave up at address %d\n", p_searchfrom);
-#endif
 
 	return (retcode);
 }
@@ -389,9 +380,6 @@ return_status get_sample_info(
 			SVOL_CHUNK,
 			1);
 	} else {
-#ifdef DEVELOPING
-		printf("Warning - sample %d corrupt - SNAM chunk not found\n", p_sample_number);
-#endif
 		retcode = SAMPLE_INVALID;
 	}
 
@@ -405,9 +393,6 @@ return_status get_sample_info(
 			SLEN_CHUNK,
 			1);
 	} else if (retcode == CHUNK_NOT_FOUND) {
-#ifdef DEVELOPING
-		printf("Warning - sample %d corrupt - SVOL chunk not found\n", p_sample_number);
-#endif
 		retcode = SAMPLE_INVALID;
 	}
 
@@ -421,9 +406,6 @@ return_status get_sample_info(
 			ROFS_CHUNK,
 			1);
 	} else if (retcode == CHUNK_NOT_FOUND) {
-#ifdef DEVELOPING
-		printf("Warning - sample %d corrupt - SLEN chunk not found\n", p_sample_number);
-#endif
 		retcode = SAMPLE_INVALID;
 	}
 
@@ -437,9 +419,6 @@ return_status get_sample_info(
 			RLEN_CHUNK,
 			1);
 	} else if (retcode == CHUNK_NOT_FOUND) {
-#ifdef DEVELOPING
-		printf("Warning - sample %d corrupt - ROFS chunk not found\n", p_sample_number);
-#endif
 		retcode = SAMPLE_INVALID;
 	}
 
@@ -453,34 +432,15 @@ return_status get_sample_info(
 			SDAT_CHUNK,
 			1);
 	} else if (retcode == CHUNK_NOT_FOUND) {
-#ifdef DEVELOPING
-		printf("Warning - sample %d corrupt - RLEN chunk not found\n", p_sample_number);
-#endif
 		retcode = SAMPLE_INVALID;
 	}
 
 	if (retcode == SUCCESS)
 		p_sample->sample_data = chunk_address+8;
 	else if (retcode == CHUNK_NOT_FOUND) {
-#ifdef DEVELOPING
-		printf("Warning - sample %d corrupt - SDAT chunk not found\n", p_sample_number);
-#endif
 		retcode = SAMPLE_INVALID;
 	}
 
-#ifdef DEVELOPING
-	if (retcode == SUCCESS && p_sample->sample_length) {
-		printf(
-			"Got sample %d, name=%s, vol=%d, length=%d, rpt offs=%d, rpt len=%d, data at address %d\n",
-			p_sample_number,
-			p_sample->name,
-			p_sample->volume,
-			p_sample->sample_length,
-			p_sample->repeat_offset,
-			p_sample->repeat_length,
-			p_sample->sample_data);
-	}
-#endif
 
     p_sample->repeats = (p_sample->repeat_length != 2);
 
