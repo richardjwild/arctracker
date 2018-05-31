@@ -45,6 +45,37 @@ typedef struct {
 	size_t size;
 } mapped_file_t;
 
+module_t read_tracker_file(mapped_file_t file);
+
+module_t read_desktop_tracker_file(mapped_file_t file);
+
+return_status search_tff(
+        void *p_searchfrom,
+        void **p_chunk_address,
+        long p_array_end,
+        char *p_chunk,
+        long p_occurrence);
+
+void read_nchar(
+        char *p_output,
+        void *p_input,
+        int p_num_chars,
+        bool p_null_term);
+
+void read_nbytes(
+        long *p_output,
+        void *p_input,
+        int p_num_bytes);
+
+void get_patterns(void *p_search_from, long p_array_end, void **p_patterns);
+
+int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples);
+
+return_status get_sample_info(
+        void *p_search_from,
+        long p_array_end,
+        sample_t *p_sample);
+
 size_t file_size(int fd)
 {
 	struct stat statbuf;
@@ -101,7 +132,7 @@ module_t read_file()
             {
                 file.addr = chunk_address;
             }
-            module = read_desktop_tracker_file(file.addr);
+            module = read_desktop_tracker_file(file);
         }
         else
             error("File type not recognised");
@@ -109,7 +140,7 @@ module_t read_file()
     else
     {
         printf("File is TRACKER format.\n");
-        module = read_tracker_file(file.addr, file.size);
+        module = read_tracker_file(file);
     }
 
     printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
@@ -117,68 +148,68 @@ module_t read_file()
     return module;
 }
 
-module_t read_tracker_file(void *p_modfile, long p_modsize)
+module_t read_tracker_file(mapped_file_t file)
 {
 	void *chunk_address;
-	long array_end = (long)p_modfile + p_modsize;
+	long array_end = (long) file.addr + file.size;
     module_t module = {
             .format = TRACKER,
             .initial_speed = 6,
             .samples = allocate_array(36, sizeof(sample_t))
     };
 
-	if (search_tff(p_modfile, &chunk_address, array_end, TINF_CHUNK, 1) == CHUNK_NOT_FOUND)
+	if (search_tff(file.addr, &chunk_address, array_end, TINF_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - TINF chunk not found");
 
     read_nchar(module.tracker_version, chunk_address + 8, 4, true);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, MVOX_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, MVOX_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MVOX chunk not found");
 
     read_nbytes(&module.num_channels, chunk_address + 8, 4);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, STER_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, STER_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - STER chunk not found");
 
     read_nchar(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS, false);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, MNAM_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, MNAM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MNAM chunk not found");
 
     read_nchar(module.name, chunk_address + 8, MAX_LEN_TUNENAME, true);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, ANAM_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, ANAM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - ANAM chunk not found");
 
     read_nchar(module.author, chunk_address + 8, MAX_LEN_AUTHOR, true);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, MLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, MLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MLEN chunk not found");
 
     read_nbytes(&module.tune_length, chunk_address + 8, 4);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, PNUM_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, PNUM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - PNUM chunk not found");
 
     read_nbytes(&module.num_patterns, chunk_address + 8, 4);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, PLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, PLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - PLEN chunk not found");
 
     read_nchar(module.pattern_length, chunk_address + 8, NUM_PATTERNS, false);
 
-    if (search_tff(p_modfile, &chunk_address, array_end, SEQU_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if (search_tff(file.addr, &chunk_address, array_end, SEQU_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - SEQU chunk not found");
 
     read_nchar(module.sequence, chunk_address + 8, MAX_TUNELENGTH, false);
 
-    get_patterns(p_modfile, array_end, module.patterns);
-	module.num_samples = get_samples(p_modfile, array_end, module.samples);
+    get_patterns(file.addr, array_end, module.patterns);
+	module.num_samples = get_samples(file.addr, array_end, module.samples);
 
 	return module;
 }
 
-module_t read_desktop_tracker_file(void *p_modfile)
+module_t read_desktop_tracker_file(mapped_file_t file)
 {
 	return_status retcode = SUCCESS;
 	void *tmp_ptr;
@@ -189,29 +220,29 @@ module_t read_desktop_tracker_file(void *p_modfile)
             .initial_speed = 6
     };
 
-	read_nchar(module.name, p_modfile+4, MAX_LEN_TUNENAME_DSKT, true);
+	read_nchar(module.name, file.addr+4, MAX_LEN_TUNENAME_DSKT, true);
 
-	read_nchar(module.author, p_modfile+68, MAX_LEN_AUTHOR_DSKT, true);
+	read_nchar(module.author, file.addr+68, MAX_LEN_AUTHOR_DSKT, true);
 
-	read_nbytes(&module.num_channels, p_modfile+136, 4);
+	read_nbytes(&module.num_channels, file.addr+136, 4);
 
-	read_nbytes(&module.tune_length, p_modfile+140, 4);
+	read_nbytes(&module.tune_length, file.addr+140, 4);
 
-	read_nchar(module.default_channel_stereo, p_modfile+144, MAX_CHANNELS_DSKT, false);
+	read_nchar(module.default_channel_stereo, file.addr+144, MAX_CHANNELS_DSKT, false);
 
-	read_nbytes(&module.initial_speed, p_modfile+152, 4);
+	read_nbytes(&module.initial_speed, file.addr+152, 4);
 
-	read_nbytes(&module.num_patterns, p_modfile+160, 4);
+	read_nbytes(&module.num_patterns, file.addr+160, 4);
 
-	read_nbytes(&module.num_samples, p_modfile+164, 4);
+	read_nbytes(&module.num_samples, file.addr+164, 4);
 
-	read_nchar(module.sequence, p_modfile+168, module.tune_length, false);
+	read_nchar(module.sequence, file.addr+168, module.tune_length, false);
 
-	tmp_ptr = p_modfile + 168 + (((module.tune_length + 3)>>2)<<2); /* align to word boundary */
+	tmp_ptr = file.addr + 168 + (((module.tune_length + 3)>>2)<<2); /* align to word boundary */
 	for (i=0; i<module.num_patterns; i++)
 	{
 		read_nbytes(&foo, tmp_ptr, 4);
-		module.patterns[i] = p_modfile + foo;
+		module.patterns[i] = file.addr + foo;
 		tmp_ptr += 4;
 	}
 
@@ -246,7 +277,7 @@ module_t read_desktop_tracker_file(void *p_modfile)
 		read_nchar(module.samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
 		tmp_ptr+=MAX_LEN_SAMPLENAME_DSKT;
 		read_nbytes(&foo, tmp_ptr, 4);
-        module.samples[i].sample_data = p_modfile + foo;
+        module.samples[i].sample_data = file.addr + foo;
         module.samples[i].repeats = (module.samples[i].repeat_length != 0);
 		tmp_ptr+=4;
 	}
