@@ -1,21 +1,3 @@
-/* Copyright (c) Richard Wild 2004, 2005                                   *
- *                                                                         *
- * This file is part of Arctracker.                                        *
- *                                                                         *
- * Arctracker is free software; you can redistribute it and/or modify      *
- * it under the terms of the GNU General Public License as published by    *
- * the Free Software Foundation; either version 2 of the License, or       *
- * (at your option) any later version.                                     *
- *                                                                         *
- * Arctracker is distributed in the hope that it will be useful,           *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
- * GNU General Public License for more details.                            *
- *                                                                         *
- * You should have received a copy of the GNU General Public License       *
- * along with Arctracker; if not, write to the Free Software               *
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include "arctracker.h"
@@ -24,21 +6,6 @@
 #include "configuration.h"
 #include "read_mod.h"
 #include "heap.h"
-
-char *notes_x[] = {"---",
-	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
-	"C-2", "C#2", "D-2", "D#2", "E-2", "F-2", "F#2", "G-2", "G#2", "A-2", "A#2", "B-2",
-	"C-3", "C#3", "D-3", "D#3", "E-3", "F-3", "F#3", "G-3", "G#3", "A-3", "A#3", "B-3"};
-
-char *alphanum_x[] = {"--",
-	"00","01","02","03","04","05","06","07","08","09",
-	"0A","0B","0C","0D","0E","0F","10","11","12","13",
-	"14","15","16","17","18","19","1A","1B","1C","1D",
-	"1E", "1F", "20", "21", "22", "23"};
-
-/* function read_file.                                                                      *
- * Read tracker modfile that is loaded in memory, and obtain its details; store information *
- * in structures for easier subsequent processing                                           */
 
 typedef struct {
 	void *addr;
@@ -211,7 +178,6 @@ module_t read_tracker_file(mapped_file_t file)
 
 module_t read_desktop_tracker_file(mapped_file_t file)
 {
-	return_status retcode = SUCCESS;
 	void *tmp_ptr;
 	long foo;
 	int i;
