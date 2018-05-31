@@ -256,25 +256,20 @@ return_status search_tff(
 	void *p_chunk,
 	long p_occurrence)
 {
-	return_status retcode = CHUNK_NOT_FOUND;
-
-	do
+	while ((long) p_searchfrom <= (p_array_end - CHUNKSIZE))
 	{
 		if (memcmp(p_chunk, p_searchfrom, CHUNKSIZE) == 0)
 		{
-			if (--p_occurrence == 0)
-			{
-				retcode = SUCCESS;
-				*p_chunk_address = p_searchfrom;
-			}
-			else
-				p_searchfrom++;
+			p_occurrence -= 1;
 		}
-		else
-			p_searchfrom++;
-	} while ((retcode == CHUNK_NOT_FOUND) && ((long) p_searchfrom <= (p_array_end - CHUNKSIZE)));
-
-	return (retcode);
+		if (p_occurrence == 0)
+		{
+			*p_chunk_address = p_searchfrom;
+			return SUCCESS;
+		}
+		p_searchfrom += 1;
+	}
+	return CHUNK_NOT_FOUND;
 }
 
 /* function read_nchar.                                                                               *
