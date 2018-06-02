@@ -58,21 +58,12 @@ be played, and [options] can be any or none of the following:
 	--volume=<n>	Software-scale the volume where n is between 1 and 255.
 			The default is 64.  When playing modfiles with more than
 			4 channels (Desktop Tracker modfiles can have up to 16)
-			a volume greater than 64 can cause saturation, which
-			will sound like an amplifier being overdriven.  If this
-			happens a lower volume should be used.
+			a volume greater than 64 can cause clipping, which
+			sounds distorted.  If this happens use a lower volume.
 
-	--oss		Use the OSS sound output API.  This is the default.  If
-			this option is chosen neither --alsa nor --arts may be
-			specified.
+	--oss		Use the OSS sound output API.
 
-	--alsa		Use the ALSA sound output API.  If this option is
-			chosen neither --oss nor --arts may be specified.
-
-	--arts		Use the aRts soundserver output API.  This enables many
-			sources of sound output to use the sound device at the
-			same time.  If this option is chosen neither --oss nor
-			--alsa may be specified.
+	--alsa		Use the ALSA sound output API.  This is the default.
 
 -----------------------------------------------------------------
 Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
