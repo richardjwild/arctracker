@@ -354,7 +354,7 @@ int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples)
     int chunks_found = 0;
     int samples_found = 0;
     void *chunk_address;
-    while (search_tff(p_search_from, &chunk_address, p_array_end, SAMP_CHUNK, chunks_found + 1) == SUCCESS
+    while ((chunk_address = search_tff2(p_search_from, p_array_end, SAMP_CHUNK, chunks_found + 1)) != CHUNK_NOT_FOUND_2
            && chunks_found < NUM_SAMPLES)
     {
         chunks_found++;
