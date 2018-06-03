@@ -23,6 +23,14 @@ return_status search_tff(
         void *to_find,
         long occurrence);
 
+void *search_tff2(
+		void *array_start,
+		const long array_end,
+		const void *to_find,
+		long occurrence);
+
+#define CHUNK_NOT_FOUND_2 NULL
+
 void read_nchar(
         char *p_output,
         void *p_input,
@@ -272,6 +280,27 @@ return_status search_tff(
 	return CHUNK_NOT_FOUND;
 }
 
+void *search_tff2(
+		void *array_start,
+		const long array_end,
+		const void *to_find,
+		long occurrence)
+{
+	while ((long) array_start <= (array_end - CHUNKSIZE))
+	{
+		if (memcmp(to_find, array_start, CHUNKSIZE) == 0)
+		{
+			occurrence -= 1;
+		}
+		if (occurrence == 0)
+		{
+			return array_start;
+		}
+		array_start += 1;
+	}
+	return CHUNK_NOT_FOUND_2;
+}
+
 /* function read_nchar.                                                                               *
  * Reads n characters at the address pointed to by p_input and returns it as a null-terminated string *
  * pointed at by p_output.  p_output must point at an array large enough to hold n+1 chars!           */
@@ -309,14 +338,14 @@ void read_nbytes(
 
 void get_patterns(void *p_search_from, long p_array_end, void **p_patterns)
 {
-	int pattern = 1;
-	void *chunk_address;
-    while (search_tff(p_search_from, &chunk_address, p_array_end, PATT_CHUNK, pattern) == SUCCESS)
+    int pattern = 1;
+    void *chunk_address;
+    while ((chunk_address = search_tff2(p_search_from, p_array_end, PATT_CHUNK, pattern)) != CHUNK_NOT_FOUND_2)
     {
         pattern++;
         *(p_patterns++) = chunk_address + 8;
     }
-	if (pattern == 1)
+    if (pattern == 1)
         error("Modfile corrupt - no patterns in module");
 }
 
