@@ -409,25 +409,19 @@ return_status get_sample_info(
 
 	read_nbytes(&p_sample->sample_length, chunk_address + 8, 4);
 
+	chunk_address = search_tff2(p_search_from, p_array_end, ROFS_CHUNK, 1);
+
+	if (chunk_address == CHUNK_NOT_FOUND_2)
+		return SAMPLE_INVALID;
+
+	read_nbytes(&p_sample->repeat_offset, chunk_address + 8, 4);
+
 	retcode = search_tff(
-			p_search_from,
-			&chunk_address,
-			p_array_end,
-			ROFS_CHUNK,
-			1);
-
-	if (retcode == SUCCESS) {
-		read_nbytes(&p_sample->repeat_offset, chunk_address+8, 4);
-
-		retcode = search_tff(
 			p_search_from,
 			&chunk_address,
 			p_array_end,
 			RLEN_CHUNK,
 			1);
-	} else if (retcode == CHUNK_NOT_FOUND) {
-		retcode = SAMPLE_INVALID;
-	}
 
 	if (retcode == SUCCESS) {
 		read_nbytes(&p_sample->repeat_length, chunk_address+8, 4);
