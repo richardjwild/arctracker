@@ -384,29 +384,23 @@ return_status get_sample_info(
 	void *chunk_address;
 	return_status retcode;
 
-	retcode = search_tff(
-		p_search_from,
-		&chunk_address,
-		p_array_end,
-		SNAM_CHUNK,
-		1);
+	chunk_address = search_tff2(p_search_from, p_array_end, SNAM_CHUNK, 1);
 
 	// transpose all notes up an octave when playing a Tracker module
 	// compensating for the greater chromatic range in a Desktop Tracker module
 	p_sample->transpose = 12;
 
-	if (retcode == SUCCESS) {
-		read_nchar(p_sample->name, chunk_address+8, MAX_LEN_SAMPLENAME, true);
+    if (chunk_address == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
 
-		retcode = search_tff(
-			p_search_from,
-			&chunk_address,
-			p_array_end,
-			SVOL_CHUNK,
-			1);
-	} else {
-		retcode = SAMPLE_INVALID;
-	}
+    read_nchar(p_sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME, true);
+
+    retcode = search_tff(
+            p_search_from,
+            &chunk_address,
+            p_array_end,
+            SVOL_CHUNK,
+            1);
 
 	if (retcode == SUCCESS) {
 		read_nbytes(&p_sample->default_gain, chunk_address+8, 4);
