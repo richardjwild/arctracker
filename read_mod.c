@@ -423,19 +423,12 @@ return_status get_sample_info(
 
 	read_nbytes(&p_sample->repeat_length, chunk_address + 8, 4);
 
-	retcode = search_tff(
-			p_search_from,
-			&chunk_address,
-			p_array_end,
-			SDAT_CHUNK,
-			1);
+	chunk_address = search_tff2(p_search_from, p_array_end, SDAT_CHUNK, 1);
 
-	if (retcode == SUCCESS)
+	if (chunk_address != CHUNK_NOT_FOUND_2)
 		p_sample->sample_data = chunk_address+8;
-	else if (retcode == CHUNK_NOT_FOUND) {
+	else
 		retcode = SAMPLE_INVALID;
-	}
-
 
     p_sample->repeats = (p_sample->repeat_length != 2);
 
