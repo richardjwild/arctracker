@@ -373,9 +373,6 @@ int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples)
     return samples_found;
 }
 
-/* function get_sample_info.                      *
- * Obtain information about samples one at a time */
-
 return_status get_sample_info(void *p_search_from, long p_array_end, sample_t *p_sample)
 {
 	void *chunk_address;
