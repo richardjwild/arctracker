@@ -37,14 +37,9 @@ void read_nchar(
         int p_num_chars,
         bool p_null_term);
 
-void read_nbytes(
-        long *p_output,
-        void *p_input,
-        int p_num_bytes);
-
 void get_patterns(void *p_search_from, long p_array_end, void **p_patterns);
 
-int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples);
+int get_samples(void *array_start, long array_end, sample_t *samples);
 
 return_status get_sample_info(
         void *array_start,
@@ -136,7 +131,7 @@ module_t read_tracker_file(mapped_file_t file)
     if (search_tff(file.addr, &chunk_address, array_end, MVOX_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MVOX chunk not found");
 
-    read_nbytes(&module.num_channels, chunk_address + 8, 4);
+    memcpy(&module.num_channels, chunk_address + 8, 4);
 
     if (search_tff(file.addr, &chunk_address, array_end, STER_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - STER chunk not found");
@@ -156,12 +151,12 @@ module_t read_tracker_file(mapped_file_t file)
     if (search_tff(file.addr, &chunk_address, array_end, MLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - MLEN chunk not found");
 
-    read_nbytes(&module.tune_length, chunk_address + 8, 4);
+    memcpy(&module.tune_length, chunk_address + 8, 4);
 
     if (search_tff(file.addr, &chunk_address, array_end, PNUM_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - PNUM chunk not found");
 
-    read_nbytes(&module.num_patterns, chunk_address + 8, 4);
+    memcpy(&module.num_patterns, chunk_address + 8, 4);
 
     if (search_tff(file.addr, &chunk_address, array_end, PLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
 		error("Modfile corrupt - PLEN chunk not found");
@@ -193,24 +188,24 @@ module_t read_desktop_tracker_file(mapped_file_t file)
 
 	read_nchar(module.author, file.addr+68, MAX_LEN_AUTHOR_DSKT, true);
 
-	read_nbytes(&module.num_channels, file.addr+136, 4);
+	memcpy(&module.num_channels, file.addr+136, 4);
 
-	read_nbytes(&module.tune_length, file.addr+140, 4);
+	memcpy(&module.tune_length, file.addr+140, 4);
 
 	read_nchar(module.default_channel_stereo, file.addr+144, MAX_CHANNELS_DSKT, false);
 
-	read_nbytes(&module.initial_speed, file.addr+152, 4);
+	memcpy(&module.initial_speed, file.addr+152, 4);
 
-	read_nbytes(&module.num_patterns, file.addr+160, 4);
+	memcpy(&module.num_patterns, file.addr+160, 4);
 
-	read_nbytes(&module.num_samples, file.addr+164, 4);
+	memcpy(&module.num_samples, file.addr+164, 4);
 
 	read_nchar(module.sequence, file.addr+168, module.tune_length, false);
 
 	tmp_ptr = file.addr + 168 + (((module.tune_length + 3)>>2)<<2); /* align to word boundary */
 	for (i=0; i<module.num_patterns; i++)
 	{
-		read_nbytes(&foo, tmp_ptr, 4);
+		memcpy(&foo, tmp_ptr, 4);
 		module.patterns[i] = file.addr + foo;
 		tmp_ptr += 4;
 	}
@@ -231,21 +226,21 @@ module_t read_desktop_tracker_file(mapped_file_t file)
 		unsigned char sample_volume = *(unsigned char *)tmp_ptr;
         module.samples[i].default_gain = (sample_volume * 2) + 1;
 		tmp_ptr+=3;
-		read_nbytes(&(module.samples[i].period), tmp_ptr, 4);
+		memcpy(&(module.samples[i].period), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(module.samples[i].sustain_start), tmp_ptr, 4);
+		memcpy(&(module.samples[i].sustain_start), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(module.samples[i].sustain_length), tmp_ptr, 4);
+		memcpy(&(module.samples[i].sustain_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(module.samples[i].repeat_offset), tmp_ptr, 4);
+		memcpy(&(module.samples[i].repeat_offset), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(module.samples[i].repeat_length), tmp_ptr, 4);
+		memcpy(&(module.samples[i].repeat_length), tmp_ptr, 4);
 		tmp_ptr+=4;
-		read_nbytes(&(module.samples[i].sample_length), tmp_ptr, 4);
+		memcpy(&(module.samples[i].sample_length), tmp_ptr, 4);
 		tmp_ptr+=4;
 		read_nchar(module.samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT, true);
 		tmp_ptr+=MAX_LEN_SAMPLENAME_DSKT;
-		read_nbytes(&foo, tmp_ptr, 4);
+		memcpy(&foo, tmp_ptr, 4);
         module.samples[i].sample_data = file.addr + foo;
         module.samples[i].repeats = (module.samples[i].repeat_length != 0);
 		tmp_ptr+=4;
@@ -320,22 +315,6 @@ void read_nchar(
 		p_output[p_num_chars] = '\0';
 }
 
-/* function read_nbytes.                                                                                 *
- * Reads n bytes at the address pointed to by p_input and returns it in the long pointed at by p_output. */
-
-void read_nbytes(
-	long *p_output,
-	void *p_input,
-	int p_num_bytes)
-{
-	int i;
-	*p_output = 0;
-
-	for (i=0; i<p_num_bytes; i++) {
-		*p_output = (*p_output | (*(((unsigned char *)p_input) + i) << (8*i)));
-	}
-}
-
 void get_patterns(void *p_search_from, long p_array_end, void **p_patterns)
 {
     int pattern = 1;
@@ -349,20 +328,20 @@ void get_patterns(void *p_search_from, long p_array_end, void **p_patterns)
         error("Modfile corrupt - no patterns in module");
 }
 
-int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples)
+int get_samples(void *array_start, long array_end, sample_t *samples)
 {
     int chunks_found = 0;
     int samples_found = 0;
     void *chunk_address;
-    while ((chunk_address = search_tff2(p_search_from, p_array_end, SAMP_CHUNK, chunks_found + 1)) != CHUNK_NOT_FOUND_2
+    while ((chunk_address = search_tff2(array_start, array_end, SAMP_CHUNK, chunks_found + 1)) != CHUNK_NOT_FOUND_2
            && chunks_found < NUM_SAMPLES)
     {
         chunks_found++;
         long chunk_length;
-        read_nbytes(&chunk_length, chunk_address + CHUNKSIZE, 4);
-        if (get_sample_info(chunk_address, (long) chunk_address + chunk_length + 8, p_samples) == SUCCESS)
+        memcpy(&chunk_length, chunk_address + CHUNKSIZE, 4);
+        if (get_sample_info(chunk_address, (long) chunk_address + chunk_length + 8, samples) == SUCCESS)
         {
-            p_samples++;
+            samples++;
             samples_found++;
         }
     }
@@ -385,22 +364,22 @@ return_status get_sample_info(void *array_start, long array_end, sample_t *sampl
     if ((chunk_address = search_tff2(array_start, array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&sample->default_gain, chunk_address + 8, 4);
+        memcpy(&sample->default_gain, chunk_address + 8, 4);
 
     if ((chunk_address = search_tff2(array_start, array_end, SLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&sample->sample_length, chunk_address + 8, 4);
+        memcpy(&sample->sample_length, chunk_address + 8, 4);
 
     if ((chunk_address = search_tff2(array_start, array_end, ROFS_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&sample->repeat_offset, chunk_address + 8, 4);
+        memcpy(&sample->repeat_offset, chunk_address + 8, 4);
 
     if ((chunk_address = search_tff2(array_start, array_end, RLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&sample->repeat_length, chunk_address + 8, 4);
+        memcpy(&sample->repeat_length, chunk_address + 8, 4);
 
     if ((chunk_address = search_tff2(array_start, array_end, SDAT_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
