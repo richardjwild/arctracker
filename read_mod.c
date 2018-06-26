@@ -47,9 +47,9 @@ void get_patterns(void *p_search_from, long p_array_end, void **p_patterns);
 int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples);
 
 return_status get_sample_info(
-        void *p_search_from,
-        long p_array_end,
-        sample_t *p_sample);
+        void *array_start,
+        long array_end,
+        sample_t *sample);
 
 size_t file_size(int fd)
 {
@@ -373,44 +373,44 @@ int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples)
     return samples_found;
 }
 
-return_status get_sample_info(void *p_search_from, long p_array_end, sample_t *p_sample)
+return_status get_sample_info(void *array_start, long array_end, sample_t *sample)
 {
 	void *chunk_address;
 
-    if ((chunk_address = search_tff2(p_search_from, p_array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+    if ((chunk_address = search_tff2(array_start, array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nchar(p_sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME, true);
+        read_nchar(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME, true);
 
-    if ((chunk_address = search_tff2(p_search_from, p_array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+    if ((chunk_address = search_tff2(array_start, array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&p_sample->default_gain, chunk_address + 8, 4);
+        read_nbytes(&sample->default_gain, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff2(p_search_from, p_array_end, SLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+    if ((chunk_address = search_tff2(array_start, array_end, SLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&p_sample->sample_length, chunk_address + 8, 4);
+        read_nbytes(&sample->sample_length, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff2(p_search_from, p_array_end, ROFS_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+    if ((chunk_address = search_tff2(array_start, array_end, ROFS_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&p_sample->repeat_offset, chunk_address + 8, 4);
+        read_nbytes(&sample->repeat_offset, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff2(p_search_from, p_array_end, RLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+    if ((chunk_address = search_tff2(array_start, array_end, RLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nbytes(&p_sample->repeat_length, chunk_address + 8, 4);
+        read_nbytes(&sample->repeat_length, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff2(p_search_from, p_array_end, SDAT_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+    if ((chunk_address = search_tff2(array_start, array_end, SDAT_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        p_sample->sample_data = chunk_address + 8;
+        sample->sample_data = chunk_address + 8;
 
 	// transpose all notes up an octave when playing a Tracker module
 	// compensating for the greater chromatic range in a Desktop Tracker module
-	p_sample->transpose = 12;
-    p_sample->repeats = (p_sample->repeat_length != 2);
+	sample->transpose = 12;
+    sample->repeats = (sample->repeat_length != 2);
 
 	return (SUCCESS);
 }
