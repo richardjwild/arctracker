@@ -376,61 +376,44 @@ int get_samples(void *p_search_from, long p_array_end, sample_t *p_samples)
 /* function get_sample_info.                      *
  * Obtain information about samples one at a time */
 
-return_status get_sample_info(
-	void *p_search_from,
-	long p_array_end,
-	sample_t *p_sample)
+return_status get_sample_info(void *p_search_from, long p_array_end, sample_t *p_sample)
 {
 	void *chunk_address;
-	return_status retcode;
 
-	chunk_address = search_tff2(p_search_from, p_array_end, SNAM_CHUNK, 1);
+    if ((chunk_address = search_tff2(p_search_from, p_array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
+    else
+        read_nchar(p_sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME, true);
+
+    if ((chunk_address = search_tff2(p_search_from, p_array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
+    else
+        read_nbytes(&p_sample->default_gain, chunk_address + 8, 4);
+
+    if ((chunk_address = search_tff2(p_search_from, p_array_end, SLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
+    else
+        read_nbytes(&p_sample->sample_length, chunk_address + 8, 4);
+
+    if ((chunk_address = search_tff2(p_search_from, p_array_end, ROFS_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
+    else
+        read_nbytes(&p_sample->repeat_offset, chunk_address + 8, 4);
+
+    if ((chunk_address = search_tff2(p_search_from, p_array_end, RLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
+    else
+        read_nbytes(&p_sample->repeat_length, chunk_address + 8, 4);
+
+    if ((chunk_address = search_tff2(p_search_from, p_array_end, SDAT_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+        return SAMPLE_INVALID;
+    else
+        p_sample->sample_data = chunk_address + 8;
 
 	// transpose all notes up an octave when playing a Tracker module
 	// compensating for the greater chromatic range in a Desktop Tracker module
 	p_sample->transpose = 12;
-
-    if (chunk_address == CHUNK_NOT_FOUND_2)
-        return SAMPLE_INVALID;
-
-    read_nchar(p_sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME, true);
-
-    chunk_address = search_tff2(p_search_from, p_array_end, SVOL_CHUNK, 1);
-
-	if (chunk_address == CHUNK_NOT_FOUND_2)
-		return SAMPLE_INVALID;
-
-	read_nbytes(&p_sample->default_gain, chunk_address + 8, 4);
-
-	chunk_address = search_tff2(p_search_from, p_array_end, SLEN_CHUNK, 1);
-
-	if (chunk_address == CHUNK_NOT_FOUND_2)
-		return SAMPLE_INVALID;
-
-	read_nbytes(&p_sample->sample_length, chunk_address + 8, 4);
-
-	chunk_address = search_tff2(p_search_from, p_array_end, ROFS_CHUNK, 1);
-
-	if (chunk_address == CHUNK_NOT_FOUND_2)
-		return SAMPLE_INVALID;
-
-	read_nbytes(&p_sample->repeat_offset, chunk_address + 8, 4);
-
-	chunk_address = search_tff2(p_search_from, p_array_end, RLEN_CHUNK, 1);
-
-	if (chunk_address == CHUNK_NOT_FOUND_2)
-		return SAMPLE_INVALID;
-
-	read_nbytes(&p_sample->repeat_length, chunk_address + 8, 4);
-
-	chunk_address = search_tff2(p_search_from, p_array_end, SDAT_CHUNK, 1);
-
-	if (chunk_address != CHUNK_NOT_FOUND_2)
-		p_sample->sample_data = chunk_address+8;
-	else
-		retcode = SAMPLE_INVALID;
-
     p_sample->repeats = (p_sample->repeat_length != 2);
 
-	return (retcode);
+	return (SUCCESS);
 }
