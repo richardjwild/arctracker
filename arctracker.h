@@ -111,16 +111,6 @@
 
 /*#define DEVELOPING*/
 
-/* type definitions */
-enum return_status {
-	SUCCESS,
-	NOT_MODULE,
-	FILE_CORRUPT,
-	NO_PATTERNS_IN_MODULE,
-	NO_SAMPLES_IN_MODULE
-};
-typedef enum return_status return_status;
-
 enum module_type {TRACKER, DESKTOP_TRACKER};
 typedef enum module_type module_type_t;
 
