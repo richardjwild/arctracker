@@ -118,8 +118,7 @@ enum return_status {
 	NOT_MODULE,
 	FILE_CORRUPT,
 	NO_PATTERNS_IN_MODULE,
-	NO_SAMPLES_IN_MODULE,
-	SAMPLE_INVALID
+	NO_SAMPLES_IN_MODULE
 };
 typedef enum return_status return_status;
 

@@ -30,6 +30,7 @@ void *search_tff2(
 		long occurrence);
 
 #define CHUNK_NOT_FOUND_2 NULL
+#define SAMPLE_INVALID NULL
 
 void read_nchar(
         char *p_output,
@@ -41,10 +42,7 @@ void get_patterns(void *p_search_from, long p_array_end, void **p_patterns);
 
 int get_samples(void *array_start, long array_end, sample_t *samples);
 
-return_status get_sample_info(
-        void *array_start,
-        long array_end,
-        sample_t *sample);
+sample_t* get_sample_info(void *array_start, long array_end);
 
 size_t file_size(int fd)
 {
@@ -339,8 +337,10 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
         chunks_found++;
         long chunk_length;
         memcpy(&chunk_length, chunk_address + CHUNKSIZE, 4);
-        if (get_sample_info(chunk_address, (long) chunk_address + chunk_length + 8, samples) == SUCCESS)
+        sample_t *sample;
+        if ((sample = get_sample_info(chunk_address, (long) chunk_address + chunk_length + 8)) != SAMPLE_INVALID)
         {
+            memcpy(samples, sample, sizeof(sample_t));
             samples++;
             samples_found++;
         }
@@ -352,9 +352,10 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
     return samples_found;
 }
 
-return_status get_sample_info(void *array_start, long array_end, sample_t *sample)
+sample_t* get_sample_info(void *array_start, long array_end)
 {
 	void *chunk_address;
+	sample_t *sample = allocate_array(1, sizeof(sample_t));
 
     if ((chunk_address = search_tff2(array_start, array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
@@ -391,5 +392,5 @@ return_status get_sample_info(void *array_start, long array_end, sample_t *sampl
 	sample->transpose = 12;
     sample->repeats = (sample->repeat_length != 2);
 
-	return (SUCCESS);
+	return sample;
 }
