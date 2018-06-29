@@ -58,16 +58,21 @@ mapped_file_t load_file(char *filename)
 	return mapped_file;
 }
 
+module_t print_details(module_t module)
+{
+    printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
+    return module;
+}
+
 module_t read_file()
 {
     mapped_file_t file = load_file(configuration().mod_filename);
-    module_t module;
     long array_end = (long) file.addr + file.size;
 
     if (search_tff2(file.addr, array_end, MUSX_CHUNK, 1) != CHUNK_NOT_FOUND_2)
     {
         printf("File is TRACKER format.\n");
-        module = read_tracker_file(file);
+        return print_details(read_tracker_file(file));
     }
     else
     {
@@ -77,12 +82,8 @@ module_t read_file()
 
         printf("File is DESKTOP TRACKER format.\n");
         file.addr = chunk_address;
-        module = read_desktop_tracker_file(file);
+        return print_details(read_desktop_tracker_file(file));
     }
-
-    printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
-
-    return module;
 }
 
 module_t read_tracker_file(mapped_file_t file)
