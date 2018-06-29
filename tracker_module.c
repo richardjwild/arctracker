@@ -4,7 +4,7 @@
 
 #define SAMPLE_INVALID NULL
 
-void get_patterns(void *p_search_from, long p_array_end, void **p_patterns);
+void get_patterns(void *array_start, long array_end, void **patterns);
 
 int get_samples(void *array_start, long array_end, sample_t *samples);
 
@@ -72,14 +72,14 @@ module_t read_tracker_file(mapped_file_t file)
     return module;
 }
 
-void get_patterns(void *p_search_from, long p_array_end, void **p_patterns)
+void get_patterns(void *array_start, long array_end, void **patterns)
 {
     int pattern = 1;
     void *chunk_address;
-    while ((chunk_address = search_tff(p_search_from, p_array_end, PATT_CHUNK, pattern)) != CHUNK_NOT_FOUND)
+    while ((chunk_address = search_tff(array_start, array_end, PATT_CHUNK, pattern)) != CHUNK_NOT_FOUND)
     {
         pattern++;
-        *(p_patterns++) = chunk_address + 8;
+        *(patterns++) = chunk_address + 8;
     }
     if (pattern == 1)
         error("Modfile corrupt - no patterns in module");
