@@ -90,8 +90,8 @@ module_t read_tracker_file(mapped_file_t file)
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 
-	if ((chunk_address = search_tff(file.addr, array_end, TINF_CHUNK, 1)) == CHUNK_NOT_FOUND)
-		error("Modfile corrupt - TINF chunk not found");
+    if ((chunk_address = search_tff(file.addr, array_end, TINF_CHUNK, 1)) == CHUNK_NOT_FOUND)
+        error("Modfile corrupt - TINF chunk not found");
     else
         strncpy(module.tracker_version, chunk_address + 8, 4);
 
