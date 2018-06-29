@@ -16,13 +16,6 @@ module_t read_tracker_file(mapped_file_t file);
 
 module_t read_desktop_tracker_file(mapped_file_t file);
 
-return_status search_tff(
-        void *array_start,
-        void **found_chunk_address,
-        long array_end,
-        void *to_find,
-        long occurrence);
-
 void *search_tff2(
 		void *array_start,
 		const long array_end,
@@ -223,32 +216,6 @@ module_t read_desktop_tracker_file(mapped_file_t file)
 	}
 
 	return module;
-}
-
-/* function search_tff.                                            *
- * Search tracker modfile for the nth occurrence of a named chunk. */
-
-return_status search_tff(
-	void *array_start,
-	void **found_chunk_address,
-	long array_end,
-	void *to_find,
-	long occurrence)
-{
-	while ((long) array_start <= (array_end - CHUNKSIZE))
-	{
-		if (memcmp(to_find, array_start, CHUNKSIZE) == 0)
-		{
-			occurrence -= 1;
-		}
-		if (occurrence == 0)
-		{
-			*found_chunk_address = array_start;
-			return SUCCESS;
-		}
-		array_start += 1;
-	}
-	return CHUNK_NOT_FOUND;
 }
 
 void *search_tff2(
