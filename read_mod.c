@@ -97,50 +97,50 @@ module_t read_tracker_file(mapped_file_t file)
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 
-	if (search_tff(file.addr, &chunk_address, array_end, TINF_CHUNK, 1) == CHUNK_NOT_FOUND)
+	if ((chunk_address = search_tff2(file.addr, array_end, TINF_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - TINF chunk not found");
+    else
+        strncpy(module.tracker_version, chunk_address + 8, 4);
 
-    strncpy(module.tracker_version, chunk_address + 8, 4);
-
-    if (search_tff(file.addr, &chunk_address, array_end, MVOX_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, MVOX_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - MVOX chunk not found");
+    else
+        memcpy(&module.num_channels, chunk_address + 8, 4);
 
-    memcpy(&module.num_channels, chunk_address + 8, 4);
-
-    if (search_tff(file.addr, &chunk_address, array_end, STER_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, STER_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - STER chunk not found");
+    else
+        memcpy(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS);
 
-    memcpy(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS);
-
-    if (search_tff(file.addr, &chunk_address, array_end, MNAM_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, MNAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - MNAM chunk not found");
+    else
+        strncpy(module.name, chunk_address + 8, MAX_LEN_TUNENAME);
 
-    strncpy(module.name, chunk_address + 8, MAX_LEN_TUNENAME);
-
-    if (search_tff(file.addr, &chunk_address, array_end, ANAM_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, ANAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - ANAM chunk not found");
+    else
+        strncpy(module.author, chunk_address + 8, MAX_LEN_AUTHOR);
 
-    strncpy(module.author, chunk_address + 8, MAX_LEN_AUTHOR);
-
-    if (search_tff(file.addr, &chunk_address, array_end, MLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, MLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - MLEN chunk not found");
+    else
+        memcpy(&module.tune_length, chunk_address + 8, 4);
 
-    memcpy(&module.tune_length, chunk_address + 8, 4);
-
-    if (search_tff(file.addr, &chunk_address, array_end, PNUM_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, PNUM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - PNUM chunk not found");
+    else
+        memcpy(&module.num_patterns, chunk_address + 8, 4);
 
-    memcpy(&module.num_patterns, chunk_address + 8, 4);
-
-    if (search_tff(file.addr, &chunk_address, array_end, PLEN_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, PLEN_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - PLEN chunk not found");
+    else
+        memcpy(module.pattern_length, chunk_address + 8, NUM_PATTERNS);
 
-    memcpy(module.pattern_length, chunk_address + 8, NUM_PATTERNS);
-
-    if (search_tff(file.addr, &chunk_address, array_end, SEQU_CHUNK, 1) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff2(file.addr, array_end, SEQU_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
 		error("Modfile corrupt - SEQU chunk not found");
-
-    memcpy(module.sequence, chunk_address + 8, MAX_TUNELENGTH);
+    else
+        memcpy(module.sequence, chunk_address + 8, MAX_TUNELENGTH);
 
     get_patterns(file.addr, array_end, module.patterns);
 	module.num_samples = get_samples(file.addr, array_end, module.samples);
