@@ -61,43 +61,23 @@ mapped_file_t load_file(char *filename)
 module_t read_file()
 {
     mapped_file_t file = load_file(configuration().mod_filename);
-    return_status retcode;
     module_t module;
-    void *chunk_address;
     long array_end = (long) file.addr + file.size;
 
-    retcode = search_tff(
-            file.addr,
-            &chunk_address,
-            array_end,
-            MUSX_CHUNK,
-            1);
-
-    if (retcode == CHUNK_NOT_FOUND)
-    {
-        retcode = search_tff(
-                file.addr,
-                &chunk_address,
-                array_end,
-                DSKT_CHUNK,
-                1);
-
-        if (retcode == SUCCESS)
-        {
-            printf("File is DESKTOP TRACKER format.\n");
-            if (chunk_address != file.addr)
-            {
-                file.addr = chunk_address;
-            }
-            module = read_desktop_tracker_file(file);
-        }
-        else
-            error("File type not recognised");
-    }
-    else
+    if (search_tff2(file.addr, array_end, MUSX_CHUNK, 1) != CHUNK_NOT_FOUND_2)
     {
         printf("File is TRACKER format.\n");
         module = read_tracker_file(file);
+    }
+    else
+    {
+        void *chunk_address;
+        if ((chunk_address = search_tff2(file.addr, array_end, DSKT_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
+            error("File type not recognised");
+
+        printf("File is DESKTOP TRACKER format.\n");
+        file.addr = chunk_address;
+        module = read_desktop_tracker_file(file);
     }
 
     printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
