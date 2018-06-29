@@ -1,8 +1,12 @@
 #include "tracker_module.h"
 #include "error.h"
 #include "heap.h"
+#include "arctracker.h"
 
 #define SAMPLE_INVALID NULL
+#define TRACKER_FORMAT "TRACKER"
+
+module_t read_tracker_module(mapped_file_t file);
 
 void get_patterns(void *array_start, long array_end, void **patterns);
 
@@ -10,7 +14,24 @@ int get_samples(void *array_start, long array_end, sample_t *samples);
 
 sample_t *get_sample_info(void *array_start, long array_end);
 
-module_t read_tracker_file(mapped_file_t file)
+bool is_tracker_format(mapped_file_t);;
+
+const module_format tracker_format()
+{
+    module_format format_reader = {
+            .is_this_format = is_tracker_format,
+            .read_module = read_tracker_module
+    };
+    return format_reader;
+}
+
+bool is_tracker_format(mapped_file_t file)
+{
+    long array_end = (long) file.addr + file.size;
+    return (search_tff(file.addr, array_end, MUSX_CHUNK, 1) != CHUNK_NOT_FOUND);
+}
+
+module_t read_tracker_module(mapped_file_t file)
 {
     void *chunk_address;
     long array_end = (long) file.addr + file.size;
@@ -18,6 +39,7 @@ module_t read_tracker_file(mapped_file_t file)
 
     memset(&module, 0, sizeof(module_t));
     module.format = TRACKER;
+    module.format_name = TRACKER_FORMAT;
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 

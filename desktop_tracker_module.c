@@ -1,15 +1,42 @@
 #include "desktop_tracker_module.h"
 #include "heap.h"
+#include "arctracker.h"
 
-module_t read_desktop_tracker_file(mapped_file_t file)
+#define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
+
+bool is_desktop_tracker_format(mapped_file_t);
+
+module_t read_desktop_tracker_module(mapped_file_t file);
+
+module_format desktop_tracker_format()
+{
+    module_format format_reader = {
+            .is_this_format = is_desktop_tracker_format,
+            .read_module = read_desktop_tracker_module
+    };
+    return format_reader;
+}
+
+bool is_desktop_tracker_format(mapped_file_t file)
+{
+    long array_end = (long) file.addr + file.size;
+    return (search_tff(file.addr, array_end, DSKT_CHUNK, 1) != CHUNK_NOT_FOUND);
+}
+
+module_t read_desktop_tracker_module(mapped_file_t file)
 {
     void *tmp_ptr;
     long foo;
     int i;
     module_t module;
 
+    long array_end = (long) file.addr + file.size;
+    void *chunk_address = search_tff(file.addr, array_end, DSKT_CHUNK, 1);
+    file.addr = chunk_address;
+
     memset(&module, 0, sizeof(module_t));
     module.format = DESKTOP_TRACKER;
+    module.format_name = DESKTOP_TRACKER_FORMAT;
     module.initial_speed = 6;
 
     strncpy(module.name, file.addr + 4, MAX_LEN_TUNENAME_DSKT);

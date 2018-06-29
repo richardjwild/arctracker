@@ -4,13 +4,16 @@
 #include "play_mod.h"
 #include "oss.h"
 #include "alsa.h"
+#include "tracker_module.h"
+#include "desktop_tracker_module.h"
 
 audio_api_t initialise_audio_api();
 
 int main(int argc, char *argv[])
 {
     read_configuration(argc, argv);
-    module_t module = read_file();
+    module_format formats[] = {tracker_format(), desktop_tracker_format()};
+    module_t module = read_file(formats, 2);
     audio_api_t audio_api = initialise_audio_api();
     play_module(&module, audio_api);
     audio_api.finish();

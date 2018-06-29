@@ -23,13 +23,13 @@ mix.o: mix.c
 heap.o: heap.c
 	$(CC) $(CFLAGS) -c heap.c
 
-read_mod.o: arctracker.h read_mod.h tracker_module.h read_mod.c
+read_mod.o: arctracker.h read_mod.h read_mod.c
 	$(CC) $(CFLAGS) -c read_mod.c
 
-tracker_module.o: tracker_module.h error.h heap.h tracker_module.c
+tracker_module.o: arctracker.h read_mod.h tracker_module.h error.h heap.h tracker_module.c
 	$(CC) $(CFLAGS) -c tracker_module.c
 
-desktop_tracker_module.o: desktop_tracker_module.h heap.h desktop_tracker_module.c
+desktop_tracker_module.o: arctracker.h read_mod.h desktop_tracker_module.h heap.h desktop_tracker_module.c
 	$(CC) $(CFLAGS) -c desktop_tracker_module.c
 
 play_mod.o: arctracker.h mu_law.h resample.h play_mod.h play_mod.c
