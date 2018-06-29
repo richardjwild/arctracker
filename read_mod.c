@@ -356,11 +356,12 @@ sample_t* get_sample_info(void *array_start, long array_end)
 {
 	void *chunk_address;
 	sample_t *sample = allocate_array(1, sizeof(sample_t));
+	memset(sample, 0, sizeof(sample_t));
 
     if ((chunk_address = search_tff2(array_start, array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
     else
-        read_nchar(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME, true);
+        strncpy(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME);
 
     if ((chunk_address = search_tff2(array_start, array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND_2)
         return SAMPLE_INVALID;
