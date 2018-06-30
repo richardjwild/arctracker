@@ -56,7 +56,7 @@ size_t file_size(int fd)
 
 void *search_tff(void *array_start, const long array_end, const void *to_find, long occurrence)
 {
-    while ((long) array_start <= (array_end - CHUNKSIZE))
+    while ((occurrence >= 1) && (long) array_start <= (array_end - CHUNKSIZE))
     {
         if (memcmp(to_find, array_start, CHUNKSIZE) == 0)
         {

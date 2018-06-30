@@ -119,7 +119,7 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
         long chunk_length;
         memcpy(&chunk_length, chunk_address + CHUNKSIZE, 4);
         sample_t *sample;
-        if ((sample = get_sample_info(chunk_address, (long) chunk_address + chunk_length + 8)) != SAMPLE_INVALID)
+        if ((sample = get_sample_info(chunk_address, array_end)) != SAMPLE_INVALID)
         {
             memcpy(samples, sample, sizeof(sample_t));
             samples++;
