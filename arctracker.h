@@ -155,8 +155,8 @@ typedef struct {
 typedef struct {
     unsigned char note;
     unsigned char sample;
-    unsigned char command;
-    unsigned char data;
+    unsigned char command0;
+    unsigned char data0;
     unsigned char command1;
     unsigned char data1;
     unsigned char command2;

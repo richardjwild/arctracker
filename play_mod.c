@@ -81,7 +81,7 @@ static args_t config;
 static inline
 bool portamento(const channel_event_t event)
 {
-	return event.command == TONEPORT_COMMAND_DSKT;
+	return event.command0 == TONEPORT_COMMAND_DSKT;
 }
 
 static inline
@@ -304,9 +304,9 @@ void get_current_pattern_line(
 					"%s %c%c%X%X | ",
 					notes[current_pattern_line_ptr->note],
 					alphanum[current_pattern_line_ptr->sample],
-					alphanum[current_pattern_line_ptr->command + 1],
-					(current_pattern_line_ptr->data >> 4) & 0xf,
-					current_pattern_line_ptr->data & 0xf);
+					alphanum[current_pattern_line_ptr->command0 + 1],
+					(current_pattern_line_ptr->data0 >> 4) & 0xf,
+					current_pattern_line_ptr->data0 & 0xf);
 		}
 	}
 	if (config.pianola)
@@ -350,62 +350,62 @@ void process_tracker_command(
 {
 	unsigned char temporary_note;
 
-	switch (p_current_event->command) {
+	switch (p_current_event->command0) {
 	case VOLUME_COMMAND:
 		if (on_event)
-			p_current_voice->gain = p_current_event->data;
+			p_current_voice->gain = p_current_event->data0;
 		break;
 
 	case SPEED_COMMAND:
-		if (on_event && p_current_event->data) /* ensure an "S00" command does not hang player! */
-			p_current_positions->speed = p_current_event->data;
+		if (on_event && p_current_event->data0) /* ensure an "S00" command does not hang player! */
+			p_current_positions->speed = p_current_event->data0;
 		break;
 
 	case STEREO_COMMAND:
 		if (on_event) {
-		    p_current_voice->panning = p_current_event->data - 1;
+		    p_current_voice->panning = p_current_event->data0 - 1;
 		}
 		break;
 
 	case VOLSLIDEUP_COMMAND:
-		if ((255 - p_current_voice->gain) > p_current_event->data)
-			p_current_voice->gain += p_current_event->data;
+		if ((255 - p_current_voice->gain) > p_current_event->data0)
+			p_current_voice->gain += p_current_event->data0;
 		else
 			p_current_voice->gain = 255;
 		break;
 
 	case VOLSLIDEDOWN_COMMAND:
-		if (p_current_voice->gain >= p_current_event->data)
-			p_current_voice->gain -= p_current_event->data;
+		if (p_current_voice->gain >= p_current_event->data0)
+			p_current_voice->gain -= p_current_event->data0;
 		else
 			p_current_voice->gain = 0;
 		break;
 
 	case PORTUP_COMMAND:
-		p_current_voice->period -= p_current_event->data;
+		p_current_voice->period -= p_current_event->data0;
 		if (p_current_voice->period < 0x50)
 			p_current_voice->period = 0x50;
 		break;
 
 	case PORTDOWN_COMMAND:
-		p_current_voice->period += p_current_event->data;
+		p_current_voice->period += p_current_event->data0;
 		if (p_current_voice->period > 0x3f0)
 			p_current_voice->period = 0x3f0;
 		break;
 
 	case TONEPORT_COMMAND_DSKT:
-		if (p_current_event->data) {
-			p_current_voice->last_data_byte = p_current_event->data;
+		if (p_current_event->data0) {
+			p_current_voice->last_data_byte = p_current_event->data0;
 		} else {
-			p_current_event->data = p_current_voice->last_data_byte;
+			p_current_event->data0 = p_current_voice->last_data_byte;
 		}
 		if (p_current_voice->period < p_current_voice->target_period) {
-			p_current_voice->period += p_current_event->data;
+			p_current_voice->period += p_current_event->data0;
 			if (p_current_voice->period > p_current_voice->target_period) {
 				p_current_voice->period = p_current_voice->target_period;
 			}
 		} else {
-			p_current_voice->period -= p_current_event->data;
+			p_current_voice->period -= p_current_event->data0;
 			if (p_current_voice->period < p_current_voice->target_period) {
 				p_current_voice->period = p_current_voice->target_period;
 			}
@@ -413,19 +413,19 @@ void process_tracker_command(
 		break;
 
 	case ARPEGGIO_COMMAND:
-		if (p_current_event->data) {
+		if (p_current_event->data0) {
 			if (p_current_voice->arpeggio_counter == 0)
 				temporary_note = p_current_voice->note_currently_playing;
 			else if (p_current_voice->arpeggio_counter == 1) {
 				temporary_note = p_current_voice->note_currently_playing +
-					         ((p_current_event->data & 0xf0) >> 4);
+					         ((p_current_event->data0 & 0xf0) >> 4);
 
 				if (temporary_note > 36)
 					temporary_note = p_current_voice->note_currently_playing;
 			}
 			else if (p_current_voice->arpeggio_counter == 2) {
 				temporary_note = p_current_voice->note_currently_playing +
-								(p_current_event->data & 0xf);
+								(p_current_event->data0 & 0xf);
 
 				if (temporary_note > 36)
 					temporary_note = p_current_voice->note_currently_playing;
@@ -448,7 +448,7 @@ void process_tracker_command(
 	case JUMP_COMMAND:
 		/* move position to last event before the requested sequence position */
 		if (on_event) {
-			p_current_positions->position_in_sequence = p_current_event->data - 1;
+			p_current_positions->position_in_sequence = p_current_event->data0 - 1;
 			p_current_positions->position_in_pattern =
 				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
 		}
@@ -470,11 +470,11 @@ void process_desktop_tracker_command(
 	int foo;
 	int bar;
 
-	command[0] = p_current_event->command;
+	command[0] = p_current_event->command0;
 	command[1] = p_current_event->command1;
 	command[2] = p_current_event->command2;
 	command[3] = p_current_event->command3;
-	data[0] = p_current_event->data;
+	data[0] = p_current_event->data0;
 	data[1] = p_current_event->data1;
 	data[2] = p_current_event->data2;
 	data[3] = p_current_event->data3;

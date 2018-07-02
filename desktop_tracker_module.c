@@ -49,22 +49,22 @@ size_t decode_desktop_tracker_event(void *raw, channel_event_t *decoded)
     decoded->sample = *(unsigned int *) raw & 0x3f;
 
     if (*(unsigned int *) raw & (0x1f << 17)) {
-        decoded->command = (*(unsigned int *) raw & 0x1f000) >> 12;
+        decoded->command0 = (*(unsigned int *) raw & 0x1f000) >> 12;
         decoded->command1 = (*(unsigned int *) raw & 0x3e0000) >> 17;
         decoded->command2 = (*(unsigned int *) raw & 0x7c00000) >> 22;
         decoded->command3 = (*(unsigned int *) raw & 0xf8000000) >> 27;
         raw += 4;
-        decoded->data = *(unsigned int *) raw & 0xff;
+        decoded->data0 = *(unsigned int *) raw & 0xff;
         decoded->data1 = (*(unsigned int *) raw & 0xff00) >> 8;
         decoded->data2 = (*(unsigned int *) raw & 0xff0000) >> 16;
         decoded->data3 = (*(unsigned int *) raw & 0xff000000) >> 24;
         return EVENT_SIZE_MULTIPLE_EFFECT;
     } else {
-        decoded->data = (*(unsigned int *) raw & 0xff000000) >> 24;
+        decoded->data0 = (*(unsigned int *) raw & 0xff000000) >> 24;
         decoded->data1 = 0;
         decoded->data2 = 0;
         decoded->data3 = 0;
-        decoded->command = (*(unsigned int *) raw & 0x1f000) >> 12;
+        decoded->command0 = (*(unsigned int *) raw & 0x1f000) >> 12;
         decoded->command1 = 0;
         decoded->command2 = 0;
         decoded->command3 = 0;
