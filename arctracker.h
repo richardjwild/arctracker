@@ -182,7 +182,7 @@ typedef struct {
 	unsigned char sequence[MAX_TUNELENGTH];
 	void *patterns[NUM_PATTERNS];
     command_t (*get_command)(int);
-    size_t (*decode_event)(void *raw, channel_event_t *decoded);
+    size_t (*decode_event)(__uint32_t *raw, channel_event_t *decoded);
 } module_t;
 
 typedef struct {
