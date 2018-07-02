@@ -31,6 +31,25 @@ bool is_tracker_format(mapped_file_t file)
     return (search_tff(file.addr, array_end, MUSX_CHUNK, 1) != CHUNK_NOT_FOUND);
 }
 
+command_t get_tracker_command(int code)
+{
+    switch (code)
+    {
+        case VOLUME_COMMAND: return SET_VOLUME_TRACKER;
+        case SPEED_COMMAND: return SET_TEMPO;
+        case STEREO_COMMAND: return SET_TRACK_STEREO;
+        case VOLSLIDEUP_COMMAND: return VOLUME_SLIDE_UP;
+        case VOLSLIDEDOWN_COMMAND: return VOLUME_SLIDE_DOWN;
+        case PORTUP_COMMAND: return PORTAMENTO_UP;
+        case PORTDOWN_COMMAND: return PORTAMENTO_DOWN;
+        case TONEPORT_COMMAND_DSKT: return TONE_PORTAMENTO;
+        case ARPEGGIO_COMMAND: return ARPEGGIO;
+        case BREAK_COMMAND: return BREAK_PATTERN;
+        case JUMP_COMMAND: return JUMP_TO_POSITION;
+        default: return NO_EFFECT;
+    }
+}
+
 module_t read_tracker_module(mapped_file_t file)
 {
     void *chunk_address;
@@ -40,6 +59,7 @@ module_t read_tracker_module(mapped_file_t file)
     memset(&module, 0, sizeof(module_t));
     module.format = TRACKER;
     module.format_name = TRACKER_FORMAT;
+    module.get_command = get_tracker_command;
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 

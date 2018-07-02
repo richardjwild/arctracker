@@ -23,6 +23,26 @@ bool is_desktop_tracker_format(mapped_file_t file)
     return (search_tff(file.addr, array_end, DSKT_CHUNK, 1) != CHUNK_NOT_FOUND);
 }
 
+command_t get_desktop_tracker_command(int code)
+{
+    switch (code)
+    {
+        case VOLUME_COMMAND_DSKT: return SET_VOLUME_DESKTOP_TRACKER;
+        case SPEED_COMMAND_DSKT: return SET_TEMPO;
+        case STEREO_COMMAND_DSKT: return SET_TRACK_STEREO;
+        case VOLSLIDE_COMMAND_DSKT: return VOLUME_SLIDE;
+        case PORTUP_COMMAND_DSKT: return PORTAMENTO_UP;
+        case PORTDOWN_COMMAND_DSKT: return PORTAMENTO_DOWN;
+        case TONEPORT_COMMAND_DSKT: return TONE_PORTAMENTO;
+        case ARPEGGIO_COMMAND_DSKT: return ARPEGGIO;
+        case JUMP_COMMAND_DSKT: return JUMP_TO_POSITION;
+        case SETFINETEMPO_COMMAND_DSKT: return SET_TEMPO_FINE;
+        case FINEPORTAMENTO_COMMAND_DSKT: return PORTAMENTO_FINE;
+        case FINEVOLSLIDE_COMMAND_DSKT: return VOLUME_SLIDE_FINE;
+        default: return NO_EFFECT;
+    }
+}
+
 module_t read_desktop_tracker_module(mapped_file_t file)
 {
     void *tmp_ptr;
@@ -37,6 +57,7 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     memset(&module, 0, sizeof(module_t));
     module.format = DESKTOP_TRACKER;
     module.format_name = DESKTOP_TRACKER_FORMAT;
+    module.get_command = get_desktop_tracker_command;
     module.initial_speed = 6;
 
     strncpy(module.name, file.addr + 4, MAX_LEN_TUNENAME_DSKT);

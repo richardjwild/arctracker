@@ -109,6 +109,27 @@
 #define NOTEDELAY_COMMAND_DSKT 0x1d /* not implemented yet */
 #define PATTERNDELAY_COMMAND_DSKT 0x1e /* not implemented yet */
 
+enum commands {
+    NO_EFFECT,
+    ARPEGGIO,
+    PORTAMENTO_UP,
+	PORTAMENTO_DOWN,
+	BREAK_PATTERN,
+	SET_TRACK_STEREO,
+	VOLUME_SLIDE_UP,
+	VOLUME_SLIDE_DOWN,
+	JUMP_TO_POSITION,
+	SET_TEMPO,
+	SET_VOLUME_TRACKER,
+	TONE_PORTAMENTO,
+	VOLUME_SLIDE,
+	SET_VOLUME_DESKTOP_TRACKER,
+	PORTAMENTO_FINE,
+	SET_TEMPO_FINE,
+	VOLUME_SLIDE_FINE
+};
+typedef enum commands command_t;
+
 /*#define DEVELOPING*/
 
 enum module_type {TRACKER, DESKTOP_TRACKER};
@@ -144,6 +165,7 @@ typedef struct {
 	unsigned char pattern_length[NUM_PATTERNS];
 	unsigned char sequence[MAX_TUNELENGTH];
 	void *patterns[NUM_PATTERNS];
+    command_t (*get_command)(int);
 } module_t;
 
 typedef struct {
