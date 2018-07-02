@@ -303,42 +303,6 @@ void get_current_pattern_line(
 			current_pattern_line_ptr->sample = *(char *)pattern_line_ptr++;
 			current_pattern_line_ptr->note = *(char *)pattern_line_ptr++;
 		} else /* if (p_module->format == desktop_tracker) */ {
-#ifdef WORDS_BIGENDIAN
-			tmp = *(unsigned int *)pattern_line_ptr;
-			tmp = ((tmp & 0xff) << 24) | ((tmp & 0xff00) << 8) |
-			((tmp & 0xff0000) >> 8) | ((tmp & 0xff000000) >> 24);
-
-			current_pattern_line_ptr->note = (tmp & 0xfc0) >> 6;
-			current_pattern_line_ptr->sample = tmp & 0x3f;
-
-			if (tmp & (0x1f << 17)) {
-				/* four commands */
-				current_pattern_line_ptr->command = (tmp & 0x1f000) >> 12;
-				current_pattern_line_ptr->command1 = (tmp & 0x3e0000) >> 17;
-				current_pattern_line_ptr->command2 = (tmp & 0x7c00000) >> 22;
-				current_pattern_line_ptr->command3 = (tmp & 0xf8000000) >> 27;
-				pattern_line_ptr += 4;
-				tmp = *(unsigned int *)pattern_line_ptr;
-				tmp = ((tmp & 0xff) << 24) | ((tmp & 0xff00) << 8) |
-				((tmp & 0xff0000) >> 8) | ((tmp & 0xff000000) >> 24);
-				current_pattern_line_ptr->data = tmp & 0xff;
-				current_pattern_line_ptr->data1 = (tmp & 0xff00) >> 8;
-				current_pattern_line_ptr->data2 = (tmp & 0xff0000) >> 16;
-				current_pattern_line_ptr->data3 = (tmp & 0xff000000) >> 24;
-				pattern_line_ptr += 4;
-			} else {
-				/* one command */
-				current_pattern_line_ptr->data = (tmp & 0xff000000) >> 24;
-				current_pattern_line_ptr->data1 = 0;
-				current_pattern_line_ptr->data2 = 0;
-				current_pattern_line_ptr->data3 = 0;
-				current_pattern_line_ptr->command = (tmp & 0x1f000) >> 12;
-				current_pattern_line_ptr->command1 = 0;
-				current_pattern_line_ptr->command2 = 0;
-				current_pattern_line_ptr->command3 = 0;
-				pattern_line_ptr += 4;
-			}
-#else
 			current_pattern_line_ptr->note = (*(unsigned int *)pattern_line_ptr & 0xfc0) >> 6;
 			current_pattern_line_ptr->sample = *(unsigned int *)pattern_line_ptr & 0x3f;
 
@@ -366,7 +330,6 @@ void get_current_pattern_line(
 				current_pattern_line_ptr->command3 = 0;
 				pattern_line_ptr += 4;
 			}
-#endif
 		}
 
 		if (config.pianola) {
