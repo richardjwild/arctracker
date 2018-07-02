@@ -297,41 +297,8 @@ void get_current_pattern_line(
 	for (channel = 0, current_pattern_line_ptr=p_current_pattern_line;
 	channel < p_module->num_channels;
 	channel++, current_pattern_line_ptr++) {
-		if (p_module->format == TRACKER) {
-			current_pattern_line_ptr->data = *(char *)pattern_line_ptr++;
-			current_pattern_line_ptr->command = *(char *)pattern_line_ptr++;
-			current_pattern_line_ptr->sample = *(char *)pattern_line_ptr++;
-			current_pattern_line_ptr->note = *(char *)pattern_line_ptr++;
-		} else /* if (p_module->format == desktop_tracker) */ {
-			current_pattern_line_ptr->note = (*(unsigned int *)pattern_line_ptr & 0xfc0) >> 6;
-			current_pattern_line_ptr->sample = *(unsigned int *)pattern_line_ptr & 0x3f;
-
-			if (*(unsigned int *)pattern_line_ptr & (0x1f << 17)) {
-				/* four commands */
-				current_pattern_line_ptr->command = (*(unsigned int *)pattern_line_ptr & 0x1f000) >> 12;
-				current_pattern_line_ptr->command1 = (*(unsigned int *)pattern_line_ptr & 0x3e0000) >> 17;
-				current_pattern_line_ptr->command2 = (*(unsigned int *)pattern_line_ptr & 0x7c00000) >> 22;
-				current_pattern_line_ptr->command3 = (*(unsigned int *)pattern_line_ptr & 0xf8000000) >> 27;
-				pattern_line_ptr += 4;
-				current_pattern_line_ptr->data = *(unsigned int *)pattern_line_ptr & 0xff;
-				current_pattern_line_ptr->data1 = (*(unsigned int *)pattern_line_ptr & 0xff00) >> 8;
-				current_pattern_line_ptr->data2 = (*(unsigned int *)pattern_line_ptr & 0xff0000) >> 16;
-				current_pattern_line_ptr->data3 = (*(unsigned int *)pattern_line_ptr & 0xff000000) >> 24;
-				pattern_line_ptr += 4;
-			} else {
-				/* one command */
-				current_pattern_line_ptr->data = (*(unsigned int *)pattern_line_ptr & 0xff000000) >> 24;
-				current_pattern_line_ptr->data1 = 0;
-				current_pattern_line_ptr->data2 = 0;
-				current_pattern_line_ptr->data3 = 0;
-				current_pattern_line_ptr->command = (*(unsigned int *)pattern_line_ptr & 0x1f000) >> 12;
-				current_pattern_line_ptr->command1 = 0;
-				current_pattern_line_ptr->command2 = 0;
-				current_pattern_line_ptr->command3 = 0;
-				pattern_line_ptr += 4;
-			}
-		}
-
+		size_t event_bytes = p_module->decode_event(pattern_line_ptr, current_pattern_line_ptr);
+		pattern_line_ptr += event_bytes;
 		if (config.pianola) {
 			if (p_module->format == TRACKER)
 				printf(

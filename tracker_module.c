@@ -50,6 +50,15 @@ command_t get_tracker_command(int code)
     }
 }
 
+size_t decode_tracker_event(void *raw, channel_event_t *decoded)
+{
+    decoded->data = *(char *) raw++;
+    decoded->command = *(char *) raw++;
+    decoded->sample = *(char *) raw++;
+    decoded->note = *(char *) raw;
+    return EVENT_SIZE_SINGLE_EFFECT;
+}
+
 module_t read_tracker_module(mapped_file_t file)
 {
     void *chunk_address;
@@ -60,6 +69,7 @@ module_t read_tracker_module(mapped_file_t file)
     module.format = TRACKER;
     module.format_name = TRACKER_FORMAT;
     module.get_command = get_tracker_command;
+    module.decode_event = decode_tracker_event;
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 

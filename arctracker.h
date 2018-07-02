@@ -109,6 +109,9 @@
 #define NOTEDELAY_COMMAND_DSKT 0x1d /* not implemented yet */
 #define PATTERNDELAY_COMMAND_DSKT 0x1e /* not implemented yet */
 
+#define EVENT_SIZE_SINGLE_EFFECT 4;
+#define EVENT_SIZE_MULTIPLE_EFFECT 8;
+
 enum commands {
     NO_EFFECT,
     ARPEGGIO,
@@ -150,6 +153,19 @@ typedef struct {
 } sample_t;
 
 typedef struct {
+    unsigned char note;
+    unsigned char sample;
+    unsigned char command;
+    unsigned char data;
+    unsigned char command1;
+    unsigned char data1;
+    unsigned char command2;
+    unsigned char data2;
+    unsigned char command3;
+    unsigned char data3;
+} channel_event_t;
+
+typedef struct {
 	module_type_t format;
 	char *format_name;
 	char tracker_version[LEN_TRACKER_VERSION+1];
@@ -166,6 +182,7 @@ typedef struct {
 	unsigned char sequence[MAX_TUNELENGTH];
 	void *patterns[NUM_PATTERNS];
     command_t (*get_command)(int);
+    size_t (*decode_event)(void *raw, channel_event_t *decoded);
 } module_t;
 
 typedef struct {
@@ -176,18 +193,5 @@ typedef struct {
 	int speed;
 	long sps_per_tick;
 } positions_t;
-
-typedef struct {
-	unsigned char note;
-	unsigned char sample;
-	unsigned char command;
-	unsigned char data;
-	unsigned char command1;
-	unsigned char data1;
-	unsigned char command2;
-	unsigned char data2;
-	unsigned char command3;
-	unsigned char data3;
-} channel_event_t;
 
 #endif // ARCTRACKER_H
