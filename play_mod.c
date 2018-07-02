@@ -300,19 +300,13 @@ void get_current_pattern_line(
 		size_t event_bytes = p_module->decode_event(pattern_line_ptr, current_pattern_line_ptr);
 		pattern_line_ptr += event_bytes;
 		if (config.pianola) {
-			if (p_module->format == TRACKER)
-				printf(
+			printf(
 					"%s %c%c%X%X | ",
 					notes[current_pattern_line_ptr->note],
 					alphanum[current_pattern_line_ptr->sample],
 					alphanum[current_pattern_line_ptr->command + 1],
 					(current_pattern_line_ptr->data >> 4) & 0xf,
 					current_pattern_line_ptr->data & 0xf);
-			else
-				printf(
-					"%s %2X | ",
-					notes[current_pattern_line_ptr->note],
-					current_pattern_line_ptr->sample);
 		}
 	}
 	if (config.pianola)
