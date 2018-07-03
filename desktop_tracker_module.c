@@ -1,6 +1,6 @@
 #include "desktop_tracker_module.h"
 #include "heap.h"
-#include "arctracker.h"
+#include "read_mod.h"
 
 #define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
 
@@ -45,26 +45,26 @@ command_t get_desktop_tracker_command(int code)
 
 size_t decode_desktop_tracker_event(__uint32_t *raw, channel_event_t *decoded)
 {
-    decoded->note = (*raw & 0xfc0) >> 6;
-    decoded->sample = *raw & 0x3f;
+    decoded->sample = MASK_6_SHIFT_RIGHT(*raw, 0);
+    decoded->note = MASK_6_SHIFT_RIGHT(*raw, 6);
 
     if (*raw & (0x1f << 17)) {
-        decoded->command0 = (*raw & 0x1f000) >> 12;    //                0001 1111 0000 0000 0000
-        decoded->command1 = (*raw & 0x3e0000) >> 17;   //           0011 1110 0000 0000 0000 0000
-        decoded->command2 = (*raw & 0x7c00000) >> 22;  //      0111 1100 0000 0000 0000 0000 0000
-        decoded->command3 = (*raw & 0xf8000000) >> 27; // 1111 1000 0000 0000 0000 0000 0000 0000
+        decoded->command0 = MASK_5_SHIFT_RIGHT(*raw, 12);
+        decoded->command1 = MASK_5_SHIFT_RIGHT(*raw, 17);
+        decoded->command2 = MASK_5_SHIFT_RIGHT(*raw, 22);
+        decoded->command3 = MASK_5_SHIFT_RIGHT(*raw, 27);
         raw += 1;
-        decoded->data0 = *raw & 0xff;
-        decoded->data1 = (*raw & 0xff00) >> 8;
-        decoded->data2 = (*raw & 0xff0000) >> 16;
-        decoded->data3 = (*raw & 0xff000000) >> 24;
+        decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 0);
+        decoded->data1 = MASK_8_SHIFT_RIGHT(*raw, 8);
+        decoded->data2 = MASK_8_SHIFT_RIGHT(*raw, 16);
+        decoded->data3 = MASK_8_SHIFT_RIGHT(*raw, 24);
         return EVENT_SIZE_MULTIPLE_EFFECT;
     } else {
-        decoded->data0 = (*raw & 0xff000000) >> 24;
+        decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 24);
         decoded->data1 = 0;
         decoded->data2 = 0;
         decoded->data3 = 0;
-        decoded->command0 = (*raw & 0x1f000) >> 12;
+        decoded->command0 = MASK_5_SHIFT_RIGHT(*raw, 12);
         decoded->command1 = 0;
         decoded->command2 = 0;
         decoded->command3 = 0;

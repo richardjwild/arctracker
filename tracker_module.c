@@ -1,7 +1,7 @@
 #include "tracker_module.h"
 #include "error.h"
 #include "heap.h"
-#include "arctracker.h"
+#include "read_mod.h"
 
 #define SAMPLE_INVALID NULL
 #define TRACKER_FORMAT "TRACKER"
@@ -52,10 +52,10 @@ command_t get_tracker_command(int code)
 
 size_t decode_tracker_event(__uint32_t *raw, channel_event_t *decoded)
 {
-    decoded->data0 = *raw & 0xff;
-    decoded->command0 = (*raw >> 8) & 0xff;
-    decoded->sample = (*raw >> 16) & 0xff;
-    decoded->note = (*raw >> 24) & 0xff;
+    decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 0);
+    decoded->command0 = MASK_8_SHIFT_RIGHT(*raw, 8);
+    decoded->sample = MASK_8_SHIFT_RIGHT(*raw, 16);
+    decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
     return EVENT_SIZE_SINGLE_EFFECT;
 }
 
