@@ -1,6 +1,7 @@
 #include "desktop_tracker_module.h"
 #include "heap.h"
 #include "read_mod.h"
+#include "arctracker.h"
 
 #define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
 
@@ -23,7 +24,8 @@ bool is_desktop_tracker_format(mapped_file_t file)
     return (search_tff(file.addr, array_end, DSKT_CHUNK, 1) != CHUNK_NOT_FOUND);
 }
 
-command_t get_desktop_tracker_command(int code)
+static inline
+command_t desktop_tracker_command(__uint8_t code, __uint8_t data)
 {
     switch (code)
     {
@@ -34,11 +36,11 @@ command_t get_desktop_tracker_command(int code)
         case PORTUP_COMMAND_DSKT: return PORTAMENTO_UP;
         case PORTDOWN_COMMAND_DSKT: return PORTAMENTO_DOWN;
         case TONEPORT_COMMAND_DSKT: return TONE_PORTAMENTO;
-        case ARPEGGIO_COMMAND_DSKT: return ARPEGGIO;
         case JUMP_COMMAND_DSKT: return JUMP_TO_POSITION;
         case SETFINETEMPO_COMMAND_DSKT: return SET_TEMPO_FINE;
         case FINEPORTAMENTO_COMMAND_DSKT: return PORTAMENTO_FINE;
         case FINEVOLSLIDE_COMMAND_DSKT: return VOLUME_SLIDE_FINE;
+        case ARPEGGIO_COMMAND_DSKT: return (data == 0) ? NO_EFFECT : ARPEGGIO;
         default: return NO_EFFECT;
     }
 }
@@ -53,6 +55,10 @@ size_t decode_desktop_tracker_event(__uint32_t *raw, channel_event_t *decoded)
         decoded->command1 = MASK_5_SHIFT_RIGHT(*raw, 17);
         decoded->command2 = MASK_5_SHIFT_RIGHT(*raw, 22);
         decoded->command3 = MASK_5_SHIFT_RIGHT(*raw, 27);
+        decoded->command0_decoded = desktop_tracker_command(decoded->command0, decoded->data0);
+        decoded->command1_decoded = desktop_tracker_command(decoded->command1, decoded->data1);
+        decoded->command2_decoded = desktop_tracker_command(decoded->command2, decoded->data2);
+        decoded->command3_decoded = desktop_tracker_command(decoded->command3, decoded->data3);
         raw += 1;
         decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 0);
         decoded->data1 = MASK_8_SHIFT_RIGHT(*raw, 8);
@@ -68,6 +74,10 @@ size_t decode_desktop_tracker_event(__uint32_t *raw, channel_event_t *decoded)
         decoded->command1 = 0;
         decoded->command2 = 0;
         decoded->command3 = 0;
+        decoded->command0_decoded = desktop_tracker_command(decoded->command0, decoded->data0);
+        decoded->command1_decoded = NO_EFFECT;
+        decoded->command2_decoded = NO_EFFECT;
+        decoded->command3_decoded = NO_EFFECT;
         return EVENT_SIZE_SINGLE_EFFECT;
     }
 }
@@ -86,7 +96,6 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     memset(&module, 0, sizeof(module_t));
     module.format = DESKTOP_TRACKER;
     module.format_name = DESKTOP_TRACKER_FORMAT;
-    module.get_command = get_desktop_tracker_command;
     module.decode_event = decode_desktop_tracker_event;
     module.initial_speed = 6;
 

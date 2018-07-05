@@ -2,6 +2,7 @@
 #include "error.h"
 #include "heap.h"
 #include "read_mod.h"
+#include "arctracker.h"
 
 #define SAMPLE_INVALID NULL
 #define TRACKER_FORMAT "TRACKER"
@@ -31,7 +32,8 @@ bool is_tracker_format(mapped_file_t file)
     return (search_tff(file.addr, array_end, MUSX_CHUNK, 1) != CHUNK_NOT_FOUND);
 }
 
-command_t get_tracker_command(int code)
+static inline
+command_t tracker_command(__uint8_t code, __uint8_t data)
 {
     switch (code)
     {
@@ -43,9 +45,9 @@ command_t get_tracker_command(int code)
         case PORTUP_COMMAND: return PORTAMENTO_UP;
         case PORTDOWN_COMMAND: return PORTAMENTO_DOWN;
         case TONEPORT_COMMAND_DSKT: return TONE_PORTAMENTO;
-        case ARPEGGIO_COMMAND: return ARPEGGIO;
         case BREAK_COMMAND: return BREAK_PATTERN;
         case JUMP_COMMAND: return JUMP_TO_POSITION;
+        case ARPEGGIO_COMMAND: return (data == 0) ? NO_EFFECT : ARPEGGIO;
         default: return NO_EFFECT;
     }
 }
@@ -54,6 +56,7 @@ size_t decode_tracker_event(__uint32_t *raw, channel_event_t *decoded)
 {
     decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 0);
     decoded->command0 = MASK_8_SHIFT_RIGHT(*raw, 8);
+    decoded->command0_decoded = tracker_command(decoded->command0, decoded->data0);
     decoded->sample = MASK_8_SHIFT_RIGHT(*raw, 16);
     decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
     return EVENT_SIZE_SINGLE_EFFECT;
@@ -68,7 +71,6 @@ module_t read_tracker_module(mapped_file_t file)
     memset(&module, 0, sizeof(module_t));
     module.format = TRACKER;
     module.format_name = TRACKER_FORMAT;
-    module.get_command = get_tracker_command;
     module.decode_event = decode_tracker_event;
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
