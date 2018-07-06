@@ -59,6 +59,12 @@ size_t decode_tracker_event(__uint32_t *raw, channel_event_t *decoded)
     decoded->command0_decoded = tracker_command(decoded->command0, decoded->data0);
     decoded->sample = MASK_8_SHIFT_RIGHT(*raw, 16);
     decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
+    decoded->command1 = 0;
+    decoded->command1_decoded = NO_EFFECT;
+    decoded->command2 = 0;
+    decoded->command2_decoded = NO_EFFECT;
+    decoded->command3 = 0;
+    decoded->command3_decoded = NO_EFFECT;
     return EVENT_SIZE_SINGLE_EFFECT;
 }
 

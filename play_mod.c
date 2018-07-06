@@ -63,14 +63,7 @@ void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voic
 
 void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
 
-void process_tracker_command(
-        channel_event_t *p_current_event,
-        voice_t *p_current_voice,
-        positions_t *p_current_positions,
-        const module_t *p_module,
-        bool on_event);
-
-void process_desktop_tracker_command(
+void process_commands(
         channel_event_t *p_current_event,
         voice_t *p_current_voice,
         positions_t *p_current_positions,
@@ -150,25 +143,13 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
                     reset_gain_to_sample_default(&voice, sample);
                 }
             }
-            if (p_module->format == TRACKER)
-            {
-                process_tracker_command(
-                        &event,
-                        &voice,
-                        &current_positions,
-                        p_module,
-                        new_event);
-            }
-            else
-            {
-                process_desktop_tracker_command(
-                        &event,
-                        &voice,
-                        &current_positions,
-                        p_module,
-                        new_event,
-                        audio_api.sample_rate);
-            }
+            process_commands(
+                    &event,
+                    &voice,
+                    &current_positions,
+                    p_module,
+                    new_event,
+                    audio_api.sample_rate);
             voice_info[channel] = voice;
         }
 
@@ -340,131 +321,13 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
 			: sample.sample_length;
 }
 
-/* process_tracker_command function.  *
- * process a tracker command.         */
-
-void process_tracker_command(
-	channel_event_t *p_current_event,
-	voice_t *p_current_voice,
-	positions_t *p_current_positions,
-	const module_t *p_module,
-	bool on_event)
-{
-	unsigned char temporary_note;
-
-	switch (p_current_event->command0_decoded) {
-	case SET_VOLUME_TRACKER:
-		if (on_event)
-			p_current_voice->gain = p_current_event->data0;
-		break;
-
-	case SET_TEMPO:
-		if (on_event && p_current_event->data0) /* ensure an "S00" command does not hang player! */
-			p_current_positions->speed = p_current_event->data0;
-		break;
-
-	case SET_TRACK_STEREO:
-		if (on_event) {
-		    p_current_voice->panning = p_current_event->data0 - 1;
-		}
-		break;
-
-	case VOLUME_SLIDE_UP:
-		if ((255 - p_current_voice->gain) > p_current_event->data0)
-			p_current_voice->gain += p_current_event->data0;
-		else
-			p_current_voice->gain = 255;
-		break;
-
-	case VOLUME_SLIDE_DOWN:
-		if (p_current_voice->gain >= p_current_event->data0)
-			p_current_voice->gain -= p_current_event->data0;
-		else
-			p_current_voice->gain = 0;
-		break;
-
-	case PORTAMENTO_UP:
-		p_current_voice->period -= p_current_event->data0;
-		if (p_current_voice->period < 0x50)
-			p_current_voice->period = 0x50;
-		break;
-
-	case PORTAMENTO_DOWN:
-		p_current_voice->period += p_current_event->data0;
-		if (p_current_voice->period > 0x3f0)
-			p_current_voice->period = 0x3f0;
-		break;
-
-	case TONE_PORTAMENTO:
-		if (p_current_event->data0) {
-			p_current_voice->last_data_byte = p_current_event->data0;
-		} else {
-			p_current_event->data0 = p_current_voice->last_data_byte;
-		}
-		if (p_current_voice->period < p_current_voice->target_period) {
-			p_current_voice->period += p_current_event->data0;
-			if (p_current_voice->period > p_current_voice->target_period) {
-				p_current_voice->period = p_current_voice->target_period;
-			}
-		} else {
-			p_current_voice->period -= p_current_event->data0;
-			if (p_current_voice->period < p_current_voice->target_period) {
-				p_current_voice->period = p_current_voice->target_period;
-			}
-		}
-		break;
-
-	case ARPEGGIO:
-		if (p_current_event->data0) {
-			if (p_current_voice->arpeggio_counter == 0)
-				temporary_note = p_current_voice->note_currently_playing;
-			else if (p_current_voice->arpeggio_counter == 1) {
-				temporary_note = p_current_voice->note_currently_playing +
-					         ((p_current_event->data0 & 0xf0) >> 4);
-
-				if (0 > temporary_note || temporary_note > 61)
-					temporary_note = p_current_voice->note_currently_playing;
-			}
-			else if (p_current_voice->arpeggio_counter == 2) {
-				temporary_note = p_current_voice->note_currently_playing +
-								(p_current_event->data0 & 0xf);
-
-				if (0 > temporary_note || temporary_note > 61)
-					temporary_note = p_current_voice->note_currently_playing;
-			}
-
-			if (++(p_current_voice->arpeggio_counter) == 3)
-				p_current_voice->arpeggio_counter = 0;
-
-			p_current_voice->period = period_for_note(temporary_note);
-		}
-		break;
-
-	case BREAK_PATTERN:
-		/* jog position (in pattern) to last event */
-		if (on_event)
-			p_current_positions->position_in_pattern =
-				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
-		break;
-
-	case JUMP_TO_POSITION:
-		/* move position to last event before the requested sequence position */
-		if (on_event) {
-			p_current_positions->position_in_sequence = p_current_event->data0 - 1;
-			p_current_positions->position_in_pattern =
-				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
-		}
-		break;
-	}
-}
-
-void process_desktop_tracker_command(
-	channel_event_t *p_current_event,
-	voice_t  *p_current_voice,
-	positions_t     *p_current_positions,
-	const module_t   *p_module,
-	bool            on_event,
-	long          p_sample_rate)
+void process_commands(
+        channel_event_t *p_current_event,
+        voice_t *p_current_voice,
+        positions_t *p_current_positions,
+        const module_t *p_module,
+        bool on_event,
+        long p_sample_rate)
 {
 	unsigned char temporary_note;
 	command_t command[4];
@@ -485,6 +348,11 @@ void process_desktop_tracker_command(
 	{
 		switch (command[foo])
 		{
+        case SET_VOLUME_TRACKER:
+            if (on_event)
+                p_current_voice->gain = data[foo];
+            break;
+
 		case SET_VOLUME_DESKTOP_TRACKER:
 			if (on_event)
 				p_current_voice->gain = ((data[foo] + 1) << 1) - 1;
@@ -501,7 +369,21 @@ void process_desktop_tracker_command(
 			}
 			break;
 
-		case VOLUME_SLIDE:
+        case VOLUME_SLIDE_UP:
+            if ((255 - p_current_voice->gain) > data[foo])
+                p_current_voice->gain += data[foo];
+            else
+                p_current_voice->gain = 255;
+            break;
+
+        case VOLUME_SLIDE_DOWN:
+            if (p_current_voice->gain >= data[foo])
+                p_current_voice->gain -= data[foo];
+            else
+                p_current_voice->gain = 0;
+            break;
+
+        case VOLUME_SLIDE:
 			bar = (signed char)data[foo] << 1;
 			if (bar > 0) {
 				if ((255 - p_current_voice->gain) > bar)
@@ -555,24 +437,31 @@ void process_desktop_tracker_command(
 					temporary_note = p_current_voice->note_currently_playing +
 					((data[foo] & 0xf0) >> 4);
 
-					if (temporary_note > 36)
+					if (0 > temporary_note || temporary_note > 61)
 						temporary_note = p_current_voice->note_currently_playing;
 					} else if (p_current_voice->arpeggio_counter == 2) {
 						temporary_note = p_current_voice->note_currently_playing +
 						(data[foo] & 0xf);
 
-					if (temporary_note > 36)
+					if (0 > temporary_note || temporary_note > 61)
 						temporary_note = p_current_voice->note_currently_playing;
 				}
 
 				if (++(p_current_voice->arpeggio_counter) == 3)
 					p_current_voice->arpeggio_counter = 0;
 
-				p_current_voice->period = period_for_note(temporary_note + 13);
+				p_current_voice->period = period_for_note(temporary_note);
 			}
 			break;
 
-		case JUMP_TO_POSITION:
+        case BREAK_PATTERN:
+            /* jog position (in pattern) to last event */
+            if (on_event)
+                p_current_positions->position_in_pattern =
+                        p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
+            break;
+
+        case JUMP_TO_POSITION:
 			/* move position to last event before the requested sequence position */
 			if (on_event) {
 				p_current_positions->position_in_sequence = data[foo] - 1;
@@ -621,11 +510,6 @@ void process_desktop_tracker_command(
 				}
 			}
 			break;
-
-#ifdef DEVELOPING
-		default:
-			if (on_event) printf("| %2X %2X\n",command[foo],data[foo]);
-#endif
 		}
 	} /* end for (foo) */
 }
