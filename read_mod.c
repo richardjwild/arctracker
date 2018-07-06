@@ -21,7 +21,7 @@ module_t read_file(module_format *formats, int no_formats)
         if (format.is_this_format(file))
         {
             module_t module = format.read_module(file);
-            printf("File is %s format.\n", module.format_name);
+            printf("File is %s format.\n", module.format);
             printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
             return module;
         }

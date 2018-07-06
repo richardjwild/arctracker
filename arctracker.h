@@ -160,7 +160,7 @@ typedef struct {
 } channel_event_t;
 
 typedef struct {
-	char *format_name;
+	char *format;
 	char tracker_version[LEN_TRACKER_VERSION+1];
 	char name[MAX_LEN_TUNENAME_DSKT+1];
 	char author[MAX_LEN_AUTHOR_DSKT+1];

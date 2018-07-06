@@ -86,7 +86,7 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     file.addr = chunk_address;
 
     memset(&module, 0, sizeof(module_t));
-    module.format_name = DESKTOP_TRACKER_FORMAT;
+    module.format = DESKTOP_TRACKER_FORMAT;
     module.decode_event = decode_desktop_tracker_event;
     module.initial_speed = 6;
 
