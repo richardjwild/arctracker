@@ -80,7 +80,6 @@ module_t read_tracker_module(mapped_file_t file)
     module_t module;
 
     memset(&module, 0, sizeof(module_t));
-    module.format = TRACKER;
     module.format_name = TRACKER_FORMAT;
     module.decode_event = decode_tracker_event;
     module.initial_speed = 6;
