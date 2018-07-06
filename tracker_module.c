@@ -34,17 +34,17 @@ command_t tracker_command(__uint8_t code, __uint8_t data)
 {
     switch (code)
     {
-        case VOLUME_COMMAND: return SET_VOLUME_TRACKER;
-        case SPEED_COMMAND: return SET_TEMPO;
-        case STEREO_COMMAND: return SET_TRACK_STEREO;
-        case VOLSLIDEUP_COMMAND: return VOLUME_SLIDE_UP;
-        case VOLSLIDEDOWN_COMMAND: return VOLUME_SLIDE_DOWN;
-        case PORTUP_COMMAND: return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND: return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND_DSKT: return TONE_PORTAMENTO;
-        case BREAK_COMMAND: return BREAK_PATTERN;
-        case JUMP_COMMAND: return JUMP_TO_POSITION;
-        case ARPEGGIO_COMMAND: return (data == 0) ? NO_EFFECT : ARPEGGIO;
+        case VOLUME_COMMAND_TRK: return SET_VOLUME_TRACKER;
+        case SPEED_COMMAND_TRK: return SET_TEMPO;
+        case STEREO_COMMAND_TRK: return SET_TRACK_STEREO;
+        case VOLSLIDEUP_COMMAND_TRK: return VOLUME_SLIDE_UP;
+        case VOLSLIDEDOWN_COMMAND_TRK: return VOLUME_SLIDE_DOWN;
+        case PORTUP_COMMAND_TRK: return PORTAMENTO_UP;
+        case PORTDOWN_COMMAND_TRK: return PORTAMENTO_DOWN;
+        case TONEPORT_COMMAND_TRK: return TONE_PORTAMENTO;
+        case BREAK_COMMAND_TRK: return BREAK_PATTERN;
+        case JUMP_COMMAND_TRK: return JUMP_TO_POSITION;
+        case ARPEGGIO_COMMAND_TRK: return (data == 0) ? NO_EFFECT : ARPEGGIO;
         default: return NO_EFFECT;
     }
 }

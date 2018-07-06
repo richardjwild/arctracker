@@ -76,7 +76,7 @@ static args_t config;
 static inline
 bool portamento(const channel_event_t event)
 {
-	return event.effects[0].command == TONEPORT_COMMAND_DSKT;
+	return event.effects[0].command == TONE_PORTAMENTO;
 }
 
 static inline

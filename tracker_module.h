@@ -5,6 +5,7 @@
 #include "read_mod.h"
 
 #define TRACKER_FORMAT "TRACKER"
+
 #define MUSX_CHUNK "MUSX"
 #define TINF_CHUNK "TINF"
 #define MVOX_CHUNK "MVOX"
@@ -23,6 +24,19 @@
 #define ROFS_CHUNK "ROFS"
 #define RLEN_CHUNK "RLEN"
 #define SDAT_CHUNK "SDAT"
+
+#define ARPEGGIO_COMMAND_TRK 0      // 0
+#define PORTUP_COMMAND_TRK 1        // 1
+#define PORTDOWN_COMMAND_TRK 2      // 2
+#define TONEPORT_COMMAND_TRK 3      // 3
+#define BREAK_COMMAND_TRK 11        // B
+#define STEREO_COMMAND_TRK 14       // E
+#define VOLSLIDEUP_COMMAND_TRK 16   // G
+#define VOLSLIDEDOWN_COMMAND_TRK 17 // H
+#define JUMP_COMMAND_TRK 19         // J
+#define SPEED_COMMAND_TRK 28        // S
+#define VOLUME_COMMAND_TRK 31       // V
+
 #define SAMPLE_INVALID NULL
 
 format_t tracker_format();

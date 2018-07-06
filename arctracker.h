@@ -32,8 +32,6 @@
 
 /* macro definitions */
 
-#define STRINGS_MATCH 0
-
 #define LEN_TRACKER_VERSION 4
 #define MAX_LEN_TUNENAME 32
 #define MAX_LEN_TUNENAME_DSKT 64
@@ -49,50 +47,10 @@
 #define MAX_TUNELENGTH 128
 #define NUM_SAMPLES 256
 
-#define ARPEGGIO_COMMAND 0 /* 0 */
-#define PORTUP_COMMAND 1 /* 1 */
-#define PORTDOWN_COMMAND 2 /* 2 */
-#define BREAK_COMMAND 11 /* B */
-#define STEREO_COMMAND 14 /* E */
-#define VOLSLIDEUP_COMMAND 16 /* G */
-#define VOLSLIDEDOWN_COMMAND 17 /* H */
-#define JUMP_COMMAND 19 /* J */
-#define SPEED_COMMAND 28 /* S */
-#define VOLUME_COMMAND 31 /* V */
-#define ARPEGGIO_COMMAND_DSKT 0x0
-#define PORTUP_COMMAND_DSKT 0x1
-#define PORTDOWN_COMMAND_DSKT 0x2
-#define TONEPORT_COMMAND_DSKT 0x3
-#define VIBRATO_COMMAND_DSKT 0x4 /* not implemented yet */
-#define DELAYEDNOTE_COMMAND_DSKT 0x5 /* not implemented yet */
-#define RELEASESAMP_COMMAND_DSKT 0x6 /* not implemented yet */
-#define TREMOLO_COMMAND_DSKT 0x7 /* not implemented yet */
-#define PHASOR_COMMAND1_DSKT 0x8 /* not implemented yet */
-#define PHASOR_COMMAND2_DSKT 0x9 /* not implemented yet */
-#define VOLSLIDE_COMMAND_DSKT 0xa
-#define JUMP_COMMAND_DSKT 0xb
-#define VOLUME_COMMAND_DSKT 0xc
-#define STEREO_COMMAND_DSKT 0xd
-#define STEREOSLIDE_COMMAND_DSKT 0xe /* not implemented yet */
-#define SPEED_COMMAND_DSKT 0xf
-#define ARPEGGIOSPEED_COMMAND_DSKT 0x10 /* not implemented yet */
-#define FINEPORTAMENTO_COMMAND_DSKT 0x11
-#define CLEAREPEAT_COMMAND_DSKT 0x12 /* not implemented yet */
-#define SETVIBRATOWAVEFORM_COMMAND_DSKT 0x14 /* not implemented yet */
-#define LOOP_COMMAND_DSKT 0x16 /* not implemented yet */
-#define SETTREMOLOWAVEFORM_COMMAND_DSKT 0x17 /* not implemented yet */
-#define SETFINETEMPO_COMMAND_DSKT 0x18
-#define RETRIGGERSAMPLE_COMMAND_DSKT 0x19 /* not implemented yet */
-#define FINEVOLSLIDE_COMMAND_DSKT 0x1a
-#define HOLD_COMMAND_DSKT 0x1b /* not implemented yet */
-#define NOTECUT_COMMAND_DSKT 0x1c /* not implemented yet */
-#define NOTEDELAY_COMMAND_DSKT 0x1d /* not implemented yet */
-#define PATTERNDELAY_COMMAND_DSKT 0x1e /* not implemented yet */
-
 #define EVENT_SIZE_SINGLE_EFFECT 4;
 #define EVENT_SIZE_MULTIPLE_EFFECT 8;
 
-enum commands {
+typedef enum {
     NO_EFFECT,
     ARPEGGIO,
     PORTAMENTO_UP,
@@ -110,8 +68,7 @@ enum commands {
 	PORTAMENTO_FINE,
 	SET_TEMPO_FINE,
 	VOLUME_SLIDE_FINE
-};
-typedef enum commands command_t;
+} command_t;
 
 typedef struct {
 	char name[MAX_LEN_SAMPLENAME_DSKT+1];
