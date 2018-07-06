@@ -52,19 +52,24 @@ command_t tracker_command(__uint8_t code, __uint8_t data)
     }
 }
 
-size_t decode_tracker_event(__uint32_t *raw, channel_event_t *decoded)
+static inline
+effect_t effect(const __uint8_t code, const __uint8_t data) {
+    const effect_t effect = {
+            .code = code,
+            .data = data,
+            .command = tracker_command(code, data)
+    };
+    return effect;
+}
+
+size_t decode_tracker_event(const __uint32_t *raw, channel_event_t *decoded)
 {
-    decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 0);
-    decoded->command0 = MASK_8_SHIFT_RIGHT(*raw, 8);
-    decoded->command0_decoded = tracker_command(decoded->command0, decoded->data0);
     decoded->sample = MASK_8_SHIFT_RIGHT(*raw, 16);
     decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
-    decoded->command1 = 0;
-    decoded->command1_decoded = NO_EFFECT;
-    decoded->command2 = 0;
-    decoded->command2_decoded = NO_EFFECT;
-    decoded->command3 = 0;
-    decoded->command3_decoded = NO_EFFECT;
+    decoded->effects[0] = effect(MASK_8_SHIFT_RIGHT(*raw, 8), MASK_8_SHIFT_RIGHT(*raw, 0));
+    for (int i = 1; i <= 3; i++) {
+        decoded->effects[i] = effect(0, 0);
+    }
     return EVENT_SIZE_SINGLE_EFFECT;
 }
 

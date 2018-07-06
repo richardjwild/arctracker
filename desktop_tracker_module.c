@@ -45,39 +45,31 @@ command_t desktop_tracker_command(__uint8_t code, __uint8_t data)
     }
 }
 
-size_t decode_desktop_tracker_event(__uint32_t *raw, channel_event_t *decoded)
+static inline
+effect_t effect(const __uint8_t code, const __uint8_t data) {
+    const effect_t effect = {
+            .code = code,
+            .data = data,
+            .command = desktop_tracker_command(code, data)
+    };
+    return effect;
+}
+
+size_t decode_desktop_tracker_event(const __uint32_t *raw, channel_event_t *decoded)
 {
     decoded->sample = MASK_6_SHIFT_RIGHT(*raw, 0);
     decoded->note = MASK_6_SHIFT_RIGHT(*raw, 6);
-
     if (*raw & (0x1f << 17)) {
-        decoded->command0 = MASK_5_SHIFT_RIGHT(*raw, 12);
-        decoded->command1 = MASK_5_SHIFT_RIGHT(*raw, 17);
-        decoded->command2 = MASK_5_SHIFT_RIGHT(*raw, 22);
-        decoded->command3 = MASK_5_SHIFT_RIGHT(*raw, 27);
-        decoded->command0_decoded = desktop_tracker_command(decoded->command0, decoded->data0);
-        decoded->command1_decoded = desktop_tracker_command(decoded->command1, decoded->data1);
-        decoded->command2_decoded = desktop_tracker_command(decoded->command2, decoded->data2);
-        decoded->command3_decoded = desktop_tracker_command(decoded->command3, decoded->data3);
-        raw += 1;
-        decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 0);
-        decoded->data1 = MASK_8_SHIFT_RIGHT(*raw, 8);
-        decoded->data2 = MASK_8_SHIFT_RIGHT(*raw, 16);
-        decoded->data3 = MASK_8_SHIFT_RIGHT(*raw, 24);
+        decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*(raw + 1), 0));
+        decoded->effects[1] = effect(MASK_5_SHIFT_RIGHT(*raw, 17), MASK_8_SHIFT_RIGHT(*(raw + 1), 8));
+        decoded->effects[2] = effect(MASK_5_SHIFT_RIGHT(*raw, 22), MASK_8_SHIFT_RIGHT(*(raw + 1), 16));
+        decoded->effects[3] = effect(MASK_5_SHIFT_RIGHT(*raw, 27), MASK_8_SHIFT_RIGHT(*(raw + 1), 24));
         return EVENT_SIZE_MULTIPLE_EFFECT;
     } else {
-        decoded->data0 = MASK_8_SHIFT_RIGHT(*raw, 24);
-        decoded->data1 = 0;
-        decoded->data2 = 0;
-        decoded->data3 = 0;
-        decoded->command0 = MASK_5_SHIFT_RIGHT(*raw, 12);
-        decoded->command1 = 0;
-        decoded->command2 = 0;
-        decoded->command3 = 0;
-        decoded->command0_decoded = desktop_tracker_command(decoded->command0, decoded->data0);
-        decoded->command1_decoded = NO_EFFECT;
-        decoded->command2_decoded = NO_EFFECT;
-        decoded->command3_decoded = NO_EFFECT;
+        decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*raw, 24));
+        decoded->effects[1] = effect(0, 0);
+        decoded->effects[2] = effect(0, 0);
+        decoded->effects[3] = effect(0, 0);
         return EVENT_SIZE_SINGLE_EFFECT;
     }
 }

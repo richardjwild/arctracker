@@ -76,7 +76,7 @@ static args_t config;
 static inline
 bool portamento(const channel_event_t event)
 {
-	return event.command0 == TONEPORT_COMMAND_DSKT;
+	return event.effects[0].command == TONEPORT_COMMAND_DSKT;
 }
 
 static inline
@@ -287,9 +287,9 @@ void get_current_pattern_line(
 					"%s %c%c%X%X | ",
 					notes[current_pattern_line_ptr->note],
 					alphanum[current_pattern_line_ptr->sample],
-					alphanum[current_pattern_line_ptr->command0 + 1],
-					(current_pattern_line_ptr->data0 >> 4) & 0xf,
-					current_pattern_line_ptr->data0 & 0xf);
+					alphanum[current_pattern_line_ptr->effects[0].code + 1],
+					(current_pattern_line_ptr->effects[0].data >> 4) & 0xf,
+					current_pattern_line_ptr->effects[0].data & 0xf);
 		}
 	}
 	if (config.pianola)
@@ -330,61 +330,50 @@ void process_commands(
         long p_sample_rate)
 {
 	unsigned char temporary_note;
-	command_t command[4];
-	unsigned char data[4];
-	int foo;
 	int bar;
 
-	command[0] = p_current_event->command0_decoded;
-	command[1] = p_current_event->command1_decoded;
-	command[2] = p_current_event->command2_decoded;
-	command[3] = p_current_event->command3_decoded;
-	data[0] = p_current_event->data0;
-	data[1] = p_current_event->data1;
-	data[2] = p_current_event->data2;
-	data[3] = p_current_event->data3;
-
-	for (foo=0; foo<4; foo++)
+	for (int effect_no = 0; effect_no < 4; effect_no++)
 	{
-		switch (command[foo])
+	    effect_t effect = p_current_event->effects[effect_no];
+		switch (effect.command)
 		{
         case SET_VOLUME_TRACKER:
             if (on_event)
-                p_current_voice->gain = data[foo];
+                p_current_voice->gain = effect.data;
             break;
 
 		case SET_VOLUME_DESKTOP_TRACKER:
 			if (on_event)
-				p_current_voice->gain = ((data[foo] + 1) << 1) - 1;
+				p_current_voice->gain = ((effect.data + 1) << 1) - 1;
 			break;
 
 		case SET_TEMPO:
-			if (on_event && data[foo]) /* ensure an "S00" command does not hang player! */
-				p_current_positions->speed = data[foo];
+			if (on_event && effect.data) /* ensure an "S00" command does not hang player! */
+				p_current_positions->speed = effect.data;
 			break;
 
 		case SET_TRACK_STEREO:
 			if (on_event) {
-			    p_current_voice->panning = data[foo] - 1;
+			    p_current_voice->panning = effect.data - 1;
 			}
 			break;
 
         case VOLUME_SLIDE_UP:
-            if ((255 - p_current_voice->gain) > data[foo])
-                p_current_voice->gain += data[foo];
+            if ((255 - p_current_voice->gain) > effect.data)
+                p_current_voice->gain += effect.data;
             else
                 p_current_voice->gain = 255;
             break;
 
         case VOLUME_SLIDE_DOWN:
-            if (p_current_voice->gain >= data[foo])
-                p_current_voice->gain -= data[foo];
+            if (p_current_voice->gain >= effect.data)
+                p_current_voice->gain -= effect.data;
             else
                 p_current_voice->gain = 0;
             break;
 
         case VOLUME_SLIDE:
-			bar = (signed char)data[foo] << 1;
+			bar = (signed char)effect.data << 1;
 			if (bar > 0) {
 				if ((255 - p_current_voice->gain) > bar)
 					p_current_voice->gain += bar;
@@ -399,30 +388,30 @@ void process_commands(
 			break;
 
 		case PORTAMENTO_UP:
-			p_current_voice->period -= data[foo];
+			p_current_voice->period -= effect.data;
 			if (p_current_voice->period < 0x50)
 				p_current_voice->period = 0x50;
 			break;
 
 		case PORTAMENTO_DOWN:
-			p_current_voice->period += data[foo];
+			p_current_voice->period += effect.data;
 			if (p_current_voice->period > 0x3f0)
 				p_current_voice->period = 0x3f0;
 			break;
 
 		case TONE_PORTAMENTO:
-			if (data[foo]) {
-				p_current_voice->last_data_byte = data[foo];
+			if (effect.data) {
+				p_current_voice->last_data_byte = effect.data;
 			} else {
-				data[foo] = p_current_voice->last_data_byte;
+				effect.data = p_current_voice->last_data_byte;
 			}
 			if (p_current_voice->period < p_current_voice->target_period) {
-				p_current_voice->period += data[foo];
+				p_current_voice->period += effect.data;
 				if (p_current_voice->period > p_current_voice->target_period) {
 					p_current_voice->period = p_current_voice->target_period;
 				}
 			} else {
-				p_current_voice->period -= data[foo];
+				p_current_voice->period -= effect.data;
 				if (p_current_voice->period < p_current_voice->target_period) {
 					p_current_voice->period = p_current_voice->target_period;
 				}
@@ -430,18 +419,18 @@ void process_commands(
 			break;
 
 		case ARPEGGIO:
-			if (data[foo]) {
+			if (effect.data) {
 				if (p_current_voice->arpeggio_counter == 0)
 					temporary_note = p_current_voice->note_currently_playing;
 				else if (p_current_voice->arpeggio_counter == 1) {
 					temporary_note = p_current_voice->note_currently_playing +
-					((data[foo] & 0xf0) >> 4);
+					((effect.data & 0xf0) >> 4);
 
 					if (0 > temporary_note || temporary_note > 61)
 						temporary_note = p_current_voice->note_currently_playing;
 					} else if (p_current_voice->arpeggio_counter == 2) {
 						temporary_note = p_current_voice->note_currently_playing +
-						(data[foo] & 0xf);
+						(effect.data & 0xf);
 
 					if (0 > temporary_note || temporary_note > 61)
 						temporary_note = p_current_voice->note_currently_playing;
@@ -464,20 +453,20 @@ void process_commands(
         case JUMP_TO_POSITION:
 			/* move position to last event before the requested sequence position */
 			if (on_event) {
-				p_current_positions->position_in_sequence = data[foo] - 1;
+				p_current_positions->position_in_sequence = effect.data - 1;
 				p_current_positions->position_in_pattern =
 				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
 			}
 			break;
 
 		case SET_TEMPO_FINE:
-			if (on_event && data[foo])
-				p_current_positions->sps_per_tick = (p_sample_rate << 8)/(data[foo]);
+			if (on_event && effect.data)
+				p_current_positions->sps_per_tick = (p_sample_rate << 8)/(effect.data);
 			break;
 
 		case PORTAMENTO_FINE:
-			if (on_event && data[foo]) {
-				bar = (unsigned char)data[foo];
+			if (on_event && effect.data) {
+				bar = (unsigned char)effect.data;
 				p_current_voice->period += bar;
 				if (bar > 0) {
 					if (p_current_voice->period > 0x3f0) {
@@ -492,8 +481,8 @@ void process_commands(
 			break;
 
 		case VOLUME_SLIDE_FINE:
-			if (on_event && data[foo]) {
-				bar = (signed char)data[foo] << 1;
+			if (on_event && effect.data) {
+				bar = (signed char)effect.data << 1;
 				if (bar > 0) {
 					if ((255 - p_current_voice->gain) > bar) {
 						p_current_voice->gain += bar;

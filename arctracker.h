@@ -153,20 +153,15 @@ typedef struct {
 } sample_t;
 
 typedef struct {
+	__uint8_t code;
+	command_t command;
+	__uint8_t data;
+} effect_t;
+
+typedef struct {
     __uint8_t note;
     __uint8_t sample;
-    __uint8_t command0;
-    command_t command0_decoded;
-    __uint8_t data0;
-    __uint8_t command1;
-    command_t command1_decoded;
-    __uint8_t data1;
-    __uint8_t command2;
-    command_t command2_decoded;
-    __uint8_t data2;
-    __uint8_t command3;
-    command_t command3_decoded;
-    __uint8_t data3;
+    effect_t effects[4];
 } channel_event_t;
 
 typedef struct {
@@ -185,7 +180,7 @@ typedef struct {
 	unsigned char pattern_length[NUM_PATTERNS];
 	unsigned char sequence[MAX_TUNELENGTH];
 	void *patterns[NUM_PATTERNS];
-    size_t (*decode_event)(__uint32_t *raw, channel_event_t *decoded);
+    size_t (*decode_event)(const __uint32_t *raw, channel_event_t *decoded);
 } module_t;
 
 typedef struct {
