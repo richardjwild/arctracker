@@ -4,14 +4,15 @@
 #include "arctracker.h"
 
 #define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
+#define DSKT_CHUNK "DskT"
 
 bool is_desktop_tracker_format(mapped_file_t);
 
 module_t read_desktop_tracker_module(mapped_file_t file);
 
-module_format desktop_tracker_format()
+format_t desktop_tracker_format()
 {
-    module_format format_reader = {
+    format_t format_reader = {
             .is_this_format = is_desktop_tracker_format,
             .read_module = read_desktop_tracker_module
     };

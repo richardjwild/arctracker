@@ -4,9 +4,6 @@
 #include "read_mod.h"
 #include "arctracker.h"
 
-#define SAMPLE_INVALID NULL
-#define TRACKER_FORMAT "TRACKER"
-
 module_t read_tracker_module(mapped_file_t file);
 
 void get_patterns(void *array_start, long array_end, void **patterns);
@@ -17,9 +14,9 @@ sample_t *get_sample_info(void *array_start, long array_end);
 
 bool is_tracker_format(mapped_file_t);;
 
-const module_format tracker_format()
+const format_t tracker_format()
 {
-    module_format format_reader = {
+    format_t format_reader = {
             .is_this_format = is_tracker_format,
             .read_module = read_tracker_module
     };

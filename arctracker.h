@@ -49,26 +49,6 @@
 #define MAX_TUNELENGTH 128
 #define NUM_SAMPLES 256
 
-#define DSKT_CHUNK "DskT"
-#define MUSX_CHUNK "MUSX"
-#define TINF_CHUNK "TINF"
-#define MVOX_CHUNK "MVOX"
-#define STER_CHUNK "STER"
-#define MNAM_CHUNK "MNAM"
-#define ANAM_CHUNK "ANAM"
-#define MLEN_CHUNK "MLEN"
-#define PNUM_CHUNK "PNUM"
-#define PLEN_CHUNK "PLEN"
-#define SEQU_CHUNK "SEQU"
-#define PATT_CHUNK "PATT"
-#define SAMP_CHUNK "SAMP"
-#define SNAM_CHUNK "SNAM"
-#define SVOL_CHUNK "SVOL"
-#define SLEN_CHUNK "SLEN"
-#define ROFS_CHUNK "ROFS"
-#define RLEN_CHUNK "RLEN"
-#define SDAT_CHUNK "SDAT"
-
 #define ARPEGGIO_COMMAND 0 /* 0 */
 #define PORTUP_COMMAND 1 /* 1 */
 #define PORTDOWN_COMMAND 2 /* 2 */
