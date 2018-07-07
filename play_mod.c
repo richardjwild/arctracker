@@ -24,17 +24,7 @@
 #include "gain.h"
 #include "period.h"
 #include "configuration.h"
-
-char *notes[] = {"---",
-	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
-	"C-2", "C#2", "D-2", "D#2", "E-2", "F-2", "F#2", "G-2", "G#2", "A-2", "A#2", "B-2",
-	"C-3", "C#3", "D-3", "D#3", "E-3", "F-3", "F#3", "G-3", "G#3", "A-3", "A#3", "B-3"};
-
-char alphanum[] = {'-',
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-	'U', 'V', 'W', 'X', 'Y', 'Z'};
+#include "pianola.h"
 
 void initialise_values(
         positions_t *p_current_positions,
@@ -101,6 +91,8 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
 
 	initialise_audio(audio_api, p_module->num_channels);
 	set_master_gain(config.volume);
+	if (config.pianola)
+	    enable_pianola(p_module->num_channels);
 
 	/* loop through whole tune */
 	do {
@@ -118,6 +110,8 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
 				&current_positions,
 				p_module,
 				current_pattern_line);
+
+			pianola_roll(&current_positions, current_pattern_line);
 		}
         for (int channel = 0; channel < p_module->num_channels; channel++)
         {
@@ -163,9 +157,6 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
 	}
 	while (!looped_yet || config.loop_forever);
     send_remaining_audio();
-
-	if (!config.pianola)
-		printf("\n");
 }
 
 void silence_channel(voice_t *voice)
@@ -195,13 +186,6 @@ void initialise_values(
 	p_current_positions->counter = p_module->initial_speed - 1;
 	p_current_positions->speed = p_module->initial_speed;
 	p_current_positions->pattern_line_ptr = p_module->patterns[p_module->sequence[0]];
-
-#ifdef DEVELOPING
-	if (p_pianola)
-		printf("Pianola mode on\n");
-	else
-		printf("Pianola mode off\n");
-#endif
 
 	/* initialise voice info: all voices silent and set initial stereo positions */
 	for (channel = 0; channel < p_module->num_channels; channel++) {
@@ -266,12 +250,6 @@ void get_current_pattern_line(
 	void *pattern_line_ptr;
 	channel_event_t *current_pattern_line_ptr;
 
-	if (config.pianola)
-		printf(
-			"%2d %2d | ",
-			p_current_positions->position_in_sequence,
-			p_current_positions->position_in_pattern);
-
 	pattern_line_ptr = p_current_positions->pattern_line_ptr;
 
 	for (channel = 0, current_pattern_line_ptr=p_current_pattern_line;
@@ -279,18 +257,7 @@ void get_current_pattern_line(
 	channel++, current_pattern_line_ptr++) {
 		size_t event_bytes = p_module->decode_event(pattern_line_ptr, current_pattern_line_ptr);
 		pattern_line_ptr += event_bytes;
-		if (config.pianola) {
-			printf(
-					"%s %c%c%X%X | ",
-					notes[current_pattern_line_ptr->note],
-					alphanum[current_pattern_line_ptr->sample],
-					alphanum[current_pattern_line_ptr->effects[0].code + 1],
-					(current_pattern_line_ptr->effects[0].data >> 4) & 0xf,
-					current_pattern_line_ptr->effects[0].data & 0xf);
-		}
 	}
-	if (config.pianola)
-		printf("\n");
 
 	/* remember pattern line address for next event */
 	p_current_positions->pattern_line_ptr = pattern_line_ptr;

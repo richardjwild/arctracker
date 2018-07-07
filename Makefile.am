@@ -5,8 +5,8 @@ LDFLAGS=@LDFLAGS@
 CLIBS=@LIBS@
 INSTALLDIR=@prefix@
 
-arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
+arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o pianola.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o pianola.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
 
 arctracker.o: arctracker.h audio_api.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
@@ -34,6 +34,9 @@ desktop_tracker_module.o: arctracker.h read_mod.h desktop_tracker_module.h heap.
 
 play_mod.o: arctracker.h mu_law.h resample.h play_mod.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
+
+pianola.o: arctracker.h pianola.h pianola.c
+	$(CC) $(CFLAGS) -c pianola.c
 
 period.o: period.h error.h period.c
 	$(CC) $(CFLAGS) -c period.c
