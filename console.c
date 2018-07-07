@@ -48,6 +48,18 @@ void output_new_position(const positions_t *positions)
     }
 }
 
+static inline
+int low_nybble(const __uint8_t octet)
+{
+    return octet & 0xf;
+}
+
+static inline
+int high_nybble(const __uint8_t octet)
+{
+    return (octet >> 4) & 0xf;
+}
+
 void pianola_roll(const positions_t *positions, const channel_event_t *line)
 {
     if (pianola_mode)
@@ -56,13 +68,14 @@ void pianola_roll(const positions_t *positions, const channel_event_t *line)
         for (int track = 0; track < pianola_tracks; track++)
         {
             channel_event_t event = line[track];
+            effect_t first_effect = event.effects[0];
             printf(
                     "%s %c%c%X%X | ",
                     notes[event.note],
                     alphanum[event.sample],
-                    alphanum[event.effects[0].code + 1],
-                    (event.effects[0].data >> 4) & 0xf,
-                    event.effects[0].data & 0xf);
+                    alphanum[first_effect.code + 1],
+                    high_nybble(first_effect.data),
+                    low_nybble(first_effect.data));
         }
         printf("\n");
     }
