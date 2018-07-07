@@ -30,7 +30,6 @@ void initialise_values(
         positions_t *p_current_positions,
         voice_t *p_voice_info,
         const module_t *p_module,
-        bool p_pianola,
         long p_sample_rate);
 
 bool update_counters(
@@ -86,13 +85,11 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
 		&current_positions,
 		voice_info,
 		p_module,
-		configuration().pianola,
 		audio_api.sample_rate);
 
 	initialise_audio(audio_api, p_module->num_channels);
 	set_master_gain(config.volume);
-	if (config.pianola)
-	    enable_pianola(p_module->num_channels);
+    configure_console(config.pianola, p_module);
 
 	/* loop through whole tune */
 	do {
@@ -176,7 +173,6 @@ void initialise_values(
 	positions_t *p_current_positions,
 	voice_t *p_voice_info,
 	const module_t *p_module,
-	bool p_pianola,
 	long p_sample_rate)
 {
 	int channel;
@@ -191,11 +187,6 @@ void initialise_values(
 	for (channel = 0; channel < p_module->num_channels; channel++) {
 		p_voice_info[channel].channel_playing = false;
 		p_voice_info[channel].panning = p_module->default_channel_stereo[channel] - 1;
-	}
-
-	if (!p_pianola) {
-		printf("Playing position 1 of %ld", p_module->tune_length);
-		fflush(stdout);
 	}
 
 	p_current_positions->sps_per_tick = (p_sample_rate << 8)/50;
@@ -223,14 +214,7 @@ bool update_counters(
 		int pattern = p_module->sequence[p_current_positions->position_in_sequence];
 		p_current_positions->pattern_line_ptr = p_module->patterns[pattern];
 
-		if (!config.pianola) {
-			printf(
-				"%cPlaying position %d of %ld ",
-				13,
-				p_current_positions->position_in_sequence + 1,
-				p_module->tune_length);
-			fflush(stdout);
-		}
+		output_new_position(p_current_positions);
 	}
 
 	return (looped_yet);

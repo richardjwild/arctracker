@@ -1,8 +1,10 @@
 #ifndef ARCTRACKER_PIANOLA_H
 #define ARCTRACKER_PIANOLA_H
 
-void enable_pianola(int channels);
+void configure_console(const bool pianola, const module_t *module);
 
-void pianola_roll(positions_t *positions, channel_event_t *line);
+void output_new_position(const positions_t *positions);
+
+void pianola_roll(const positions_t *positions, const channel_event_t *line);
 
 #endif //ARCTRACKER_PIANOLA_H

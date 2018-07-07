@@ -1,8 +1,9 @@
 #include "arctracker.h"
 #include "console.h"
 
-static bool enabled = false;
+static bool pianola_mode;
 static int pianola_tracks;
+static int tune_length;
 
 static const
 char *notes[] = {"---",
@@ -17,15 +18,33 @@ char alphanum[] = {'-',
                    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
                    'U', 'V', 'W', 'X', 'Y', 'Z'};
 
-void enable_pianola(int channels)
+void configure_console(const bool pianola, const module_t *module)
 {
-    enabled = true;
-    pianola_tracks = channels;
+    pianola_mode = pianola;
+    pianola_tracks = (int) module->num_channels;
+    tune_length = (int) module->tune_length;
+    if (!pianola)
+    {
+        printf("Playing position 1 of %d", tune_length);
+        fflush(stdout);
+    }
 }
 
-void pianola_roll(positions_t *positions, channel_event_t *line)
+void output_new_position(const positions_t *positions)
 {
-    if (enabled)
+    if (!pianola_mode) {
+        printf(
+                "%cPlaying position %d of %d ",
+                13,
+                positions->position_in_sequence + 1,
+                tune_length);
+        fflush(stdout);
+    }
+}
+
+void pianola_roll(const positions_t *positions, const channel_event_t *line)
+{
+    if (pianola_mode)
     {
         printf("%2d %2d | ", positions->position_in_sequence, positions->position_in_pattern);
         for (int track = 0; track < pianola_tracks; track++)
