@@ -16,7 +16,6 @@
  * along with Arctracker; if not, write to the Free Software               *
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
 
-#include <stdbool.h>
 #include "arctracker.h"
 #include "play_mod.h"
 #include "config.h"
@@ -25,8 +24,6 @@
 #include "gain.h"
 #include "period.h"
 #include "configuration.h"
-
-#define MASK_4_SHIFT_RIGHT(value, shift) (((value) >> (shift)) & 0xf)
 
 char *notes[] = {"---",
 	"C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",

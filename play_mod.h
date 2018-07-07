@@ -1,7 +1,8 @@
-#include "arctracker.h"
-
 #ifndef ARCTRACKER_PLAY_MOD_H
 #define ARCTRACKER_PLAY_MOD_H
+
+#include "arctracker.h"
+#include "audio_api.h"
 
 typedef struct {
     double phase_accumulator;

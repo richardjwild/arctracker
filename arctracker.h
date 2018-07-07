@@ -1,21 +1,3 @@
-/* Copyright (c) Richard Wild 2004, 2005                                   *
- *                                                                         *
- * This file is part of Arctracker.                                        *
- *                                                                         *
- * Arctracker is free software; you can redistribute it and/or modify      *
- * it under the terms of the GNU General Public License as published by    *
- * the Free Software Foundation; either version 2 of the License, or       *
- * (at your option) any later version.                                     *
- *                                                                         *
- * Arctracker is distributed in the hope that it will be useful,           *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
- * GNU General Public License for more details.                            *
- *                                                                         *
- * You should have received a copy of the GNU General Public License       *
- * along with Arctracker; if not, write to the Free Software               *
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
-
 #ifndef ARCTRACKER_H
 #define ARCTRACKER_H
 
@@ -23,29 +5,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <sys/soundcard.h>
-#include <sys/ioctl.h>
-#include <sys/unistd.h>
-#include <sys/fcntl.h>
-#include "config.h"
-#include "audio_api.h"
 
-/* macro definitions */
-
-#define LEN_TRACKER_VERSION 4
-#define MAX_LEN_TUNENAME 32
-#define MAX_LEN_TUNENAME_DSKT 64
-#define MAX_LEN_AUTHOR 32
-#define MAX_LEN_AUTHOR_DSKT 64
-#define MAX_LEN_SAMPLENAME 20
-#define MAX_LEN_SAMPLENAME_DSKT 32
-
-#define CHUNKSIZE 4
+#define MAX_LEN_TUNENAME 65
+#define MAX_LEN_AUTHOR 65
+#define MAX_LEN_SAMPLENAME 33
 #define MAX_CHANNELS 16
-#define MAX_CHANNELS_DSKT 16
 #define NUM_PATTERNS 256
 #define MAX_TUNELENGTH 128
-#define NUM_SAMPLES 256
 
 #define EVENT_SIZE_SINGLE_EFFECT 4;
 #define EVENT_SIZE_MULTIPLE_EFFECT 8;
@@ -71,7 +37,7 @@ typedef enum {
 } command_t;
 
 typedef struct {
-	char name[MAX_LEN_SAMPLENAME_DSKT+1];
+	char name[MAX_LEN_SAMPLENAME];
 	long default_gain;
 	long sample_length;
 	bool repeats;
@@ -98,11 +64,10 @@ typedef struct {
 
 typedef struct {
 	char *format;
-	char tracker_version[LEN_TRACKER_VERSION+1];
-	char name[MAX_LEN_TUNENAME_DSKT+1];
-	char author[MAX_LEN_AUTHOR_DSKT+1];
+	char name[MAX_LEN_TUNENAME];
+	char author[MAX_LEN_AUTHOR];
 	long num_channels;
-	unsigned char default_channel_stereo[MAX_CHANNELS_DSKT];
+	unsigned char default_channel_stereo[MAX_CHANNELS];
 	long initial_speed;
 	long tune_length;
 	long num_patterns;

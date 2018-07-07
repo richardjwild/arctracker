@@ -1,8 +1,8 @@
 #include "tracker_module.h"
+#include "arctracker.h"
 #include "error.h"
 #include "heap.h"
 #include "read_mod.h"
-#include "arctracker.h"
 
 module_t read_tracker_module(mapped_file_t file);
 
@@ -82,11 +82,6 @@ module_t read_tracker_module(mapped_file_t file)
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 
-    if ((chunk_address = search_tff(file.addr, array_end, TINF_CHUNK, 1)) == CHUNK_NOT_FOUND)
-        error("Modfile corrupt - TINF chunk not found");
-    else
-        strncpy(module.tracker_version, chunk_address + 8, 4);
-
     if ((chunk_address = search_tff(file.addr, array_end, MVOX_CHUNK, 1)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MVOX chunk not found");
     else
@@ -95,17 +90,17 @@ module_t read_tracker_module(mapped_file_t file)
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK, 1)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - STER chunk not found");
     else
-        memcpy(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS);
+        memcpy(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS_TRK);
 
     if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK, 1)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MNAM chunk not found");
     else
-        strncpy(module.name, chunk_address + 8, MAX_LEN_TUNENAME);
+        strncpy(module.name, chunk_address + 8, MAX_LEN_TUNENAME_TRK);
 
     if ((chunk_address = search_tff(file.addr, array_end, ANAM_CHUNK, 1)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - ANAM chunk not found");
     else
-        strncpy(module.author, chunk_address + 8, MAX_LEN_AUTHOR);
+        strncpy(module.author, chunk_address + 8, MAX_LEN_AUTHOR_TRK);
 
     if ((chunk_address = search_tff(file.addr, array_end, MLEN_CHUNK, 1)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MLEN chunk not found");
@@ -156,7 +151,7 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
     {
         chunks_found++;
         long chunk_length;
-        memcpy(&chunk_length, chunk_address + CHUNKSIZE, 4);
+        memcpy(&chunk_length, chunk_address + CHUNK_SIZE, 4);
         sample_t *sample;
         if ((sample = get_sample_info(chunk_address, array_end)) != SAMPLE_INVALID)
         {
@@ -181,7 +176,7 @@ sample_t *get_sample_info(void *array_start, long array_end)
     if ((chunk_address = search_tff(array_start, array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        strncpy(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME);
+        strncpy(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME_TRK);
 
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;

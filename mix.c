@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include "arctracker.h"
 #include "heap.h"
 #include "mix.h"
 

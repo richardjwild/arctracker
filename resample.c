@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
+#include "arctracker.h"
 #include "heap.h"
 #include "resample.h"
 
