@@ -24,7 +24,7 @@
 #include "gain.h"
 #include "period.h"
 #include "configuration.h"
-#include "pianola.h"
+#include "console.h"
 
 void initialise_values(
         positions_t *p_current_positions,

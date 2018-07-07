@@ -1,5 +1,5 @@
 #include "arctracker.h"
-#include "pianola.h"
+#include "console.h"
 
 static bool enabled = false;
 static int pianola_tracks;
