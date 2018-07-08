@@ -43,6 +43,8 @@ typedef struct
 
 static module_t create_module(dtt_file_format_t *file_format);
 
+static void set_sequence(module_t *module, void *positions, size_t sequence_length);
+
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
 
 static void set_pattern_lengths(module_t *module, unsigned char *pattern_lengths);
@@ -114,22 +116,17 @@ size_t decode_desktop_tracker_event(const __uint32_t *raw, channel_event_t *deco
     }
 }
 
-size_t align_to_word(size_t length)
-{
-    return length + (4 - (length % 4));
-}
-
 module_t read_desktop_tracker_module(mapped_file_t file)
 {
     module_t module = create_module((dtt_file_format_t *) file.addr);
     void *positions = file.addr + sizeof(dtt_file_format_t);
-    void *pattern_offsets = positions + align_to_word(module.tune_length);
+    void *pattern_offsets = positions + ALIGN_TO_WORD(module.tune_length);
     void *pattern_lengths = pattern_offsets + (module.num_patterns * sizeof(__uint32_t));
-    void *samples = pattern_lengths + align_to_word(module.num_patterns);
-    memcpy(module.sequence, positions, (size_t) module.tune_length);
+    void *samples = pattern_lengths + ALIGN_TO_WORD(module.num_patterns);
+    set_sequence(&module, positions, (size_t) module.tune_length);
     set_pattern_starts(&module, pattern_offsets, file.addr);
     set_pattern_lengths(&module, pattern_lengths);
-    module.samples = get_samples(module.num_samples, samples, file.addr);
+    module.samples = get_samples((int) module.num_samples, samples, file.addr);
     return module;
 }
 
@@ -148,6 +145,11 @@ static module_t create_module(dtt_file_format_t *file_format)
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
     return module;
+}
+
+static void set_sequence(module_t *module, void *positions, size_t sequence_length)
+{
+    memcpy(module->sequence, positions, sequence_length);
 }
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address)

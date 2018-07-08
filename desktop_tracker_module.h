@@ -39,6 +39,8 @@
 #define NOTEDELAY_COMMAND_DSKT 0x1d          // not implemented
 #define PATTERNDELAY_COMMAND_DSKT 0x1e       // not implemented
 
+#define ALIGN_TO_WORD(length) ((length) + (4 - ((length) % 4)))
+
 format_t desktop_tracker_format();
 
 #endif //ARCTRACKER_DESKTOP_TRACKER_MODULE_H
