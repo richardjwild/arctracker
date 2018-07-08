@@ -40,12 +40,12 @@ typedef enum
 typedef struct
 {
     char name[MAX_LEN_SAMPLENAME];
-    long default_gain;
-    long sample_length;
+    __uint32_t default_gain;
+    __uint32_t sample_length;
     bool repeats;
-    long repeat_offset;
-    long repeat_length;
-    unsigned char transpose;
+    __uint32_t repeat_offset;
+    __uint32_t repeat_length;
+    int transpose;
     long period;
     long sustain_start;
     long sustain_length;
