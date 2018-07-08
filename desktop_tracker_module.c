@@ -13,6 +13,21 @@ module_t read_desktop_tracker_module(mapped_file_t file);
 
 typedef struct
 {
+    __uint32_t identifier;
+    char name[MAX_LEN_TUNENAME_DSKT];
+    char author[MAX_LEN_AUTHOR_DSKT];
+    __uint32_t flags;
+    __uint32_t num_channels;
+    __uint32_t tune_length;
+    __uint8_t initial_stereo[8];
+    __uint32_t initial_speed;
+    __uint32_t restart;
+    __uint32_t num_patterns;
+    __uint32_t num_samples;
+} dtt_file_format_t;
+
+typedef struct
+{
     __uint8_t note;
     __uint8_t volume;
     __uint16_t unused;
@@ -100,30 +115,18 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     int i;
     module_t module;
 
-    long array_end = (long) file.addr + file.size;
-    void *chunk_address = search_tff(file.addr, array_end, DSKT_CHUNK);
-    file.addr = chunk_address;
-
+    dtt_file_format_t *file_format = (dtt_file_format_t *) file.addr;
     memset(&module, 0, sizeof(module_t));
     module.format = DESKTOP_TRACKER_FORMAT;
     module.decode_event = decode_desktop_tracker_event;
-    module.initial_speed = 6;
-
-    strncpy(module.name, file.addr + 4, MAX_LEN_TUNENAME_DSKT);
-
-    strncpy(module.author, file.addr + 68, MAX_LEN_AUTHOR_DSKT);
-
-    memcpy(&module.num_channels, file.addr + 136, 4);
-
-    memcpy(&module.tune_length, file.addr + 140, 4);
-
-    memcpy(module.default_channel_stereo, file.addr + 144, MAX_CHANNELS_DSKT);
-
-    memcpy(&module.initial_speed, file.addr + 152, 4);
-
-    memcpy(&module.num_patterns, file.addr + 160, 4);
-
-    memcpy(&module.num_samples, file.addr + 164, 4);
+    strncpy(module.name, file_format->name, MAX_LEN_TUNENAME_DSKT);
+    strncpy(module.author, file_format->author, MAX_LEN_AUTHOR_DSKT);
+    module.num_channels = file_format->num_channels;
+    module.tune_length = file_format->tune_length;
+    memcpy(module.default_channel_stereo, file_format->initial_stereo, 8);
+    module.initial_speed = file_format->initial_speed;
+    module.num_patterns = file_format->num_patterns;
+    module.num_samples = file_format->num_samples;
 
     memcpy(module.sequence, file.addr + 168, (size_t) module.tune_length);
 
