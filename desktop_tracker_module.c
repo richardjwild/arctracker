@@ -11,6 +11,21 @@ bool is_desktop_tracker_format(mapped_file_t);
 
 module_t read_desktop_tracker_module(mapped_file_t file);
 
+typedef struct
+{
+    __uint8_t note;
+    __uint8_t volume;
+    __uint16_t unused;
+    __uint32_t period;
+    __uint32_t sustain_start;
+    __uint32_t sustain_end;
+    __uint32_t repeat_offset;
+    __uint32_t repeat_length;
+    __uint32_t sample_length;
+    char name[MAX_LEN_SAMPLENAME_DSKT];
+    __uint32_t sample_data;
+} file_sample_t;
+
 format_t desktop_tracker_format()
 {
     format_t format_reader = {
@@ -129,30 +144,17 @@ module_t read_desktop_tracker_module(mapped_file_t file)
 
     module.samples = allocate_array(module.num_samples, sizeof(sample_t));
     memset(module.samples, 0, sizeof(sample_t) * module.num_samples);
+    file_sample_t *file_samples = (file_sample_t *) tmp_ptr;
     for (i = 0; i < module.num_samples; i++)
     {
-        module.samples[i].transpose = 26 - *(unsigned char *) tmp_ptr++;
-        unsigned char sample_volume = *(unsigned char *) tmp_ptr;
-        module.samples[i].default_gain = (sample_volume * 2) + 1;
-        tmp_ptr += 3;
-        memcpy(&(module.samples[i].period), tmp_ptr, 4);
-        tmp_ptr += 4;
-        memcpy(&(module.samples[i].sustain_start), tmp_ptr, 4);
-        tmp_ptr += 4;
-        memcpy(&(module.samples[i].sustain_length), tmp_ptr, 4);
-        tmp_ptr += 4;
-        memcpy(&(module.samples[i].repeat_offset), tmp_ptr, 4);
-        tmp_ptr += 4;
-        memcpy(&(module.samples[i].repeat_length), tmp_ptr, 4);
-        tmp_ptr += 4;
-        memcpy(&(module.samples[i].sample_length), tmp_ptr, 4);
-        tmp_ptr += 4;
-        strncpy(module.samples[i].name, tmp_ptr, MAX_LEN_SAMPLENAME_DSKT);
-        tmp_ptr += MAX_LEN_SAMPLENAME_DSKT;
-        memcpy(&foo, tmp_ptr, 4);
-        module.samples[i].sample_data = file.addr + foo;
+        strncpy(module.samples[i].name, file_samples[i].name, MAX_LEN_SAMPLENAME_DSKT);
+        module.samples[i].transpose = 26 - file_samples[i].note;
+        module.samples[i].default_gain = (file_samples[i].volume * (unsigned int) 2) + 1;
+        module.samples[i].repeat_offset = file_samples[i].repeat_offset;
+        module.samples[i].repeat_length = file_samples[i].repeat_length;
+        module.samples[i].sample_length = file_samples[i].sample_length;
+        module.samples[i].sample_data = file.addr + file_samples[i].sample_data;
         module.samples[i].repeats = (module.samples[i].repeat_length != 0);
-        tmp_ptr += 4;
     }
 
     return module;
