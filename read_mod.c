@@ -56,9 +56,9 @@ size_t file_size(int file_descriptor)
 
 void *search_tff(void *array_start, const long array_end, const void *to_find)
 {
-    while ((long) array_start <= (array_end - CHUNK_SIZE))
+    while ((long) array_start <= (array_end - CHUNK_ID_LENGTH))
     {
-        if (memcmp(to_find, array_start, CHUNK_SIZE) == 0)
+        if (memcmp(to_find, array_start, CHUNK_ID_LENGTH) == 0)
             return array_start;
         else
             array_start += 1;

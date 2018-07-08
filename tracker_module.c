@@ -145,15 +145,15 @@ module_t read_tracker_module(mapped_file_t file)
 
 void get_patterns(void *array_start, long array_end, void **patterns)
 {
-    int pattern = 1;
+    int patterns_found = 0;
     void *chunk_address = search_tff(array_start, array_end, PATT_CHUNK);
     while (chunk_address != CHUNK_NOT_FOUND)
     {
-        pattern++;
-        *(patterns++) = chunk_address + 8;
-        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, PATT_CHUNK);
+        *(patterns++) = chunk_address + CHUNK_HEADER_LENGTH;
+        patterns_found++;
+        chunk_address = search_tff(chunk_address + CHUNK_ID_LENGTH, array_end, PATT_CHUNK);
     }
-    if (pattern == 1)
+    if (patterns_found == 0)
         error("Modfile corrupt - no patterns in module");
 }
 
@@ -172,7 +172,7 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
             samples++;
             samples_found++;
         }
-        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, SAMP_CHUNK);
+        chunk_address = search_tff(chunk_address + CHUNK_ID_LENGTH, array_end, SAMP_CHUNK);
     }
     if (chunks_found == 0)
     {
@@ -183,39 +183,39 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
 
 sample_t *get_sample_info(void *array_start, long array_end)
 {
-    void *chunk_address;
     sample_t *sample = allocate_array(1, sizeof(sample_t));
     memset(sample, 0, sizeof(sample_t));
+    void *chunk_address;
 
     if ((chunk_address = search_tff(array_start, array_end, SNAM_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        strncpy(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME_TRK);
+        strncpy(sample->name, chunk_address + CHUNK_HEADER_LENGTH, MAX_LEN_SAMPLENAME_TRK);
 
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->default_gain, chunk_address + 8, 4);
+        memcpy(&sample->default_gain, chunk_address + CHUNK_HEADER_LENGTH, 4);
 
     if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->sample_length, chunk_address + 8, 4);
+        memcpy(&sample->sample_length, chunk_address + CHUNK_HEADER_LENGTH, 4);
 
     if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->repeat_offset, chunk_address + 8, 4);
+        memcpy(&sample->repeat_offset, chunk_address + CHUNK_HEADER_LENGTH, 4);
 
     if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->repeat_length, chunk_address + 8, 4);
+        memcpy(&sample->repeat_length, chunk_address + CHUNK_HEADER_LENGTH, 4);
 
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        sample->sample_data = chunk_address + 8;
+        sample->sample_data = chunk_address + CHUNK_HEADER_LENGTH;
 
     // transpose all notes up an octave when playing a Tracker module
     // compensating for the greater chromatic range in a Desktop Tracker module
