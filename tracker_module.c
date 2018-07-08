@@ -146,11 +146,12 @@ module_t read_tracker_module(mapped_file_t file)
 void get_patterns(void *array_start, long array_end, void **patterns)
 {
     int pattern = 1;
-    void *chunk_address;
-    while ((chunk_address = search_tff(array_start, array_end, PATT_CHUNK, pattern)) != CHUNK_NOT_FOUND)
+    void *chunk_address = search_tff(array_start, array_end, PATT_CHUNK, pattern);
+    while (chunk_address != CHUNK_NOT_FOUND)
     {
         pattern++;
         *(patterns++) = chunk_address + 8;
+        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, PATT_CHUNK, pattern);
     }
     if (pattern == 1)
         error("Modfile corrupt - no patterns in module");
