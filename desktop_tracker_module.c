@@ -4,9 +4,6 @@
 #include "arctracker.h"
 #include "bits.h"
 
-#define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
-#define DSKT_CHUNK "DskT"
-
 bool is_desktop_tracker_format(mapped_file_t);
 
 module_t read_desktop_tracker_module(mapped_file_t file);
@@ -62,8 +59,7 @@ format_t desktop_tracker_format()
 
 bool is_desktop_tracker_format(mapped_file_t file)
 {
-    long array_end = (long) file.addr + file.size;
-    return (search_tff(file.addr, array_end, DSKT_CHUNK) != CHUNK_NOT_FOUND);
+    return memcmp(file.addr, DTT_FILE_IDENTIFIER, strlen(DTT_FILE_IDENTIFIER)) == 0;
 }
 
 static inline

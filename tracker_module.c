@@ -5,6 +5,8 @@
 #include "read_mod.h"
 #include "bits.h"
 
+void *search_tff(void *array_start, long array_end, const void *to_find);
+
 module_t read_tracker_module(mapped_file_t file);
 
 void get_patterns(void *array_start, long array_end, void **patterns);
@@ -28,6 +30,18 @@ bool is_tracker_format(mapped_file_t file)
 {
     long array_end = (long) file.addr + file.size;
     return (search_tff(file.addr, array_end, MUSX_CHUNK) != CHUNK_NOT_FOUND);
+}
+
+void *search_tff(void *array_start, const long array_end, const void *to_find)
+{
+    while ((long) array_start <= (array_end - CHUNK_ID_LENGTH))
+    {
+        if (memcmp(to_find, array_start, CHUNK_ID_LENGTH) == 0)
+            return array_start;
+        else
+            array_start += 1;
+    }
+    return CHUNK_NOT_FOUND;
 }
 
 static inline
