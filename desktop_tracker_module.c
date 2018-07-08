@@ -23,8 +23,10 @@ typedef struct
     __uint32_t repeat_length;
     __uint32_t sample_length;
     char name[MAX_LEN_SAMPLENAME_DSKT];
-    __uint32_t sample_data;
+    __uint32_t sample_data_offset;
 } file_sample_t;
+
+static sample_t *get_samples(int num_samples, file_sample_t *file_samples, void *base_address);
 
 format_t desktop_tracker_format()
 {
@@ -142,20 +144,25 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     if (module.num_patterns % 4)
         tmp_ptr = tmp_ptr + (4 - (module.num_patterns % 4));
 
-    module.samples = allocate_array(module.num_samples, sizeof(sample_t));
-    memset(module.samples, 0, sizeof(sample_t) * module.num_samples);
-    file_sample_t *file_samples = (file_sample_t *) tmp_ptr;
-    for (i = 0; i < module.num_samples; i++)
-    {
-        strncpy(module.samples[i].name, file_samples[i].name, MAX_LEN_SAMPLENAME_DSKT);
-        module.samples[i].transpose = 26 - file_samples[i].note;
-        module.samples[i].default_gain = (file_samples[i].volume * (unsigned int) 2) + 1;
-        module.samples[i].repeat_offset = file_samples[i].repeat_offset;
-        module.samples[i].repeat_length = file_samples[i].repeat_length;
-        module.samples[i].sample_length = file_samples[i].sample_length;
-        module.samples[i].sample_data = file.addr + file_samples[i].sample_data;
-        module.samples[i].repeats = (module.samples[i].repeat_length != 0);
-    }
+    module.samples = get_samples(module.num_samples, (file_sample_t *) tmp_ptr, file.addr);
 
     return module;
+}
+
+static sample_t *get_samples(int num_samples, file_sample_t *file_samples, void *base_address)
+{
+    sample_t *samples = allocate_array(num_samples, sizeof(sample_t));
+    memset(samples, 0, sizeof(sample_t) * num_samples);
+    for (int i = 0; i < num_samples; i++)
+    {
+        strncpy(samples[i].name, file_samples[i].name, MAX_LEN_SAMPLENAME_DSKT);
+        samples[i].transpose = 26 - file_samples[i].note;
+        samples[i].default_gain = (file_samples[i].volume * (unsigned int) 2) + 1;
+        samples[i].repeat_offset = file_samples[i].repeat_offset;
+        samples[i].repeat_length = file_samples[i].repeat_length;
+        samples[i].sample_length = file_samples[i].sample_length;
+        samples[i].sample_data = base_address + file_samples[i].sample_data_offset;
+        samples[i].repeats = (samples[i].repeat_length != 0);
+    }
+    return samples;
 }

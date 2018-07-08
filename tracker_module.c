@@ -9,7 +9,7 @@ module_t read_tracker_module(mapped_file_t file);
 
 void get_patterns(void *array_start, long array_end, void **patterns);
 
-int get_samples(void *array_start, long array_end, sample_t *samples);
+static int get_samples(void *array_start, long array_end, sample_t *samples);
 
 sample_t *get_sample_info(void *array_start, long array_end);
 
@@ -157,7 +157,7 @@ void get_patterns(void *array_start, long array_end, void **patterns)
         error("Modfile corrupt - no patterns in module");
 }
 
-int get_samples(void *array_start, long array_end, sample_t *samples)
+static int get_samples(void *array_start, long array_end, sample_t *samples)
 {
     int chunks_found = 0;
     int samples_found = 0;
