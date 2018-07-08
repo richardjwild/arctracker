@@ -16,7 +16,7 @@ typedef struct {
     module_t (*read_module)(mapped_file_t);
 } format_t;
 
-void *search_tff(void *array_start, long array_end, const void *to_find, long occurrence);
+void *search_tff(void *array_start, long array_end, const void *to_find);
 
 module_t read_file(format_t *formats, int no_formats);
 

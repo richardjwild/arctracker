@@ -54,19 +54,14 @@ size_t file_size(int file_descriptor)
     return (size_t) statbuf.st_size;
 }
 
-void *search_tff(void *array_start, const long array_end, const void *to_find, long occurrence)
+void *search_tff(void *array_start, const long array_end, const void *to_find)
 {
-    while ((occurrence >= 1) && (long) array_start <= (array_end - CHUNK_SIZE))
+    while ((long) array_start <= (array_end - CHUNK_SIZE))
     {
         if (memcmp(to_find, array_start, CHUNK_SIZE) == 0)
-        {
-            occurrence -= 1;
-        }
-        if (occurrence == 0)
-        {
             return array_start;
-        }
-        array_start += 1;
+        else
+            array_start += 1;
     }
     return CHUNK_NOT_FOUND;
 }

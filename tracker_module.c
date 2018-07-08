@@ -27,7 +27,7 @@ const format_t tracker_format()
 bool is_tracker_format(mapped_file_t file)
 {
     long array_end = (long) file.addr + file.size;
-    return (search_tff(file.addr, array_end, MUSX_CHUNK, 1) != CHUNK_NOT_FOUND);
+    return (search_tff(file.addr, array_end, MUSX_CHUNK) != CHUNK_NOT_FOUND);
 }
 
 static inline
@@ -97,42 +97,42 @@ module_t read_tracker_module(mapped_file_t file)
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
 
-    if ((chunk_address = search_tff(file.addr, array_end, MVOX_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, MVOX_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MVOX chunk not found");
     else
         memcpy(&module.num_channels, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - STER chunk not found");
     else
         memcpy(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS_TRK);
 
-    if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MNAM chunk not found");
     else
         strncpy(module.name, chunk_address + 8, MAX_LEN_TUNENAME_TRK);
 
-    if ((chunk_address = search_tff(file.addr, array_end, ANAM_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, ANAM_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - ANAM chunk not found");
     else
         strncpy(module.author, chunk_address + 8, MAX_LEN_AUTHOR_TRK);
 
-    if ((chunk_address = search_tff(file.addr, array_end, MLEN_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, MLEN_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MLEN chunk not found");
     else
         memcpy(&module.tune_length, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(file.addr, array_end, PNUM_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, PNUM_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - PNUM chunk not found");
     else
         memcpy(&module.num_patterns, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(file.addr, array_end, PLEN_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, PLEN_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - PLEN chunk not found");
     else
         memcpy(module.pattern_length, chunk_address + 8, NUM_PATTERNS);
 
-    if ((chunk_address = search_tff(file.addr, array_end, SEQU_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(file.addr, array_end, SEQU_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - SEQU chunk not found");
     else
         memcpy(module.sequence, chunk_address + 8, MAX_TUNELENGTH);
@@ -146,12 +146,12 @@ module_t read_tracker_module(mapped_file_t file)
 void get_patterns(void *array_start, long array_end, void **patterns)
 {
     int pattern = 1;
-    void *chunk_address = search_tff(array_start, array_end, PATT_CHUNK, pattern);
+    void *chunk_address = search_tff(array_start, array_end, PATT_CHUNK);
     while (chunk_address != CHUNK_NOT_FOUND)
     {
         pattern++;
         *(patterns++) = chunk_address + 8;
-        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, PATT_CHUNK, pattern);
+        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, PATT_CHUNK);
     }
     if (pattern == 1)
         error("Modfile corrupt - no patterns in module");
@@ -161,7 +161,7 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
 {
     int chunks_found = 0;
     int samples_found = 0;
-    void *chunk_address = search_tff(array_start, array_end, SAMP_CHUNK, 1);
+    void *chunk_address = search_tff(array_start, array_end, SAMP_CHUNK);
     while (chunk_address != CHUNK_NOT_FOUND && chunks_found < NUM_SAMPLES)
     {
         chunks_found++;
@@ -172,7 +172,7 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
             samples++;
             samples_found++;
         }
-        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, SAMP_CHUNK, 1);
+        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, SAMP_CHUNK);
     }
     if (chunks_found == 0)
     {
@@ -187,32 +187,32 @@ sample_t *get_sample_info(void *array_start, long array_end)
     sample_t *sample = allocate_array(1, sizeof(sample_t));
     memset(sample, 0, sizeof(sample_t));
 
-    if ((chunk_address = search_tff(array_start, array_end, SNAM_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(array_start, array_end, SNAM_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
         strncpy(sample->name, chunk_address + 8, MAX_LEN_SAMPLENAME_TRK);
 
-    if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
         memcpy(&sample->default_gain, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
         memcpy(&sample->sample_length, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
         memcpy(&sample->repeat_offset, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
         memcpy(&sample->repeat_length, chunk_address + 8, 4);
 
-    if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK, 1)) == CHUNK_NOT_FOUND)
+    if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
         sample->sample_data = chunk_address + 8;

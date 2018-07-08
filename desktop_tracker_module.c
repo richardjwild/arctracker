@@ -23,7 +23,7 @@ format_t desktop_tracker_format()
 bool is_desktop_tracker_format(mapped_file_t file)
 {
     long array_end = (long) file.addr + file.size;
-    return (search_tff(file.addr, array_end, DSKT_CHUNK, 1) != CHUNK_NOT_FOUND);
+    return (search_tff(file.addr, array_end, DSKT_CHUNK) != CHUNK_NOT_FOUND);
 }
 
 static inline
@@ -84,7 +84,7 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     module_t module;
 
     long array_end = (long) file.addr + file.size;
-    void *chunk_address = search_tff(file.addr, array_end, DSKT_CHUNK, 1);
+    void *chunk_address = search_tff(file.addr, array_end, DSKT_CHUNK);
     file.addr = chunk_address;
 
     memset(&module, 0, sizeof(module_t));
