@@ -26,16 +26,16 @@ heap.o: heap.c
 read_mod.o: arctracker.h read_mod.h read_mod.c
 	$(CC) $(CFLAGS) -c read_mod.c
 
-tracker_module.o: arctracker.h read_mod.h tracker_module.h error.h heap.h tracker_module.c
+tracker_module.o: arctracker.h read_mod.h tracker_module.h error.h heap.h bits.h tracker_module.c
 	$(CC) $(CFLAGS) -c tracker_module.c
 
-desktop_tracker_module.o: arctracker.h read_mod.h desktop_tracker_module.h heap.h desktop_tracker_module.c
+desktop_tracker_module.o: arctracker.h read_mod.h desktop_tracker_module.h heap.h bits.h desktop_tracker_module.c
 	$(CC) $(CFLAGS) -c desktop_tracker_module.c
 
 play_mod.o: arctracker.h mu_law.h resample.h play_mod.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
 
-console.o: arctracker.h console.h console.c
+console.o: arctracker.h console.h bits.h console.c
 	$(CC) $(CFLAGS) -c console.c
 
 period.o: period.h error.h period.c

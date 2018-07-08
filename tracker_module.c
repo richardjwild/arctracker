@@ -3,6 +3,7 @@
 #include "error.h"
 #include "heap.h"
 #include "read_mod.h"
+#include "bits.h"
 
 module_t read_tracker_module(mapped_file_t file);
 

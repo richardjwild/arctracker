@@ -2,6 +2,7 @@
 #include "heap.h"
 #include "read_mod.h"
 #include "arctracker.h"
+#include "bits.h"
 
 #define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
 #define DSKT_CHUNK "DskT"

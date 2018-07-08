@@ -1,5 +1,6 @@
 #include "arctracker.h"
 #include "console.h"
+#include "bits.h"
 
 static bool pianola_mode;
 static int pianola_tracks;
@@ -48,18 +49,6 @@ void output_new_position(const positions_t *positions)
     }
 }
 
-static inline
-int low_nybble(const __uint8_t octet)
-{
-    return octet & 0xf;
-}
-
-static inline
-int high_nybble(const __uint8_t octet)
-{
-    return (octet >> 4) & 0xf;
-}
-
 void pianola_roll(const positions_t *positions, const channel_event_t *line)
 {
     if (pianola_mode)
@@ -74,8 +63,8 @@ void pianola_roll(const positions_t *positions, const channel_event_t *line)
                     notes[event.note],
                     alphanum[event.sample],
                     alphanum[first_effect.code + 1],
-                    high_nybble(first_effect.data),
-                    low_nybble(first_effect.data));
+                    HIGH_NYBBLE(first_effect.data),
+                    LOW_NYBBLE(first_effect.data));
         }
         printf("\n");
     }
