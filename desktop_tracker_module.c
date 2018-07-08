@@ -24,6 +24,7 @@ typedef struct
     __uint32_t restart;
     __uint32_t num_patterns;
     __uint32_t num_samples;
+    __uint8_t positions[1];
 } dtt_file_format_t;
 
 typedef struct
@@ -117,8 +118,6 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     int i;
     module_t module = create_module((dtt_file_format_t *) file.addr);
 
-    memcpy(module.sequence, file.addr + 168, (size_t) module.tune_length);
-
     tmp_ptr = file.addr + 168 + (((module.tune_length + 3) >> 2) << 2); /* align to word boundary */
     for (i = 0; i < module.num_patterns; i++)
     {
@@ -155,6 +154,7 @@ static module_t create_module(dtt_file_format_t *file_format)
     module.initial_speed = file_format->initial_speed;
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
+    memcpy(module.sequence, file_format->positions, (size_t) module.tune_length);
     return module;
 }
 
