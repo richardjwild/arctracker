@@ -36,7 +36,7 @@ typedef struct
     __uint32_t sample_length;
     char name[MAX_LEN_SAMPLENAME_DSKT];
     __uint32_t sample_data_offset;
-} file_sample_t;
+} dtt_sample_format_t;
 
 static module_t create_module(dtt_file_format_t *file_format);
 
@@ -44,9 +44,9 @@ static void set_sequence(module_t *module, void *positions, size_t sequence_leng
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
 
-static void set_pattern_lengths(module_t *module, unsigned char *pattern_lengths);
+static void set_pattern_lengths(module_t *module, const unsigned char *pattern_lengths);
 
-static sample_t *get_samples(int num_samples, file_sample_t *file_samples, void *base_address);
+static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples, void *base_address);
 
 format_t desktop_tracker_format()
 {
@@ -97,7 +97,7 @@ size_t decode_desktop_tracker_event(const __uint32_t *raw, channel_event_t *deco
 {
     decoded->sample = MASK_6_SHIFT_RIGHT(*raw, 0);
     decoded->note = MASK_6_SHIFT_RIGHT(*raw, 6);
-    if (*raw & (0x1f << 17)) {
+    if (IS_MULTIPLE_EFFECT(*raw)) {
         decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*(raw + 1), 0));
         decoded->effects[1] = effect(MASK_5_SHIFT_RIGHT(*raw, 17), MASK_8_SHIFT_RIGHT(*(raw + 1), 8));
         decoded->effects[2] = effect(MASK_5_SHIFT_RIGHT(*raw, 22), MASK_8_SHIFT_RIGHT(*(raw + 1), 16));
@@ -114,7 +114,7 @@ size_t decode_desktop_tracker_event(const __uint32_t *raw, channel_event_t *deco
 
 module_t read_desktop_tracker_module(mapped_file_t file)
 {
-    module_t module = create_module((dtt_file_format_t *) file.addr);
+    module_t module = create_module(file.addr);
     void *positions = file.addr + sizeof(dtt_file_format_t);
     void *pattern_offsets = positions + ALIGN_TO_WORD(module.tune_length);
     void *pattern_lengths = pattern_offsets + (module.num_patterns * sizeof(__uint32_t));
@@ -154,13 +154,13 @@ static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, vo
         module->patterns[i] = base_address + pattern_offsets[i];
 }
 
-static void set_pattern_lengths(module_t *module, unsigned char *pattern_lengths)
+static void set_pattern_lengths(module_t *module, const unsigned char *pattern_lengths)
 {
     for (int i = 0; i < module->num_patterns; i++)
         module->pattern_length[i] = pattern_lengths[i];
 }
 
-static sample_t *get_samples(int num_samples, file_sample_t *file_samples, void *base_address)
+static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples, void *base_address)
 {
     sample_t *samples = allocate_array(num_samples, sizeof(sample_t));
     memset(samples, 0, sizeof(sample_t) * num_samples);
