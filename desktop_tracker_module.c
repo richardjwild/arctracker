@@ -41,6 +41,8 @@ typedef struct
     __uint32_t sample_data_offset;
 } file_sample_t;
 
+static module_t create_module(dtt_file_format_t *file_format);
+
 static sample_t *get_samples(int num_samples, file_sample_t *file_samples, void *base_address);
 
 format_t desktop_tracker_format()
@@ -113,20 +115,7 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     void *tmp_ptr;
     long foo;
     int i;
-    module_t module;
-
-    dtt_file_format_t *file_format = (dtt_file_format_t *) file.addr;
-    memset(&module, 0, sizeof(module_t));
-    module.format = DESKTOP_TRACKER_FORMAT;
-    module.decode_event = decode_desktop_tracker_event;
-    strncpy(module.name, file_format->name, MAX_LEN_TUNENAME_DSKT);
-    strncpy(module.author, file_format->author, MAX_LEN_AUTHOR_DSKT);
-    module.num_channels = file_format->num_channels;
-    module.tune_length = file_format->tune_length;
-    memcpy(module.default_channel_stereo, file_format->initial_stereo, 8);
-    module.initial_speed = file_format->initial_speed;
-    module.num_patterns = file_format->num_patterns;
-    module.num_samples = file_format->num_samples;
+    module_t module = create_module((dtt_file_format_t *) file.addr);
 
     memcpy(module.sequence, file.addr + 168, (size_t) module.tune_length);
 
@@ -149,6 +138,23 @@ module_t read_desktop_tracker_module(mapped_file_t file)
 
     module.samples = get_samples(module.num_samples, (file_sample_t *) tmp_ptr, file.addr);
 
+    return module;
+}
+
+static module_t create_module(dtt_file_format_t *file_format)
+{
+    module_t module;
+    memset(&module, 0, sizeof(module_t));
+    module.format = DESKTOP_TRACKER_FORMAT;
+    module.decode_event = decode_desktop_tracker_event;
+    strncpy(module.name, file_format->name, MAX_LEN_TUNENAME_DSKT);
+    strncpy(module.author, file_format->author, MAX_LEN_AUTHOR_DSKT);
+    module.num_channels = file_format->num_channels;
+    module.tune_length = file_format->tune_length;
+    memcpy(module.default_channel_stereo, file_format->initial_stereo, 8);
+    module.initial_speed = file_format->initial_speed;
+    module.num_patterns = file_format->num_patterns;
+    module.num_samples = file_format->num_samples;
     return module;
 }
 
