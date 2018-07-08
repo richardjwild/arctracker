@@ -43,6 +43,8 @@ typedef struct
 
 static module_t create_module(dtt_file_format_t *file_format);
 
+static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
+
 static sample_t *get_samples(int num_samples, file_sample_t *file_samples, void *base_address);
 
 format_t desktop_tracker_format()
@@ -118,19 +120,15 @@ size_t align_to_word(size_t length)
 module_t read_desktop_tracker_module(mapped_file_t file)
 {
     void *tmp_ptr;
-    long foo;
     int i;
     module_t module = create_module((dtt_file_format_t *) file.addr);
     void *positions = file.addr + sizeof(dtt_file_format_t);
+    __uint32_t *pattern_offsets = positions + align_to_word(module.tune_length);
     memcpy(module.sequence, positions, (size_t) module.tune_length);
 
-    tmp_ptr = file.addr + 168 + align_to_word(module.tune_length);
-    for (i = 0; i < module.num_patterns; i++)
-    {
-        memcpy(&foo, tmp_ptr, 4);
-        module.patterns[i] = file.addr + foo;
-        tmp_ptr += 4;
-    }
+    tmp_ptr = positions + align_to_word(module.tune_length);
+    set_pattern_starts(&module, pattern_offsets, file.addr);
+    tmp_ptr += (module.num_patterns * 4);
 
     for (i = 0; i < module.num_patterns; i++)
     {
@@ -144,6 +142,12 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     module.samples = get_samples(module.num_samples, (file_sample_t *) tmp_ptr, file.addr);
 
     return module;
+}
+
+static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address)
+{
+    for (int i = 0; i < module->num_patterns; i++)
+        module->patterns[i] = base_address + pattern_offsets[i];
 }
 
 static module_t create_module(dtt_file_format_t *file_format)
