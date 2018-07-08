@@ -160,12 +160,10 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
 {
     int chunks_found = 0;
     int samples_found = 0;
-    void *chunk_address = search_tff(array_start, array_end, SAMP_CHUNK, chunks_found + 1);
+    void *chunk_address = search_tff(array_start, array_end, SAMP_CHUNK, 1);
     while (chunk_address != CHUNK_NOT_FOUND && chunks_found < NUM_SAMPLES)
     {
         chunks_found++;
-        long chunk_length;
-        memcpy(&chunk_length, chunk_address + CHUNK_SIZE, 4);
         sample_t *sample = get_sample_info(chunk_address, array_end);
         if (sample != SAMPLE_INVALID)
         {
@@ -173,7 +171,7 @@ int get_samples(void *array_start, long array_end, sample_t *samples)
             samples++;
             samples_found++;
         }
-        chunk_address = search_tff(array_start, array_end, SAMP_CHUNK, chunks_found + 1);
+        chunk_address = search_tff(chunk_address + CHUNK_SIZE, array_end, SAMP_CHUNK, 1);
     }
     if (chunks_found == 0)
     {
