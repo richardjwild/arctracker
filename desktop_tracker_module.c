@@ -67,24 +67,38 @@ command_t desktop_tracker_command(__uint8_t code, __uint8_t data)
 {
     switch (code)
     {
-        case VOLUME_COMMAND_DSKT: return SET_VOLUME_DESKTOP_TRACKER;
-        case SPEED_COMMAND_DSKT: return SET_TEMPO;
-        case STEREO_COMMAND_DSKT: return SET_TRACK_STEREO;
-        case VOLSLIDE_COMMAND_DSKT: return VOLUME_SLIDE;
-        case PORTUP_COMMAND_DSKT: return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND_DSKT: return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND_DSKT: return TONE_PORTAMENTO;
-        case JUMP_COMMAND_DSKT: return JUMP_TO_POSITION;
-        case SETFINETEMPO_COMMAND_DSKT: return SET_TEMPO_FINE;
-        case FINEPORTAMENTO_COMMAND_DSKT: return PORTAMENTO_FINE;
-        case FINEVOLSLIDE_COMMAND_DSKT: return VOLUME_SLIDE_FINE;
-        case ARPEGGIO_COMMAND_DSKT: return (data == 0) ? NO_EFFECT : ARPEGGIO;
-        default: return NO_EFFECT;
+        case VOLUME_COMMAND_DSKT:
+            return SET_VOLUME_DESKTOP_TRACKER;
+        case SPEED_COMMAND_DSKT:
+            return SET_TEMPO;
+        case STEREO_COMMAND_DSKT:
+            return SET_TRACK_STEREO;
+        case VOLSLIDE_COMMAND_DSKT:
+            return VOLUME_SLIDE;
+        case PORTUP_COMMAND_DSKT:
+            return PORTAMENTO_UP;
+        case PORTDOWN_COMMAND_DSKT:
+            return PORTAMENTO_DOWN;
+        case TONEPORT_COMMAND_DSKT:
+            return TONE_PORTAMENTO;
+        case JUMP_COMMAND_DSKT:
+            return JUMP_TO_POSITION;
+        case SETFINETEMPO_COMMAND_DSKT:
+            return SET_TEMPO_FINE;
+        case FINEPORTAMENTO_COMMAND_DSKT:
+            return PORTAMENTO_FINE;
+        case FINEVOLSLIDE_COMMAND_DSKT:
+            return VOLUME_SLIDE_FINE;
+        case ARPEGGIO_COMMAND_DSKT:
+            return (data == 0) ? NO_EFFECT : ARPEGGIO;
+        default:
+            return NO_EFFECT;
     }
 }
 
 static inline
-effect_t effect(const __uint8_t code, const __uint8_t data) {
+effect_t effect(const __uint8_t code, const __uint8_t data)
+{
     const effect_t effect = {
             .code = code,
             .data = data,
@@ -97,13 +111,16 @@ size_t decode_desktop_tracker_event(const __uint32_t *raw, channel_event_t *deco
 {
     decoded->sample = MASK_6_SHIFT_RIGHT(*raw, 0);
     decoded->note = MASK_6_SHIFT_RIGHT(*raw, 6);
-    if (IS_MULTIPLE_EFFECT(*raw)) {
+    if (IS_MULTIPLE_EFFECT(*raw))
+    {
         decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*(raw + 1), 0));
         decoded->effects[1] = effect(MASK_5_SHIFT_RIGHT(*raw, 17), MASK_8_SHIFT_RIGHT(*(raw + 1), 8));
         decoded->effects[2] = effect(MASK_5_SHIFT_RIGHT(*raw, 22), MASK_8_SHIFT_RIGHT(*(raw + 1), 16));
         decoded->effects[3] = effect(MASK_5_SHIFT_RIGHT(*raw, 27), MASK_8_SHIFT_RIGHT(*(raw + 1), 24));
         return EVENT_SIZE_MULTIPLE_EFFECT;
-    } else {
+    }
+    else
+    {
         decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*raw, 24));
         decoded->effects[1] = effect(0, 0);
         decoded->effects[2] = effect(0, 0);
