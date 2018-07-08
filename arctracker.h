@@ -46,9 +46,6 @@ typedef struct
     __uint32_t repeat_offset;
     __uint32_t repeat_length;
     int transpose;
-    long period;
-    long sustain_start;
-    long sustain_length;
     void *sample_data;
 } sample_t;
 
