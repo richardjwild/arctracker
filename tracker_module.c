@@ -35,23 +35,36 @@ command_t tracker_command(__uint8_t code, __uint8_t data)
 {
     switch (code)
     {
-        case VOLUME_COMMAND_TRK: return SET_VOLUME_TRACKER;
-        case SPEED_COMMAND_TRK: return SET_TEMPO;
-        case STEREO_COMMAND_TRK: return SET_TRACK_STEREO;
-        case VOLSLIDEUP_COMMAND_TRK: return VOLUME_SLIDE_UP;
-        case VOLSLIDEDOWN_COMMAND_TRK: return VOLUME_SLIDE_DOWN;
-        case PORTUP_COMMAND_TRK: return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND_TRK: return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND_TRK: return TONE_PORTAMENTO;
-        case BREAK_COMMAND_TRK: return BREAK_PATTERN;
-        case JUMP_COMMAND_TRK: return JUMP_TO_POSITION;
-        case ARPEGGIO_COMMAND_TRK: return (data == 0) ? NO_EFFECT : ARPEGGIO;
-        default: return NO_EFFECT;
+        case VOLUME_COMMAND_TRK:
+            return SET_VOLUME_TRACKER;
+        case SPEED_COMMAND_TRK:
+            return SET_TEMPO;
+        case STEREO_COMMAND_TRK:
+            return SET_TRACK_STEREO;
+        case VOLSLIDEUP_COMMAND_TRK:
+            return VOLUME_SLIDE_UP;
+        case VOLSLIDEDOWN_COMMAND_TRK:
+            return VOLUME_SLIDE_DOWN;
+        case PORTUP_COMMAND_TRK:
+            return PORTAMENTO_UP;
+        case PORTDOWN_COMMAND_TRK:
+            return PORTAMENTO_DOWN;
+        case TONEPORT_COMMAND_TRK:
+            return TONE_PORTAMENTO;
+        case BREAK_COMMAND_TRK:
+            return BREAK_PATTERN;
+        case JUMP_COMMAND_TRK:
+            return JUMP_TO_POSITION;
+        case ARPEGGIO_COMMAND_TRK:
+            return (data == 0) ? NO_EFFECT : ARPEGGIO;
+        default:
+            return NO_EFFECT;
     }
 }
 
 static inline
-effect_t effect(const __uint8_t code, const __uint8_t data) {
+effect_t effect(const __uint8_t code, const __uint8_t data)
+{
     const effect_t effect = {
             .code = code,
             .data = data,
@@ -65,7 +78,8 @@ size_t decode_tracker_event(const __uint32_t *raw, channel_event_t *decoded)
     decoded->sample = MASK_8_SHIFT_RIGHT(*raw, 16);
     decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
     decoded->effects[0] = effect(MASK_8_SHIFT_RIGHT(*raw, 8), MASK_8_SHIFT_RIGHT(*raw, 0));
-    for (int i = 1; i <= 3; i++) {
+    for (int i = 1; i <= 3; i++)
+    {
         decoded->effects[i] = effect(0, 0);
     }
     return EVENT_SIZE_SINGLE_EFFECT;
