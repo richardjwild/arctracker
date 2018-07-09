@@ -25,6 +25,8 @@
 #include "period.h"
 #include "configuration.h"
 #include "console.h"
+#include "clock.h"
+#include "audio_api.h"
 
 void initialise_values(
         positions_t *p_current_positions,
@@ -89,13 +91,13 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
 
 	initialise_audio(audio_api, p_module->num_channels);
 	set_master_gain(config.volume);
+    set_clock(p_module->initial_speed, audio_api.sample_rate);
     configure_console(config.pianola, p_module);
 
 	/* loop through whole tune */
 	do {
-	    current_positions.counter++;
-	    bool new_event = (current_positions.counter == current_positions.speed);
-		if (new_event)
+        clock_tick();
+		if (new_event())
 		{
 			/* new event. update counters: current position in pattern, position in sequence */
 			looped_yet = update_counters(
@@ -115,7 +117,7 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
             channel_event_t event = current_pattern_line[channel];
             sample_t sample = p_module->samples[event.sample - 1];
             voice_t voice = voice_info[channel];
-            if (new_event)
+            if (new_event())
             {
                 if (event.note)
                 {
@@ -136,7 +138,7 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
                     &voice,
                     &current_positions,
                     p_module,
-                    new_event,
+                    new_event(),
                     audio_api.sample_rate);
             voice_info[channel] = voice;
         }
@@ -297,7 +299,7 @@ void process_commands(
 
 		case SET_TEMPO:
 			if (on_event && effect.data) /* ensure an "S00" command does not hang player! */
-				p_current_positions->speed = effect.data;
+			    set_speed(effect.data);
 			break;
 
 		case SET_TRACK_STEREO:

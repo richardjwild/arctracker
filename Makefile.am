@@ -5,8 +5,8 @@ LDFLAGS=@LDFLAGS@
 CLIBS=@LIBS@
 INSTALLDIR=@prefix@
 
-arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
+arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o clock.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o clock.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
 
 arctracker.o: arctracker.h audio_api.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
@@ -32,8 +32,11 @@ tracker_module.o: arctracker.h read_mod.h tracker_module.h error.h heap.h bits.h
 desktop_tracker_module.o: arctracker.h read_mod.h desktop_tracker_module.h heap.h bits.h desktop_tracker_module.c
 	$(CC) $(CFLAGS) -c desktop_tracker_module.c
 
-play_mod.o: arctracker.h mu_law.h resample.h play_mod.h play_mod.c
+play_mod.o: arctracker.h mu_law.h resample.h clock.h play_mod.h play_mod.c
 	$(CC) $(CFLAGS) -c play_mod.c
+
+clock.o: clock.h clock.c
+	$(CC) $(CFLAGS) -c clock.c
 
 console.o: arctracker.h console.h bits.h console.c
 	$(CC) $(CFLAGS) -c console.c
