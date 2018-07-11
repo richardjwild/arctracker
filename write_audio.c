@@ -5,6 +5,7 @@
 #include "heap.h"
 #include "play_mod.h"
 #include "gain.h"
+#include "clock.h"
 
 static stereo_frame_t *channel_buffer;
 static audio_api_t audio_output;
@@ -92,15 +93,16 @@ long can_be_filled(const long frames_requested)
         return frames_requested;
 }
 
-void write_audio_data(voice_t *voices, const long frames_requested)
+void write_audio_data(voice_t *voices)
 {
-    long frames_left = frames_requested;
+    long frames_left = frames_to_write();
     while (frames_left)
     {
         const long to_fill = can_be_filled(frames_left);
         fill_frames(voices, to_fill);
         frames_left -= to_fill;
     }
+    all_frames_written();
 }
 
 void send_remaining_audio()

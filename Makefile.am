@@ -44,7 +44,7 @@ console.o: arctracker.h console.h bits.h console.c
 period.o: period.h error.h period.c
 	$(CC) $(CFLAGS) -c period.c
 
-write_audio.o: write_audio.c
+write_audio.o: write_audio.h clock.h audio_api.h mix.h resample.h heap.h play_mod.h gain.h clock.h write_audio.c
 	$(CC) $(CFLAGS) -c write_audio.c
 
 gain.o: gain.c

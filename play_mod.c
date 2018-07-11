@@ -56,8 +56,7 @@ void process_commands(
         voice_t *p_current_voice,
         positions_t *p_current_positions,
         const module_t *p_module,
-        bool on_event,
-        long p_sample_rate);
+        bool on_event);
 
 static args_t config;
 
@@ -79,7 +78,6 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
 	positions_t current_positions;
 	channel_event_t current_pattern_line[MAX_CHANNELS];
 	voice_t voice_info[MAX_CHANNELS];
-    int nframes_fraction = 0;
 
 	bool looped_yet = false;
 
@@ -138,21 +136,11 @@ void play_module(const module_t *p_module, audio_api_t audio_api)
                     &voice,
                     &current_positions,
                     p_module,
-                    new_event(),
-                    audio_api.sample_rate);
+                    new_event());
             voice_info[channel] = voice;
         }
 
-        int extra_frame = 0;
-        nframes_fraction += current_positions.sps_per_tick;
-        nframes_fraction -= current_positions.sps_per_tick & 0xffffffffffffff00;
-        if (nframes_fraction > 256) {
-            extra_frame = 1;
-            nframes_fraction -= 256;
-        }
-
-        /* write one tick's worth of audio data */
-		write_audio_data(voice_info, (current_positions.sps_per_tick >> 8) + extra_frame);
+        write_audio_data(voice_info);
 	}
 	while (!looped_yet || config.loop_forever);
     send_remaining_audio();
@@ -276,8 +264,7 @@ void process_commands(
         voice_t *p_current_voice,
         positions_t *p_current_positions,
         const module_t *p_module,
-        bool on_event,
-        long p_sample_rate)
+        bool on_event)
 {
 	unsigned char temporary_note;
 	int bar;
@@ -411,7 +398,7 @@ void process_commands(
 
 		case SET_TEMPO_FINE:
 			if (on_event && effect.data)
-				p_current_positions->sps_per_tick = (p_sample_rate << 8)/(effect.data);
+                set_ticks_per_second(effect.data);
 			break;
 
 		case PORTAMENTO_FINE:
