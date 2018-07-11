@@ -286,7 +286,7 @@ void process_commands(
 
 		case SET_TEMPO:
 			if (on_event && effect.data) /* ensure an "S00" command does not hang player! */
-			    set_speed(effect.data);
+				set_ticks_per_event(effect.data);
 			break;
 
 		case SET_TRACK_STEREO:
