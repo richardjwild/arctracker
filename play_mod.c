@@ -29,9 +29,9 @@
 #include "clock.h"
 #include "audio_api.h"
 
-void initialise_values(voice_t *p_voice_info, const module_t *p_module);
+void initialise_values(voice_t *voice, const module_t *module);
 
-void decode_next_events(const module_t *p_module, channel_event_t *p_current_pattern_line);
+void decode_next_events(const module_t *module, channel_event_t *decoded_events);
 
 void silence_channel(voice_t *voice);
 
@@ -41,7 +41,7 @@ void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voic
 
 void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
 
-void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice, bool on_event);
+void process_commands(channel_event_t *event, voice_t *voice, bool on_event);
 
 static args_t config;
 
@@ -57,40 +57,40 @@ bool sample_out_of_range(const channel_event_t event, const module_t module)
 	return event.sample > module.num_samples;
 }
 
-void play_module(module_t *p_module, audio_api_t audio_api)
+void play_module(module_t *module, audio_api_t audio_api)
 {
     config = configuration();
-	channel_event_t current_pattern_line[MAX_CHANNELS];
-	voice_t voice_info[MAX_CHANNELS];
+	channel_event_t events[MAX_CHANNELS];
+	voice_t voices[MAX_CHANNELS];
 
-	initialise_values(voice_info, p_module);
+	initialise_values(voices, module);
 
-	initialise_audio(audio_api, p_module->num_channels);
+	initialise_audio(audio_api, module->num_channels);
 	set_master_gain(config.volume);
-    set_clock(p_module->initial_speed, audio_api.sample_rate);
-    initialise_sequence(p_module);
-    configure_console(config.pianola, p_module);
+    set_clock(module->initial_speed, audio_api.sample_rate);
+    initialise_sequence(module);
+    configure_console(config.pianola, module);
 
 	/* loop through whole tune */
 	do {
         clock_tick();
 		if (new_event())
 		{
-            decode_next_events(p_module, current_pattern_line);
-			output_to_console(current_pattern_line);
+            decode_next_events(module, events);
+			output_to_console(events);
 		}
-        for (int channel = 0; channel < p_module->num_channels; channel++)
+        for (int channel = 0; channel < module->num_channels; channel++)
         {
-            channel_event_t event = current_pattern_line[channel];
-            sample_t sample = p_module->samples[event.sample - 1];
-            voice_t voice = voice_info[channel];
+            channel_event_t event = events[channel];
+            sample_t sample = module->samples[event.sample - 1];
+            voice_t voice = voices[channel];
             if (new_event())
             {
                 if (event.note)
                 {
                     if (portamento(event))
                         set_portamento_target(event, sample, &voice);
-                    else if (sample_out_of_range(event, *p_module))
+                    else if (sample_out_of_range(event, *module))
                         silence_channel(&voice);
                     else
                         trigger_new_note(event, sample, &voice);
@@ -101,10 +101,10 @@ void play_module(module_t *p_module, audio_api_t audio_api)
                 }
             }
             process_commands(&event, &voice, new_event());
-            voice_info[channel] = voice;
+            voices[channel] = voice;
         }
 
-        write_audio_data(voice_info);
+        write_audio_data(voices);
 	}
 	while (!looped_yet() || config.loop_forever);
     send_remaining_audio();
@@ -123,23 +123,23 @@ void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
 /* initialise_values function.                    *
  * Set up values in preparation for player start. */
 
-void initialise_values(voice_t *p_voice_info, const module_t *p_module)
+void initialise_values(voice_t *voice, const module_t *module)
 {
 	int channel;
 
 	/* initialise voice info: all voices silent and set initial stereo positions */
-	for (channel = 0; channel < p_module->num_channels; channel++) {
-		p_voice_info[channel].channel_playing = false;
-		p_voice_info[channel].panning = p_module->default_channel_stereo[channel] - 1;
+	for (channel = 0; channel < module->num_channels; channel++) {
+		voice[channel].channel_playing = false;
+		voice[channel].panning = module->default_channel_stereo[channel] - 1;
 	}
 }
 
-void decode_next_events(const module_t *p_module, channel_event_t *decoded_events)
+void decode_next_events(const module_t *module, channel_event_t *decoded_events)
 {
     next_event();
-	for (int channel = 0; channel < p_module->num_channels; channel++)
+	for (int channel = 0; channel < module->num_channels; channel++)
 	{
-		size_t event_bytes = p_module->decode_event(pattern_line(), decoded_events + channel);
+		size_t event_bytes = module->decode_event(pattern_line(), decoded_events + channel);
 		advance_pattern_line(event_bytes);
 	}
 }
@@ -166,24 +166,24 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
 			: sample.sample_length;
 }
 
-void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice, bool on_event)
+void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {
 	unsigned char temporary_note;
 	int bar;
 
 	for (int effect_no = 0; effect_no < 4; effect_no++)
 	{
-	    effect_t effect = p_current_event->effects[effect_no];
+	    effect_t effect = event->effects[effect_no];
 		switch (effect.command)
 		{
         case SET_VOLUME_TRACKER:
             if (on_event)
-                p_current_voice->gain = effect.data;
+                voice->gain = effect.data;
             break;
 
 		case SET_VOLUME_DESKTOP_TRACKER:
 			if (on_event)
-				p_current_voice->gain = ((effect.data + 1) << 1) - 1;
+				voice->gain = ((effect.data + 1) << 1) - 1;
 			break;
 
 		case SET_TEMPO:
@@ -193,92 +193,92 @@ void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice
 
 		case SET_TRACK_STEREO:
 			if (on_event) {
-			    p_current_voice->panning = effect.data - 1;
+			    voice->panning = effect.data - 1;
 			}
 			break;
 
         case VOLUME_SLIDE_UP:
-            if ((255 - p_current_voice->gain) > effect.data)
-                p_current_voice->gain += effect.data;
+            if ((255 - voice->gain) > effect.data)
+                voice->gain += effect.data;
             else
-                p_current_voice->gain = 255;
+                voice->gain = 255;
             break;
 
         case VOLUME_SLIDE_DOWN:
-            if (p_current_voice->gain >= effect.data)
-                p_current_voice->gain -= effect.data;
+            if (voice->gain >= effect.data)
+                voice->gain -= effect.data;
             else
-                p_current_voice->gain = 0;
+                voice->gain = 0;
             break;
 
         case VOLUME_SLIDE:
 			bar = (signed char)effect.data << 1;
 			if (bar > 0) {
-				if ((255 - p_current_voice->gain) > bar)
-					p_current_voice->gain += bar;
+				if ((255 - voice->gain) > bar)
+					voice->gain += bar;
 				else
-					p_current_voice->gain = 255;
+					voice->gain = 255;
 			} else if (bar < 0) {
-				if (p_current_voice->gain >= bar)
-					p_current_voice->gain += bar; /* is -ve value ! */
+				if (voice->gain >= bar)
+					voice->gain += bar; /* is -ve value ! */
 				else
-					p_current_voice->gain = 0;
+					voice->gain = 0;
 			}
 			break;
 
 		case PORTAMENTO_UP:
-			p_current_voice->period -= effect.data;
-			if (p_current_voice->period < 0x50)
-				p_current_voice->period = 0x50;
+			voice->period -= effect.data;
+			if (voice->period < 0x50)
+				voice->period = 0x50;
 			break;
 
 		case PORTAMENTO_DOWN:
-			p_current_voice->period += effect.data;
-			if (p_current_voice->period > 0x3f0)
-				p_current_voice->period = 0x3f0;
+			voice->period += effect.data;
+			if (voice->period > 0x3f0)
+				voice->period = 0x3f0;
 			break;
 
 		case TONE_PORTAMENTO:
 			if (effect.data) {
-				p_current_voice->last_data_byte = effect.data;
+				voice->last_data_byte = effect.data;
 			} else {
-				effect.data = p_current_voice->last_data_byte;
+				effect.data = voice->last_data_byte;
 			}
-			if (p_current_voice->period < p_current_voice->target_period) {
-				p_current_voice->period += effect.data;
-				if (p_current_voice->period > p_current_voice->target_period) {
-					p_current_voice->period = p_current_voice->target_period;
+			if (voice->period < voice->target_period) {
+				voice->period += effect.data;
+				if (voice->period > voice->target_period) {
+					voice->period = voice->target_period;
 				}
 			} else {
-				p_current_voice->period -= effect.data;
-				if (p_current_voice->period < p_current_voice->target_period) {
-					p_current_voice->period = p_current_voice->target_period;
+				voice->period -= effect.data;
+				if (voice->period < voice->target_period) {
+					voice->period = voice->target_period;
 				}
 			}
 			break;
 
 		case ARPEGGIO:
 			if (effect.data) {
-				if (p_current_voice->arpeggio_counter == 0)
-					temporary_note = p_current_voice->note_currently_playing;
-				else if (p_current_voice->arpeggio_counter == 1) {
-					temporary_note = p_current_voice->note_currently_playing +
+				if (voice->arpeggio_counter == 0)
+					temporary_note = voice->note_currently_playing;
+				else if (voice->arpeggio_counter == 1) {
+					temporary_note = voice->note_currently_playing +
 					((effect.data & 0xf0) >> 4);
 
 					if (0 > temporary_note || temporary_note > 61)
-						temporary_note = p_current_voice->note_currently_playing;
-					} else if (p_current_voice->arpeggio_counter == 2) {
-						temporary_note = p_current_voice->note_currently_playing +
+						temporary_note = voice->note_currently_playing;
+					} else if (voice->arpeggio_counter == 2) {
+						temporary_note = voice->note_currently_playing +
 						(effect.data & 0xf);
 
 					if (0 > temporary_note || temporary_note > 61)
-						temporary_note = p_current_voice->note_currently_playing;
+						temporary_note = voice->note_currently_playing;
 				}
 
-				if (++(p_current_voice->arpeggio_counter) == 3)
-					p_current_voice->arpeggio_counter = 0;
+				if (++(voice->arpeggio_counter) == 3)
+					voice->arpeggio_counter = 0;
 
-				p_current_voice->period = period_for_note(temporary_note);
+				voice->period = period_for_note(temporary_note);
 			}
 			break;
 
@@ -300,14 +300,14 @@ void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice
 		case PORTAMENTO_FINE:
 			if (on_event && effect.data) {
 				bar = (unsigned char)effect.data;
-				p_current_voice->period += bar;
+				voice->period += bar;
 				if (bar > 0) {
-					if (p_current_voice->period > 0x3f0) {
-						p_current_voice->period = 0x3f0;
+					if (voice->period > 0x3f0) {
+						voice->period = 0x3f0;
 					}
 				} else {
-					if (p_current_voice->period < 0x50) {
-						p_current_voice->period = 0x50;
+					if (voice->period < 0x50) {
+						voice->period = 0x50;
 					}
 				}
 			}
@@ -317,21 +317,21 @@ void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice
 			if (on_event && effect.data) {
 				bar = (signed char)effect.data << 1;
 				if (bar > 0) {
-					if ((255 - p_current_voice->gain) > bar) {
-						p_current_voice->gain += bar;
+					if ((255 - voice->gain) > bar) {
+						voice->gain += bar;
 					} else {
-						p_current_voice->gain = 255;
+						voice->gain = 255;
 					}
 				}
 				else if (bar < 0) {
-					if (p_current_voice->gain >= bar) {
-						p_current_voice->gain += bar; /* is -ve value ! */
+					if (voice->gain >= bar) {
+						voice->gain += bar; /* is -ve value ! */
 					} else {
-						p_current_voice->gain = 0;
+						voice->gain = 0;
 					}
 				}
 			}
 			break;
 		}
-	} /* end for (foo) */
+	}
 }
