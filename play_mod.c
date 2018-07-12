@@ -31,7 +31,7 @@
 
 void initialise_values(voice_t *p_voice_info, const module_t *p_module);
 
-void get_current_pattern_line(const module_t *p_module, channel_event_t *p_current_pattern_line);
+void decode_next_events(const module_t *p_module, channel_event_t *p_current_pattern_line);
 
 void silence_channel(voice_t *voice);
 
@@ -76,10 +76,7 @@ void play_module(module_t *p_module, audio_api_t audio_api)
         clock_tick();
 		if (new_event())
 		{
-            next_event();
-
-			/* we have a new pattern line to process */
-			get_current_pattern_line(p_module, current_pattern_line);
+            decode_next_events(p_module, current_pattern_line);
 
 			output_new_position();
 			pianola_roll(current_pattern_line);
@@ -139,20 +136,12 @@ void initialise_values(voice_t *p_voice_info, const module_t *p_module)
 	}
 }
 
-/* get_current_pattern_line function.                                *
- * Called every n tracker periods where n is the current tune speed; *
- * gets current pattern line from pattern data and reads data into a *
- * structure: note, sample, command, command data.                   */
-
-void get_current_pattern_line(const module_t *p_module, channel_event_t *p_current_pattern_line)
+void decode_next_events(const module_t *p_module, channel_event_t *decoded_events)
 {
-	int channel;
-	channel_event_t *current_pattern_line_ptr;
-
-	for (channel = 0, current_pattern_line_ptr=p_current_pattern_line;
-	channel < p_module->num_channels;
-	channel++, current_pattern_line_ptr++) {
-		size_t event_bytes = p_module->decode_event(pattern_line(), current_pattern_line_ptr);
+    next_event();
+	for (int channel = 0; channel < p_module->num_channels; channel++)
+	{
+		size_t event_bytes = p_module->decode_event(pattern_line(), decoded_events + channel);
 		advance_pattern_line(event_bytes);
 	}
 }
