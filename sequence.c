@@ -66,3 +66,16 @@ bool looped_yet()
 {
     return looped;
 }
+
+void break_to_next_position()
+{
+    int current_pattern = sequence[position_in_sequence];
+    position_in_pattern = pattern_lengths[current_pattern] - 1;
+}
+
+void jump_to_position(int next_position)
+{
+    position_in_sequence = next_position - 1;
+    int current_pattern = sequence[position_in_sequence];
+    position_in_pattern = pattern_lengths[current_pattern] - 1;
+}

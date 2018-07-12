@@ -17,4 +17,8 @@ void advance_pattern_line(size_t bytes);
 
 bool looped_yet();
 
+void break_to_next_position();
+
+void jump_to_position(int next_position);
+
 #endif //ARCTRACKER_SEQUENCE_H

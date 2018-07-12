@@ -31,10 +31,6 @@
 
 void initialise_values(voice_t *p_voice_info, const module_t *p_module);
 
-bool update_counters(
-        positions_t *p_current_positions,
-        const module_t *p_module);
-
 void get_current_pattern_line(const module_t *p_module, channel_event_t *p_current_pattern_line);
 
 void silence_channel(voice_t *voice);
@@ -45,12 +41,7 @@ void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voic
 
 void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
 
-void process_commands(
-        channel_event_t *p_current_event,
-        voice_t *p_current_voice,
-        positions_t *p_current_positions,
-        const module_t *p_module,
-        bool on_event);
+void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice, bool on_event);
 
 static args_t config;
 
@@ -69,7 +60,6 @@ bool sample_out_of_range(const channel_event_t event, const module_t module)
 void play_module(module_t *p_module, audio_api_t audio_api)
 {
     config = configuration();
-	positions_t current_positions;
 	channel_event_t current_pattern_line[MAX_CHANNELS];
 	voice_t voice_info[MAX_CHANNELS];
 
@@ -115,12 +105,7 @@ void play_module(module_t *p_module, audio_api_t audio_api)
                     reset_gain_to_sample_default(&voice, sample);
                 }
             }
-            process_commands(
-                    &event,
-                    &voice,
-                    &current_positions,
-                    p_module,
-                    new_event());
+            process_commands(&event, &voice, new_event());
             voice_info[channel] = voice;
         }
 
@@ -194,12 +179,7 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
 			: sample.sample_length;
 }
 
-void process_commands(
-        channel_event_t *p_current_event,
-        voice_t *p_current_voice,
-        positions_t *p_current_positions,
-        const module_t *p_module,
-        bool on_event)
+void process_commands(channel_event_t *p_current_event, voice_t *p_current_voice, bool on_event)
 {
 	unsigned char temporary_note;
 	int bar;
@@ -316,19 +296,13 @@ void process_commands(
 			break;
 
         case BREAK_PATTERN:
-            /* jog position (in pattern) to last event */
             if (on_event)
-                p_current_positions->position_in_pattern =
-                        p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
+                break_to_next_position();
             break;
 
         case JUMP_TO_POSITION:
-			/* move position to last event before the requested sequence position */
-			if (on_event) {
-				p_current_positions->position_in_sequence = effect.data - 1;
-				p_current_positions->position_in_pattern =
-				p_module->pattern_length[p_module->sequence[p_current_positions->position_in_sequence]] - 1;
-			}
+			if (on_event)
+			    jump_to_position(effect.data);
 			break;
 
 		case SET_TEMPO_FINE:
