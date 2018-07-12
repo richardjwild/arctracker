@@ -5,8 +5,8 @@ LDFLAGS=@LDFLAGS@
 CLIBS=@LIBS@
 INSTALLDIR=@prefix@
 
-arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o clock.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o clock.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
+arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o clock.o sequence.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o clock.o sequence.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
 
 arctracker.o: arctracker.h audio_api.h arctracker.c
 	$(CC) $(CFLAGS) -c arctracker.c
@@ -37,6 +37,9 @@ play_mod.o: arctracker.h mu_law.h resample.h clock.h play_mod.h play_mod.c
 
 clock.o: clock.h clock.c
 	$(CC) $(CFLAGS) -c clock.c
+
+sequence.o: arctracker.h sequence.h sequence.c
+	$(CC) $(CFLAGS) -c sequence.c
 
 console.o: arctracker.h console.h bits.h console.c
 	$(CC) $(CFLAGS) -c console.c

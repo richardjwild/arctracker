@@ -20,6 +20,6 @@ typedef struct {
     unsigned char note_currently_playing;
 } voice_t;
 
-void play_module(const module_t *p_module, audio_api_t audio_api);
+void play_module(module_t *p_module, audio_api_t audio_api);
 
 #endif //ARCTRACKER_PLAY_MOD_H

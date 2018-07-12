@@ -1,6 +1,7 @@
 #include "arctracker.h"
 #include "console.h"
 #include "bits.h"
+#include "sequence.h"
 
 static bool pianola_mode;
 static int pianola_tracks;
@@ -37,23 +38,20 @@ void configure_console(const bool pianola, const module_t *module)
     }
 }
 
-void output_new_position(const positions_t *positions)
+void output_new_position()
 {
     if (!pianola_mode)
     {
-        printf(
-                "\rPlaying position %d of %d ",
-                positions->position_in_sequence + 1,
-                tune_length);
+        printf("\rPlaying position %d of %d ", song_position() + 1, tune_length);
         fflush(stdout);
     }
 }
 
-void pianola_roll(const positions_t *positions, const channel_event_t *line)
+void pianola_roll(const channel_event_t *line)
 {
     if (pianola_mode)
     {
-        printf("%2d %2d | ", positions->position_in_sequence, positions->position_in_pattern);
+        printf("%2d %2d | ", song_position(), pattern_position());
         for (int track = 0; track < pianola_tracks; track++)
         {
             channel_event_t event = line[track];
