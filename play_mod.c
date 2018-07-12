@@ -77,9 +77,7 @@ void play_module(module_t *p_module, audio_api_t audio_api)
 		if (new_event())
 		{
             decode_next_events(p_module, current_pattern_line);
-
-			output_new_position();
-			pianola_roll(current_pattern_line);
+			output_to_console(current_pattern_line);
 		}
         for (int channel = 0; channel < p_module->num_channels; channel++)
         {

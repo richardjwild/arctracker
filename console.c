@@ -67,3 +67,11 @@ void pianola_roll(const channel_event_t *line)
         printf("\n");
     }
 }
+
+void output_to_console(const channel_event_t *line)
+{
+    if (pianola_mode)
+        pianola_roll(line);
+    else
+        output_new_position();
+}
