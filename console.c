@@ -40,32 +40,26 @@ void configure_console(const bool pianola, const module_t *module)
 
 void output_new_position()
 {
-    if (!pianola_mode)
-    {
-        printf("\rPlaying position %d of %d ", song_position() + 1, tune_length);
-        fflush(stdout);
-    }
+    printf("\rPlaying position %d of %d ", song_position() + 1, tune_length);
+    fflush(stdout);
 }
 
 void pianola_roll(const channel_event_t *line)
 {
-    if (pianola_mode)
+    printf("%2d %2d | ", song_position(), pattern_position());
+    for (int track = 0; track < pianola_tracks; track++)
     {
-        printf("%2d %2d | ", song_position(), pattern_position());
-        for (int track = 0; track < pianola_tracks; track++)
-        {
-            channel_event_t event = line[track];
-            effect_t first_effect = event.effects[0];
-            printf(
-                    "%s %c%c%X%X | ",
-                    notes[event.note],
-                    alphanum[event.sample],
-                    alphanum[first_effect.code + 1],
-                    HIGH_NYBBLE(first_effect.data),
-                    LOW_NYBBLE(first_effect.data));
-        }
-        printf("\n");
+        channel_event_t event = line[track];
+        effect_t first_effect = event.effects[0];
+        printf(
+                "%s %c%c%X%X | ",
+                notes[event.note],
+                alphanum[event.sample],
+                alphanum[first_effect.code + 1],
+                HIGH_NYBBLE(first_effect.data),
+                LOW_NYBBLE(first_effect.data));
     }
+    printf("\n");
 }
 
 void output_to_console(const channel_event_t *line)
