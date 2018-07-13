@@ -70,25 +70,15 @@ typedef struct
     char author[MAX_LEN_AUTHOR];
     long num_channels;
     unsigned char default_channel_stereo[MAX_CHANNELS];
-    long initial_speed;
-    long tune_length;
-    long num_patterns;
-    long num_samples;
+    int initial_speed;
+    int tune_length;
+    int num_patterns;
+    int num_samples;
     sample_t *samples;
-    unsigned char pattern_length[NUM_PATTERNS];
-    unsigned char sequence[MAX_TUNELENGTH];
+    __uint8_t sequence[MAX_TUNELENGTH];
     void *patterns[NUM_PATTERNS];
+    __uint8_t pattern_lengths[NUM_PATTERNS];
     size_t (*decode_event)(const __uint32_t *raw, channel_event_t *decoded);
 } module_t;
-
-typedef struct
-{
-    int position_in_sequence;
-    int position_in_pattern;
-    void *pattern_line_ptr;
-    int counter;
-    int speed;
-    long sps_per_tick;
-} positions_t;
 
 #endif // ARCTRACKER_H

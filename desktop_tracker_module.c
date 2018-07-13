@@ -174,7 +174,7 @@ static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, vo
 static void set_pattern_lengths(module_t *module, const unsigned char *pattern_lengths)
 {
     for (int i = 0; i < module->num_patterns; i++)
-        module->pattern_length[i] = pattern_lengths[i];
+        module->pattern_lengths[i] = pattern_lengths[i];
 }
 
 static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples, void *base_address)

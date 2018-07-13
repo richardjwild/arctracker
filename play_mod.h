@@ -12,12 +12,12 @@ typedef struct {
     long sample_end;
     long repeat_length;
     void *sample_pointer;
-    unsigned char gain;
+    int gain;
     bool channel_playing;
     int panning;
     unsigned char arpeggio_counter;
-    unsigned char last_data_byte;
-    unsigned char note_currently_playing;
+    __uint8_t last_data_byte;
+    int note_currently_playing;
 } voice_t;
 
 void play_module(module_t *module, audio_api_t audio_api);

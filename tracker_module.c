@@ -144,7 +144,7 @@ module_t read_tracker_module(mapped_file_t file)
     if ((chunk_address = search_tff(file.addr, array_end, PLEN_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - PLEN chunk not found");
     else
-        memcpy(module.pattern_length, chunk_address + 8, NUM_PATTERNS);
+        memcpy(module.pattern_lengths, chunk_address + 8, NUM_PATTERNS);
 
     if ((chunk_address = search_tff(file.addr, array_end, SEQU_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - SEQU chunk not found");

@@ -1,21 +1,3 @@
-/* Copyright (c) Richard Wild 2004, 2005                                   *
- *                                                                         *
- * This file is part of Arctracker.                                        *
- *                                                                         *
- * Arctracker is free software; you can redistribute it and/or modify      *
- * it under the terms of the GNU General Public License as published by    *
- * the Free Software Foundation; either version 2 of the License, or       *
- * (at your option) any later version.                                     *
- *                                                                         *
- * Arctracker is distributed in the hope that it will be useful,           *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
- * GNU General Public License for more details.                            *
- *                                                                         *
- * You should have received a copy of the GNU General Public License       *
- * along with Arctracker; if not, write to the Free Software               *
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MS 02111-1307 USA */
-
 #include "arctracker.h"
 #include "play_mod.h"
 #include "config.h"
@@ -29,7 +11,7 @@
 #include "clock.h"
 #include "audio_api.h"
 
-void initialise_values(voice_t *voice, const module_t *module);
+void initialise_voices(voice_t *voice, const module_t *module);
 
 void decode_next_events(const module_t *module, channel_event_t *decoded_events);
 
@@ -63,15 +45,13 @@ void play_module(module_t *module, audio_api_t audio_api)
 	channel_event_t events[MAX_CHANNELS];
 	voice_t voices[MAX_CHANNELS];
 
-	initialise_values(voices, module);
-
+    initialise_voices(voices, module);
 	initialise_audio(audio_api, module->num_channels);
 	set_master_gain(config.volume);
     set_clock(module->initial_speed, audio_api.sample_rate);
     initialise_sequence(module);
     configure_console(config.pianola, module);
 
-	/* loop through whole tune */
 	do {
         clock_tick();
 		if (new_event())
@@ -120,15 +100,9 @@ void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
 	voice->gain = sample.default_gain;
 }
 
-/* initialise_values function.                    *
- * Set up values in preparation for player start. */
-
-void initialise_values(voice_t *voice, const module_t *module)
+void initialise_voices(voice_t *voice, const module_t *module)
 {
-	int channel;
-
-	/* initialise voice info: all voices silent and set initial stereo positions */
-	for (channel = 0; channel < module->num_channels; channel++) {
+	for (int channel = 0; channel < module->num_channels; channel++) {
 		voice[channel].channel_playing = false;
 		voice[channel].panning = module->default_channel_stereo[channel] - 1;
 	}
@@ -168,7 +142,6 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {
-	unsigned char temporary_note;
 	int bar;
 
 	for (int effect_no = 0; effect_no < 4; effect_no++)
@@ -259,7 +232,8 @@ void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 
 		case ARPEGGIO:
 			if (effect.data) {
-				if (voice->arpeggio_counter == 0)
+                int temporary_note;
+                if (voice->arpeggio_counter == 0)
 					temporary_note = voice->note_currently_playing;
 				else if (voice->arpeggio_counter == 1) {
 					temporary_note = voice->note_currently_playing +
