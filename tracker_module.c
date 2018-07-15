@@ -209,22 +209,38 @@ sample_t *get_sample_info(void *array_start, long array_end)
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->default_gain, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+    {
+        __uint32_t default_gain;
+        memcpy(&default_gain, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+        sample->default_gain = default_gain;
+    }
 
     if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->sample_length, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+    {
+        __uint32_t sample_length;
+        memcpy(&sample_length, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+        sample->sample_length = sample_length;
+    }
 
     if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->repeat_offset, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+    {
+        __uint32_t repeat_offset;
+        memcpy(&repeat_offset, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+        sample->repeat_offset = repeat_offset;
+    }
 
     if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        memcpy(&sample->repeat_length, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+    {
+        __uint32_t repeat_length;
+        memcpy(&repeat_length, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
+        sample->repeat_length = repeat_length;
+    }
 
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
