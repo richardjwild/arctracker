@@ -26,9 +26,9 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event);
 
-bool portamento(const channel_event_t event);
+bool portamento(channel_event_t event);
 
-bool sample_out_of_range(const channel_event_t event, const module_t module);
+bool sample_out_of_range(channel_event_t event, module_t module);
 
 void play_module(module_t *module, audio_api_t audio_api)
 {
