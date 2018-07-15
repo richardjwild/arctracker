@@ -68,7 +68,7 @@ typedef struct
     char *format;
     char name[MAX_LEN_TUNENAME];
     char author[MAX_LEN_AUTHOR];
-    long num_channels;
+    int num_channels;
     unsigned char default_channel_stereo[MAX_CHANNELS];
     int initial_speed;
     int tune_length;

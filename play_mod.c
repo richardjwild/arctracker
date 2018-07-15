@@ -10,8 +10,9 @@
 #include "console.h"
 #include "clock.h"
 #include "audio_api.h"
+#include "heap.h"
 
-void initialise_voices(voice_t *voice, const module_t *module);
+voice_t *initialise_voices(const module_t *module);
 
 void decode_next_events(const module_t *module, channel_event_t *decoded_events);
 
@@ -25,34 +26,22 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event);
 
-static args_t config;
+bool portamento(const channel_event_t event);
 
-static inline
-bool portamento(const channel_event_t event)
-{
-    return event.effects[0].command == TONE_PORTAMENTO;
-}
-
-static inline
-bool sample_out_of_range(const channel_event_t event, const module_t module)
-{
-    return event.sample > module.num_samples;
-}
+bool sample_out_of_range(const channel_event_t event, const module_t module);
 
 void play_module(module_t *module, audio_api_t audio_api)
 {
-    config = configuration();
-    channel_event_t events[MAX_CHANNELS];
-    voice_t voices[MAX_CHANNELS];
-
-    initialise_voices(voices, module);
+    args_t config = configuration();
     initialise_audio(audio_api, module->num_channels);
     set_master_gain(config.volume);
     set_clock(module->initial_speed, audio_api.sample_rate);
     initialise_sequence(module);
     configure_console(config.pianola, module);
+    voice_t *voices = initialise_voices(module);
+    channel_event_t events[MAX_CHANNELS];
 
-    do
+    while (!looped_yet() || config.loop_forever)
     {
         clock_tick();
         if (new_event())
@@ -84,29 +73,50 @@ void play_module(module_t *module, audio_api_t audio_api)
             process_commands(&event, &voice, new_event());
             voices[channel] = voice;
         }
-
         write_audio_data(voices);
-    } while (!looped_yet() || config.loop_forever);
+    }
     send_remaining_audio();
 }
 
+inline
+bool sample_out_of_range(const channel_event_t event, const module_t module)
+{
+    return event.sample > module.num_samples;
+}
+
+inline
+bool portamento(const channel_event_t event)
+{
+    const effect_t *effects = event.effects;
+    for (int effect_no = 0; effect_no < 4; effect_no++)
+    {
+        if (effects[effect_no].command == TONE_PORTAMENTO)
+            return true;
+    }
+    return false;
+}
+
+inline
 void silence_channel(voice_t *voice)
 {
     voice->channel_playing = false;
 }
 
+inline
 void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
 {
     voice->gain = sample.default_gain;
 }
 
-void initialise_voices(voice_t *voice, const module_t *module)
+voice_t *initialise_voices(const module_t *module)
 {
+    voice_t *voices = allocate_array(module->num_channels, sizeof(voice_t));
     for (int channel = 0; channel < module->num_channels; channel++)
     {
-        voice[channel].channel_playing = false;
-        voice[channel].panning = module->default_channel_stereo[channel] - 1;
+        voices[channel].channel_playing = false;
+        voices[channel].panning = module->default_channel_stereo[channel] - 1;
     }
+    return voices;
 }
 
 void decode_next_events(const module_t *module, channel_event_t *decoded_events)
@@ -137,8 +147,8 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
     voice->sample_repeats = sample.repeats;
     voice->repeat_length = sample.repeat_length;
     voice->sample_end = voice->sample_repeats
-                        ? sample.repeat_offset + sample.repeat_length
-                        : sample.sample_length;
+            ? sample.repeat_offset + sample.repeat_length
+            : sample.sample_length;
 }
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
