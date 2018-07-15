@@ -4,7 +4,7 @@
 static int position_in_sequence;
 static int position_in_pattern;
 static void *pattern_line_ptr;
-static const __uint8_t *sequence;
+static const int *sequence;
 static long tune_length;
 static void **patterns;
 static __uint8_t *pattern_lengths;
@@ -18,7 +18,7 @@ void initialise_sequence(module_t *module)
     tune_length = module->tune_length;
     patterns = module->patterns;
     pattern_lengths = module->pattern_lengths;
-    __uint8_t first_pattern = sequence[position_in_sequence];
+    int first_pattern = sequence[position_in_sequence];
     pattern_line_ptr = patterns[first_pattern];
     looped = false;
 }

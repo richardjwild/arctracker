@@ -11,6 +11,8 @@ module_t read_tracker_module(mapped_file_t file);
 
 static int *initial_panning(__uint8_t *raw, int num_channels);
 
+static int *get_sequence(__uint8_t *raw, int tune_length);
+
 void get_patterns(void *array_start, long array_end, void **patterns);
 
 static int get_samples(void *array_start, long array_end, sample_t *samples);
@@ -151,7 +153,8 @@ module_t read_tracker_module(mapped_file_t file)
     if ((chunk_address = search_tff(file.addr, array_end, SEQU_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - SEQU chunk not found");
     else
-        memcpy(module.sequence, chunk_address + 8, MAX_TUNELENGTH);
+        module.sequence = get_sequence(chunk_address + 8, module.tune_length);
+//        memcpy(module.sequence, chunk_address + 8, MAX_TUNELENGTH);
 
     get_patterns(file.addr, array_end, module.patterns);
     module.num_samples = get_samples(file.addr, array_end, module.samples);
@@ -165,6 +168,14 @@ static int *initial_panning(__uint8_t *raw, int num_channels)
     for (int channel = 0; channel < num_channels; channel++)
         pan_positions[channel] = raw[channel];
     return pan_positions;
+}
+
+static int *get_sequence(__uint8_t *raw, int tune_length)
+{
+    int *sequence = allocate_array(tune_length, sizeof(int));
+    for (int position = 0; position < tune_length; position++)
+        sequence[position] = raw[position];
+    return sequence;
 }
 
 void get_patterns(void *array_start, long array_end, void **patterns)

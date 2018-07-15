@@ -75,7 +75,7 @@ typedef struct
     int num_patterns;
     int num_samples;
     sample_t *samples;
-    __uint8_t sequence[MAX_TUNELENGTH];
+    int *sequence;
     void *patterns[NUM_PATTERNS];
     __uint8_t pattern_lengths[NUM_PATTERNS];
     size_t (*decode_event)(const __uint32_t *raw, channel_event_t *decoded);

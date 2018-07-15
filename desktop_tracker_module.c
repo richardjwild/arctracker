@@ -42,7 +42,7 @@ static module_t create_module(dtt_file_format_t *file_format);
 
 static int *initial_panning(__uint8_t *raw, int num_channels);
 
-static void set_sequence(module_t *module, void *positions, size_t sequence_length);
+static int *get_sequence(__uint8_t *raw, int tune_length);
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
 
@@ -138,7 +138,7 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     void *pattern_offsets = positions + ALIGN_TO_WORD(module.tune_length);
     void *pattern_lengths = pattern_offsets + (module.num_patterns * sizeof(__uint32_t));
     void *samples = pattern_lengths + ALIGN_TO_WORD(module.num_patterns);
-    set_sequence(&module, positions, (size_t) module.tune_length);
+    module.sequence = get_sequence(positions, module.tune_length);
     set_pattern_starts(&module, pattern_offsets, file.addr);
     set_pattern_lengths(&module, pattern_lengths);
     module.samples = get_samples((int) module.num_samples, samples, file.addr);
@@ -170,9 +170,12 @@ static int *initial_panning(__uint8_t *raw, int num_channels)
     return pan_positions;
 }
 
-static void set_sequence(module_t *module, void *positions, size_t sequence_length)
+static int *get_sequence(__uint8_t *raw, int tune_length)
 {
-    memcpy(module->sequence, positions, sequence_length);
+    int *sequence = allocate_array(tune_length, sizeof(int));
+    for (int position = 0; position < tune_length; position++)
+        sequence[position] = raw[position];
+    return sequence;
 }
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address)
