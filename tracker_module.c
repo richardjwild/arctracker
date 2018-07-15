@@ -205,6 +205,13 @@ static int get_samples(void *array_start, long array_end, sample_t *samples)
     return samples_found;
 }
 
+int read_word(__uint32_t *address)
+{
+    __uint32_t value;
+    memcpy(&value, address, sizeof(__uint32_t));
+    return value;
+}
+
 sample_t *get_sample_info(void *array_start, long array_end)
 {
     sample_t *sample = allocate_array(1, sizeof(sample_t));
@@ -219,38 +226,22 @@ sample_t *get_sample_info(void *array_start, long array_end)
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-    {
-        __uint32_t default_gain;
-        memcpy(&default_gain, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
-        sample->default_gain = default_gain;
-    }
+        sample->default_gain = read_word(chunk_address + CHUNK_HEADER_LENGTH);
 
     if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-    {
-        __uint32_t sample_length;
-        memcpy(&sample_length, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
-        sample->sample_length = sample_length;
-    }
+        sample->sample_length = read_word(chunk_address + CHUNK_HEADER_LENGTH);
 
     if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-    {
-        __uint32_t repeat_offset;
-        memcpy(&repeat_offset, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
-        sample->repeat_offset = repeat_offset;
-    }
+        sample->repeat_offset = read_word(chunk_address + CHUNK_HEADER_LENGTH);
 
     if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-    {
-        __uint32_t repeat_length;
-        memcpy(&repeat_length, chunk_address + CHUNK_HEADER_LENGTH, sizeof(__uint32_t));
-        sample->repeat_length = repeat_length;
-    }
+        sample->repeat_length = read_word(chunk_address + CHUNK_HEADER_LENGTH);
 
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
