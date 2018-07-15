@@ -9,6 +9,8 @@ void *search_tff(void *array_start, long array_end, const void *to_find);
 
 module_t read_tracker_module(mapped_file_t file);
 
+static int *initial_panning(__uint8_t *raw, int num_channels);
+
 void get_patterns(void *array_start, long array_end, void **patterns);
 
 static int get_samples(void *array_start, long array_end, sample_t *samples);
@@ -119,7 +121,7 @@ module_t read_tracker_module(mapped_file_t file)
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - STER chunk not found");
     else
-        memcpy(module.default_channel_stereo, chunk_address + 8, MAX_CHANNELS_TRK);
+        module.initial_panning = initial_panning(chunk_address + 8, module.num_channels);
 
     if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MNAM chunk not found");
@@ -155,6 +157,14 @@ module_t read_tracker_module(mapped_file_t file)
     module.num_samples = get_samples(file.addr, array_end, module.samples);
 
     return module;
+}
+
+static int *initial_panning(__uint8_t *raw, int num_channels)
+{
+    int *pan_positions = allocate_array(num_channels, sizeof(int));
+    for (int channel = 0; channel < num_channels; channel++)
+        pan_positions[channel] = raw[channel];
+    return pan_positions;
 }
 
 void get_patterns(void *array_start, long array_end, void **patterns)

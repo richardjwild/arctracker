@@ -40,6 +40,8 @@ typedef struct
 
 static module_t create_module(dtt_file_format_t *file_format);
 
+static int *initial_panning(__uint8_t *raw, int num_channels);
+
 static void set_sequence(module_t *module, void *positions, size_t sequence_length);
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
@@ -153,11 +155,19 @@ static module_t create_module(dtt_file_format_t *file_format)
     strncpy(module.author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     module.num_channels = file_format->num_channels;
     module.tune_length = file_format->tune_length;
-    memcpy(module.default_channel_stereo, file_format->initial_stereo, 8);
+    module.initial_panning = initial_panning(file_format->initial_stereo, module.num_channels);
     module.initial_speed = file_format->initial_speed;
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
     return module;
+}
+
+static int *initial_panning(__uint8_t *raw, int num_channels)
+{
+    int *pan_positions = allocate_array(num_channels, sizeof(int));
+    for (int channel = 0; channel < num_channels; channel++)
+        pan_positions[channel] = raw[channel];
+    return pan_positions;
 }
 
 static void set_sequence(module_t *module, void *positions, size_t sequence_length)

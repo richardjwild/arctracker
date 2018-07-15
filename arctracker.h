@@ -69,7 +69,7 @@ typedef struct
     char name[MAX_LEN_TUNENAME];
     char author[MAX_LEN_AUTHOR];
     int num_channels;
-    unsigned char default_channel_stereo[MAX_CHANNELS];
+    int *initial_panning;
     int initial_speed;
     int tune_length;
     int num_patterns;
