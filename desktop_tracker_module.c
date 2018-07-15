@@ -63,7 +63,7 @@ bool is_desktop_tracker_format(mapped_file_t file)
 }
 
 static inline
-command_t desktop_tracker_command(__uint8_t code, __uint8_t data)
+command_t desktop_tracker_command(int code, __uint8_t data)
 {
     switch (code)
     {

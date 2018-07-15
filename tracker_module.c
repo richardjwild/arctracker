@@ -45,7 +45,7 @@ void *search_tff(void *array_start, const long array_end, const void *to_find)
 }
 
 static inline
-command_t tracker_command(__uint8_t code, __uint8_t data)
+command_t tracker_command(int code, __uint8_t data)
 {
     switch (code)
     {

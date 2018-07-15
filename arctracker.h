@@ -51,15 +51,15 @@ typedef struct
 
 typedef struct
 {
-    __uint8_t code;
+    int code;
     command_t command;
     __uint8_t data;
 } effect_t;
 
 typedef struct
 {
-    __uint8_t note;
-    __uint8_t sample;
+    int note;
+    int sample;
     effect_t effects[4];
 } channel_event_t;
 
