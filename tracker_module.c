@@ -9,9 +9,7 @@ void *search_tff(void *array_start, long array_end, const void *to_find);
 
 module_t read_tracker_module(mapped_file_t file);
 
-static int *initial_panning(__uint8_t *raw, int num_channels);
-
-static int *get_sequence(__uint8_t *raw, int tune_length);
+static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements);
 
 void get_patterns(void *array_start, long array_end, void **patterns);
 
@@ -123,7 +121,7 @@ module_t read_tracker_module(mapped_file_t file)
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - STER chunk not found");
     else
-        module.initial_panning = initial_panning(chunk_address + 8, module.num_channels);
+        module.initial_panning = convert_int_array(chunk_address + 8, module.num_channels);
 
     if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MNAM chunk not found");
@@ -148,13 +146,12 @@ module_t read_tracker_module(mapped_file_t file)
     if ((chunk_address = search_tff(file.addr, array_end, PLEN_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - PLEN chunk not found");
     else
-        memcpy(module.pattern_lengths, chunk_address + 8, NUM_PATTERNS);
+        module.pattern_lengths = convert_int_array(chunk_address + 8, NUM_PATTERNS);
 
     if ((chunk_address = search_tff(file.addr, array_end, SEQU_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - SEQU chunk not found");
     else
-        module.sequence = get_sequence(chunk_address + 8, module.tune_length);
-//        memcpy(module.sequence, chunk_address + 8, MAX_TUNELENGTH);
+        module.sequence = convert_int_array(chunk_address + 8, module.tune_length);
 
     get_patterns(file.addr, array_end, module.patterns);
     module.num_samples = get_samples(file.addr, array_end, module.samples);
@@ -162,20 +159,12 @@ module_t read_tracker_module(mapped_file_t file)
     return module;
 }
 
-static int *initial_panning(__uint8_t *raw, int num_channels)
+static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements)
 {
-    int *pan_positions = allocate_array(num_channels, sizeof(int));
-    for (int channel = 0; channel < num_channels; channel++)
-        pan_positions[channel] = raw[channel];
-    return pan_positions;
-}
-
-static int *get_sequence(__uint8_t *raw, int tune_length)
-{
-    int *sequence = allocate_array(tune_length, sizeof(int));
-    for (int position = 0; position < tune_length; position++)
-        sequence[position] = raw[position];
-    return sequence;
+    int *int_array = allocate_array(num_elements, sizeof(int));
+    for (int i = 0; i < num_elements; i++)
+        int_array[i] = unsigned_bytes[i];
+    return int_array;
 }
 
 void get_patterns(void *array_start, long array_end, void **patterns)

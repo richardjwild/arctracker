@@ -40,13 +40,9 @@ typedef struct
 
 static module_t create_module(dtt_file_format_t *file_format);
 
-static int *initial_panning(__uint8_t *raw, int num_channels);
-
-static int *get_sequence(__uint8_t *raw, int tune_length);
+static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements);
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
-
-static void set_pattern_lengths(module_t *module, const unsigned char *pattern_lengths);
 
 static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples, void *base_address);
 
@@ -138,9 +134,9 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     void *pattern_offsets = positions + ALIGN_TO_WORD(module.tune_length);
     void *pattern_lengths = pattern_offsets + (module.num_patterns * sizeof(__uint32_t));
     void *samples = pattern_lengths + ALIGN_TO_WORD(module.num_patterns);
-    module.sequence = get_sequence(positions, module.tune_length);
+    module.sequence = convert_int_array(positions, module.tune_length);
     set_pattern_starts(&module, pattern_offsets, file.addr);
-    set_pattern_lengths(&module, pattern_lengths);
+    module.pattern_lengths = convert_int_array(pattern_lengths, module.num_patterns);
     module.samples = get_samples((int) module.num_samples, samples, file.addr);
     return module;
 }
@@ -155,39 +151,25 @@ static module_t create_module(dtt_file_format_t *file_format)
     strncpy(module.author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     module.num_channels = file_format->num_channels;
     module.tune_length = file_format->tune_length;
-    module.initial_panning = initial_panning(file_format->initial_stereo, module.num_channels);
+    module.initial_panning = convert_int_array(file_format->initial_stereo, module.num_channels);
     module.initial_speed = file_format->initial_speed;
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
     return module;
 }
 
-static int *initial_panning(__uint8_t *raw, int num_channels)
+static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements)
 {
-    int *pan_positions = allocate_array(num_channels, sizeof(int));
-    for (int channel = 0; channel < num_channels; channel++)
-        pan_positions[channel] = raw[channel];
-    return pan_positions;
-}
-
-static int *get_sequence(__uint8_t *raw, int tune_length)
-{
-    int *sequence = allocate_array(tune_length, sizeof(int));
-    for (int position = 0; position < tune_length; position++)
-        sequence[position] = raw[position];
-    return sequence;
+    int *int_array = allocate_array(num_elements, sizeof(int));
+    for (int i = 0; i < num_elements; i++)
+        int_array[i] = unsigned_bytes[i];
+    return int_array;
 }
 
 static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address)
 {
     for (int i = 0; i < module->num_patterns; i++)
         module->patterns[i] = base_address + pattern_offsets[i];
-}
-
-static void set_pattern_lengths(module_t *module, const unsigned char *pattern_lengths)
-{
-    for (int i = 0; i < module->num_patterns; i++)
-        module->pattern_lengths[i] = pattern_lengths[i];
 }
 
 static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples, void *base_address)

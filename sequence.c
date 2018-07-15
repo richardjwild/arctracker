@@ -7,7 +7,7 @@ static void *pattern_line_ptr;
 static const int *sequence;
 static long tune_length;
 static void **patterns;
-static __uint8_t *pattern_lengths;
+static int *pattern_lengths;
 static bool looped;
 
 void initialise_sequence(module_t *module)
