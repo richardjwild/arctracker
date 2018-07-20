@@ -2,6 +2,7 @@
 #include "clock.h"
 #include "sequence.h"
 #include "period.h"
+#include "gain.h"
 #include "arctracker.h"
 
 void handle_effects_every_tick(channel_event_t *event, voice_t *voice);
@@ -92,10 +93,10 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
 static inline
 void volume_slide_up(voice_t *voice, __uint8_t data)
 {
-    if ((255 - voice->gain) > data)
+    if ((LOGARITHMIC_GAIN_MAX - voice->gain) > data)
         voice->gain += data;
     else
-        voice->gain = 255;
+        voice->gain = LOGARITHMIC_GAIN_MAX;
 }
 
 static inline
@@ -104,7 +105,7 @@ void volume_slide_down(voice_t *voice, __uint8_t data)
     if (voice->gain >= data)
         voice->gain -= data;
     else
-        voice->gain = 0;
+        voice->gain = LOGARITHMIC_GAIN_MIN;
 }
 
 static inline
@@ -113,17 +114,17 @@ void volume_slide_combined(voice_t *voice, __uint8_t data)
     __int8_t gain_adjust = data << 1;
     if (gain_adjust > 0)
     {
-        if ((255 - voice->gain) > gain_adjust)
+        if ((LOGARITHMIC_GAIN_MAX - voice->gain) > gain_adjust)
             voice->gain += gain_adjust;
         else
-            voice->gain = 255;
+            voice->gain = LOGARITHMIC_GAIN_MAX;
     }
-    else if (gain_adjust < 0)
+    else if (gain_adjust < LOGARITHMIC_GAIN_MIN)
     {
         if (voice->gain >= gain_adjust)
             voice->gain += gain_adjust; /* is -ve value ! */
         else
-            voice->gain = 0;
+            voice->gain = LOGARITHMIC_GAIN_MIN;
     }
 }
 
