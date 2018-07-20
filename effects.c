@@ -2,204 +2,185 @@
 #include "clock.h"
 #include "sequence.h"
 #include "period.h"
+#include "arctracker.h"
+
+void handle_effects_every_tick(channel_event_t *event, voice_t *voice);
+
+void handle_effects_on_new_event(channel_event_t *event, voice_t *voice);
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {
-    int bar;
+    handle_effects_every_tick(event, voice);
+    if (on_event)
+        handle_effects_on_new_event(event, voice);
+}
 
-    for (int effect_no = 0; effect_no < 4; effect_no++)
+void handle_effects_every_tick(channel_event_t *event, voice_t *voice)
+{
+    for (int i = 0; i < MAX_EFFECTS; i++)
     {
-        effect_t effect = event->effects[effect_no];
-        switch (effect.command)
+        effect_t effect = event->effects[i];
+        if (effect.command == VOLUME_SLIDE_UP)
         {
-            case SET_VOLUME_TRACKER:
-                if (on_event)
-                    voice->gain = effect.data;
-                break;
-
-            case SET_VOLUME_DESKTOP_TRACKER:
-                if (on_event)
-                    voice->gain = ((effect.data + 1) << 1) - 1;
-                break;
-
-            case SET_TEMPO:
-                if (on_event && effect.data) /* ensure an "S00" command does not hang player! */
-                    set_ticks_per_event(effect.data);
-                break;
-
-            case SET_TRACK_STEREO:
-                if (on_event)
-                {
-                    voice->panning = effect.data - 1;
-                }
-                break;
-
-            case VOLUME_SLIDE_UP:
-                if ((255 - voice->gain) > effect.data)
-                    voice->gain += effect.data;
+            if ((255 - voice->gain) > effect.data)
+                voice->gain += effect.data;
+            else
+                voice->gain = 255;
+        }
+        else if (effect.command == VOLUME_SLIDE_DOWN)
+        {
+            if (voice->gain >= effect.data)
+                voice->gain -= effect.data;
+            else
+                voice->gain = 0;
+        }
+        else if (effect.command == VOLUME_SLIDE)
+        {
+            __int8_t gain_adjust = effect.data << 1;
+            if (gain_adjust > 0)
+            {
+                if ((255 - voice->gain) > gain_adjust)
+                    voice->gain += gain_adjust;
                 else
                     voice->gain = 255;
-                break;
-
-            case VOLUME_SLIDE_DOWN:
-                if (voice->gain >= effect.data)
-                    voice->gain -= effect.data;
+            }
+            else if (gain_adjust < 0)
+            {
+                if (voice->gain >= gain_adjust)
+                    voice->gain += gain_adjust; /* is -ve value ! */
                 else
                     voice->gain = 0;
-                break;
-
-            case VOLUME_SLIDE:
-                bar = (signed char) effect.data << 1;
-                if (bar > 0)
-                {
-                    if ((255 - voice->gain) > bar)
-                        voice->gain += bar;
-                    else
-                        voice->gain = 255;
-                }
-                else if (bar < 0)
-                {
-                    if (voice->gain >= bar)
-                        voice->gain += bar; /* is -ve value ! */
-                    else
-                        voice->gain = 0;
-                }
-                break;
-
-            case PORTAMENTO_UP:
-                voice->period -= effect.data;
-                if (voice->period < 0x50)
-                    voice->period = 0x50;
-                break;
-
-            case PORTAMENTO_DOWN:
+            }
+        }
+        else if (effect.command == PORTAMENTO_UP)
+        {
+            voice->period -= effect.data;
+            if (voice->period < PERIOD_MIN)
+                voice->period = PERIOD_MIN;
+        }
+        else if (effect.command == PORTAMENTO_DOWN)
+        {
+            voice->period += effect.data;
+            if (voice->period > PERIOD_MAX)
+                voice->period = PERIOD_MAX;
+        }
+        else if (effect.command == TONE_PORTAMENTO)
+        {
+            if (effect.data)
+            {
+                voice->last_data_byte = effect.data;
+            }
+            else
+            {
+                effect.data = voice->last_data_byte;
+            }
+            if (voice->period < voice->target_period)
+            {
                 voice->period += effect.data;
-                if (voice->period > 0x3f0)
-                    voice->period = 0x3f0;
-                break;
-
-            case TONE_PORTAMENTO:
-                if (effect.data)
+                if (voice->period > voice->target_period)
                 {
-                    voice->last_data_byte = effect.data;
+                    voice->period = voice->target_period;
                 }
-                else
-                {
-                    effect.data = voice->last_data_byte;
-                }
+            }
+            else
+            {
+                voice->period -= effect.data;
                 if (voice->period < voice->target_period)
                 {
-                    voice->period += effect.data;
-                    if (voice->period > voice->target_period)
-                    {
-                        voice->period = voice->target_period;
-                    }
+                    voice->period = voice->target_period;
                 }
+            }
+        }
+        else if (effect.command == ARPEGGIO)
+        {
+            int temporary_note;
+            if (voice->arpeggio_counter == 0)
+                temporary_note = voice->note_currently_playing;
+            else if (voice->arpeggio_counter == 1)
+            {
+                temporary_note = voice->note_currently_playing +
+                                 ((effect.data & 0xf0) >> 4);
+
+                if (0 > temporary_note || temporary_note > 61)
+                    temporary_note = voice->note_currently_playing;
+            }
+            else if (voice->arpeggio_counter == 2)
+            {
+                temporary_note = voice->note_currently_playing +
+                                 (effect.data & 0xf);
+
+                if (0 > temporary_note || temporary_note > 61)
+                    temporary_note = voice->note_currently_playing;
+            }
+
+            if (++(voice->arpeggio_counter) == 3)
+                voice->arpeggio_counter = 0;
+
+            voice->period = period_for_note(temporary_note);
+        }
+    }
+}
+
+void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
+{
+    for (int i = 0; i < MAX_EFFECTS; i++)
+    {
+        effect_t effect = event->effects[i];
+        if (effect.command == SET_VOLUME_TRACKER)
+        {
+            voice->gain = effect.data;
+        }
+        else if (effect.command == SET_VOLUME_DESKTOP_TRACKER)
+        {
+            voice->gain = ((effect.data + 1) << 1) - 1;
+        }
+        else if (effect.command == SET_TEMPO)
+        {
+            if (effect.data > 0)
+                set_ticks_per_event(effect.data);
+        }
+        else if (effect.command == SET_TRACK_STEREO)
+        {
+            voice->panning = effect.data - 1;
+        }
+        else if (effect.command == BREAK_PATTERN)
+        {
+            break_to_next_position();
+        }
+        else if (effect.command == JUMP_TO_POSITION)
+        {
+            jump_to_position(effect.data);
+        }
+        else if (effect.command == SET_TEMPO_FINE)
+        {
+            if (effect.data > 0)
+                set_ticks_per_second(effect.data);
+        }
+        else if (effect.command == PORTAMENTO_FINE)
+        {
+            voice->period += effect.data;
+            if (voice->period > PERIOD_MAX)
+                voice->period = PERIOD_MAX;
+            else if (voice->period < PERIOD_MIN)
+                voice->period = PERIOD_MIN;
+        }
+        else if (effect.command == VOLUME_SLIDE_FINE)
+        {
+            __int8_t gain_adjust = effect.data << 1;
+            if (gain_adjust > 0)
+            {
+                if ((255 - voice->gain) > gain_adjust)
+                    voice->gain += gain_adjust;
                 else
-                {
-                    voice->period -= effect.data;
-                    if (voice->period < voice->target_period)
-                    {
-                        voice->period = voice->target_period;
-                    }
-                }
-                break;
-
-            case ARPEGGIO:
-                if (effect.data)
-                {
-                    int temporary_note;
-                    if (voice->arpeggio_counter == 0)
-                        temporary_note = voice->note_currently_playing;
-                    else if (voice->arpeggio_counter == 1)
-                    {
-                        temporary_note = voice->note_currently_playing +
-                                         ((effect.data & 0xf0) >> 4);
-
-                        if (0 > temporary_note || temporary_note > 61)
-                            temporary_note = voice->note_currently_playing;
-                    }
-                    else if (voice->arpeggio_counter == 2)
-                    {
-                        temporary_note = voice->note_currently_playing +
-                                         (effect.data & 0xf);
-
-                        if (0 > temporary_note || temporary_note > 61)
-                            temporary_note = voice->note_currently_playing;
-                    }
-
-                    if (++(voice->arpeggio_counter) == 3)
-                        voice->arpeggio_counter = 0;
-
-                    voice->period = period_for_note(temporary_note);
-                }
-                break;
-
-            case BREAK_PATTERN:
-                if (on_event)
-                    break_to_next_position();
-                break;
-
-            case JUMP_TO_POSITION:
-                if (on_event)
-                    jump_to_position(effect.data);
-                break;
-
-            case SET_TEMPO_FINE:
-                if (on_event && effect.data)
-                    set_ticks_per_second(effect.data);
-                break;
-
-            case PORTAMENTO_FINE:
-                if (on_event && effect.data)
-                {
-                    bar = (unsigned char) effect.data;
-                    voice->period += bar;
-                    if (bar > 0)
-                    {
-                        if (voice->period > 0x3f0)
-                        {
-                            voice->period = 0x3f0;
-                        }
-                    }
-                    else
-                    {
-                        if (voice->period < 0x50)
-                        {
-                            voice->period = 0x50;
-                        }
-                    }
-                }
-                break;
-
-            case VOLUME_SLIDE_FINE:
-                if (on_event && effect.data)
-                {
-                    bar = (signed char) effect.data << 1;
-                    if (bar > 0)
-                    {
-                        if ((255 - voice->gain) > bar)
-                        {
-                            voice->gain += bar;
-                        }
-                        else
-                        {
-                            voice->gain = 255;
-                        }
-                    }
-                    else if (bar < 0)
-                    {
-                        if (voice->gain >= bar)
-                        {
-                            voice->gain += bar; /* is -ve value ! */
-                        }
-                        else
-                        {
-                            voice->gain = 0;
-                        }
-                    }
-                }
-                break;
+                    voice->gain = 255;
+            }
+            else if (gain_adjust < 0)
+            {
+                if (voice->gain >= gain_adjust)
+                    voice->gain += gain_adjust; /* is -ve value ! */
+                else
+                    voice->gain = 0;
+            }
         }
     }
 }
