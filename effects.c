@@ -8,6 +8,20 @@ void handle_effects_every_tick(channel_event_t *event, voice_t *voice);
 
 void handle_effects_on_new_event(channel_event_t *event, voice_t *voice);
 
+static void volume_slide_up(voice_t *voice, __uint8_t data);
+
+static void volume_slide_down(voice_t *voice, __uint8_t data);
+
+static void volume_slide_combined(voice_t *voice, __uint8_t data);
+
+static void portamento_up(voice_t *voice, __uint8_t data);
+
+static void portamento_down(voice_t *voice, __uint8_t data);
+
+static void target_portamento(voice_t *voice, __uint8_t data);
+
+static void arpeggiate(voice_t *voice, __uint8_t data);
+
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {
     handle_effects_every_tick(event, voice);
@@ -21,103 +35,19 @@ void handle_effects_every_tick(channel_event_t *event, voice_t *voice)
     {
         effect_t effect = event->effects[i];
         if (effect.command == VOLUME_SLIDE_UP)
-        {
-            if ((255 - voice->gain) > effect.data)
-                voice->gain += effect.data;
-            else
-                voice->gain = 255;
-        }
+            volume_slide_up(voice, effect.data);
         else if (effect.command == VOLUME_SLIDE_DOWN)
-        {
-            if (voice->gain >= effect.data)
-                voice->gain -= effect.data;
-            else
-                voice->gain = 0;
-        }
+            volume_slide_down(voice, effect.data);
         else if (effect.command == VOLUME_SLIDE)
-        {
-            __int8_t gain_adjust = effect.data << 1;
-            if (gain_adjust > 0)
-            {
-                if ((255 - voice->gain) > gain_adjust)
-                    voice->gain += gain_adjust;
-                else
-                    voice->gain = 255;
-            }
-            else if (gain_adjust < 0)
-            {
-                if (voice->gain >= gain_adjust)
-                    voice->gain += gain_adjust; /* is -ve value ! */
-                else
-                    voice->gain = 0;
-            }
-        }
+            volume_slide_combined(voice, effect.data);
         else if (effect.command == PORTAMENTO_UP)
-        {
-            voice->period -= effect.data;
-            if (voice->period < PERIOD_MIN)
-                voice->period = PERIOD_MIN;
-        }
+            portamento_up(voice, effect.data);
         else if (effect.command == PORTAMENTO_DOWN)
-        {
-            voice->period += effect.data;
-            if (voice->period > PERIOD_MAX)
-                voice->period = PERIOD_MAX;
-        }
+            portamento_down(voice, effect.data);
         else if (effect.command == TONE_PORTAMENTO)
-        {
-            if (effect.data)
-            {
-                voice->last_data_byte = effect.data;
-            }
-            else
-            {
-                effect.data = voice->last_data_byte;
-            }
-            if (voice->period < voice->target_period)
-            {
-                voice->period += effect.data;
-                if (voice->period > voice->target_period)
-                {
-                    voice->period = voice->target_period;
-                }
-            }
-            else
-            {
-                voice->period -= effect.data;
-                if (voice->period < voice->target_period)
-                {
-                    voice->period = voice->target_period;
-                }
-            }
-        }
+            target_portamento(voice, effect.data);
         else if (effect.command == ARPEGGIO)
-        {
-            int temporary_note;
-            if (voice->arpeggio_counter == 0)
-                temporary_note = voice->note_currently_playing;
-            else if (voice->arpeggio_counter == 1)
-            {
-                temporary_note = voice->note_currently_playing +
-                                 ((effect.data & 0xf0) >> 4);
-
-                if (0 > temporary_note || temporary_note > 61)
-                    temporary_note = voice->note_currently_playing;
-            }
-            else if (voice->arpeggio_counter == 2)
-            {
-                temporary_note = voice->note_currently_playing +
-                                 (effect.data & 0xf);
-
-                if (0 > temporary_note || temporary_note > 61)
-                    temporary_note = voice->note_currently_playing;
-            }
-
-            if (++(voice->arpeggio_counter) == 3)
-                voice->arpeggio_counter = 0;
-
-            voice->period = period_for_note(temporary_note);
-        }
+            arpeggiate(voice, effect.data);
     }
 }
 
@@ -183,4 +113,114 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
             }
         }
     }
+}
+
+static inline
+void volume_slide_up(voice_t *voice, __uint8_t data)
+{
+    if ((255 - voice->gain) > data)
+        voice->gain += data;
+    else
+        voice->gain = 255;
+}
+
+static inline
+void volume_slide_down(voice_t *voice, __uint8_t data)
+{
+    if (voice->gain >= data)
+        voice->gain -= data;
+    else
+        voice->gain = 0;
+}
+
+static inline
+void volume_slide_combined(voice_t *voice, __uint8_t data)
+{
+    __int8_t gain_adjust = data << 1;
+    if (gain_adjust > 0)
+    {
+        if ((255 - voice->gain) > gain_adjust)
+            voice->gain += gain_adjust;
+        else
+            voice->gain = 255;
+    }
+    else if (gain_adjust < 0)
+    {
+        if (voice->gain >= gain_adjust)
+            voice->gain += gain_adjust; /* is -ve value ! */
+        else
+            voice->gain = 0;
+    }
+}
+
+static inline
+void portamento_up(voice_t *voice, __uint8_t data)
+{
+    voice->period -= data;
+    if (voice->period < PERIOD_MIN)
+        voice->period = PERIOD_MIN;
+}
+
+static inline
+void portamento_down(voice_t *voice, __uint8_t data)
+{
+    voice->period += data;
+    if (voice->period > PERIOD_MAX)
+        voice->period = PERIOD_MAX;
+}
+
+static inline
+void target_portamento(voice_t *voice, __uint8_t data)
+{
+    if (data)
+    {
+        voice->last_data_byte = data;
+    }
+    else
+    {
+        data = voice->last_data_byte;
+    }
+    if (voice->period < voice->target_period)
+    {
+        voice->period += data;
+        if (voice->period > voice->target_period)
+        {
+            voice->period = voice->target_period;
+        }
+    }
+    else
+    {
+        voice->period -= data;
+        if (voice->period < voice->target_period)
+        {
+            voice->period = voice->target_period;
+        }
+    }
+}
+
+static inline
+void arpeggiate(voice_t *voice, __uint8_t data)
+{
+    int temporary_note;
+    if (voice->arpeggio_counter == 0)
+    {
+        temporary_note = voice->note_currently_playing;
+    }
+    else if (voice->arpeggio_counter == 1)
+    {
+        temporary_note = voice->note_currently_playing + ((data & 0xf0) >> 4);
+        if (0 > temporary_note || temporary_note > 61)
+            temporary_note = voice->note_currently_playing;
+    }
+    else if (voice->arpeggio_counter == 2)
+    {
+        temporary_note = voice->note_currently_playing + (data & 0xf);
+        if (0 > temporary_note || temporary_note > 61)
+            temporary_note = voice->note_currently_playing;
+    }
+    if (++(voice->arpeggio_counter) == 3)
+    {
+        voice->arpeggio_counter = 0;
+    }
+    voice->period = period_for_note(temporary_note);
 }
