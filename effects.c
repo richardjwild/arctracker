@@ -19,7 +19,9 @@ static void portamento_up(voice_t *voice, __uint8_t data);
 
 static void portamento_down(voice_t *voice, __uint8_t data);
 
-static void target_portamento(voice_t *voice, __uint8_t data);
+static void start_tone_portamento(voice_t *voice, __uint8_t data);
+
+static void tone_portamento(voice_t *voice);
 
 static void arpeggiate(voice_t *voice, __uint8_t data);
 
@@ -58,7 +60,7 @@ void handle_effects_every_tick(channel_event_t *event, voice_t *voice)
         else if (effect.command == PORTAMENTO_DOWN)
             portamento_down(voice, effect.data);
         else if (effect.command == TONE_PORTAMENTO)
-            target_portamento(voice, effect.data);
+            tone_portamento(voice);
         else if (effect.command == ARPEGGIO)
             arpeggiate(voice, effect.data);
     }
@@ -69,7 +71,9 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
     for (int i = 0; i < MAX_EFFECTS; i++)
     {
         effect_t effect = event->effects[i];
-        if (effect.command == SET_VOLUME_TRACKER)
+        if (effect.command == TONE_PORTAMENTO)
+            start_tone_portamento(voice, effect.data);
+        else if (effect.command == SET_VOLUME_TRACKER)
             set_volume_tracker(voice, effect.data);
         else if (effect.command == SET_VOLUME_DESKTOP_TRACKER)
             set_volume_desktop_tracker(voice, effect.data);
@@ -133,31 +137,26 @@ void portamento_down(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void target_portamento(voice_t *voice, __uint8_t data)
+void start_tone_portamento(voice_t *voice, __uint8_t data)
 {
     if (data)
+        voice->tone_portamento_speed = data;
+}
+
+static inline
+void tone_portamento(voice_t *voice)
+{
+    if (voice->period < voice->tone_portamento_target_period)
     {
-        voice->last_data_byte = data;
+        voice->period += voice->tone_portamento_speed;
+        if (voice->period > voice->tone_portamento_target_period)
+            voice->period = voice->tone_portamento_target_period;
     }
     else
     {
-        data = voice->last_data_byte;
-    }
-    if (voice->period < voice->target_period)
-    {
-        voice->period += data;
-        if (voice->period > voice->target_period)
-        {
-            voice->period = voice->target_period;
-        }
-    }
-    else
-    {
-        voice->period -= data;
-        if (voice->period < voice->target_period)
-        {
-            voice->period = voice->target_period;
-        }
+        voice->period -= voice->tone_portamento_speed;
+        if (voice->period < voice->tone_portamento_target_period)
+            voice->period = voice->tone_portamento_target_period;
     }
 }
 

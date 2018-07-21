@@ -132,7 +132,7 @@ void decode_next_events(const module_t *module, channel_event_t *decoded_events)
 
 void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice)
 {
-    voice->target_period = period_for_note(event.note + sample.transpose);
+    voice->tone_portamento_target_period = period_for_note(event.note + sample.transpose);
 }
 
 void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
@@ -143,7 +143,7 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
     voice->arpeggio_counter = 0;
     voice->note_currently_playing = event.note + sample.transpose;
     voice->period = period_for_note(voice->note_currently_playing);
-    voice->target_period = voice->period;
+    voice->tone_portamento_target_period = voice->period;
     voice->gain = sample.default_gain;
     voice->sample_repeats = sample.repeats;
     voice->repeat_length = sample.repeat_length;

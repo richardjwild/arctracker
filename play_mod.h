@@ -7,7 +7,8 @@
 typedef struct {
     double phase_accumulator;
     int period;
-    int target_period;
+    int tone_portamento_target_period;
+    int tone_portamento_speed;
     bool sample_repeats;
     long sample_end;
     long repeat_length;
@@ -16,7 +17,6 @@ typedef struct {
     bool channel_playing;
     int panning;
     unsigned char arpeggio_counter;
-    __uint8_t last_data_byte;
     int note_currently_playing;
 } voice_t;
 
