@@ -171,7 +171,7 @@ void arpeggiate(voice_t *voice, __uint8_t data)
             voice->note_playing + LOW_NYBBLE(data)
     };
     int arpeggio_note = chord[voice->arpeggio_counter % 3];
-    if (out_of_range(arpeggio_note))
+    if (NOTE_OUT_OF_RANGE(arpeggio_note))
     {
         arpeggio_note = voice->note_playing;
     }

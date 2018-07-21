@@ -7,6 +7,7 @@
 #define PERIOD_MIN 0x50
 #define LOWEST_NOTE 0
 #define HIGHEST_NOTE 61
+#define NOTE_OUT_OF_RANGE(note) (note) < LOWEST_NOTE || (note) > HIGHEST_NOTE
 
 bool out_of_range(int note);
 
