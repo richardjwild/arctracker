@@ -4,6 +4,8 @@
 #include "period.h"
 #include "gain.h"
 #include "arctracker.h"
+#include "bits.h"
+#include "play_mod.h"
 
 void handle_effects_every_tick(channel_event_t *event, voice_t *voice);
 
@@ -163,28 +165,18 @@ void tone_portamento(voice_t *voice)
 static inline
 void arpeggiate(voice_t *voice, __uint8_t data)
 {
-    int temporary_note;
-    if (voice->arpeggio_counter == 0)
+    int chord[] = {
+            voice->note_playing,
+            voice->note_playing + HIGH_NYBBLE(data),
+            voice->note_playing + LOW_NYBBLE(data)
+    };
+    int arpeggio_note = chord[voice->arpeggio_counter % 3];
+    if (out_of_range(arpeggio_note))
     {
-        temporary_note = voice->note_currently_playing;
+        arpeggio_note = voice->note_playing;
     }
-    else if (voice->arpeggio_counter == 1)
-    {
-        temporary_note = voice->note_currently_playing + ((data & 0xf0) >> 4);
-        if (0 > temporary_note || temporary_note > 61)
-            temporary_note = voice->note_currently_playing;
-    }
-    else if (voice->arpeggio_counter == 2)
-    {
-        temporary_note = voice->note_currently_playing + (data & 0xf);
-        if (0 > temporary_note || temporary_note > 61)
-            temporary_note = voice->note_currently_playing;
-    }
-    if (++(voice->arpeggio_counter) == 3)
-    {
-        voice->arpeggio_counter = 0;
-    }
-    voice->period = period_for_note(temporary_note);
+    voice->period = period_for_note(arpeggio_note);
+    voice->arpeggio_counter += 1;
 }
 
 static inline

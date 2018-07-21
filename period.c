@@ -22,9 +22,14 @@ const unsigned int periods[] = {
         0x0044, 0x0040, 0x003C, 0x0039,
         0x0036};
 
+bool out_of_range(int note)
+{
+    return (note < LOWEST_NOTE || note > HIGHEST_NOTE);
+}
+
 unsigned int period_for_note(int note)
 {
-    if (note < 0 || note > 61)
+    if (out_of_range(note))
         error("Note out of range");
     else
         return periods[note];
