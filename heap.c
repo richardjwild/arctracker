@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "heap.h"
 #include "error.h"
 
 void *allocate_array(int no_elements, size_t element_size)

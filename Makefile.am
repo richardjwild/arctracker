@@ -1,75 +1,174 @@
-CC=@CC@
-INSTALL=@INSTALL@
-CFLAGS=@CFLAGS@ -Winline
-LDFLAGS=@LDFLAGS@
-CLIBS=@LIBS@
-INSTALLDIR=@prefix@
+CC = @CC@
+INSTALL = @INSTALL@
+CFLAGS = @CFLAGS@ -Winline
+LDFLAGS = @LDFLAGS@
+CLIBS = @LIBS@
+INSTALLDIR = @prefix@
 
-arctracker: arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o effects.o clock.o sequence.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o arctracker arctracker.o configuration.o read_mod.o tracker_module.o desktop_tracker_module.o play_mod.o effects.o clock.o sequence.o console.o period.o write_audio.o resample.o mix.o gain.o oss.o alsa.o heap.o error.o $(CLIBS)
+EXECUTABLE = arctracker
 
-arctracker.o: arctracker.h audio_api.h arctracker.c
-	$(CC) $(CFLAGS) -c arctracker.c
+OBJS = \
+arctracker.o \
+configuration.o \
+read_mod.o \
+tracker_module.o \
+desktop_tracker_module.o \
+play_mod.o \
+effects.o \
+clock.o \
+sequence.o \
+console.o \
+period.o \
+write_audio.o \
+resample.o \
+mix.o \
+gain.o \
+oss.o \
+alsa.o \
+heap.o \
+error.o
 
-configuration.o: configuration.h error.h configuration.c
-	$(CC) $(CFLAGS) -c configuration.c
+REBUILDABLES = $(EXECUTABLE) $(OBJS)
 
-resample.o: resample.c heap.h
-	$(CC) $(CFLAGS) -c resample.c
+clean :
+	rm -f $(EXECUTABLE) $(OBJS) 2>/dev/null
+	@echo Clean done
 
-mix.o: mix.c
-	$(CC) $(CFLAGS) -c mix.c
+all-local : $(EXECUTABLE)
+	@echo All done
 
-heap.o: heap.c
-	$(CC) $(CFLAGS) -c heap.c
+install : arctracker
+	$(INSTALL) $(EXECUTABLE) $(INSTALLDIR)/bin/$(EXECUTABLE)
+	@echo Install done
 
-read_mod.o: arctracker.h read_mod.h read_mod.c
-	$(CC) $(CFLAGS) -c read_mod.c
+uninstall :
+	rm -f $(INSTALLDIR)/bin/$(EXECUTABLE) 2>/dev/null
+	@echo Uninstall done
 
-tracker_module.o: arctracker.h read_mod.h tracker_module.h error.h heap.h bits.h tracker_module.c
-	$(CC) $(CFLAGS) -c tracker_module.c
+$(EXECUTABLE) : $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CLIBS)
 
-desktop_tracker_module.o: arctracker.h read_mod.h desktop_tracker_module.h heap.h bits.h desktop_tracker_module.c
-	$(CC) $(CFLAGS) -c desktop_tracker_module.c
+%.o : %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-play_mod.o: arctracker.h mu_law.h resample.h clock.h play_mod.h play_mod.c
-	$(CC) $(CFLAGS) -c play_mod.c
+arctracker.o : arctracker.c \
+arctracker.h \
+configuration.h \
+read_mod.h \
+play_mod.h \
+oss.h \
+alsa.h \
+tracker_module.h \
+desktop_tracker_module.h
 
-effects.o: arctracker.h effects.h effects.c
-	$(CC) $(CFLAGS) -c effects.c
+configuration.o : configuration.c \
+configuration.h \
+error.h
 
-clock.o: clock.h clock.c
-	$(CC) $(CFLAGS) -c clock.c
+resample.o : resample.c \
+resample.h \
+arctracker.h \
+heap.h
 
-sequence.o: arctracker.h sequence.h sequence.c
-	$(CC) $(CFLAGS) -c sequence.c
+mix.o : mix.c \
+mix.h \
+arctracker.h \
+heap.h
 
-console.o: arctracker.h console.h bits.h console.c
-	$(CC) $(CFLAGS) -c console.c
+heap.o : heap.c \
+heap.h \
+error.h
 
-period.o: period.h error.h period.c
-	$(CC) $(CFLAGS) -c period.c
+read_mod.o : read_mod.c \
+read_mod.h \
+arctracker.h \
+config.h \
+error.h \
+configuration.h \
+heap.h
 
-write_audio.o: write_audio.h clock.h audio_api.h mix.h resample.h heap.h play_mod.h gain.h clock.h write_audio.c
-	$(CC) $(CFLAGS) -c write_audio.c
+tracker_module.o : tracker_module.c \
+tracker_module.h \
+arctracker.h \
+error.h \
+heap.h \
+read_mod.h \
+bits.h
 
-gain.o: gain.c
-	$(CC) $(CFLAGS) -c gain.c
+desktop_tracker_module.o : desktop_tracker_module.c \
+desktop_tracker_module.h \
+heap.h \
+read_mod.h \
+arctracker.h \
+bits.h
 
-oss.o: audio_api.h oss.c
-	$(CC) $(CFLAGS) -c oss.c
+play_mod.o : play_mod.c \
+play_mod.h \
+arctracker.h \
+config.h \
+error.h \
+write_audio.h \
+sequence.h \
+gain.h \
+period.h \
+configuration.h \
+console.h \
+clock.h \
+audio_api.h \
+heap.h \
+effects.h
 
-alsa.o: config.h audio_api.h alsa.c
-	$(CC) $(CFLAGS) -c alsa.c
+effects.o : effects.c \
+effects.h \
+arctracker.h \
+clock.h \
+sequence.h \
+period.h \
+gain.h \
+bits.h \
+play_mod.h
 
-error.o: error.h error.c
-	$(CC) $(CFLAGS) -c error.c
+clock.o : clock.c \
+clock.h
 
-clean:
-	rm -f ./arctracker ./*.o 2>/dev/null
+sequence.o : sequence.c \
+sequence.h \
+arctracker.h
 
-install: arctracker
-	$(INSTALL) ./arctracker $(INSTALLDIR)/bin/arctracker
+console.o : console.c \
+console.h \
+arctracker.h \
+bits.h \
+sequence.h
 
-uninstall:
-	rm -f $(INSTALLDIR)/bin/arctracker 2>/dev/null
+period.o : period.c \
+period.h \
+error.h
+
+write_audio.o : write_audio.c \
+write_audio.h \
+audio_api.h \
+mix.h \
+resample.h \
+heap.h \
+play_mod.h \
+gain.h \
+clock.h
+
+gain.o : gain.c \
+gain.h \
+mu_law.h \
+play_mod.h
+
+oss.o : oss.c \
+oss.h \
+error.h
+
+alsa.o : alsa.c \
+alsa.h \
+error.h \
+config.h \
+audio_api.h
+
+error.o : error.c \
+error.h
