@@ -7,15 +7,13 @@ INSTALLDIR = @prefix@
 
 TARGET = arctracker
 SRCDIR = src
-OBJDIR = objs
 BINDIR = bin
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
-OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+SOURCES  := $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
+INCLUDES := $(wildcard $(SRCDIR)/*.h) $(wildcard $(SRCDIR)/*/*.h)
 
 clean :
-	rm -f $(BINDIR)/$(TARGET) $(OBJECTS) 2>/dev/null
+	rm -f $(BINDIR)/$(TARGET) 2>/dev/null
 	@echo "Clean done"
 
 all-local : $(BINDIR)/$(TARGET)
@@ -29,10 +27,6 @@ uninstall :
 	rm -f $(INSTALLDIR)/bin/$(TARGET) 2>/dev/null
 	@echo "Uninstall done"
 
-$(BINDIR)/$(TARGET) : $(OBJECTS)
+$(BINDIR)/$(TARGET) : $(SOURCES) $(INCLUDES)
 	@if [ ! -d "$(BINDIR)" ]; then mkdir $(BINDIR); fi
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS) $(CLIBS)
-
-$(OBJECTS) : $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@if [ ! -d "$(OBJDIR)" ]; then mkdir $(OBJDIR); fi
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -o $@ $(SOURCES) $(LDFLAGS) $(CLIBS)

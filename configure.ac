@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 AC_INIT([Arctracker], [0.2.0], [richardwild76@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
-AC_CONFIG_SRCDIR([src/play_mod.c])
+AC_CONFIG_SRCDIR([src/arctracker.c])
 AC_CONFIG_HEADERS([src/config.h])
 
 # Checks for programs.
