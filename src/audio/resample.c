@@ -11,8 +11,8 @@ void calculate_phase_increments(const long sample_rate)
 
 void allocate_resample_buffer(const int no_of_frames)
 {
-    resample_buffer = (unsigned char *) allocate_array(no_of_frames, sizeof(unsigned char));
-    resample_buffer_bytes = no_of_frames * sizeof(unsigned char);
+    resample_buffer = (float *) allocate_array(no_of_frames, sizeof(float));
+    resample_buffer_bytes = no_of_frames * sizeof(float);
 }
 
 static inline
@@ -29,7 +29,7 @@ void loop_sample(voice_t *voice)
 
 void write_audio_to_resample_buffer(voice_t *voice, const long frames_to_write)
 {
-    const unsigned char *sample = voice->sample_pointer;
+    const float *sample = voice->sample_pointer;
     const double phase_increment = phase_increments[voice->period];
     for (long frame = 0; voice->channel_playing && frame < frames_to_write; frame++)
     {
@@ -51,7 +51,7 @@ void clear_resample_buffer()
     memset(resample_buffer, 0, resample_buffer_bytes);
 }
 
-unsigned char *resample(voice_t *voice, const long frames_to_write)
+float *resample(voice_t *voice, const long frames_to_write)
 {
     clear_resample_buffer();
     if (voice->channel_playing)

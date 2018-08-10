@@ -26,9 +26,7 @@ static void tone_portamento(voice_t *voice);
 
 static void arpeggiate(voice_t *voice, __uint8_t data);
 
-static void set_volume_tracker(voice_t *voice, __uint8_t data);
-
-static void set_volume_desktop_tracker(voice_t *voice, __uint8_t data);
+static void set_volume(voice_t *voice, __uint8_t data);
 
 static void set_tempo(__uint8_t data);
 
@@ -74,10 +72,8 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
         effect_t effect = event->effects[i];
         if (effect.command == TONE_PORTAMENTO)
             start_tone_portamento(voice, effect.data);
-        else if (effect.command == SET_VOLUME_TRACKER)
-            set_volume_tracker(voice, effect.data);
-        else if (effect.command == SET_VOLUME_DESKTOP_TRACKER)
-            set_volume_desktop_tracker(voice, effect.data);
+        else if (effect.command == SET_VOLUME)
+            set_volume(voice, effect.data);
         else if (effect.command == SET_TEMPO)
             set_tempo(effect.data);
         else if (effect.command == SET_TRACK_STEREO)
@@ -98,27 +94,27 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
 static inline
 void volume_slide_up(voice_t *voice, __uint8_t data)
 {
-    voice->gain += data;
-    if (voice->gain > LOGARITHMIC_GAIN_MAX)
-        voice->gain = LOGARITHMIC_GAIN_MAX;
+//    voice->gain += data;
+//    if (voice->gain > LOGARITHMIC_GAIN_MAX)
+//        voice->gain = LOGARITHMIC_GAIN_MAX;
 }
 
 static inline
 void volume_slide_down(voice_t *voice, __uint8_t data)
 {
-    voice->gain -= data;
-    if (voice->gain < LOGARITHMIC_GAIN_MIN)
-        voice->gain = LOGARITHMIC_GAIN_MIN;
+//    voice->gain -= data;
+//    if (voice->gain < LOGARITHMIC_GAIN_MIN)
+//        voice->gain = LOGARITHMIC_GAIN_MIN;
 }
 
 static inline
 void volume_slide_combined(voice_t *voice, __int8_t data)
 {
-    voice->gain += data << 1;
-    if (voice->gain > LOGARITHMIC_GAIN_MAX)
-        voice->gain = LOGARITHMIC_GAIN_MAX;
-    else if (voice->gain < LOGARITHMIC_GAIN_MIN)
-        voice->gain = LOGARITHMIC_GAIN_MIN;
+//    voice->gain += data << 1;
+//    if (voice->gain > LOGARITHMIC_GAIN_MAX)
+//        voice->gain = LOGARITHMIC_GAIN_MAX;
+//    else if (voice->gain < LOGARITHMIC_GAIN_MIN)
+//        voice->gain = LOGARITHMIC_GAIN_MIN;
 }
 
 static inline
@@ -179,15 +175,9 @@ void arpeggiate(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void set_volume_tracker(voice_t *voice, __uint8_t data)
+void set_volume(voice_t *voice, __uint8_t data)
 {
-    voice->gain = data;
-}
-
-static inline
-void set_volume_desktop_tracker(voice_t *voice, __uint8_t data)
-{
-    voice->gain = ((data + 1) << 1) - 1;
+    voice->gain = relative_gain(data);
 }
 
 static inline

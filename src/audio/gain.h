@@ -8,12 +8,16 @@
 
 typedef struct
 {
-    long l;
-    long r;
+    float l;
+    float r;
 } stereo_frame_t;
 
 void set_master_gain(int gain);
 
-stereo_frame_t apply_gain(unsigned char mu_law, voice_t *voice);
+void gain_goes_to(int maximum);
+
+float relative_gain(int absolute_gain);
+
+stereo_frame_t apply_gain(float pcm, voice_t *voice);
 
 #endif //ARCTRACKER_GAIN_H

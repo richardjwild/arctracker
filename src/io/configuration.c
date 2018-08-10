@@ -43,8 +43,8 @@ void read_configuration(int p_argc, char *p_argv[])
             {
                 p_argv[i] += strlen(ARG_VOLUME);
                 config.volume = atoi(p_argv[i]);
-                if (config.volume < 1 || config.volume > 255)
-                    error("Volume must be between 1 and 255");
+                if (config.volume < 1 || config.volume > 256)
+                    error("Volume must be between 1 and 256");
             }
             else if (i == (p_argc - 1))
             {

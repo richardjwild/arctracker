@@ -1,7 +1,9 @@
 #include "desktop_tracker_module.h"
+#include "../audio/gain.h"
 #include "../io/read_mod.h"
 #include "../memory/bits.h"
 #include "../memory/heap.h"
+#include "../pcm/mu_law.h"
 
 bool is_desktop_tracker_format(mapped_file_t);
 
@@ -65,7 +67,7 @@ command_t desktop_tracker_command(int code, __uint8_t data)
     switch (code)
     {
         case VOLUME_COMMAND_DSKT:
-            return SET_VOLUME_DESKTOP_TRACKER;
+            return SET_VOLUME;
         case SPEED_COMMAND_DSKT:
             return SET_TEMPO;
         case STEREO_COMMAND_DSKT:
@@ -154,6 +156,7 @@ static module_t create_module(dtt_file_format_t *file_format)
     module.initial_speed = file_format->initial_speed;
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
+    gain_goes_to(127);
     return module;
 }
 
@@ -183,7 +186,8 @@ static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples,
         samples[i].repeat_offset = file_samples[i].repeat_offset;
         samples[i].repeat_length = file_samples[i].repeat_length;
         samples[i].sample_length = file_samples[i].sample_length;
-        samples[i].sample_data = base_address + file_samples[i].sample_data_offset;
+        __uint8_t *sample_data_mu_law = base_address + file_samples[i].sample_data_offset;
+        samples[i].sample_data = convert_mu_law_to_linear_pcm(sample_data_mu_law, samples[i].sample_length);
         samples[i].repeats = (samples[i].repeat_length != 0);
     }
     return samples;

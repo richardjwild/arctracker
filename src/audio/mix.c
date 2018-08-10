@@ -2,6 +2,11 @@
 #include "../arctracker.h"
 #include "../memory/heap.h"
 
+static const __int16_t DIGITAL_PCM_MAX = 32767;
+static const __int16_t DIGITAL_PCM_MIN = -32768;
+static const float POSITIVE_0dBFS = 1.0;
+static const float NEGATIVE_0dBFS = -1.0;
+
 static const size_t stereo_frame_size = 2 * sizeof(__int16_t);
 static __int16_t *audio_buffer;
 
@@ -12,14 +17,14 @@ void allocate_audio_buffer(const int no_of_frames)
 }
 
 static inline
-__int16_t clip(const __int16_t sample)
+__int16_t clip(const float sample)
 {
     if (sample > POSITIVE_0dBFS)
-        return POSITIVE_0dBFS;
+        return DIGITAL_PCM_MAX;
     else if (sample < NEGATIVE_0dBFS)
-        return NEGATIVE_0dBFS;
+        return DIGITAL_PCM_MIN;
     else
-        return sample;
+        return (__int16_t) (sample * DIGITAL_PCM_MAX);
 }
 
 __int16_t *mix(const stereo_frame_t *channel_buffer, const int channels_to_mix)
@@ -28,7 +33,7 @@ __int16_t *mix(const stereo_frame_t *channel_buffer, const int channels_to_mix)
     int output_i = 0;
     for (int frame = 0; frame < audio_buffer_frames; frame++)
     {
-        __int16_t l_sample = 0, r_sample = 0;
+        float l_sample = 0.0, r_sample = 0.0;
         for (int channel = 0; channel < channels_to_mix; channel++)
         {
             const stereo_frame_t stereo_frame = channel_buffer[input_i++];

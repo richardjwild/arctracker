@@ -27,10 +27,9 @@ typedef enum
     VOLUME_SLIDE_DOWN,
     JUMP_TO_POSITION,
     SET_TEMPO,
-    SET_VOLUME_TRACKER,
+    SET_VOLUME,
     TONE_PORTAMENTO,
     VOLUME_SLIDE,
-    SET_VOLUME_DESKTOP_TRACKER,
     PORTAMENTO_FINE,
     SET_TEMPO_FINE,
     VOLUME_SLIDE_FINE
@@ -45,7 +44,7 @@ typedef struct
     int repeat_offset;
     int repeat_length;
     int transpose;
-    void *sample_data;
+    float *sample_data;
 } sample_t;
 
 typedef struct

@@ -1,5 +1,7 @@
 #include "tracker_module.h"
+#include "../audio/gain.h"
 #include "../io/error.h"
+#include "../pcm/mu_law.h"
 #include "../memory/heap.h"
 #include "../memory/bits.h"
 
@@ -50,7 +52,7 @@ command_t tracker_command(int code, __uint8_t data)
     switch (code)
     {
         case VOLUME_COMMAND_TRK:
-            return SET_VOLUME_TRACKER;
+            return SET_VOLUME;
         case SPEED_COMMAND_TRK:
             return SET_TEMPO;
         case STEREO_COMMAND_TRK:
@@ -104,6 +106,7 @@ module_t read_tracker_module(mapped_file_t file)
     void *chunk_address;
     long array_end = (long) file.addr + file.size;
     module_t module;
+    gain_goes_to(255);
 
     memset(&module, 0, sizeof(module_t));
     module.format = TRACKER_FORMAT;
@@ -244,7 +247,10 @@ sample_t *get_sample_info(void *array_start, long array_end)
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        sample->sample_data = chunk_address + CHUNK_HEADER_LENGTH;
+    {
+        __uint8_t *sample_data_mu_law = chunk_address + CHUNK_HEADER_LENGTH;
+        sample->sample_data = convert_mu_law_to_linear_pcm(sample_data_mu_law, sample->sample_length);
+    }
 
     // transpose all notes up an octave when playing a Tracker module
     // compensating for the greater chromatic range in a Desktop Tracker module

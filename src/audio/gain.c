@@ -1,33 +1,31 @@
 #include "gain.h"
-#include "mu_law.h"
+#include "../pcm/mu_law.h"
 
-static int master_gain;
+static float master_gain;
+static float maximum_gain;
 
-const unsigned char max_logarithmic_gain = 255;
-const long pan_l[] = {256, 212, 172, 128, 84, 44, 0};
-const long pan_r[] = {0, 44, 84, 128, 172, 212, 256};
+const float pan_l[] = {1.0, 0.828, 0.672, 0.5, 0.328, 0.172, 0.0};
+const float pan_r[] = {0.0, 0.172, 0.328, 0.5, 0.672, 0.828, 1.0};
 
 void set_master_gain(int gain)
 {
-    master_gain = gain;
+    master_gain = (float) gain / 256;
 }
 
-static inline
-unsigned char adjust_logarithmic_gain(const unsigned char mlaw, const unsigned char gain)
+void gain_goes_to(int maximum_gain_in)
 {
-    const unsigned char adjustment = max_logarithmic_gain - gain;
-    if (mlaw > adjustment)
-        return mlaw - adjustment;
-    else
-        return 0;
+    maximum_gain = (float) maximum_gain_in;
 }
 
-stereo_frame_t apply_gain(unsigned char mu_law, voice_t *voice)
+float relative_gain(int absolute_gain)
+{
+    return (float) absolute_gain / maximum_gain;
+}
+
+stereo_frame_t apply_gain(float pcm, voice_t *voice)
 {
     stereo_frame_t stereo_frame;
-    mu_law = adjust_logarithmic_gain(mu_law, voice->gain);
-    const long pcm = linear_pcm[mu_law];
-    stereo_frame.l = master_gain * pcm * pan_l[voice->panning] >> 16;
-    stereo_frame.r = master_gain * pcm * pan_r[voice->panning] >> 16;
+    stereo_frame.l = master_gain * pcm * pan_l[voice->panning];
+    stereo_frame.r = master_gain * pcm * pan_r[voice->panning];
     return stereo_frame;
 }
