@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include "heap.h"
-#include "../io/error.h"
+#include <memory/heap.h>
+#include <io/error.h>
 
 void *allocate_array(int no_elements, size_t element_size)
 {

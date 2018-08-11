@@ -1,6 +1,6 @@
-#include "mix.h"
-#include "../arctracker.h"
-#include "../memory/heap.h"
+#include <arctracker.h>
+#include <audio/mix.h>
+#include <memory/heap.h>
 
 static const __int16_t DIGITAL_PCM_MAX = 32767;
 static const __int16_t DIGITAL_PCM_MIN = -32768;

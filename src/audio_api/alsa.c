@@ -1,6 +1,6 @@
-#include "alsa.h"
-#include "../config.h"
-#include "../io/error.h"
+#include <audio_api/alsa.h>
+#include <config.h>
+#include <io/error.h>
 
 #ifndef HAVE_LIBASOUND
 

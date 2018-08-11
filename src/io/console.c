@@ -1,6 +1,6 @@
-#include "console.h"
-#include "../memory/bits.h"
-#include "../playroutine/sequence.h"
+#include <io/console.h>
+#include <memory/bits.h>
+#include <playroutine/sequence.h>
 
 static bool pianola_mode;
 static int pianola_tracks;

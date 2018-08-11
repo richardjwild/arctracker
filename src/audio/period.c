@@ -1,5 +1,5 @@
-#include "period.h"
-#include "../io/error.h"
+#include <audio/period.h>
+#include <io/error.h>
 
 static
 const unsigned int periods[] = {

@@ -7,7 +7,7 @@
 #define CHUNK_HEADER_LENGTH 8
 #define CHUNK_NOT_FOUND NULL
 
-#include "../arctracker.h"
+#include <arctracker.h>
 
 typedef struct {
     void *addr;

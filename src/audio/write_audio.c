@@ -1,10 +1,10 @@
-#include "write_audio.h"
-#include "audio_api.h"
-#include "mix.h"
-#include "resample.h"
-#include "gain.h"
-#include "../chrono/clock.h"
-#include "../memory/heap.h"
+#include <audio/write_audio.h>
+#include <audio/audio_api.h>
+#include <audio/mix.h>
+#include <audio/resample.h>
+#include <audio/gain.h>
+#include <chrono/clock.h>
+#include <memory/heap.h>
 
 static stereo_frame_t *channel_buffer;
 static audio_api_t audio_output;

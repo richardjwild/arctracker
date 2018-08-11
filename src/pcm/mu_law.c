@@ -1,6 +1,6 @@
-#include "mu_law.h"
-#include "../memory/bits.h"
-#include "../memory/heap.h"
+#include <pcm/mu_law.h>
+#include <memory/bits.h>
+#include <memory/heap.h>
 
 static int vidc_pcm_encoding[256];
 static float gain_conversion[256];

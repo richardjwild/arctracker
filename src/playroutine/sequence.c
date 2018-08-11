@@ -1,4 +1,4 @@
-#include "sequence.h"
+#include <playroutine/sequence.h>
 
 static int position_in_sequence;
 static int position_in_pattern;

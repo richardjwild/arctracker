@@ -1,7 +1,7 @@
-#include "../playroutine/play_mod.h"
-
 #ifndef ARCTRACKER_WRITE_AUDIO_H
 #define ARCTRACKER_WRITE_AUDIO_H
+
+#include <playroutine/play_mod.h>
 
 void initialise_audio(audio_api_t audio_output, long channels);
 

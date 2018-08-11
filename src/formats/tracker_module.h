@@ -1,8 +1,8 @@
 #ifndef ARCTRACKER_TRACKER_MODULE_H
 #define ARCTRACKER_TRACKER_MODULE_H
 
-#include "../arctracker.h"
-#include "../io/read_mod.h"
+#include <arctracker.h>
+#include <io/read_mod.h>
 
 #define TRACKER_FORMAT "TRACKER"
 

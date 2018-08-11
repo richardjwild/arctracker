@@ -1,8 +1,8 @@
-#include "../arctracker.h"
-#include "../io/read_mod.h"
-
 #ifndef ARCTRACKER_DESKTOP_TRACKER_MODULE_H
 #define ARCTRACKER_DESKTOP_TRACKER_MODULE_H
+
+#include <arctracker.h>
+#include <io/read_mod.h>
 
 #define DESKTOP_TRACKER_FORMAT "DESKTOP TRACKER"
 #define DTT_FILE_IDENTIFIER "DskT"

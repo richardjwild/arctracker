@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_CONSOLE_H
 #define ARCTRACKER_CONSOLE_H
 
-#include "../arctracker.h"
+#include <arctracker.h>
 
 void configure_console(bool pianola, const module_t *module);
 

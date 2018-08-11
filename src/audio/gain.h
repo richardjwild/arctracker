@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_GAIN_H
 #define ARCTRACKER_GAIN_H
 
-#include "../playroutine/play_mod.h"
+#include <playroutine/play_mod.h>
 
 #define LOGARITHMIC_GAIN_MAX 255
 #define LOGARITHMIC_GAIN_MIN 0

@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_OSS_H
 #define ARCTRACKER_OSS_H
 
-#include "../audio/audio_api.h"
+#include <audio/audio_api.h>
 
 #define DEVICE_NAME "/dev/dsp"
 

@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_ALSA_H
 #define ARCTRACKER_ALSA_H
 
-#include "../audio/audio_api.h"
+#include <audio/audio_api.h>
 
 #define PCM_DEVICE "plughw:0,0"
 

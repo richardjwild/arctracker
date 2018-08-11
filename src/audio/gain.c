@@ -1,5 +1,5 @@
-#include "gain.h"
-#include "../pcm/mu_law.h"
+#include <audio/gain.h>
+#include <pcm/mu_law.h>
 
 const int MAXIMUM_GAIN = 255;
 

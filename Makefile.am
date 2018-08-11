@@ -1,13 +1,13 @@
-CC = @CC@
-INSTALL = @INSTALL@
-CFLAGS = @CFLAGS@ -Winline
-LDFLAGS = @LDFLAGS@
-CLIBS = @LIBS@
-INSTALLDIR = @prefix@
-
 TARGET = arctracker
 SRCDIR = src
 BINDIR = bin
+
+CC = @CC@
+INSTALL = @INSTALL@
+CFLAGS = @CFLAGS@ -Winline -I $(SRCDIR)
+LDFLAGS = @LDFLAGS@
+CLIBS = @LIBS@
+INSTALLDIR = @prefix@
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) $(wildcard $(SRCDIR)/*/*.h)
@@ -29,4 +29,4 @@ uninstall :
 
 $(BINDIR)/$(TARGET) : $(SOURCES) $(INCLUDES)
 	@if [ ! -d "$(BINDIR)" ]; then mkdir $(BINDIR); fi
-	$(CC) -o $@ $(SOURCES) $(LDFLAGS) $(CLIBS)
+	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS) $(CLIBS)

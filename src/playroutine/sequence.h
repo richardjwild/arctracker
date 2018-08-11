@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_SEQUENCE_H
 #define ARCTRACKER_SEQUENCE_H
 
-#include "../arctracker.h"
+#include <arctracker.h>
 
 void initialise_sequence(module_t *module);
 

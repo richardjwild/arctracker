@@ -1,9 +1,9 @@
-#include "desktop_tracker_module.h"
-#include "../audio/gain.h"
-#include "../io/read_mod.h"
-#include "../memory/bits.h"
-#include "../memory/heap.h"
-#include "../pcm/mu_law.h"
+#include <formats/desktop_tracker_module.h>
+#include <audio/gain.h>
+#include <io/read_mod.h>
+#include <memory/bits.h>
+#include <memory/heap.h>
+#include <pcm/mu_law.h>
 
 bool is_desktop_tracker_format(mapped_file_t);
 

@@ -2,8 +2,8 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/unistd.h>
-#include "oss.h"
-#include "../io/error.h"
+#include <audio_api/oss.h>
+#include <io/error.h>
 
 static int audio_handle;
 

@@ -1,11 +1,11 @@
-#include "arctracker.h"
-#include "audio_api/alsa.h"
-#include "audio_api/oss.h"
-#include "formats/desktop_tracker_module.h"
-#include "formats/tracker_module.h"
-#include "io/configuration.h"
-#include "io/read_mod.h"
-#include "playroutine/play_mod.h"
+#include <arctracker.h>
+#include <audio_api/alsa.h>
+#include <audio_api/oss.h>
+#include <formats/desktop_tracker_module.h>
+#include <formats/tracker_module.h>
+#include <io/configuration.h>
+#include <io/read_mod.h>
+#include <playroutine/play_mod.h>
 
 audio_api_t initialise_audio_api();
 

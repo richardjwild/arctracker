@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_PERIOD_H
 #define ARCTRACKER_PERIOD_H
 
-#include "../arctracker.h"
+#include <arctracker.h>
 
 #define PERIOD_MAX 0x3f0
 #define PERIOD_MIN 0x50

@@ -1,16 +1,16 @@
-#include "play_mod.h"
-#include "sequence.h"
-#include "../config.h"
-#include "../audio/gain.h"
-#include "../pcm/mu_law.h"
-#include "../audio/period.h"
-#include "../audio/write_audio.h"
-#include "../chrono/clock.h"
-#include "../io/error.h"
-#include "../io/configuration.h"
-#include "../io/console.h"
-#include "../memory/heap.h"
-#include "../playroutine/effects.h"
+#include <playroutine/play_mod.h>
+#include <playroutine/sequence.h>
+#include <config.h>
+#include <audio/gain.h>
+#include <pcm/mu_law.h>
+#include <audio/period.h>
+#include <audio/write_audio.h>
+#include <chrono/clock.h>
+#include <io/error.h>
+#include <io/configuration.h>
+#include <io/console.h>
+#include <memory/heap.h>
+#include <playroutine/effects.h>
 
 voice_t *initialise_voices(const module_t *module);
 
