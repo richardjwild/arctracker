@@ -4,7 +4,7 @@
 
 void calculate_phase_increments(const long sample_rate)
 {
-    phase_increments = (double *) allocate_array(PITCH_QUANTA, sizeof(double));
+    phase_increments = (float *) allocate_array(PITCH_QUANTA, sizeof(float));
     for (int period = 1; period <= PITCH_QUANTA; period++)
         phase_increments[period - 1] = PHASE_INCREMENT_CONVERSION / (period * sample_rate);
 }
@@ -27,13 +27,23 @@ void loop_sample(voice_t *voice)
     voice->phase_accumulator -= voice->repeat_length;
 }
 
+static inline
+float interpolate(const float *sample, const float phase_accumulator)
+{
+    long frame_from = (long) phase_accumulator;
+    float sample_from = sample[frame_from];
+    float distance = sample[frame_from + 1] - sample_from;
+    float fraction = phase_accumulator - frame_from;
+    return sample_from + (distance * fraction);
+}
+
 void write_audio_to_resample_buffer(voice_t *voice, const long frames_to_write)
 {
     const float *sample = voice->sample_pointer;
-    const double phase_increment = phase_increments[voice->period];
+    const float phase_increment = phase_increments[voice->period];
     for (long frame = 0; voice->channel_playing && frame < frames_to_write; frame++)
     {
-        resample_buffer[frame] = sample[(long) voice->phase_accumulator];
+        resample_buffer[frame] = interpolate(sample, voice->phase_accumulator);
         voice->phase_accumulator += phase_increment;
         if (end_of_sample(voice))
         {

@@ -5,7 +5,7 @@
 #include "../audio/audio_api.h"
 
 typedef struct {
-    double phase_accumulator;
+    float phase_accumulator;
     int period;
     int tone_portamento_target_period;
     int tone_portamento_speed;
