@@ -7,9 +7,9 @@
 #include "../playroutine/play_mod.h"
 #include "../playroutine/sequence.h"
 
-void handle_effects_every_tick(channel_event_t *event, voice_t *voice);
+void handle_effects_off_event(channel_event_t *event, voice_t *voice);
 
-void handle_effects_on_new_event(channel_event_t *event, voice_t *voice);
+void handle_effects_on_event(channel_event_t *event, voice_t *voice);
 
 static void volume_slide_up(voice_t *voice, __uint8_t data);
 
@@ -39,34 +39,13 @@ static void portamento_fine(voice_t *voice, __uint8_t data);
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {
-    handle_effects_every_tick(event, voice);
     if (on_event)
-        handle_effects_on_new_event(event, voice);
+        handle_effects_on_event(event, voice);
+    else
+        handle_effects_off_event(event, voice);
 }
 
-void handle_effects_every_tick(channel_event_t *event, voice_t *voice)
-{
-    for (int i = 0; i < MAX_EFFECTS; i++)
-    {
-        effect_t effect = event->effects[i];
-        if (effect.command == VOLUME_SLIDE_UP)
-            volume_slide_up(voice, effect.data);
-        else if (effect.command == VOLUME_SLIDE_DOWN)
-            volume_slide_down(voice, effect.data);
-        else if (effect.command == VOLUME_SLIDE)
-            volume_slide_combined(voice, effect.data);
-        else if (effect.command == PORTAMENTO_UP)
-            portamento_up(voice, effect.data);
-        else if (effect.command == PORTAMENTO_DOWN)
-            portamento_down(voice, effect.data);
-        else if (effect.command == TONE_PORTAMENTO)
-            tone_portamento(voice);
-        else if (effect.command == ARPEGGIO)
-            arpeggiate(voice, effect.data);
-    }
-}
-
-void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
+void handle_effects_on_event(channel_event_t *event, voice_t *voice)
 {
     for (int i = 0; i < MAX_EFFECTS; i++)
     {
@@ -89,6 +68,28 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
             portamento_fine(voice, effect.data);
         else if (effect.command == VOLUME_SLIDE_FINE)
             volume_slide_combined(voice, effect.data);
+    }
+}
+
+void handle_effects_off_event(channel_event_t *event, voice_t *voice)
+{
+    for (int i = 0; i < MAX_EFFECTS; i++)
+    {
+        effect_t effect = event->effects[i];
+        if (effect.command == VOLUME_SLIDE_UP)
+            volume_slide_up(voice, effect.data);
+        else if (effect.command == VOLUME_SLIDE_DOWN)
+            volume_slide_down(voice, effect.data);
+        else if (effect.command == VOLUME_SLIDE)
+            volume_slide_combined(voice, effect.data);
+        else if (effect.command == PORTAMENTO_UP)
+            portamento_up(voice, effect.data);
+        else if (effect.command == PORTAMENTO_DOWN)
+            portamento_down(voice, effect.data);
+        else if (effect.command == TONE_PORTAMENTO)
+            tone_portamento(voice);
+        else if (effect.command == ARPEGGIO)
+            arpeggiate(voice, effect.data);
     }
 }
 
