@@ -3,6 +3,7 @@
 #include "../audio/period.h"
 #include "../chrono/clock.h"
 #include "../memory/bits.h"
+#include "../pcm/mu_law.h"
 #include "../playroutine/play_mod.h"
 #include "../playroutine/sequence.h"
 
@@ -94,27 +95,27 @@ void handle_effects_on_new_event(channel_event_t *event, voice_t *voice)
 static inline
 void volume_slide_up(voice_t *voice, __uint8_t data)
 {
-//    voice->gain += data;
-//    if (voice->gain > LOGARITHMIC_GAIN_MAX)
-//        voice->gain = LOGARITHMIC_GAIN_MAX;
+    voice->gain += data;
+    if (voice->gain > LOGARITHMIC_GAIN_MAX)
+        voice->gain = LOGARITHMIC_GAIN_MAX;
 }
 
 static inline
 void volume_slide_down(voice_t *voice, __uint8_t data)
 {
-//    voice->gain -= data;
-//    if (voice->gain < LOGARITHMIC_GAIN_MIN)
-//        voice->gain = LOGARITHMIC_GAIN_MIN;
+    voice->gain -= data;
+    if (voice->gain < LOGARITHMIC_GAIN_MIN)
+        voice->gain = LOGARITHMIC_GAIN_MIN;
 }
 
 static inline
 void volume_slide_combined(voice_t *voice, __int8_t data)
 {
-//    voice->gain += data << 1;
-//    if (voice->gain > LOGARITHMIC_GAIN_MAX)
-//        voice->gain = LOGARITHMIC_GAIN_MAX;
-//    else if (voice->gain < LOGARITHMIC_GAIN_MIN)
-//        voice->gain = LOGARITHMIC_GAIN_MIN;
+    voice->gain += data << 1;
+    if (voice->gain > LOGARITHMIC_GAIN_MAX)
+        voice->gain = LOGARITHMIC_GAIN_MAX;
+    else if (voice->gain < LOGARITHMIC_GAIN_MIN)
+        voice->gain = LOGARITHMIC_GAIN_MIN;
 }
 
 static inline
@@ -177,7 +178,7 @@ void arpeggiate(voice_t *voice, __uint8_t data)
 static inline
 void set_volume(voice_t *voice, __uint8_t data)
 {
-    voice->gain = relative_gain(data);
+    voice->gain = data;
 }
 
 static inline

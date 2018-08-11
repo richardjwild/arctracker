@@ -13,7 +13,7 @@ typedef struct {
     long sample_end;
     long repeat_length;
     float *sample_pointer;
-    float gain;
+    int gain;
     bool channel_playing;
     int panning;
     int arpeggio_counter;

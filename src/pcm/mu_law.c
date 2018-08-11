@@ -3,11 +3,25 @@
 #include "../memory/heap.h"
 
 static int vidc_pcm_encoding[256];
+static float gain_conversion[256];
 static bool encoding_done = false;
 const __uint16_t MULAW_BIAS = 33;
 const float EXPANDED_MAX = 8097.0;
+const float GAIN_MAX = 8031.0;
 
 int expand_mu_law(__int8_t mu_law);
+
+void calculate_logarithmic_gain()
+{
+    for (int i = 0; i <= 127; i++)
+    {
+        gain_conversion[(i * 2) + 1] = expand_mu_law(255 - i) / GAIN_MAX;
+        if (i >= 1)
+            gain_conversion[i * 2] = (gain_conversion[(i * 2) - 1] + gain_conversion[(i * 2) + 1]) / 2;
+    }
+    gain_conversion[0] = 0.0;
+    gain_conversion[1] = gain_conversion[2] / 2;
+}
 
 void calculate_pcm_encoding()
 {
@@ -19,7 +33,21 @@ void calculate_pcm_encoding()
             vidc_pcm_encoding[(i * 2) + 1] = expand_mu_law(127 - i) * -1;
         }
         encoding_done = true;
+        calculate_logarithmic_gain();
     }
+}
+
+int expand_mu_law(__int8_t mu_law)
+{
+    __int8_t number = ~mu_law;
+    int sign = (number & 0x80) ? -1 : 1;
+    if (sign == -1)
+    {
+        number &= ~(1 << 7);
+    }
+    int position = HIGH_NYBBLE(number) + 5;
+    return sign * ((1 << position) | (LOW_NYBBLE(number) << (position - 4))
+                   | (1 << (position - 5))) - MULAW_BIAS;
 }
 
 float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
@@ -34,15 +62,7 @@ float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int n
     return linear;
 }
 
-int expand_mu_law(__int8_t mu_law)
+float convert_to_linear_gain(const int logarithmic_gain)
 {
-    __int8_t number = ~mu_law;
-    int sign = (number & 0x80) ? -1 : 1;
-    if (sign == -1)
-    {
-        number &= ~(1 << 7);
-    }
-    int position = HIGH_NYBBLE(number) + 5;
-    return sign * ((1 << position) | (LOW_NYBBLE(number) << (position - 4))
-                   | (1 << (position - 5))) - MULAW_BIAS;
+    return gain_conversion[logarithmic_gain];
 }
