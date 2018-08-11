@@ -182,7 +182,7 @@ static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples,
     {
         strncpy(samples[i].name, file_samples[i].name, MAX_LEN_SAMPLENAME_DSKT);
         samples[i].transpose = 26 - file_samples[i].note;
-        samples[i].default_gain = (file_samples[i].volume * (unsigned int) 2) + 1;
+        samples[i].default_gain = file_samples[i].volume;
         samples[i].repeat_offset = file_samples[i].repeat_offset;
         samples[i].repeat_length = file_samples[i].repeat_length;
         samples[i].sample_length = file_samples[i].sample_length;

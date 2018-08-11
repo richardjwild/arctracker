@@ -105,7 +105,7 @@ void silence_channel(voice_t *voice)
 inline
 void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
 {
-    voice->gain = sample.default_gain;
+    voice->gain = relative_gain(sample.default_gain);
 }
 
 voice_t *initialise_voices(const module_t *module)
@@ -143,7 +143,7 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
     voice->note_playing = event.note + sample.transpose;
     voice->period = period_for_note(voice->note_playing);
     voice->tone_portamento_target_period = voice->period;
-    voice->gain = sample.default_gain;
+    voice->gain = relative_gain(sample.default_gain);
     voice->sample_repeats = sample.repeats;
     voice->repeat_length = sample.repeat_length;
     voice->sample_end = voice->sample_repeats

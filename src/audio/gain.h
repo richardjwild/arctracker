@@ -14,7 +14,9 @@ typedef struct
 
 void set_master_gain(int gain);
 
-void gain_goes_to(int maximum);
+void gain_goes_to(int eleven);
+
+int relative_gain(int absolute_gain);
 
 stereo_frame_t apply_gain(float pcm, voice_t *voice);
 

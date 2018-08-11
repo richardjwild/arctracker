@@ -178,7 +178,7 @@ void arpeggiate(voice_t *voice, __uint8_t data)
 static inline
 void set_volume(voice_t *voice, __uint8_t data)
 {
-    voice->gain = data;
+    voice->gain = relative_gain(data);
 }
 
 static inline
