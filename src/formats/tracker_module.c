@@ -247,6 +247,8 @@ sample_t *get_sample_info(void *array_start, long array_end)
         int repeat_length = read_word(chunk_address + CHUNK_HEADER_LENGTH);
         if (repeat_length == 2 && sample->repeat_offset != 0)
             sample->repeat_length = sample->sample_length - sample->repeat_offset;
+        else if (repeat_length + sample->repeat_offset > sample->sample_length)
+            sample->repeat_length = sample->sample_length - sample->repeat_offset;
         else
             sample->repeat_length = repeat_length;
     }

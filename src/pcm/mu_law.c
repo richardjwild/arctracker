@@ -54,12 +54,13 @@ void calculate_pcm_encoding()
 float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
 {
     calculate_pcm_encoding();
-    float *linear = allocate_array(no_samples, sizeof(float));
+    float *linear = allocate_array(no_samples + 1, sizeof(float));
     for (int i = 0; i < no_samples; i++)
     {
         __uint8_t encoded = mu_law_encoded[i];
         linear[i] = vidc_pcm_encoding[encoded] / EXPANDED_MAX;
     }
+    linear[no_samples] = 0.0;
     return linear;
 }
 
