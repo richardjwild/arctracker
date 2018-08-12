@@ -92,28 +92,29 @@ void write_info(const module_t module)
     if (configuration().info)
     {
         printf("\n--------------------------------- Song Details ---------------------------------\n\n");
-        printf("Channels:        %d\n"
-               "Initial speed:   %d\n"
-               "Length:          %d\n"
-               "Patterns:        %d\n"
-               "Samples:         %d\n",
+        printf("Channels        : %d\n"
+               "Initial speed   : %d\n"
+               "Length          : %d\n"
+               "Patterns        : %d\n"
+               "Samples         : %d\n",
                module.num_channels,
                module.initial_speed,
                module.tune_length,
                module.num_patterns,
                module.num_samples);
-        printf("Initial panning: ");
+        printf("Initial panning : ");
         for (int channel = 0; channel < module.num_channels; channel++)
         {
             printf("[%d:%s] ",
                    module.initial_panning[channel],
                    get_panning(module.initial_panning[channel] - 1));
         }
-        for (int group = 0; group < module.tune_length; group += 8)
+        printf("\nSequence        :");
+        for (int group = 0; group < module.tune_length; group += 10)
         {
-            printf("\n%-17s", (group == 0 ? "Sequence:" : ""));
-            for (int position = group; position < (group + 8) && position < module.tune_length; position++)
-                printf("[%02d-%d] ",
+            printf("\n");
+            for (int position = group; position < (group + 10) && position < module.tune_length; position++)
+                printf("[%02d:%d] ",
                        module.sequence[position],
                        module.pattern_lengths[module.sequence[position]]);
         }
