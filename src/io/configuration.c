@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <memory.h>
 #include <stdlib.h>
-#include <io/configuration.h>
-#include <io/error.h>
+#include "configuration.h"
+#include "error.h"
 
 static args_t config = {
         .volume = 64,

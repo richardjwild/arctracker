@@ -1,4 +1,4 @@
-#include <chrono/clock.h>
+#include "clock.h"
 
 static int ticks_per_event;
 static int sample_rate;

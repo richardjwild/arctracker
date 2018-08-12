@@ -1,4 +1,4 @@
-#include <audio/period.h>
+#include "period.h"
 #include <io/error.h>
 
 static

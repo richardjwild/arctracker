@@ -1,4 +1,4 @@
-#include <formats/desktop_tracker_module.h>
+#include "desktop_tracker_module.h"
 #include <audio/gain.h>
 #include <io/read_mod.h>
 #include <memory/bits.h>

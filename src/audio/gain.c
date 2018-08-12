@@ -1,4 +1,4 @@
-#include <audio/gain.h>
+#include "gain.h"
 #include <pcm/mu_law.h>
 
 // 1024 determined by trial and error to give acceptable volume

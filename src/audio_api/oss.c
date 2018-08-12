@@ -1,8 +1,8 @@
+#include "oss.h"
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/unistd.h>
-#include <audio_api/oss.h>
 #include <io/error.h>
 
 static int audio_handle;

@@ -1,5 +1,6 @@
-#include <playroutine/play_mod.h>
-#include <playroutine/sequence.h>
+#include "play_mod.h"
+#include "sequence.h"
+#include "effects.h"
 #include <config.h>
 #include <audio/gain.h>
 #include <pcm/mu_law.h>
@@ -10,8 +11,6 @@
 #include <io/configuration.h>
 #include <io/console.h>
 #include <memory/heap.h>
-#include <playroutine/effects.h>
-#include "play_mod.h"
 
 voice_t *initialise_voices(const module_t *module);
 

@@ -1,10 +1,10 @@
+#include "read_mod.h"
+#include "configuration.h"
+#include "console.h"
+#include "error.h"
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <config.h>
-#include <io/read_mod.h>
-#include <io/configuration.h>
-#include <io/console.h>
-#include <io/error.h>
 #include <memory/heap.h>
 
 mapped_file_t load_file(char *filename);

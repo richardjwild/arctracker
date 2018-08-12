@@ -1,5 +1,5 @@
-#include <io/console.h>
-#include <io/configuration.h>
+#include "console.h"
+#include "configuration.h"
 #include <memory/bits.h>
 #include <playroutine/sequence.h>
 

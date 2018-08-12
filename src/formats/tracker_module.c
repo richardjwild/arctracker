@@ -1,4 +1,4 @@
-#include <formats/tracker_module.h>
+#include "tracker_module.h"
 #include <audio/gain.h>
 #include <io/error.h>
 #include <pcm/mu_law.h>

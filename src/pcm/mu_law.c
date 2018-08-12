@@ -1,4 +1,4 @@
-#include <pcm/mu_law.h>
+#include "mu_law.h"
 #include <memory/bits.h>
 #include <memory/heap.h>
 

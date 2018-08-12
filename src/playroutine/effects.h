@@ -2,7 +2,7 @@
 #define ARCTRACKER_EFFECTS_H
 
 #include <arctracker.h>
-#include <playroutine/play_mod.h>
+#include "play_mod.h"
 
 #define MAX_EFFECTS 4
 

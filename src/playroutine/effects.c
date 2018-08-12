@@ -1,12 +1,10 @@
-#include <playroutine/effects.h>
+#include "effects.h"
+#include "sequence.h"
 #include <audio/gain.h>
 #include <audio/period.h>
 #include <chrono/clock.h>
 #include <memory/bits.h>
 #include <pcm/mu_law.h>
-#include <playroutine/play_mod.h>
-#include <playroutine/sequence.h>
-#include "play_mod.h"
 
 void handle_effects_off_event(channel_event_t *event, voice_t *voice);
 

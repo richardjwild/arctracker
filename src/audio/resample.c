@@ -1,5 +1,4 @@
-#include <arctracker.h>
-#include <audio/resample.h>
+#include "resample.h"
 #include <memory/heap.h>
 
 void calculate_phase_increments(const long sample_rate)
