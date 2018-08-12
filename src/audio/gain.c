@@ -1,27 +1,33 @@
 #include <audio/gain.h>
 #include <pcm/mu_law.h>
 
-const int MAXIMUM_GAIN = 255;
+// 1024 determined by trial and error to give acceptable volume
+// with reasonably low likelihood of clipping
+const float MASTER_GAIN_FACTOR = 1024.0;
+static float master_gain;
+
+const int INTERNAL_GAIN_MAXIMUM = 255;
+static int module_gain_maximum;
 
 const float PAN_L[] = {1.0, 0.828, 0.672, 0.5, 0.328, 0.172, 0.0};
 const float PAN_R[] = {0.0, 0.172, 0.328, 0.5, 0.672, 0.828, 1.0};
 
-static int module_maximum_gain;
-static float master_gain;
-
 void set_master_gain(int gain)
 {
-    master_gain = (float) gain / 256;
+    master_gain = gain / MASTER_GAIN_FACTOR;
 }
 
-void gain_goes_to(int eleven)
+// Tracker module volume max: 255
+// Desktop Tracker module volume max: 127
+void gain_goes_to(int maximum_value)
 {
-    module_maximum_gain = eleven;
+    module_gain_maximum = maximum_value;
 }
 
-int relative_gain(int absolute_gain)
+// Convert module volume values to common internal gain value
+int relative_gain(int value)
 {
-    return MAXIMUM_GAIN * absolute_gain / module_maximum_gain;
+    return value * INTERNAL_GAIN_MAXIMUM / module_gain_maximum;
 }
 
 stereo_frame_t apply_gain(float pcm, voice_t *voice)

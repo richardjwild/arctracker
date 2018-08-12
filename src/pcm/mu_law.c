@@ -4,18 +4,32 @@
 
 static int vidc_pcm_encoding[256];
 static float gain_conversion[256];
-static bool encoding_done = false;
-const __uint16_t MULAW_BIAS = 33;
-const float EXPANDED_MAX = 8097.0;
-const float GAIN_MAX = 8031.0;
 
-int expand_mu_law(__int8_t mu_law);
+static bool encoding_done = false;
+
+const float EXPANDED_MAX = 32124.0;
+const float GAIN_MAX = 8031.0;
+const int BIAS = 0x84;
+const unsigned int SIGN_BIT = 0x80;
+const unsigned int QUANTIZATION_BITS_MASK = 0xf;
+const unsigned int SEGMENT_SHIFT = 4;
+const unsigned int SEGMENT_NUMBER_MASK = 0x70;
+
+int mu_law_to_linear(__int8_t mu_law)
+{
+    int normal_mu_law = ~mu_law;
+    int biased_quantization_bits = ((normal_mu_law & QUANTIZATION_BITS_MASK) << 3) + BIAS;
+    unsigned int segment_number = ((unsigned) normal_mu_law & SEGMENT_NUMBER_MASK) >> SEGMENT_SHIFT;
+    return normal_mu_law & SIGN_BIT
+            ? (BIAS - (biased_quantization_bits << segment_number))
+            : ((biased_quantization_bits << segment_number) - BIAS);
+}
 
 void calculate_logarithmic_gain()
 {
     for (int i = 0; i <= 127; i++)
     {
-        gain_conversion[(i * 2) + 1] = expand_mu_law(255 - i) / GAIN_MAX;
+        gain_conversion[(i * 2) + 1] = mu_law_to_linear(255 - i) / GAIN_MAX;
         if (i >= 1)
             gain_conversion[i * 2] = (gain_conversion[(i * 2) - 1] + gain_conversion[(i * 2) + 1]) / 2;
     }
@@ -29,25 +43,12 @@ void calculate_pcm_encoding()
     {
         for (int i = 0; i <= 127; i++)
         {
-            vidc_pcm_encoding[i * 2] = expand_mu_law(127 - i);
-            vidc_pcm_encoding[(i * 2) + 1] = expand_mu_law(127 - i) * -1;
+            vidc_pcm_encoding[i * 2] = mu_law_to_linear(127 - i);
+            vidc_pcm_encoding[(i * 2) + 1] = mu_law_to_linear(127 - i) * -1;
         }
         encoding_done = true;
         calculate_logarithmic_gain();
     }
-}
-
-int expand_mu_law(__int8_t mu_law)
-{
-    __int8_t number = ~mu_law;
-    int sign = (number & 0x80) ? -1 : 1;
-    if (sign == -1)
-    {
-        number &= ~(1 << 7);
-    }
-    int position = HIGH_NYBBLE(number) + 5;
-    return sign * ((1 << position) | (LOW_NYBBLE(number) << (position - 4))
-                   | (1 << (position - 5))) - MULAW_BIAS;
 }
 
 float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
