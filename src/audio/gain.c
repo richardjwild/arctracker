@@ -6,7 +6,6 @@
 const float MASTER_GAIN_FACTOR = 1024.0;
 static float master_gain;
 
-const int INTERNAL_GAIN_MAXIMUM = 255;
 static int module_gain_maximum;
 
 const float PAN_L[] = {1.0, 0.828, 0.672, 0.5, 0.328, 0.172, 0.0};

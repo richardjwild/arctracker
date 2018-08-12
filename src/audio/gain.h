@@ -5,6 +5,7 @@
 
 #define LOGARITHMIC_GAIN_MAX 255
 #define LOGARITHMIC_GAIN_MIN 0
+#define INTERNAL_GAIN_MAXIMUM 255
 
 typedef struct
 {
