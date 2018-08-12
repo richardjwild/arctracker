@@ -2,6 +2,7 @@
 #include "configuration.h"
 #include <memory/bits.h>
 #include <playroutine/sequence.h>
+#include <arctracker.h>
 
 static bool pianola_mode;
 static int pianola_tracks;
@@ -116,21 +117,22 @@ void write_info(const module_t module)
                        module.sequence[position],
                        module.pattern_lengths[module.sequence[position]]);
         }
-        printf("\n\n-------------------------------- Sample Details --------------------------------\n\n");
+        printf("\n\n----------------------------- Filled Sample Slots ------------------------------\n\n");
         printf("No Name                              Vol  Length Loop?  Offset   R-len Transpose\n");
         printf("== ================================= === ======= ===== ======= ======= =========\n");
         for (int sno = 0; sno < module.num_samples; sno++)
         {
             sample_t sample = module.samples[sno];
-            printf("%2d %-33s %3d %7d %-5s %7d %7d %9d\n",
-                   (sno + 1),
-                   sample.name,
-                   sample.default_gain,
-                   sample.sample_length,
-                   (sample.repeats ? "yes" : "no"),
-                   sample.repeat_offset,
-                   sample.repeat_length,
-                   sample.transpose);
+            if (sample.sample_length > 0)
+                printf("%2d %-33s %3d %7d %-5s %7d %7d %9d\n",
+                       (sno + 1),
+                       sample.name,
+                       sample.default_gain,
+                       sample.sample_length,
+                       (sample.repeats ? "yes" : "no"),
+                       sample.repeat_offset,
+                       sample.repeat_length,
+                       sample.transpose);
         }
     }
 }
