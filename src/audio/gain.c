@@ -34,7 +34,16 @@ stereo_frame_t apply_gain(float pcm, voice_t *voice)
 {
     float voice_gain = convert_to_linear_gain(voice->gain);
     stereo_frame_t stereo_frame;
-    stereo_frame.l = master_gain * voice_gain * pcm * PAN_L[voice->panning];
-    stereo_frame.r = master_gain * voice_gain * pcm * PAN_R[voice->panning];
+    float adjusted_pcm = master_gain * voice_gain * pcm;
+    if (voice->panning >= 0 && voice->panning <= 6)
+    {
+        stereo_frame.l = adjusted_pcm * PAN_L[voice->panning];
+        stereo_frame.r = adjusted_pcm * PAN_R[voice->panning];
+    }
+    else
+    {
+        stereo_frame.l = adjusted_pcm * 0.5;
+        stereo_frame.r = adjusted_pcm * 0.5;
+    }
     return stereo_frame;
 }
