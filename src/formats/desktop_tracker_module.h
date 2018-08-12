@@ -42,7 +42,6 @@
 #define PATTERNDELAY_COMMAND_DSKT 0x1e       // not implemented
 
 #define IS_MULTIPLE_EFFECT(raw_event) ((raw_event) & (0x1f << 17)) > 0
-#define ALIGN_TO_WORD(length) ((length % 4) ? (length) + (4 - ((length) % 4)) : (length))
 
 format_t desktop_tracker_format();
 
