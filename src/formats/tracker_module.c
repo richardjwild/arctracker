@@ -4,6 +4,7 @@
 #include <pcm/mu_law.h>
 #include <memory/heap.h>
 #include <memory/bits.h>
+#include <arctracker.h>
 
 void *search_tff(void *array_start, long array_end, const void *to_find);
 
@@ -242,7 +243,13 @@ sample_t *get_sample_info(void *array_start, long array_end)
     if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
     else
-        sample->repeat_length = read_word(chunk_address + CHUNK_HEADER_LENGTH);
+    {
+        int repeat_length = read_word(chunk_address + CHUNK_HEADER_LENGTH);
+        if (repeat_length == 2 && sample->repeat_offset != 0)
+            sample->repeat_length = sample->sample_length - sample->repeat_offset;
+        else
+            sample->repeat_length = repeat_length;
+    }
 
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
         return SAMPLE_INVALID;
@@ -255,7 +262,7 @@ sample_t *get_sample_info(void *array_start, long array_end)
     // transpose all notes up an octave when playing a Tracker module
     // compensating for the greater chromatic range in a Desktop Tracker module
     sample->transpose = 12;
-    sample->repeats = (sample->repeat_length != 2);
+    sample->repeats = (sample->repeat_offset != 0 || sample->repeat_length != 2);
 
     return sample;
 }
