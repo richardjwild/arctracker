@@ -1,5 +1,6 @@
 #include "mix.h"
 #include <memory/heap.h>
+#include <io/console.h>
 
 static const __int16_t DIGITAL_PCM_MAX = 32767;
 static const __int16_t DIGITAL_PCM_MIN = -32768;
@@ -19,9 +20,15 @@ static inline
 __int16_t clip(const float sample)
 {
     if (sample > POSITIVE_0dBFS)
+    {
+        warn_clip();
         return DIGITAL_PCM_MAX;
+    }
     else if (sample < NEGATIVE_0dBFS)
+    {
+        warn_clip();
         return DIGITAL_PCM_MIN;
+    }
     else
         return (__int16_t) (sample * DIGITAL_PCM_MAX);
 }

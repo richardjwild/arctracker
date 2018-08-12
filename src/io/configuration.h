@@ -5,6 +5,7 @@
 
 #define ARG_PIANOLA "--pianola"
 #define ARG_INFO "--info"
+#define ARG_CLIP_WARN "--clip-warn"
 #define ARG_OSS "--oss"
 #define ARG_ALSA "--alsa"
 #define ARG_VOLUME "--volume="
@@ -21,6 +22,7 @@ typedef struct
     int volume;
     bool pianola;
     bool info;
+    bool clip_warning;
     output_api api;
     bool loop_forever;
 } args_t;

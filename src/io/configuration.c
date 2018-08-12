@@ -8,11 +8,13 @@ static args_t config = {
         .volume = 64,
         .pianola = false,
         .info = false,
+        .clip_warning = false,
         .api = ALSA,
         .mod_filename = NULL,
         .loop_forever = false
 };
 
+inline
 args_t configuration()
 {
     return config;
@@ -31,6 +33,10 @@ void read_configuration(int p_argc, char *p_argv[])
             else if (strcmp(p_argv[i], ARG_INFO) == 0)
             {
                 config.info = true;
+            }
+            else if (strcmp(p_argv[i], ARG_CLIP_WARN) == 0)
+            {
+                config.clip_warning = true;
             }
             else if (strcmp(p_argv[i], ARG_LOOP) == 0)
             {
@@ -61,6 +67,6 @@ void read_configuration(int p_argc, char *p_argv[])
     }
     if (config.mod_filename == NULL)
     {
-        error("Usage: arctracker [--loop] [--pianola] [--oss|--alsa] [--volume=<volume>] <modfile>");
+        error("Usage: arctracker [--loop] [--info] [--clip-warn] [--pianola] [--oss|--alsa] [--volume=<volume>] <modfile>");
     }
 }

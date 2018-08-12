@@ -134,3 +134,10 @@ void write_info(const module_t module)
         }
     }
 }
+
+inline
+void warn_clip()
+{
+    if (configuration().clip_warning)
+        printf("!");
+}
