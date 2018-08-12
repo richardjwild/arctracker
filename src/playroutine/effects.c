@@ -6,6 +6,7 @@
 #include <pcm/mu_law.h>
 #include <playroutine/play_mod.h>
 #include <playroutine/sequence.h>
+#include "play_mod.h"
 
 void handle_effects_off_event(channel_event_t *event, voice_t *voice);
 
@@ -25,6 +26,10 @@ static void start_tone_portamento(voice_t *voice, __uint8_t data);
 
 static void tone_portamento(voice_t *voice);
 
+static void reset_arpeggiator(voice_t *voice);
+
+static void turn_arpeggiator_on(voice_t *voice);
+
 static void arpeggiate(voice_t *voice, __uint8_t data);
 
 static void set_volume(voice_t *voice, __uint8_t data);
@@ -40,7 +45,10 @@ static void portamento_fine(voice_t *voice, __uint8_t data);
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {
     if (on_event)
+    {
+        reset_arpeggiator(voice);
         handle_effects_on_event(event, voice);
+    }
     else
         handle_effects_off_event(event, voice);
 }
@@ -68,6 +76,8 @@ void handle_effects_on_event(channel_event_t *event, voice_t *voice)
             portamento_fine(voice, effect.data);
         else if (effect.command == VOLUME_SLIDE_FINE)
             volume_slide_combined(voice, effect.data);
+        else if (effect.command == ARPEGGIO)
+            turn_arpeggiator_on(voice);
     }
 }
 
@@ -160,6 +170,13 @@ void tone_portamento(voice_t *voice)
 }
 
 static inline
+void turn_arpeggiator_on(voice_t *voice)
+{
+    voice->arpeggiator_on = true;
+    voice->arpeggio_counter = 1;
+}
+
+static inline
 void arpeggiate(voice_t *voice, __uint8_t data)
 {
     int chord[] = {
@@ -174,6 +191,16 @@ void arpeggiate(voice_t *voice, __uint8_t data)
     }
     voice->period = period_for_note(arpeggio_note);
     voice->arpeggio_counter += 1;
+}
+
+static inline
+void reset_arpeggiator(voice_t *voice)
+{
+    if (voice->arpeggiator_on)
+    {
+        voice->period = period_for_note(voice->note_playing);
+        voice->arpeggiator_on = false;
+    }
 }
 
 static inline

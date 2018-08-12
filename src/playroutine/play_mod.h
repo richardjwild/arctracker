@@ -16,6 +16,7 @@ typedef struct {
     int gain;
     bool channel_playing;
     int panning;
+    bool arpeggiator_on;
     int arpeggio_counter;
     int note_playing;
 } voice_t;
