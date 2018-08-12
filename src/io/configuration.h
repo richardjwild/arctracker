@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #define ARG_PIANOLA "--pianola"
+#define ARG_INFO "--info"
 #define ARG_OSS "--oss"
 #define ARG_ALSA "--alsa"
 #define ARG_VOLUME "--volume="
@@ -19,6 +20,7 @@ typedef struct
     char *mod_filename;
     int volume;
     bool pianola;
+    bool info;
     output_api api;
     bool loop_forever;
 } args_t;

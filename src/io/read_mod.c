@@ -3,6 +3,7 @@
 #include <config.h>
 #include <io/read_mod.h>
 #include <io/configuration.h>
+#include <io/console.h>
 #include <io/error.h>
 #include <memory/heap.h>
 
@@ -20,8 +21,7 @@ module_t read_file(format_t *formats, int no_formats)
         if (format.is_this_format(file))
         {
             module_t module = format.read_module(file);
-            printf("File is %s format.\n", module.format);
-            printf("Module name: %s\nAuthor: %s\n", module.name, module.author);
+            write_info(module);
             return module;
         }
     }

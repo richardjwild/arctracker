@@ -7,6 +7,7 @@
 static args_t config = {
         .volume = 64,
         .pianola = false,
+        .info = false,
         .api = ALSA,
         .mod_filename = NULL,
         .loop_forever = false
@@ -26,6 +27,10 @@ void read_configuration(int p_argc, char *p_argv[])
             if (strcmp(p_argv[i], ARG_PIANOLA) == 0)
             {
                 config.pianola = true;
+            }
+            else if (strcmp(p_argv[i], ARG_INFO) == 0)
+            {
+                config.info = true;
             }
             else if (strcmp(p_argv[i], ARG_LOOP) == 0)
             {

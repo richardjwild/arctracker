@@ -7,4 +7,6 @@ void configure_console(bool pianola, const module_t *module);
 
 void output_to_console(const channel_event_t *line);
 
+void write_info(const module_t module);
+
 #endif //ARCTRACKER_CONSOLE_H
