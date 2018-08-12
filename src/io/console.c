@@ -106,8 +106,8 @@ void write_info(const module_t module)
         for (int channel = 0; channel < module.num_channels; channel++)
         {
             printf("[%d:%s] ",
-                   module.initial_panning[channel - 1],
-                   get_panning(module.initial_panning[channel - 1]));
+                   module.initial_panning[channel],
+                   get_panning(module.initial_panning[channel] - 1));
         }
         for (int group = 0; group < module.tune_length; group += 8)
         {
