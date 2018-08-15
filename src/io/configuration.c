@@ -4,6 +4,14 @@
 #include "configuration.h"
 #include "error.h"
 
+static const char *ARG_PIANOLA = "--pianola";
+static const char *ARG_INFO = "--info";
+static const char *ARG_CLIP_WARN = "--clip-warn";
+static const char *ARG_OSS = "--oss";
+static const char *ARG_ALSA = "--alsa";
+static const char *ARG_VOLUME = "--volume=";
+static const char *ARG_LOOP = "--loop";
+
 static args_t config = {
         .volume = 64,
         .pianola = false,

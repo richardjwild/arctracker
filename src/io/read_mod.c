@@ -7,6 +7,8 @@
 #include <config.h>
 #include <memory/heap.h>
 
+#define READONLY "r"
+
 mapped_file_t load_file(char *filename);
 
 size_t file_size(int file_descriptor);

@@ -7,7 +7,10 @@
 #include <arctracker.h>
 
 #define SAMPLE_INVALID NULL
+#define CHUNK_NOT_FOUND NULL
 
+static const int CHUNK_ID_LENGTH = 4;
+static const int CHUNK_HEADER_LENGTH = 8;
 static const int MAX_LEN_TUNENAME_TRK = 32;
 static const int MAX_LEN_AUTHOR_TRK = 32;
 static const int MAX_LEN_SAMPLENAME_TRK = 20;
