@@ -1,6 +1,13 @@
 #include "resample.h"
 #include <memory/heap.h>
 
+const static int PITCH_QUANTA = 2047;
+const static float PHASE_INCREMENT_CONVERSION = 3273808.59375f;
+
+static float *phase_increments;
+static float *resample_buffer;
+static size_t resample_buffer_bytes;
+
 void calculate_phase_increments(const long sample_rate)
 {
     phase_increments = (float *) allocate_array(PITCH_QUANTA, sizeof(float));

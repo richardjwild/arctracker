@@ -3,13 +3,12 @@
 
 #include <arctracker.h>
 
-#define PERIOD_MAX 0x3f0
-#define PERIOD_MIN 0x50
-#define LOWEST_NOTE 0
-#define HIGHEST_NOTE 61
-#define NOTE_OUT_OF_RANGE(note) (note) < LOWEST_NOTE || (note) > HIGHEST_NOTE
+static const int PERIOD_MAX = 0x3f0;
+static const int PERIOD_MIN = 0x50;
+static const int LOWEST_NOTE = 0;
+static const int HIGHEST_NOTE = 61;
 
-bool out_of_range(int note);
+#define NOTE_OUT_OF_RANGE(note) ((note) < LOWEST_NOTE || (note) > HIGHEST_NOTE)
 
 unsigned int period_for_note(int note);
 

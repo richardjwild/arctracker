@@ -4,15 +4,16 @@
 
 static const __int16_t DIGITAL_PCM_MAX = 32767;
 static const __int16_t DIGITAL_PCM_MIN = -32768;
-static const float POSITIVE_0dBFS = 1.0;
-static const float NEGATIVE_0dBFS = -1.0;
+static const float POSITIVE_0dBFS = 1.0f;
+static const float NEGATIVE_0dBFS = -1.0f;
+static const size_t STEREO_FRAME_SIZE = 2 * sizeof(__int16_t);
 
-static const size_t stereo_frame_size = 2 * sizeof(__int16_t);
 static __int16_t *audio_buffer;
+static int audio_buffer_frames;
 
 void allocate_audio_buffer(const int no_of_frames)
 {
-    audio_buffer = (__int16_t *) allocate_array(no_of_frames, stereo_frame_size);
+    audio_buffer = (__int16_t *) allocate_array(no_of_frames, STEREO_FRAME_SIZE);
     audio_buffer_frames = no_of_frames;
 }
 
