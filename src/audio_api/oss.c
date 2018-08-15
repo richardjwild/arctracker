@@ -5,6 +5,8 @@
 #include <sys/unistd.h>
 #include <io/error.h>
 
+static const char *DEVICE_FILE_NAME = "/dev/dsp";
+
 static int audio_handle;
 
 static
@@ -24,8 +26,8 @@ void close_oss()
 static
 void open_device()
 {
-    if ((audio_handle = open("/dev/dsp", O_WRONLY, 0)) == -1)
-        system_error("/dev/dsp");
+    if ((audio_handle = open(DEVICE_FILE_NAME, O_WRONLY, 0)) == -1)
+        system_error(DEVICE_FILE_NAME);
 }
 
 static
