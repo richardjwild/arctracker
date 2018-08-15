@@ -3,10 +3,10 @@
 
 // 1024 determined by trial and error to give acceptable volume
 // with reasonably low likelihood of clipping
-const float MASTER_GAIN_FACTOR = 1024.0;
-static float master_gain;
+static const float MASTER_GAIN_FACTOR = 1024.0;
 
-static int module_gain_maximum;
+static float master_gain;
+static float module_gain_factor;
 
 const float PAN_L[] = {1.0, 0.828, 0.672, 0.5, 0.328, 0.172, 0.0};
 const float PAN_R[] = {0.0, 0.172, 0.328, 0.5, 0.672, 0.828, 1.0};
@@ -16,17 +16,14 @@ void set_master_gain(int gain)
     master_gain = gain / MASTER_GAIN_FACTOR;
 }
 
-// Tracker module volume max: 255
-// Desktop Tracker module volume max: 127
-void gain_goes_to(int maximum_value)
+void module_gain_goes_to(int module_gain_maximum)
 {
-    module_gain_maximum = maximum_value;
+    module_gain_factor = (float) INTERNAL_GAIN_MAX / module_gain_maximum;
 }
 
-// Convert module volume values to common internal gain value
-int relative_gain(int value)
+int get_internal_gain(int module_gain)
 {
-    return value * INTERNAL_GAIN_MAXIMUM / module_gain_maximum;
+    return (int) (module_gain * module_gain_factor);
 }
 
 stereo_frame_t apply_gain(float pcm, voice_t *voice)
@@ -41,8 +38,8 @@ stereo_frame_t apply_gain(float pcm, voice_t *voice)
     }
     else
     {
-        stereo_frame.l = adjusted_pcm * 0.5;
-        stereo_frame.r = adjusted_pcm * 0.5;
+        stereo_frame.l = adjusted_pcm * 0.5f;
+        stereo_frame.r = adjusted_pcm * 0.5f;
     }
     return stereo_frame;
 }

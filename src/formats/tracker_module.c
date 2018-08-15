@@ -107,7 +107,7 @@ module_t read_tracker_module(mapped_file_t file)
     void *chunk_address;
     long array_end = (long) file.addr + file.size;
     module_t module;
-    gain_goes_to(255);
+    module_gain_goes_to(255);
 
     memset(&module, 0, sizeof(module_t));
     module.format = TRACKER_FORMAT;

@@ -156,7 +156,7 @@ static module_t create_module(dtt_file_format_t *file_format)
     module.initial_speed = file_format->initial_speed;
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
-    gain_goes_to(127);
+    module_gain_goes_to(127);
     return module;
 }
 

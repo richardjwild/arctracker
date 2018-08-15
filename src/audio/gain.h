@@ -3,9 +3,8 @@
 
 #include <playroutine/play_mod.h>
 
-#define LOGARITHMIC_GAIN_MAX 255
-#define LOGARITHMIC_GAIN_MIN 0
-#define INTERNAL_GAIN_MAXIMUM 255
+static const int INTERNAL_GAIN_MIN = 0;
+static const int INTERNAL_GAIN_MAX = 255;
 
 typedef struct
 {
@@ -15,9 +14,9 @@ typedef struct
 
 void set_master_gain(int gain);
 
-void gain_goes_to(int maximum_value);
+void module_gain_goes_to(int module_gain_maximum);
 
-int relative_gain(int value);
+int get_internal_gain(int module_gain);
 
 stereo_frame_t apply_gain(float pcm, voice_t *voice);
 
