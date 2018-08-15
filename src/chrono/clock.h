@@ -1,9 +1,7 @@
 #ifndef ARCTRACKER_CLOCK_H
 #define ARCTRACKER_CLOCK_H
 
-#include <arctracker.h>
-
-#define DEFAULT_TICKS_PER_SECOND 50.0
+#include <stdbool.h>
 
 void set_clock(int initial_ticks_per_event, int sample_rate_in);
 
