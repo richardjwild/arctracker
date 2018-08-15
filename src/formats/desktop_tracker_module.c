@@ -5,6 +5,45 @@
 #include <memory/heap.h>
 #include <pcm/mu_law.h>
 
+#define MAX_LEN_TUNENAME_DSKT 64
+#define MAX_LEN_AUTHOR_DSKT 64
+#define MAX_LEN_SAMPLENAME_DSKT 32
+#define IS_MULTIPLE_EFFECT(raw_event) \
+    ((raw_event) & (0x1f << 17)) > 0
+
+static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
+static const char *DTT_FILE_IDENTIFIER = "DskT";
+
+static const __uint8_t ARPEGGIO_COMMAND_DSKT = 0x0;
+static const __uint8_t PORTUP_COMMAND_DSKT = 0x1;
+static const __uint8_t PORTDOWN_COMMAND_DSKT = 0x2;
+static const __uint8_t TONEPORT_COMMAND_DSKT = 0x3;
+static const __uint8_t VIBRATO_COMMAND_DSKT = 0x4;             // not implemented
+static const __uint8_t DELAYEDNOTE_COMMAND_DSKT = 0x5;         // not implemented
+static const __uint8_t RELEASESAMP_COMMAND_DSKT = 0x6;         // not implemented
+static const __uint8_t TREMOLO_COMMAND_DSKT = 0x7;             // not implemented
+static const __uint8_t PHASOR_COMMAND1_DSKT = 0x8;             // not implemented
+static const __uint8_t PHASOR_COMMAND2_DSKT = 0x9;             // not implemented
+static const __uint8_t VOLSLIDE_COMMAND_DSKT = 0xa;
+static const __uint8_t JUMP_COMMAND_DSKT = 0xb;
+static const __uint8_t VOLUME_COMMAND_DSKT = 0xc;
+static const __uint8_t STEREO_COMMAND_DSKT = 0xd;
+static const __uint8_t STEREOSLIDE_COMMAND_DSKT = 0xe;         // not implemented
+static const __uint8_t SPEED_COMMAND_DSKT = 0xf;
+static const __uint8_t ARPEGGIOSPEED_COMMAND_DSKT = 0x10;      // not implemented
+static const __uint8_t FINEPORTAMENTO_COMMAND_DSKT = 0x11;
+static const __uint8_t CLEAREPEAT_COMMAND_DSKT = 0x12;         // not implemented
+static const __uint8_t SETVIBRATOWAVEFORM_COMMAND_DSKT = 0x14; // not implemented
+static const __uint8_t LOOP_COMMAND_DSKT = 0x16;               // not implemented
+static const __uint8_t SETTREMOLOWAVEFORM_COMMAND_DSKT = 0x17; // not implemented
+static const __uint8_t SETFINETEMPO_COMMAND_DSKT = 0x18;
+static const __uint8_t RETRIGGERSAMPLE_COMMAND_DSKT = 0x19;    // not implemented
+static const __uint8_t FINEVOLSLIDE_COMMAND_DSKT = 0x1a;
+static const __uint8_t HOLD_COMMAND_DSKT = 0x1b;               // not implemented
+static const __uint8_t NOTECUT_COMMAND_DSKT = 0x1c;            // not implemented
+static const __uint8_t NOTEDELAY_COMMAND_DSKT = 0x1d;          // not implemented
+static const __uint8_t PATTERNDELAY_COMMAND_DSKT = 0x1e;       // not implemented
+
 bool is_desktop_tracker_format(mapped_file_t);
 
 module_t read_desktop_tracker_module(mapped_file_t file);
@@ -64,35 +103,32 @@ bool is_desktop_tracker_format(mapped_file_t file)
 static inline
 command_t desktop_tracker_command(int code, __uint8_t data)
 {
-    switch (code)
-    {
-        case VOLUME_COMMAND_DSKT:
-            return SET_VOLUME;
-        case SPEED_COMMAND_DSKT:
-            return SET_TEMPO;
-        case STEREO_COMMAND_DSKT:
-            return SET_TRACK_STEREO;
-        case VOLSLIDE_COMMAND_DSKT:
-            return VOLUME_SLIDE;
-        case PORTUP_COMMAND_DSKT:
-            return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND_DSKT:
-            return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND_DSKT:
-            return TONE_PORTAMENTO;
-        case JUMP_COMMAND_DSKT:
-            return JUMP_TO_POSITION;
-        case SETFINETEMPO_COMMAND_DSKT:
-            return SET_TEMPO_FINE;
-        case FINEPORTAMENTO_COMMAND_DSKT:
-            return PORTAMENTO_FINE;
-        case FINEVOLSLIDE_COMMAND_DSKT:
-            return VOLUME_SLIDE_FINE;
-        case ARPEGGIO_COMMAND_DSKT:
-            return (data == 0) ? NO_EFFECT : ARPEGGIO;
-        default:
-            return NO_EFFECT;
-    }
+    if (code == VOLUME_COMMAND_DSKT)
+        return SET_VOLUME;
+    else if (code == SPEED_COMMAND_DSKT)
+        return SET_TEMPO;
+    else if (code == STEREO_COMMAND_DSKT)
+        return SET_TRACK_STEREO;
+    else if (code == VOLSLIDE_COMMAND_DSKT)
+        return VOLUME_SLIDE;
+    else if (code == PORTUP_COMMAND_DSKT)
+        return PORTAMENTO_UP;
+    else if (code == PORTDOWN_COMMAND_DSKT)
+        return PORTAMENTO_DOWN;
+    else if (code == TONEPORT_COMMAND_DSKT)
+        return TONE_PORTAMENTO;
+    else if (code == JUMP_COMMAND_DSKT)
+        return JUMP_TO_POSITION;
+    else if (code == SETFINETEMPO_COMMAND_DSKT)
+        return SET_TEMPO_FINE;
+    else if (code == FINEPORTAMENTO_COMMAND_DSKT)
+        return PORTAMENTO_FINE;
+    else if (code == FINEVOLSLIDE_COMMAND_DSKT)
+        return VOLUME_SLIDE_FINE;
+    else if (code == ARPEGGIO_COMMAND_DSKT)
+        return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    else
+        return NO_EFFECT;
 }
 
 static inline

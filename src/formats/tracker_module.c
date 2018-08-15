@@ -6,6 +6,45 @@
 #include <memory/bits.h>
 #include <arctracker.h>
 
+#define SAMPLE_INVALID NULL
+
+static const int MAX_LEN_TUNENAME_TRK = 32;
+static const int MAX_LEN_AUTHOR_TRK = 32;
+static const int MAX_LEN_SAMPLENAME_TRK = 20;
+static const int NUM_SAMPLES = 256;
+
+static const char *TRACKER_FORMAT = "TRACKER";
+
+static const char *MUSX_CHUNK = "MUSX";
+static const char *MVOX_CHUNK = "MVOX";
+static const char *STER_CHUNK = "STER";
+static const char *MNAM_CHUNK = "MNAM";
+static const char *ANAM_CHUNK = "ANAM";
+static const char *MLEN_CHUNK = "MLEN";
+static const char *PNUM_CHUNK = "PNUM";
+static const char *PLEN_CHUNK = "PLEN";
+static const char *SEQU_CHUNK = "SEQU";
+static const char *PATT_CHUNK = "PATT";
+static const char *SAMP_CHUNK = "SAMP";
+static const char *SNAM_CHUNK = "SNAM";
+static const char *SVOL_CHUNK = "SVOL";
+static const char *SLEN_CHUNK = "SLEN";
+static const char *ROFS_CHUNK = "ROFS";
+static const char *RLEN_CHUNK = "RLEN";
+static const char *SDAT_CHUNK = "SDAT";
+
+static const __uint8_t ARPEGGIO_COMMAND_TRK = 0;      // 0
+static const __uint8_t PORTUP_COMMAND_TRK = 1;        // 1
+static const __uint8_t PORTDOWN_COMMAND_TRK = 2;      // 2
+static const __uint8_t TONEPORT_COMMAND_TRK = 3;      // 3
+static const __uint8_t BREAK_COMMAND_TRK = 11;        // B
+static const __uint8_t STEREO_COMMAND_TRK = 14;       // E
+static const __uint8_t VOLSLIDEUP_COMMAND_TRK = 16;   // G
+static const __uint8_t VOLSLIDEDOWN_COMMAND_TRK = 17; // H
+static const __uint8_t JUMP_COMMAND_TRK = 19;         // J
+static const __uint8_t SPEED_COMMAND_TRK = 28;        // S
+static const __uint8_t VOLUME_COMMAND_TRK = 31;       // V
+
 void *search_tff(void *array_start, long array_end, const void *to_find);
 
 module_t read_tracker_module(mapped_file_t file);
@@ -50,33 +89,30 @@ void *search_tff(void *array_start, const long array_end, const void *to_find)
 static inline
 command_t tracker_command(int code, __uint8_t data)
 {
-    switch (code)
-    {
-        case VOLUME_COMMAND_TRK:
-            return SET_VOLUME;
-        case SPEED_COMMAND_TRK:
-            return SET_TEMPO;
-        case STEREO_COMMAND_TRK:
-            return SET_TRACK_STEREO;
-        case VOLSLIDEUP_COMMAND_TRK:
-            return VOLUME_SLIDE_UP;
-        case VOLSLIDEDOWN_COMMAND_TRK:
-            return VOLUME_SLIDE_DOWN;
-        case PORTUP_COMMAND_TRK:
-            return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND_TRK:
-            return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND_TRK:
-            return TONE_PORTAMENTO;
-        case BREAK_COMMAND_TRK:
-            return BREAK_PATTERN;
-        case JUMP_COMMAND_TRK:
-            return JUMP_TO_POSITION;
-        case ARPEGGIO_COMMAND_TRK:
-            return (data == 0) ? NO_EFFECT : ARPEGGIO;
-        default:
-            return NO_EFFECT;
-    }
+    if (code == VOLUME_COMMAND_TRK)
+        return SET_VOLUME;
+    else if (code == SPEED_COMMAND_TRK)
+        return SET_TEMPO;
+    else if (code == STEREO_COMMAND_TRK)
+        return SET_TRACK_STEREO;
+    else if (code == VOLSLIDEUP_COMMAND_TRK)
+        return VOLUME_SLIDE_UP;
+    else if (code == VOLSLIDEDOWN_COMMAND_TRK)
+        return VOLUME_SLIDE_DOWN;
+    else if (code == PORTUP_COMMAND_TRK)
+        return PORTAMENTO_UP;
+    else if (code == PORTDOWN_COMMAND_TRK)
+        return PORTAMENTO_DOWN;
+    else if (code == TONEPORT_COMMAND_TRK)
+        return TONE_PORTAMENTO;
+    else if (code == BREAK_COMMAND_TRK)
+        return BREAK_PATTERN;
+    else if (code == JUMP_COMMAND_TRK)
+        return JUMP_TO_POSITION;
+    else if (code == ARPEGGIO_COMMAND_TRK)
+        return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    else
+        return NO_EFFECT;
 }
 
 static inline

@@ -63,7 +63,7 @@ typedef struct
 
 typedef struct
 {
-    char *format;
+    const char *format;
     char name[MAX_LEN_TUNENAME];
     char author[MAX_LEN_AUTHOR];
     int num_channels;
