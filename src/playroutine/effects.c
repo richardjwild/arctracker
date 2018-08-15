@@ -6,6 +6,8 @@
 #include <memory/bits.h>
 #include <pcm/mu_law.h>
 
+static const int MAX_EFFECTS = 4;
+
 void handle_effects_off_event(channel_event_t *event, voice_t *voice);
 
 void handle_effects_on_event(channel_event_t *event, voice_t *voice);
