@@ -5,8 +5,6 @@
 static int vidc_pcm_encoding[256];
 static float gain_conversion[256];
 
-static bool encoding_done = false;
-
 const float EXPANDED_MAX = 32124.0;
 const float GAIN_MAX = 8031.0;
 const int BIAS = 0x84;
@@ -37,23 +35,23 @@ void calculate_logarithmic_gain()
     gain_conversion[1] = gain_conversion[2] / 2;
 }
 
-void calculate_pcm_encoding()
+void calculate_vidc_encoding()
 {
-    if (!encoding_done)
+    for (int i = 0; i <= 127; i++)
     {
-        for (int i = 0; i <= 127; i++)
-        {
-            vidc_pcm_encoding[i * 2] = mu_law_to_linear(127 - i);
-            vidc_pcm_encoding[(i * 2) + 1] = mu_law_to_linear(127 - i) * -1;
-        }
-        encoding_done = true;
-        calculate_logarithmic_gain();
+        vidc_pcm_encoding[i * 2] = mu_law_to_linear(127 - i);
+        vidc_pcm_encoding[(i * 2) + 1] = mu_law_to_linear(127 - i) * -1;
     }
+}
+
+void precalculate_mu_law()
+{
+    calculate_vidc_encoding();
+    calculate_logarithmic_gain();
 }
 
 float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
 {
-    calculate_pcm_encoding();
     float *linear = allocate_array(no_samples + 1, sizeof(float));
     for (int i = 0; i < no_samples; i++)
     {

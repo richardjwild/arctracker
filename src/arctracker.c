@@ -6,12 +6,14 @@
 #include <io/configuration.h>
 #include <io/read_mod.h>
 #include <playroutine/play_mod.h>
+#include <pcm/mu_law.h>
 
 audio_api_t initialise_audio_api();
 
 int main(int argc, char *argv[])
 {
     read_configuration(argc, argv);
+    precalculate_mu_law();
     format_t formats[] = {tracker_format(), desktop_tracker_format()};
     module_t module = read_file(formats, 2);
     if (!configuration().info)
