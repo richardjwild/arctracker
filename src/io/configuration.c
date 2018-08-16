@@ -21,6 +21,7 @@ static const char *ARG_VALUE_ALSA = "ALSA";
 static const char *ARG_VALUE_OSS = "OSS";
 static const char *ARG_LOOP = "--loop";
 static const char *ARG_LOOP_S = "-l";
+
 static const char *USAGE_MESSAGE =
         "Usage: arctracker [options] <modfile>\n"
         "\n"
@@ -32,7 +33,7 @@ static const char *USAGE_MESSAGE =
         "\t-c or --clip-warn\n"
         "\t-p or --pianola\n"
         "\t-o<ALSA or OSS> or --output=<ALSA or OSS>\n"
-        "\t-v<0 to 255> or --volume=<0 to 255>\n"
+        "\t-v<1 to 255> or --volume=<1 to 255>\n"
         "\n";
 
 static args_t config = {
