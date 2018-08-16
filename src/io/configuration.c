@@ -52,22 +52,17 @@ void read_configuration(int p_argc, char *p_argv[])
     {
         for (int i = 1; i < p_argc; i++)
         {
-            bool handled = handle_argument(p_argv[i]);
-            if (!handled)
+            if (!handle_argument(p_argv[i]))
             {
                 if (i == (p_argc - 1))
-                {
                     config.mod_filename = p_argv[i];
-                }
                 else
                     error_with_detail("Unknown argument", p_argv[i]);
             }
         }
     }
     if (config.mod_filename == NULL)
-    {
         error(USAGE_MESSAGE);
-    }
 }
 
 bool handle_argument(const char *arg)
