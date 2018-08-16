@@ -6,26 +6,33 @@
 #include "error.h"
 
 static const char *ARG_HELP = "--help";
+static const char *ARG_HELP_S = "-h";
 static const char *ARG_PIANOLA = "--pianola";
+static const char *ARG_PIANOLA_S = "-p";
 static const char *ARG_INFO = "--info";
+static const char *ARG_INFO_S = "-i";
 static const char *ARG_CLIP_WARN = "--clip-warn";
+static const char *ARG_CLIP_WARN_S = "-c";
 static const char *ARG_VOLUME = "--volume=";
+static const char *ARG_VOLUME_S = "-v";
 static const char *ARG_OUTPUT = "--output=";
+static const char *ARG_OUTPUT_S = "-o";
 static const char *ARG_VALUE_ALSA = "ALSA";
 static const char *ARG_VALUE_OSS = "OSS";
 static const char *ARG_LOOP = "--loop";
+static const char *ARG_LOOP_S = "-l";
 static const char *USAGE_MESSAGE =
         "Usage: arctracker [options] <modfile>\n"
         "\n"
         "Options are:\n"
         "\n"
-        "\t--help\n"
-        "\t--info\n"
-        "\t--loop\n"
-        "\t--clip-warn\n"
-        "\t--pianola\n"
-        "\t--output=<ALSA or OSS>\n"
-        "\t--volume=<0 to 255>\n"
+        "\t-h or --help\n"
+        "\t-i or --info\n"
+        "\t-l or --loop\n"
+        "\t-c or --clip-warn\n"
+        "\t-p or --pianola\n"
+        "\t-o<ALSA or OSS> or --output=<ALSA or OSS>\n"
+        "\t-v<0 to 255> or --volume=<0 to 255>\n"
         "\n";
 
 static args_t config = {
@@ -65,46 +72,60 @@ void read_configuration(int p_argc, char *p_argv[])
         error(USAGE_MESSAGE);
 }
 
+bool matches(const char *arg, const char *long_form, const char *short_form)
+{
+    return strncmp(arg, long_form, strlen(long_form)) == 0
+           || strncmp(arg, short_form, strlen(short_form)) == 0;
+}
+
+const char *arg_value(const char *arg, const char *long_form, const char *short_form)
+{
+    if (strncmp(arg, long_form, strlen(long_form)) == 0)
+        return arg + strlen(long_form);
+    else
+        return arg + strlen(short_form);
+}
+
 bool handle_argument(const char *arg)
 {
     bool argument_was_handled = true;
-    if (strncmp(arg, ARG_HELP, strlen(ARG_HELP)) == 0)
+    if (matches(arg, ARG_HELP, ARG_HELP_S))
     {
         printf("%s", USAGE_MESSAGE);
         exit(EXIT_SUCCESS);
     }
-    else if (strncmp(arg, ARG_PIANOLA, strlen(ARG_PIANOLA)) == 0)
+    else if (matches(arg, ARG_PIANOLA, ARG_PIANOLA_S))
     {
         config.pianola = true;
     }
-    else if (strncmp(arg, ARG_INFO, strlen(ARG_INFO)) == 0)
+    else if (matches(arg, ARG_INFO, ARG_INFO_S))
     {
         config.info = true;
     }
-    else if (strncmp(arg, ARG_CLIP_WARN, strlen(ARG_CLIP_WARN)) == 0)
+    else if (matches(arg, ARG_CLIP_WARN, ARG_CLIP_WARN_S))
     {
         config.clip_warning = true;
     }
-    else if (strncmp(arg, ARG_LOOP, strlen(ARG_LOOP)) == 0)
+    else if (matches(arg, ARG_LOOP, ARG_LOOP_S))
     {
         config.loop_forever = true;
     }
-    else if (strncmp(arg, ARG_OUTPUT, strlen(ARG_OUTPUT)) == 0)
+    else if (matches(arg, ARG_OUTPUT, ARG_OUTPUT_S))
     {
-        arg += strlen(ARG_OUTPUT);
-        if (strncmp(arg, ARG_VALUE_ALSA, strlen(ARG_VALUE_ALSA)) == 0)
+        const char *value = arg_value(arg, ARG_OUTPUT, ARG_OUTPUT_S);
+        if (strncmp(value, ARG_VALUE_ALSA, strlen(ARG_VALUE_ALSA)) == 0)
             config.api = ALSA;
-        else if (strncmp(arg, ARG_VALUE_OSS, strlen(ARG_VALUE_OSS)) == 0)
+        else if (strncmp(value, ARG_VALUE_OSS, strlen(ARG_VALUE_OSS)) == 0)
             config.api = OSS;
         else
             error("Unrecognised output type. Try ALSA or OSS");
     }
-    else if (strncmp(arg, ARG_VOLUME, strlen(ARG_VOLUME)) == 0)
+    else if (matches(arg, ARG_VOLUME, ARG_VOLUME_S))
     {
-        arg += strlen(ARG_VOLUME);
-        config.volume = atoi(arg);
+        const char *value = arg_value(arg, ARG_VOLUME, ARG_VOLUME_S);
+        config.volume = atoi(value);
         if (config.volume < 1 || config.volume > 256)
-            error("Volume must be between 1 and 256");
+            error("Volume must be a number between 1 and 256");
     }
     else
     {
