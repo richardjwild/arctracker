@@ -38,6 +38,8 @@ static args_t config = {
         .loop_forever = false
 };
 
+bool handle_argument(const char *arg);
+
 inline
 args_t configuration()
 {
@@ -50,54 +52,68 @@ void read_configuration(int p_argc, char *p_argv[])
     {
         for (int i = 1; i < p_argc; i++)
         {
-            if (strncmp(p_argv[i], ARG_HELP, strlen(ARG_HELP)) == 0)
+            bool handled = handle_argument(p_argv[i]);
+            if (!handled)
             {
-                printf("%s", USAGE_MESSAGE);
-                exit(EXIT_SUCCESS);
-            }
-            else if (strncmp(p_argv[i], ARG_PIANOLA, strlen(ARG_PIANOLA)) == 0)
-            {
-                config.pianola = true;
-            }
-            else if (strncmp(p_argv[i], ARG_INFO, strlen(ARG_INFO)) == 0)
-            {
-                config.info = true;
-            }
-            else if (strncmp(p_argv[i], ARG_CLIP_WARN, strlen(ARG_CLIP_WARN)) == 0)
-            {
-                config.clip_warning = true;
-            }
-            else if (strncmp(p_argv[i], ARG_LOOP, strlen(ARG_LOOP)) == 0)
-            {
-                config.loop_forever = true;
-            }
-            else if (strncmp(p_argv[i], ARG_OUTPUT, strlen(ARG_OUTPUT)) == 0)
-            {
-                p_argv[i] += strlen(ARG_OUTPUT);
-                if (strncmp(p_argv[i], ARG_VALUE_ALSA, strlen(ARG_VALUE_ALSA)) == 0)
-                    config.api = ALSA;
-                else if (strncmp(p_argv[i], ARG_VALUE_OSS, strlen(ARG_VALUE_OSS)) == 0)
-                    config.api = OSS;
+                if (i == (p_argc - 1))
+                {
+                    config.mod_filename = p_argv[i];
+                }
                 else
-                    error("Unrecognised output type. Try ALSA or OSS");
+                    error_with_detail("Unknown argument", p_argv[i]);
             }
-            else if (strncmp(p_argv[i], ARG_VOLUME, strlen(ARG_VOLUME)) == 0)
-            {
-                p_argv[i] += strlen(ARG_VOLUME);
-                config.volume = atoi(p_argv[i]);
-                if (config.volume < 1 || config.volume > 256)
-                    error("Volume must be between 1 and 256");
-            }
-            else if (i == (p_argc - 1))
-            {
-                config.mod_filename = p_argv[i];
-            }
-            else
-                error_with_detail("Unknown argument", p_argv[i]);
         }
     }
     if (config.mod_filename == NULL)
     {
         error(USAGE_MESSAGE);
     }
+}
+
+bool handle_argument(const char *arg)
+{
+    bool argument_was_handled = true;
+    if (strncmp(arg, ARG_HELP, strlen(ARG_HELP)) == 0)
+    {
+        printf("%s", USAGE_MESSAGE);
+        exit(EXIT_SUCCESS);
+    }
+    else if (strncmp(arg, ARG_PIANOLA, strlen(ARG_PIANOLA)) == 0)
+    {
+        config.pianola = true;
+    }
+    else if (strncmp(arg, ARG_INFO, strlen(ARG_INFO)) == 0)
+    {
+        config.info = true;
+    }
+    else if (strncmp(arg, ARG_CLIP_WARN, strlen(ARG_CLIP_WARN)) == 0)
+    {
+        config.clip_warning = true;
+    }
+    else if (strncmp(arg, ARG_LOOP, strlen(ARG_LOOP)) == 0)
+    {
+        config.loop_forever = true;
+    }
+    else if (strncmp(arg, ARG_OUTPUT, strlen(ARG_OUTPUT)) == 0)
+    {
+        arg += strlen(ARG_OUTPUT);
+        if (strncmp(arg, ARG_VALUE_ALSA, strlen(ARG_VALUE_ALSA)) == 0)
+            config.api = ALSA;
+        else if (strncmp(arg, ARG_VALUE_OSS, strlen(ARG_VALUE_OSS)) == 0)
+            config.api = OSS;
+        else
+            error("Unrecognised output type. Try ALSA or OSS");
+    }
+    else if (strncmp(arg, ARG_VOLUME, strlen(ARG_VOLUME)) == 0)
+    {
+        arg += strlen(ARG_VOLUME);
+        config.volume = atoi(arg);
+        if (config.volume < 1 || config.volume > 256)
+            error("Volume must be between 1 and 256");
+    }
+    else
+    {
+        argument_was_handled = false;
+    }
+    return argument_was_handled;
 }
