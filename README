@@ -11,12 +11,12 @@ clones that run on the Commodore Amiga.  However, both Tracker and Desktop
 Tracker have their own file formats and so none of the existing modfile players
 available for Linux (or Windows, to the best of my knowledge) will play them.
 
-This program exists for two reasons:
+This program existed for two reasons:
 
 (1) I wanted to be able to play all my old Tracker and Desktop Tracker modfiles
 on my Linux machine, and
 
-(2) I want to write an advanced tracker editor of my own for Linux and this
+(2) I wanted to write an advanced tracker editor of my own for Linux and this
 seemed like a useful exercise to try my hand at first.
 
 Well, (2) never happened and nowadays Renoise does all that I could ever have
@@ -28,19 +28,19 @@ How to build it
 
 You need to have GNU automake and autoconf installed. Run the following command:
 
-	autoreconf -vfi
+    autoreconf -vfi
 
 If that succeeds, then run:
 
-	./configure
+    ./configure
 
 You can then build the program with:
 
-	make arctracker
+    make arctracker
 
 and install it with:
 
-	sudo make install
+    sudo make install
 
 How to run it
 -------------
@@ -48,7 +48,7 @@ How to run it
 Currently, the program runs from the command line only.  It is invoked like
 this:
 
-	arctracker [options] <modfile>
+    arctracker [options] <modfile>
 
 where <modfile> is the filename of the Tracker or Desktop Tracker modfile to
 be played, and [options] can be any or none of the following:
@@ -59,23 +59,23 @@ be played, and [options] can be any or none of the following:
     -i              Print information about the module and exit.
     --info
 
-	-l              Continually repeat the modfile until the program is
-	--loop	        interrupted by ctrl-c.  The default is not to repeat.
+    -l              Continually repeat the modfile until the program is
+    --loop          interrupted by ctrl-c.  The default is not to repeat.
 
-	-p              Print the pattern information to stdout as the modfile
-	--pianola	    is playing in the manner of an old pianola roll.
+    -p              Print the pattern information to stdout as the modfile is
+    --pianola       playing in the manner of an old pianola roll.
 
-	-v<n>           Software-scale the volume where n is between 1 and 255.
-	--volume=<n>    When playing modfiles with more than 4 channels (Desktop
-			        Tracker modfiles can have up to 16) a volume greater than
-			        64 may cause clipping, which sounds distorted. If this
-			        happens use a lower volume.
+    -v<n>           Software-scale the volume where n is between 1 and 255. When
+    --volume=<n>    playing modfiles with more than 4 channels (Desktop Tracker
+                    modfiles can have up to 16) a volume greater than 64 may
+                    cause clipping, which sounds distorted. If this happens then
+                    use a lower volume.
 
     -c              Indicate when clipping occurs by printing a bang character
     --clip-warn     to stdout.
 
-	-o<type>        Set the audio output type. Valid types are ALSA and OSS.
-	--output=<type> The default is ALSA.
+    -o<type>        Set the audio output type. Valid types are ALSA and OSS. The
+    --output=<type> default is ALSA.
 
 -----------------------------------------------------------------
 Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
