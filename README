@@ -19,6 +19,10 @@ on my Linux machine, and
 (2) I want to write an advanced tracker editor of my own for Linux and this
 seemed like a useful exercise to try my hand at first.
 
+Well, (2) never happened and nowadays Renoise does all that I could ever have
+imagined and much more besides. More recently this program has taken on a new
+lease of life as a refactoring project.
+
 How to build it
 ---------------
 
@@ -49,21 +53,29 @@ this:
 where <modfile> is the filename of the Tracker or Desktop Tracker modfile to
 be played, and [options] can be any or none of the following:
 
-	--loop		Continually repeat the modfile until the program is
-			interrupted by ctrl-c.  The default is not to repeat.
+    -h              Print usage information and exit.
+    --help
+    
+    -i              Print information about the module and exit.
+    --info
 
-	--pianola	Print the pattern information to stdout as the modfile
-			is playing in the manner of an old pianola roll.
+	-l              Continually repeat the modfile until the program is
+	--loop	        interrupted by ctrl-c.  The default is not to repeat.
 
-	--volume=<n>	Software-scale the volume where n is between 1 and 255.
-			The default is 64.  When playing modfiles with more than
-			4 channels (Desktop Tracker modfiles can have up to 16)
-			a volume greater than 64 can cause clipping, which
-			sounds distorted.  If this happens use a lower volume.
+	-p              Print the pattern information to stdout as the modfile
+	--pianola	    is playing in the manner of an old pianola roll.
 
-	--oss		Use the OSS sound output API.
+	-v<n>           Software-scale the volume where n is between 1 and 255.
+	--volume=<n>    When playing modfiles with more than 4 channels (Desktop
+			        Tracker modfiles can have up to 16) a volume greater than
+			        64 may cause clipping, which sounds distorted. If this
+			        happens use a lower volume.
 
-	--alsa		Use the ALSA sound output API.  This is the default.
+    -c              Indicate when clipping occurs by printing a bang character
+    --clip-warn     to stdout.
+
+	-o<type>        Set the audio output type. Valid types are ALSA and OSS.
+	--output=<type> The default is ALSA.
 
 -----------------------------------------------------------------
 Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
