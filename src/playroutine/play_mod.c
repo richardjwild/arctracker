@@ -114,6 +114,7 @@ voice_t *initialise_voices(const module_t *module)
     for (int channel = 0; channel < module->num_channels; channel++)
     {
         voices[channel].channel_playing = false;
+        voices[channel].arpeggiator_on = false;
         voices[channel].panning = module->initial_panning[channel] - 1;
         voices[channel].gain = INTERNAL_GAIN_MAX;
     }
