@@ -41,7 +41,8 @@ void play_module(module_t *module, audio_api_t audio_api)
     voice_t *voices = initialise_voices(module);
     channel_event_t events[MAX_CHANNELS];
 
-    while (!looped_yet() || config.loop_forever)
+    bool song_finished = false;
+    do
     {
         clock_tick();
         if (new_event())
@@ -49,33 +50,39 @@ void play_module(module_t *module, audio_api_t audio_api)
             decode_next_events(module, events);
             output_to_console(events);
         }
-        for (int channel = 0; channel < module->num_channels; channel++)
+        if (!looped_yet() || config.loop_forever)
         {
-            channel_event_t event = events[channel];
-            sample_t sample = module->samples[event.sample - 1];
-            voice_t voice = voices[channel];
-            if (new_event())
+            for (int channel = 0; channel < module->num_channels; channel++)
             {
-                if (event.note)
+                channel_event_t event = events[channel];
+                sample_t sample = module->samples[event.sample - 1];
+                voice_t voice = voices[channel];
+                if (new_event())
                 {
-                    if (portamento(event))
-                        set_portamento_target(event, sample, &voice);
-                    else if (sample_out_of_range(event, *module))
-                        silence_channel(&voice);
-                    else
-                        trigger_new_note(event, sample, &voice);
+                    if (event.note)
+                    {
+                        if (portamento(event))
+                            set_portamento_target(event, sample, &voice);
+                        else if (sample_out_of_range(event, *module))
+                            silence_channel(&voice);
+                        else
+                            trigger_new_note(event, sample, &voice);
+                    }
+                    else if (event.sample)
+                    {
+                        reset_gain_to_sample_default(&voice, sample);
+                    }
                 }
-                else if (event.sample)
-                {
-                    reset_gain_to_sample_default(&voice, sample);
-                }
+                process_commands(&event, &voice, new_event());
+                voices[channel] = voice;
             }
-            process_commands(&event, &voice, new_event());
-            voices[channel] = voice;
+            write_audio_data(voices);
         }
-        write_audio_data(voices);
+        else
+            song_finished = true;
     }
-    send_remaining_audio();
+    while (!song_finished);
+        send_remaining_audio();
 }
 
 inline
