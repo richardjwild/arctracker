@@ -30,6 +30,10 @@ bool portamento(channel_event_t event);
 
 bool sample_out_of_range(channel_event_t event, module_t module);
 
+void output_one_tick(const module_t *module, voice_t *voices, const channel_event_t *events);
+
+void output_one_channel_tick(const module_t *module, channel_event_t event, voice_t *voice);
+
 void play_module(module_t *module, audio_api_t audio_api)
 {
     args_t config = configuration();
@@ -42,7 +46,7 @@ void play_module(module_t *module, audio_api_t audio_api)
     channel_event_t events[MAX_CHANNELS];
 
     bool song_finished = false;
-    do
+    while (!song_finished)
     {
         clock_tick();
         if (new_event())
@@ -51,38 +55,45 @@ void play_module(module_t *module, audio_api_t audio_api)
             output_to_console(events);
         }
         if (!looped_yet() || config.loop_forever)
-        {
-            for (int channel = 0; channel < module->num_channels; channel++)
-            {
-                channel_event_t event = events[channel];
-                sample_t sample = module->samples[event.sample - 1];
-                voice_t voice = voices[channel];
-                if (new_event())
-                {
-                    if (event.note)
-                    {
-                        if (portamento(event))
-                            set_portamento_target(event, sample, &voice);
-                        else if (sample_out_of_range(event, *module))
-                            silence_channel(&voice);
-                        else
-                            trigger_new_note(event, sample, &voice);
-                    }
-                    else if (event.sample)
-                    {
-                        reset_gain_to_sample_default(&voice, sample);
-                    }
-                }
-                process_commands(&event, &voice, new_event());
-                voices[channel] = voice;
-            }
-            write_audio_data(voices);
-        }
+            output_one_tick(module, voices, events);
         else
             song_finished = true;
     }
-    while (!song_finished);
-        send_remaining_audio();
+    send_remaining_audio();
+}
+
+void output_one_tick(const module_t *module, voice_t *voices, const channel_event_t *events)
+{
+    for (int channel = 0; channel < module->num_channels; channel++)
+    {
+        channel_event_t event = events[channel];
+        voice_t voice = voices[channel];
+        output_one_channel_tick(module, event, &voice);
+        voices[channel] = voice;
+    }
+    write_audio_data(voices);
+}
+
+void output_one_channel_tick(const module_t *module, channel_event_t event, voice_t *voice)
+{
+    sample_t sample = module->samples[event.sample - 1];
+    if (new_event())
+    {
+        if (event.note)
+        {
+            if (portamento(event))
+                set_portamento_target(event, sample, voice);
+            else if (sample_out_of_range(event, *module))
+                silence_channel(voice);
+            else
+                trigger_new_note(event, sample, voice);
+        }
+        else if (event.sample)
+        {
+            reset_gain_to_sample_default(voice, sample);
+        }
+    }
+    process_commands(&event, voice, new_event());
 }
 
 inline
