@@ -8,10 +8,6 @@
 
 static const int MAX_EFFECTS = 4;
 
-void handle_effects_off_event(channel_event_t *, voice_t *);
-
-void handle_effects_on_event(channel_event_t *, voice_t *);
-
 static void volume_slide_up(voice_t *, __uint8_t);
 
 static void volume_slide_down(voice_t *, __uint8_t);
@@ -25,8 +21,6 @@ static void portamento_down(voice_t *, __uint8_t);
 static void start_tone_portamento(voice_t *, __uint8_t);
 
 static void tone_portamento(voice_t *);
-
-static void reset_arpeggiator(voice_t *);
 
 static void turn_arpeggiator_on(voice_t *);
 
@@ -42,15 +36,14 @@ static void set_tempo_fine(__uint8_t);
 
 static void portamento_fine(voice_t *, __uint8_t);
 
-void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
+inline
+void reset_arpeggiator(voice_t *voice)
 {
-    if (on_event)
+    if (voice->arpeggiator_on)
     {
-        reset_arpeggiator(voice);
-        handle_effects_on_event(event, voice);
+        voice->period = period_for_note(voice->note_playing);
+        voice->arpeggiator_on = false;
     }
-    else
-        handle_effects_off_event(event, voice);
 }
 
 void handle_effects_on_event(channel_event_t *event, voice_t *voice)
@@ -191,16 +184,6 @@ void arpeggiate(voice_t *voice, __uint8_t data)
     }
     voice->period = period_for_note(arpeggio_note);
     voice->arpeggio_counter += 1;
-}
-
-static inline
-void reset_arpeggiator(voice_t *voice)
-{
-    if (voice->arpeggiator_on)
-    {
-        voice->period = period_for_note(voice->note_playing);
-        voice->arpeggiator_on = false;
-    }
 }
 
 static inline

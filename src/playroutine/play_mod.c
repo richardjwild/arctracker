@@ -101,8 +101,11 @@ void output_one_channel_tick(channel_event_t event, voice_t *voice)
         {
             reset_gain_to_sample_default(voice, sample);
         }
+        reset_arpeggiator(voice);
+        handle_effects_on_event(&event, voice);
     }
-    process_commands(&event, voice, new_event());
+    else
+        handle_effects_off_event(&event, voice);
 }
 
 inline
