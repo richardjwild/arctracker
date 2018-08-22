@@ -6,8 +6,6 @@
 #include <memory/bits.h>
 #include <pcm/mu_law.h>
 
-static const int MAX_EFFECTS = 4;
-
 static void volume_slide_up(voice_t *, __uint8_t);
 
 static void volume_slide_down(voice_t *, __uint8_t);
@@ -18,9 +16,9 @@ static void portamento_up(voice_t *, __uint8_t);
 
 static void portamento_down(voice_t *, __uint8_t);
 
-static void start_tone_portamento(voice_t *, __uint8_t);
+static void start_tone_portamento(voice_t *, int, __uint8_t);
 
-static void tone_portamento(voice_t *);
+static void tone_portamento(voice_t *, int);
 
 static void turn_arpeggiator_on(voice_t *);
 
@@ -48,11 +46,11 @@ void reset_arpeggiator(voice_t *voice)
 
 void handle_effects_on_event(channel_event_t *event, voice_t *voice)
 {
-    for (int i = 0; i < MAX_EFFECTS; i++)
+    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
-        effect_t effect = event->effects[i];
+        effect_t effect = event->effects[effect_no];
         if (effect.command == TONE_PORTAMENTO)
-            start_tone_portamento(voice, effect.data);
+            start_tone_portamento(voice, effect_no, effect.data);
         else if (effect.command == SET_VOLUME)
             set_volume(voice, effect.data);
         else if (effect.command == SET_TEMPO)
@@ -76,9 +74,9 @@ void handle_effects_on_event(channel_event_t *event, voice_t *voice)
 
 void handle_effects_off_event(channel_event_t *event, voice_t *voice)
 {
-    for (int i = 0; i < MAX_EFFECTS; i++)
+    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
-        effect_t effect = event->effects[i];
+        effect_t effect = event->effects[effect_no];
         if (effect.command == VOLUME_SLIDE_UP)
             volume_slide_up(voice, effect.data);
         else if (effect.command == VOLUME_SLIDE_DOWN)
@@ -90,7 +88,7 @@ void handle_effects_off_event(channel_event_t *event, voice_t *voice)
         else if (effect.command == PORTAMENTO_DOWN)
             portamento_down(voice, effect.data);
         else if (effect.command == TONE_PORTAMENTO)
-            tone_portamento(voice);
+            tone_portamento(voice, effect_no);
         else if (effect.command == ARPEGGIO)
             arpeggiate(voice, effect.data);
     }
@@ -139,24 +137,25 @@ void portamento_down(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void start_tone_portamento(voice_t *voice, __uint8_t data)
+void start_tone_portamento(voice_t *voice, int effect_no, __uint8_t data)
 {
     if (data)
-        voice->tone_portamento_speed = data;
+        voice->effect_memory[effect_no] = data;
 }
 
 static inline
-void tone_portamento(voice_t *voice)
+void tone_portamento(voice_t *voice, int effect_no)
 {
+    int portamento_speed = (int) voice->effect_memory[effect_no];
     if (voice->period < voice->tone_portamento_target_period)
     {
-        voice->period += voice->tone_portamento_speed;
+        voice->period += portamento_speed;
         if (voice->period > voice->tone_portamento_target_period)
             voice->period = voice->tone_portamento_target_period;
     }
     else
     {
-        voice->period -= voice->tone_portamento_speed;
+        voice->period -= portamento_speed;
         if (voice->period < voice->tone_portamento_target_period)
             voice->period = voice->tone_portamento_target_period;
     }

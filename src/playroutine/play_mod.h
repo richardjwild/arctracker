@@ -4,11 +4,12 @@
 #include <arctracker.h>
 #include <audio/audio_api.h>
 
+#define MAX_EFFECTS 4
+
 typedef struct {
     float phase_accumulator;
     int period;
     int tone_portamento_target_period;
-    int tone_portamento_speed;
     bool sample_repeats;
     long sample_end;
     long repeat_length;
@@ -19,6 +20,7 @@ typedef struct {
     bool arpeggiator_on;
     int arpeggio_counter;
     int current_note;
+    __uint8_t effect_memory[MAX_EFFECTS];
 } voice_t;
 
 void play_module(module_t *module, audio_api_t audio_api);
