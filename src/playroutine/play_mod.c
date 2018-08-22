@@ -12,9 +12,14 @@
 #include <io/console.h>
 #include <memory/heap.h>
 
-voice_t *initialise_voices(const module_t *module);
+static module_t module;
+static args_t config;
 
-void decode_next_events(const module_t *module, channel_event_t *decoded_events);
+voice_t *initialise_player(module_t *module_p, audio_api_t audio_api_p);
+
+voice_t *initialise_voices();
+
+void decode_next_events(channel_event_t *decoded_events);
 
 void silence_channel(voice_t *voice);
 
@@ -28,62 +33,67 @@ void process_commands(channel_event_t *event, voice_t *voice, bool on_event);
 
 bool portamento(channel_event_t event);
 
-bool sample_out_of_range(channel_event_t event, module_t module);
+bool sample_out_of_range(channel_event_t event);
 
-void output_one_tick(const module_t *module, voice_t *voices, const channel_event_t *events);
+void output_one_tick(voice_t *voices, const channel_event_t *events);
 
-void output_one_channel_tick(const module_t *module, channel_event_t event, voice_t *voice);
+void output_one_channel_tick(channel_event_t event, voice_t *voice);
 
 void play_module(module_t *module, audio_api_t audio_api)
 {
-    args_t config = configuration();
-    initialise_audio(audio_api, module->num_channels);
-    set_master_gain(config.volume);
-    set_clock(module->initial_speed, audio_api.sample_rate);
-    initialise_sequence(module);
-    configure_console(config.pianola, module);
-    voice_t *voices = initialise_voices(module);
+    voice_t *voices = initialise_player(module, audio_api);
     channel_event_t events[MAX_CHANNELS];
-
     bool song_finished = false;
     while (!song_finished)
     {
         clock_tick();
         if (new_event())
         {
-            decode_next_events(module, events);
+            decode_next_events(events);
             output_to_console(events);
         }
         if (!looped_yet() || config.loop_forever)
-            output_one_tick(module, voices, events);
+            output_one_tick(voices, events);
         else
             song_finished = true;
     }
     send_remaining_audio();
 }
 
-void output_one_tick(const module_t *module, voice_t *voices, const channel_event_t *events)
+voice_t *initialise_player(module_t *module_p, const audio_api_t audio_api)
 {
-    for (int channel = 0; channel < module->num_channels; channel++)
+    module = *module_p;
+    args_t config = configuration();
+    initialise_audio(audio_api, module.num_channels);
+    set_master_gain(config.volume);
+    set_clock(module.initial_speed, audio_api.sample_rate);
+    initialise_sequence(module_p);
+    configure_console(config.pianola, module_p);
+    return initialise_voices();
+}
+
+void output_one_tick(voice_t *voices, const channel_event_t *events)
+{
+    for (int channel = 0; channel < module.num_channels; channel++)
     {
         channel_event_t event = events[channel];
         voice_t voice = voices[channel];
-        output_one_channel_tick(module, event, &voice);
+        output_one_channel_tick(event, &voice);
         voices[channel] = voice;
     }
     write_audio_data(voices);
 }
 
-void output_one_channel_tick(const module_t *module, channel_event_t event, voice_t *voice)
+void output_one_channel_tick(channel_event_t event, voice_t *voice)
 {
-    sample_t sample = module->samples[event.sample - 1];
+    sample_t sample = module.samples[event.sample - 1];
     if (new_event())
     {
         if (event.note)
         {
             if (portamento(event))
                 set_portamento_target(event, sample, voice);
-            else if (sample_out_of_range(event, *module))
+            else if (sample_out_of_range(event))
                 silence_channel(voice);
             else
                 trigger_new_note(event, sample, voice);
@@ -97,7 +107,7 @@ void output_one_channel_tick(const module_t *module, channel_event_t event, voic
 }
 
 inline
-bool sample_out_of_range(const channel_event_t event, const module_t module)
+bool sample_out_of_range(const channel_event_t event)
 {
     return event.sample > module.num_samples;
 }
@@ -126,25 +136,25 @@ void reset_gain_to_sample_default(voice_t *voice, sample_t sample)
     voice->gain = get_internal_gain(sample.default_gain);
 }
 
-voice_t *initialise_voices(const module_t *module)
+voice_t *initialise_voices()
 {
-    voice_t *voices = allocate_array(module->num_channels, sizeof(voice_t));
-    for (int channel = 0; channel < module->num_channels; channel++)
+    voice_t *voices = allocate_array(module.num_channels, sizeof(voice_t));
+    for (int channel = 0; channel < module.num_channels; channel++)
     {
         voices[channel].channel_playing = false;
         voices[channel].arpeggiator_on = false;
-        voices[channel].panning = module->initial_panning[channel] - 1;
+        voices[channel].panning = module.initial_panning[channel] - 1;
         voices[channel].gain = INTERNAL_GAIN_MAX;
     }
     return voices;
 }
 
-void decode_next_events(const module_t *module, channel_event_t *decoded_events)
+void decode_next_events(channel_event_t *decoded_events)
 {
     next_event();
-    for (int channel = 0; channel < module->num_channels; channel++)
+    for (int channel = 0; channel < module.num_channels; channel++)
     {
-        size_t event_bytes = module->decode_event(pattern_line(), decoded_events + channel);
+        size_t event_bytes = module.decode_event(pattern_line(), decoded_events + channel);
         advance_pattern_line(event_bytes);
     }
 }
