@@ -11,4 +11,6 @@ void write_info(module_t module);
 
 void warn_clip();
 
+void finish_console();
+
 #endif //ARCTRACKER_CONSOLE_H

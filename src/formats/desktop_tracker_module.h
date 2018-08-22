@@ -3,6 +3,6 @@
 
 #include <io/read_mod.h>
 
-format_t desktop_tracker_format();
+const format_t desktop_tracker_format();
 
 #endif //ARCTRACKER_DESKTOP_TRACKER_MODULE_H

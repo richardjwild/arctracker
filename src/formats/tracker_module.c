@@ -48,19 +48,19 @@ static const __uint8_t JUMP_COMMAND_TRK = 19;         // J
 static const __uint8_t SPEED_COMMAND_TRK = 28;        // S
 static const __uint8_t VOLUME_COMMAND_TRK = 31;       // V
 
-void *search_tff(void *array_start, long array_end, const void *to_find);
+void *search_tff(void *, long, const void *);
 
-module_t read_tracker_module(mapped_file_t file);
+module_t read_tracker_module(mapped_file_t);
 
-static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements);
+static int *convert_int_array(__uint8_t *, int);
 
-void get_patterns(void *array_start, long array_end, void **patterns);
+void get_patterns(void *, long, void **);
 
-static int get_samples(void *array_start, long array_end, sample_t *samples);
+static int get_samples(void *, long, sample_t *);
 
-sample_t *get_sample_info(void *array_start, long array_end);
+sample_t *get_sample_info(void *, long);
 
-bool is_tracker_format(mapped_file_t);;
+bool is_tracker_format(mapped_file_t);
 
 const format_t tracker_format()
 {

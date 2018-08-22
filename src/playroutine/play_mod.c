@@ -56,6 +56,7 @@ void play_module(module_t *module, audio_api_t audio_api)
             song_finished = true;
     }
     send_remaining_audio();
+    finish_console();
 }
 
 voice_t *initialise_player(module_t *module_p, const audio_api_t audio_api)

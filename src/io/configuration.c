@@ -46,7 +46,7 @@ static args_t config = {
         .loop_forever = false
 };
 
-bool handle_argument(const char *arg);
+bool handle_argument(const char *);
 
 inline
 args_t configuration()

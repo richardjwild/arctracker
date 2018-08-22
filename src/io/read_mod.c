@@ -9,14 +9,13 @@
 
 #define READONLY "r"
 
-mapped_file_t load_file(char *filename);
+mapped_file_t load_file(char *);
 
-size_t file_size(int file_descriptor);
+size_t file_size(int);
 
 module_t read_file(format_t *formats, int no_formats)
 {
     mapped_file_t file = load_file(configuration().mod_filename);
-
     for (int i = 0; i < no_formats; i++)
     {
         format_t format = formats[i];
@@ -27,7 +26,6 @@ module_t read_file(format_t *formats, int no_formats)
             return module;
         }
     }
-
     error("File type not recognised");
 }
 

@@ -144,3 +144,7 @@ void warn_clip()
     if (configuration().clip_warning)
         printf("!");
 }
+
+void finish_console() {
+    printf("\n");
+}

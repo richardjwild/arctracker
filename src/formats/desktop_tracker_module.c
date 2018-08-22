@@ -44,10 +44,6 @@ static const __uint8_t NOTECUT_COMMAND_DSKT = 0x1c;            // not implemente
 static const __uint8_t NOTEDELAY_COMMAND_DSKT = 0x1d;          // not implemented
 static const __uint8_t PATTERNDELAY_COMMAND_DSKT = 0x1e;       // not implemented
 
-bool is_desktop_tracker_format(mapped_file_t);
-
-module_t read_desktop_tracker_module(mapped_file_t file);
-
 typedef struct
 {
     __uint32_t identifier;
@@ -78,15 +74,19 @@ typedef struct
     __uint32_t sample_data_offset;
 } dtt_sample_format_t;
 
-static module_t create_module(dtt_file_format_t *file_format);
+bool is_desktop_tracker_format(mapped_file_t);
 
-static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements);
+module_t read_desktop_tracker_module(mapped_file_t);
 
-static void set_pattern_starts(module_t *module, __uint32_t *pattern_offsets, void *base_address);
+static module_t create_module(dtt_file_format_t *);
 
-static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples, void *base_address);
+static int *convert_int_array(const __uint8_t *, int);
 
-format_t desktop_tracker_format()
+static void set_pattern_starts(module_t *, __uint32_t *, void *);
+
+static sample_t *get_samples(int, dtt_sample_format_t *, void *);
+
+const format_t desktop_tracker_format()
 {
     format_t format_reader = {
             .is_this_format = is_desktop_tracker_format,
@@ -174,7 +174,7 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     module.sequence = convert_int_array(positions, module.tune_length);
     set_pattern_starts(&module, pattern_offsets, file.addr);
     module.pattern_lengths = convert_int_array(pattern_lengths, module.num_patterns);
-    module.samples = get_samples((int) module.num_samples, samples, file.addr);
+    module.samples = get_samples(module.num_samples, samples, file.addr);
     return module;
 }
 
@@ -196,7 +196,7 @@ static module_t create_module(dtt_file_format_t *file_format)
     return module;
 }
 
-static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements)
+static int *convert_int_array(const __uint8_t *unsigned_bytes, int num_elements)
 {
     int *int_array = allocate_array(num_elements, sizeof(int));
     for (int i = 0; i < num_elements; i++)

@@ -8,39 +8,39 @@
 
 static const int MAX_EFFECTS = 4;
 
-void handle_effects_off_event(channel_event_t *event, voice_t *voice);
+void handle_effects_off_event(channel_event_t *, voice_t *);
 
-void handle_effects_on_event(channel_event_t *event, voice_t *voice);
+void handle_effects_on_event(channel_event_t *, voice_t *);
 
-static void volume_slide_up(voice_t *voice, __uint8_t data);
+static void volume_slide_up(voice_t *, __uint8_t);
 
-static void volume_slide_down(voice_t *voice, __uint8_t data);
+static void volume_slide_down(voice_t *, __uint8_t);
 
-static void volume_slide_combined(voice_t *voice, __int8_t data);
+static void volume_slide_combined(voice_t *, __int8_t);
 
-static void portamento_up(voice_t *voice, __uint8_t data);
+static void portamento_up(voice_t *, __uint8_t);
 
-static void portamento_down(voice_t *voice, __uint8_t data);
+static void portamento_down(voice_t *, __uint8_t);
 
-static void start_tone_portamento(voice_t *voice, __uint8_t data);
+static void start_tone_portamento(voice_t *, __uint8_t);
 
-static void tone_portamento(voice_t *voice);
+static void tone_portamento(voice_t *);
 
-static void reset_arpeggiator(voice_t *voice);
+static void reset_arpeggiator(voice_t *);
 
-static void turn_arpeggiator_on(voice_t *voice);
+static void turn_arpeggiator_on(voice_t *);
 
-static void arpeggiate(voice_t *voice, __uint8_t data);
+static void arpeggiate(voice_t *, __uint8_t);
 
-static void set_volume(voice_t *voice, __uint8_t data);
+static void set_volume(voice_t *, __uint8_t);
 
-static void set_tempo(__uint8_t data);
+static void set_tempo(__uint8_t);
 
-static void set_voice_panning(voice_t *voice, __uint8_t data);
+static void set_voice_panning(voice_t *, __uint8_t);
 
-static void set_tempo_fine(__uint8_t data);
+static void set_tempo_fine(__uint8_t);
 
-static void portamento_fine(voice_t *voice, __uint8_t data);
+static void portamento_fine(voice_t *, __uint8_t);
 
 void process_commands(channel_event_t *event, voice_t *voice, bool on_event)
 {

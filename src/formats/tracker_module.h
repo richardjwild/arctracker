@@ -3,6 +3,6 @@
 
 #include <io/read_mod.h>
 
-format_t tracker_format();
+const format_t tracker_format();
 
 #endif //ARCTRACKER_TRACKER_MODULE_H
