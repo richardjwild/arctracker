@@ -18,7 +18,7 @@ typedef struct {
     int panning;
     bool arpeggiator_on;
     int arpeggio_counter;
-    int note_playing;
+    int current_note;
 } voice_t;
 
 void play_module(module_t *module, audio_api_t audio_api);

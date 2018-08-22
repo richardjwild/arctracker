@@ -41,7 +41,7 @@ void reset_arpeggiator(voice_t *voice)
 {
     if (voice->arpeggiator_on)
     {
-        voice->period = period_for_note(voice->note_playing);
+        voice->period = period_for_note(voice->current_note);
         voice->arpeggiator_on = false;
     }
 }
@@ -173,14 +173,14 @@ static inline
 void arpeggiate(voice_t *voice, __uint8_t data)
 {
     int chord[] = {
-            voice->note_playing,
-            voice->note_playing + HIGH_NYBBLE(data),
-            voice->note_playing + LOW_NYBBLE(data)
+            voice->current_note,
+            voice->current_note + HIGH_NYBBLE(data),
+            voice->current_note + LOW_NYBBLE(data)
     };
     int arpeggio_note = chord[voice->arpeggio_counter % 3];
     if (NOTE_OUT_OF_RANGE(arpeggio_note))
     {
-        arpeggio_note = voice->note_playing;
+        arpeggio_note = voice->current_note;
     }
     voice->period = period_for_note(arpeggio_note);
     voice->arpeggio_counter += 1;

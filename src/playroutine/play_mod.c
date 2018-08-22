@@ -174,8 +174,8 @@ void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice)
     voice->sample_pointer = sample.sample_data;
     voice->phase_accumulator = 0.0;
     voice->arpeggiator_on = false;
-    voice->note_playing = event.note + sample.transpose;
-    voice->period = period_for_note(voice->note_playing);
+    voice->current_note = event.note + sample.transpose;
+    voice->period = period_for_note(voice->current_note);
     voice->tone_portamento_target_period = voice->period;
     voice->gain = get_internal_gain(sample.default_gain);
     voice->sample_repeats = sample.repeats;
