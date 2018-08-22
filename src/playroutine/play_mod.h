@@ -21,6 +21,6 @@ typedef struct {
     int note_playing;
 } voice_t;
 
-void play_module(module_t *module, audio_api_t audio_api);
+void play_module(module_t *, audio_api_t);
 
 #endif //ARCTRACKER_PLAY_MOD_H

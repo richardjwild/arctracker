@@ -15,41 +15,39 @@
 static module_t module;
 static args_t config;
 
-voice_t *initialise_player(module_t *module_p, audio_api_t audio_api_p);
+voice_t *initialise_player(module_t *, audio_api_t);
 
 voice_t *initialise_voices();
 
-void decode_next_events(channel_event_t *decoded_events);
+channel_event_t *decode_next_events();
 
-void silence_channel(voice_t *voice);
+void silence_channel(voice_t *);
 
-void reset_gain_to_sample_default(voice_t *voice, sample_t sample);
+void reset_gain_to_sample_default(voice_t *, sample_t);
 
-void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice);
+void set_portamento_target(channel_event_t, sample_t, voice_t *);
 
-void trigger_new_note(channel_event_t event, sample_t sample, voice_t *voice);
+void trigger_new_note(channel_event_t, sample_t, voice_t *);
 
-void process_commands(channel_event_t *event, voice_t *voice, bool on_event);
+bool portamento(channel_event_t);
 
-bool portamento(channel_event_t event);
+bool sample_out_of_range(channel_event_t);
 
-bool sample_out_of_range(channel_event_t event);
+void output_one_tick(voice_t *, const channel_event_t *);
 
-void output_one_tick(voice_t *voices, const channel_event_t *events);
-
-void output_one_channel_tick(channel_event_t event, voice_t *voice);
+void output_one_channel_tick(channel_event_t, voice_t *);
 
 void play_module(module_t *module, audio_api_t audio_api)
 {
     voice_t *voices = initialise_player(module, audio_api);
-    channel_event_t events[MAX_CHANNELS];
     bool song_finished = false;
+    channel_event_t *events = NULL;
     while (!song_finished)
     {
         clock_tick();
         if (new_event())
         {
-            decode_next_events(events);
+            events = decode_next_events();
             output_to_console(events);
         }
         if (!looped_yet() || config.loop_forever)
@@ -149,14 +147,16 @@ voice_t *initialise_voices()
     return voices;
 }
 
-void decode_next_events(channel_event_t *decoded_events)
+channel_event_t *decode_next_events()
 {
+    static channel_event_t events[MAX_CHANNELS];
     next_event();
     for (int channel = 0; channel < module.num_channels; channel++)
     {
-        size_t event_bytes = module.decode_event(pattern_line(), decoded_events + channel);
+        size_t event_bytes = module.decode_event(pattern_line(), events + channel);
         advance_pattern_line(event_bytes);
     }
+    return events;
 }
 
 void set_portamento_target(channel_event_t event, sample_t sample, voice_t *voice)
