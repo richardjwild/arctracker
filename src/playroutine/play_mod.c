@@ -35,7 +35,7 @@ bool sample_out_of_range(channel_event_t);
 
 void output_one_tick(voice_t *, const channel_event_t *);
 
-void output_one_channel_tick(channel_event_t, voice_t *);
+void update_voice_every_tick(channel_event_t, voice_t *);
 
 void play_module(module_t *module, audio_api_t audio_api)
 {
@@ -77,13 +77,13 @@ void output_one_tick(voice_t *voices, const channel_event_t *events)
     {
         channel_event_t event = events[channel];
         voice_t voice = voices[channel];
-        output_one_channel_tick(event, &voice);
+        update_voice_every_tick(event, &voice);
         voices[channel] = voice;
     }
     write_audio_data(voices);
 }
 
-void output_one_channel_tick(channel_event_t event, voice_t *voice)
+void update_voice_every_tick(channel_event_t event, voice_t *voice)
 {
     sample_t sample = module.samples[event.sample - 1];
     if (new_event())
