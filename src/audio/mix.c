@@ -52,9 +52,3 @@ __int16_t *mix(const stereo_frame_t *channel_buffer, const int channels_to_mix)
     }
     return audio_buffer;
 }
-
-__int16_t *silence(const int no_of_frames)
-{
-    memset(audio_buffer, 0, sizeof(__int16_t) * 2 * no_of_frames);
-    return audio_buffer;
-}
