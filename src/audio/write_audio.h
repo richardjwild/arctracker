@@ -3,7 +3,7 @@
 
 #include <playroutine/play_mod.h>
 
-void initialise_audio(audio_api_t audio_output, long channels);
+void initialise_audio(audio_api_t audio_output, int channels);
 
 void write_audio_data(voice_t *voices);
 

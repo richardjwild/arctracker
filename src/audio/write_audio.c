@@ -11,10 +11,10 @@ static audio_api_t audio_output;
 static long frames_filled;
 static int channels;
 
-void initialise_audio(audio_api_t audio_output_in, long channels_in)
+void initialise_audio(audio_api_t audio_output_in, int channels_in)
 {
     audio_output = audio_output_in;
-    channels = (int) channels_in;
+    channels = channels_in;
     channel_buffer = allocate_array(audio_output.buffer_size_frames * channels, sizeof(stereo_frame_t));
     calculate_phase_increments(audio_output.sample_rate);
     allocate_resample_buffer(audio_output.buffer_size_frames);
