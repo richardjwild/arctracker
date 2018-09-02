@@ -4,8 +4,8 @@
 
 static const __int16_t DIGITAL_PCM_MAX = 32767;
 static const __int16_t DIGITAL_PCM_MIN = -32768;
-static const float POSITIVE_0dBFS = 1.0f;
-static const float NEGATIVE_0dBFS = -1.0f;
+static const double POSITIVE_0dBFS = 1.0f;
+static const double NEGATIVE_0dBFS = -1.0f;
 static const size_t STEREO_FRAME_SIZE = 2 * sizeof(__int16_t);
 
 static __int16_t *audio_buffer;
@@ -18,7 +18,7 @@ void allocate_audio_buffer(const int no_of_frames)
 }
 
 static inline
-__int16_t clip(const float sample)
+__int16_t clip(const double sample)
 {
     if (sample > POSITIVE_0dBFS)
     {
@@ -40,7 +40,7 @@ __int16_t *mix(const stereo_frame_t *channel_buffer, const int channels_to_mix)
     int output_i = 0;
     for (int frame = 0; frame < audio_buffer_frames; frame++)
     {
-        float l_sample = 0.0, r_sample = 0.0;
+        double l_sample = 0.0, r_sample = 0.0;
         for (int channel = 0; channel < channels_to_mix; channel++)
         {
             const stereo_frame_t stereo_frame = channel_buffer[input_i++];

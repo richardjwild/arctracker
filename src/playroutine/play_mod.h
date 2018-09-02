@@ -7,13 +7,13 @@
 #define MAX_EFFECTS 4
 
 typedef struct {
-    float phase_accumulator;
+    double phase_accumulator;
     int period;
     int tone_portamento_target_period;
     bool sample_repeats;
     long sample_end;
     long repeat_length;
-    float *sample_pointer;
+    double *sample_pointer;
     int gain;
     bool channel_playing;
     int panning;

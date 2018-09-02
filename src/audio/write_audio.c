@@ -32,10 +32,10 @@ void write_frames_for_channel(voice_t *voices, const int channel, const long fra
 {
     voice_t *voice = voices + channel;
     long offset = buffer_offset_for(channel);
-    float *resample_buffer = resample(voice, frames_to_fill);
+    double *resample_buffer = resample(voice, frames_to_fill);
     for (long frame = 0; frame < frames_to_fill; frame++)
     {
-        float pcm = resample_buffer[frame];
+        double pcm = resample_buffer[frame];
         stereo_frame_t stereo_frame = apply_gain(pcm, voice);
         channel_buffer[offset] = stereo_frame;
         offset += channels;

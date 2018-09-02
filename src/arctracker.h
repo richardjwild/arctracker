@@ -44,7 +44,7 @@ typedef struct
     int repeat_offset;
     int repeat_length;
     int transpose;
-    float *sample_data;
+    double *sample_data;
 } sample_t;
 
 typedef struct

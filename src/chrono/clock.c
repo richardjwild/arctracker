@@ -1,6 +1,6 @@
 #include "clock.h"
 
-static const float DEFAULT_TICKS_PER_SECOND = 50.0;
+static const double DEFAULT_TICKS_PER_SECOND = 50.0;
 
 static int ticks_per_event;
 static int sample_rate;

@@ -3,13 +3,13 @@
 
 // 1024 determined by trial and error to give acceptable volume
 // with reasonably low likelihood of clipping
-static const float MASTER_GAIN_FACTOR = 1024.0;
+static const double MASTER_GAIN_FACTOR = 1024.0;
 
-static float master_gain;
-static float module_gain_factor;
+static double master_gain;
+static double module_gain_factor;
 
-const float PAN_L[] = {1.0, 0.828, 0.672, 0.5, 0.328, 0.172, 0.0};
-const float PAN_R[] = {0.0, 0.172, 0.328, 0.5, 0.672, 0.828, 1.0};
+const double PAN_L[] = {1.0, 0.828, 0.672, 0.5, 0.328, 0.172, 0.0};
+const double PAN_R[] = {0.0, 0.172, 0.328, 0.5, 0.672, 0.828, 1.0};
 
 void set_master_gain(int gain)
 {
@@ -18,7 +18,7 @@ void set_master_gain(int gain)
 
 void module_gain_goes_to(int module_gain_maximum)
 {
-    module_gain_factor = (float) INTERNAL_GAIN_MAX / module_gain_maximum;
+    module_gain_factor = (double) INTERNAL_GAIN_MAX / module_gain_maximum;
 }
 
 int get_internal_gain(int module_gain)
@@ -26,11 +26,11 @@ int get_internal_gain(int module_gain)
     return (int) (module_gain * module_gain_factor);
 }
 
-stereo_frame_t apply_gain(float pcm, voice_t *voice)
+stereo_frame_t apply_gain(double pcm, voice_t *voice)
 {
-    float voice_gain = convert_to_linear_gain(voice->gain);
+    double voice_gain = convert_to_linear_gain(voice->gain);
     stereo_frame_t stereo_frame;
-    float adjusted_pcm = master_gain * voice_gain * pcm;
+    double adjusted_pcm = master_gain * voice_gain * pcm;
     if (voice->panning >= 0 && voice->panning <= 6)
     {
         stereo_frame.l = adjusted_pcm * PAN_L[voice->panning];

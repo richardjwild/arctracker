@@ -3,10 +3,10 @@
 #include <memory/heap.h>
 
 static int vidc_pcm_encoding[256];
-static float gain_conversion[256];
+static double gain_conversion[256];
 
-const float EXPANDED_MAX = 32124.0;
-const float GAIN_MAX = 8031.0;
+const double EXPANDED_MAX = 32124.0;
+const double GAIN_MAX = 8031.0;
 const int BIAS = 0x84;
 const unsigned int SIGN_BIT = 0x80;
 const unsigned int QUANTIZATION_BITS_MASK = 0xf;
@@ -50,9 +50,9 @@ void precalculate_mu_law()
     calculate_logarithmic_gain();
 }
 
-float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
+double *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
 {
-    float *linear = allocate_array(no_samples + 1, sizeof(float));
+    double *linear = allocate_array(no_samples + 1, sizeof(double));
     for (int i = 0; i < no_samples; i++)
     {
         __uint8_t encoded = mu_law_encoded[i];
@@ -62,7 +62,7 @@ float *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int n
     return linear;
 }
 
-float convert_to_linear_gain(const int logarithmic_gain)
+double convert_to_linear_gain(const int logarithmic_gain)
 {
     return gain_conversion[logarithmic_gain];
 }
