@@ -18,5 +18,4 @@ configure
 install-sh
 *~
 .idea
-CMakeLists.txt
 cmake-build-debug/
