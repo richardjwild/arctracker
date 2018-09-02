@@ -5,6 +5,13 @@
 #include <memory/heap.h>
 #include <pcm/mu_law.h>
 
+// As you can see, about half of the effects are left unimplemented. Neither
+// is the sample sustain feature. I could in principle have a stab at doing
+// some of them, but I do not posses any modfiles that make use of these
+// features so I have no means to test them properly. Therefore I have elected
+// not to implement them, unless I should ever come into possession of some
+// modfiles that could serve as an acceptance test, which seems quite unlikely.
+
 #define MAX_LEN_TUNENAME_DSKT 64
 #define MAX_LEN_AUTHOR_DSKT 64
 #define MAX_LEN_SAMPLENAME_DSKT 32
@@ -14,35 +21,35 @@
 static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 
-static const __uint8_t ARPEGGIO_COMMAND_DSKT = 0x0;
-static const __uint8_t PORTUP_COMMAND_DSKT = 0x1;
-static const __uint8_t PORTDOWN_COMMAND_DSKT = 0x2;
-static const __uint8_t TONEPORT_COMMAND_DSKT = 0x3;
-static const __uint8_t VIBRATO_COMMAND_DSKT = 0x4;             // not implemented
-static const __uint8_t DELAYEDNOTE_COMMAND_DSKT = 0x5;         // not implemented
-static const __uint8_t RELEASESAMP_COMMAND_DSKT = 0x6;         // not implemented
-static const __uint8_t TREMOLO_COMMAND_DSKT = 0x7;             // not implemented
-static const __uint8_t PHASOR_COMMAND1_DSKT = 0x8;             // not implemented
-static const __uint8_t PHASOR_COMMAND2_DSKT = 0x9;             // not implemented
-static const __uint8_t VOLSLIDE_COMMAND_DSKT = 0xa;
-static const __uint8_t JUMP_COMMAND_DSKT = 0xb;
-static const __uint8_t VOLUME_COMMAND_DSKT = 0xc;
-static const __uint8_t STEREO_COMMAND_DSKT = 0xd;
-static const __uint8_t STEREOSLIDE_COMMAND_DSKT = 0xe;         // not implemented
-static const __uint8_t SPEED_COMMAND_DSKT = 0xf;
-static const __uint8_t ARPEGGIOSPEED_COMMAND_DSKT = 0x10;      // not implemented
-static const __uint8_t FINEPORTAMENTO_COMMAND_DSKT = 0x11;
-static const __uint8_t CLEAREPEAT_COMMAND_DSKT = 0x12;         // not implemented
-static const __uint8_t SETVIBRATOWAVEFORM_COMMAND_DSKT = 0x14; // not implemented
-static const __uint8_t LOOP_COMMAND_DSKT = 0x16;               // not implemented
-static const __uint8_t SETTREMOLOWAVEFORM_COMMAND_DSKT = 0x17; // not implemented
-static const __uint8_t SETFINETEMPO_COMMAND_DSKT = 0x18;
-static const __uint8_t RETRIGGERSAMPLE_COMMAND_DSKT = 0x19;    // not implemented
-static const __uint8_t FINEVOLSLIDE_COMMAND_DSKT = 0x1a;
-static const __uint8_t HOLD_COMMAND_DSKT = 0x1b;               // not implemented
-static const __uint8_t NOTECUT_COMMAND_DSKT = 0x1c;            // not implemented
-static const __uint8_t NOTEDELAY_COMMAND_DSKT = 0x1d;          // not implemented
-static const __uint8_t PATTERNDELAY_COMMAND_DSKT = 0x1e;       // not implemented
+static const __uint8_t ARPEGGIO_COMMAND = 0x0;
+static const __uint8_t PORTUP_COMMAND = 0x1;
+static const __uint8_t PORTDOWN_COMMAND = 0x2;
+static const __uint8_t TONEPORT_COMMAND = 0x3;
+static const __uint8_t VIBRATO_COMMAND_NOT_IMPLEMENTED = 0x4;
+static const __uint8_t DELAYEDNOTE_COMMAND_NOT_IMPLEMENTED = 0x5;
+static const __uint8_t RELEASESAMP_COMMAND_NOT_IMPLEMENTED = 0x6;
+static const __uint8_t TREMOLO_COMMAND_NOT_IMPLEMENTED = 0x7;
+static const __uint8_t PHASOR_COMMAND1_NOT_IMPLEMENTED = 0x8;
+static const __uint8_t PHASOR_COMMAND2_NOT_IMPLEMENTED = 0x9;
+static const __uint8_t VOLSLIDE_COMMAND = 0xa;
+static const __uint8_t JUMP_COMMAND = 0xb;
+static const __uint8_t VOLUME_COMMAND = 0xc;
+static const __uint8_t STEREO_COMMAND = 0xd;
+static const __uint8_t STEREOSLIDE_COMMAND_NOT_IMPLEMENTED = 0xe;
+static const __uint8_t SPEED_COMMAND = 0xf;
+static const __uint8_t ARPEGGIOSPEED_COMMAND_NOT_IMPLEMENTED = 0x10;
+static const __uint8_t FINEPORTAMENTO_COMMAND = 0x11;
+static const __uint8_t CLEAREPEAT_COMMAND_NOT_IMPLEMENTED = 0x12;
+static const __uint8_t SETVIBRATOWAVEFORM_COMMAND_NOT_IMPLEMENTED = 0x14;
+static const __uint8_t LOOP_COMMAND_NOT_IMPLEMENTED = 0x16;
+static const __uint8_t SETTREMOLOWAVEFORM_COMMAND_NOT_IMPLEMENTED = 0x17;
+static const __uint8_t SETFINETEMPO_COMMAND = 0x18;
+static const __uint8_t RETRIGGERSAMPLE_COMMAND_NOT_IMPLEMENTED = 0x19;
+static const __uint8_t FINEVOLSLIDE_COMMAND = 0x1a;
+static const __uint8_t HOLD_COMMAND_NOT_IMPLEMENTED = 0x1b;
+static const __uint8_t NOTECUT_COMMAND_NOT_IMPLEMENTED = 0x1c;
+static const __uint8_t NOTEDELAY_COMMAND_NOT_IMPLEMENTED = 0x1d;
+static const __uint8_t PATTERNDELAY_COMMAND_NOT_IMPLEMENTED = 0x1e;
 
 typedef struct
 {
@@ -103,29 +110,29 @@ bool is_desktop_tracker_format(mapped_file_t file)
 static inline
 command_t desktop_tracker_command(int code, __uint8_t data)
 {
-    if (code == VOLUME_COMMAND_DSKT)
+    if (code == VOLUME_COMMAND)
         return SET_VOLUME;
-    else if (code == SPEED_COMMAND_DSKT)
+    else if (code == SPEED_COMMAND)
         return SET_TEMPO;
-    else if (code == STEREO_COMMAND_DSKT)
+    else if (code == STEREO_COMMAND)
         return SET_TRACK_STEREO;
-    else if (code == VOLSLIDE_COMMAND_DSKT)
+    else if (code == VOLSLIDE_COMMAND)
         return VOLUME_SLIDE;
-    else if (code == PORTUP_COMMAND_DSKT)
+    else if (code == PORTUP_COMMAND)
         return PORTAMENTO_UP;
-    else if (code == PORTDOWN_COMMAND_DSKT)
+    else if (code == PORTDOWN_COMMAND)
         return PORTAMENTO_DOWN;
-    else if (code == TONEPORT_COMMAND_DSKT)
+    else if (code == TONEPORT_COMMAND)
         return TONE_PORTAMENTO;
-    else if (code == JUMP_COMMAND_DSKT)
+    else if (code == JUMP_COMMAND)
         return JUMP_TO_POSITION;
-    else if (code == SETFINETEMPO_COMMAND_DSKT)
+    else if (code == SETFINETEMPO_COMMAND)
         return SET_TEMPO_FINE;
-    else if (code == FINEPORTAMENTO_COMMAND_DSKT)
+    else if (code == FINEPORTAMENTO_COMMAND)
         return PORTAMENTO_FINE;
-    else if (code == FINEVOLSLIDE_COMMAND_DSKT)
+    else if (code == FINEVOLSLIDE_COMMAND)
         return VOLUME_SLIDE_FINE;
-    else if (code == ARPEGGIO_COMMAND_DSKT)
+    else if (code == ARPEGGIO_COMMAND)
         return (data == 0) ? NO_EFFECT : ARPEGGIO;
     else
         return NO_EFFECT;

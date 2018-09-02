@@ -36,17 +36,17 @@ static const char *ROFS_CHUNK = "ROFS";
 static const char *RLEN_CHUNK = "RLEN";
 static const char *SDAT_CHUNK = "SDAT";
 
-static const __uint8_t ARPEGGIO_COMMAND_TRK = 0;      // 0
-static const __uint8_t PORTUP_COMMAND_TRK = 1;        // 1
-static const __uint8_t PORTDOWN_COMMAND_TRK = 2;      // 2
-static const __uint8_t TONEPORT_COMMAND_TRK = 3;      // 3
-static const __uint8_t BREAK_COMMAND_TRK = 11;        // B
-static const __uint8_t STEREO_COMMAND_TRK = 14;       // E
-static const __uint8_t VOLSLIDEUP_COMMAND_TRK = 16;   // G
-static const __uint8_t VOLSLIDEDOWN_COMMAND_TRK = 17; // H
-static const __uint8_t JUMP_COMMAND_TRK = 19;         // J
-static const __uint8_t SPEED_COMMAND_TRK = 28;        // S
-static const __uint8_t VOLUME_COMMAND_TRK = 31;       // V
+static const __uint8_t ARPEGGIO_COMMAND = 0;      // 0
+static const __uint8_t PORTUP_COMMAND = 1;        // 1
+static const __uint8_t PORTDOWN_COMMAND = 2;      // 2
+static const __uint8_t TONEPORT_COMMAND = 3;      // 3
+static const __uint8_t BREAK_COMMAND = 11;        // B
+static const __uint8_t STEREO_COMMAND = 14;       // E
+static const __uint8_t VOLSLIDEUP_COMMAND = 16;   // G
+static const __uint8_t VOLSLIDEDOWN_COMMAND = 17; // H
+static const __uint8_t JUMP_COMMAND = 19;         // J
+static const __uint8_t SPEED_COMMAND = 28;        // S
+static const __uint8_t VOLUME_COMMAND = 31;       // V
 
 void *search_tff(void *, long, const void *);
 
@@ -92,27 +92,27 @@ void *search_tff(void *array_start, const long array_end, const void *to_find)
 static inline
 command_t tracker_command(int code, __uint8_t data)
 {
-    if (code == VOLUME_COMMAND_TRK)
+    if (code == VOLUME_COMMAND)
         return SET_VOLUME;
-    else if (code == SPEED_COMMAND_TRK)
+    else if (code == SPEED_COMMAND)
         return SET_TEMPO;
-    else if (code == STEREO_COMMAND_TRK)
+    else if (code == STEREO_COMMAND)
         return SET_TRACK_STEREO;
-    else if (code == VOLSLIDEUP_COMMAND_TRK)
+    else if (code == VOLSLIDEUP_COMMAND)
         return VOLUME_SLIDE_UP;
-    else if (code == VOLSLIDEDOWN_COMMAND_TRK)
+    else if (code == VOLSLIDEDOWN_COMMAND)
         return VOLUME_SLIDE_DOWN;
-    else if (code == PORTUP_COMMAND_TRK)
+    else if (code == PORTUP_COMMAND)
         return PORTAMENTO_UP;
-    else if (code == PORTDOWN_COMMAND_TRK)
+    else if (code == PORTDOWN_COMMAND)
         return PORTAMENTO_DOWN;
-    else if (code == TONEPORT_COMMAND_TRK)
+    else if (code == TONEPORT_COMMAND)
         return TONE_PORTAMENTO;
-    else if (code == BREAK_COMMAND_TRK)
+    else if (code == BREAK_COMMAND)
         return BREAK_PATTERN;
-    else if (code == JUMP_COMMAND_TRK)
+    else if (code == JUMP_COMMAND)
         return JUMP_TO_POSITION;
-    else if (code == ARPEGGIO_COMMAND_TRK)
+    else if (code == ARPEGGIO_COMMAND)
         return (data == 0) ? NO_EFFECT : ARPEGGIO;
     else
         return NO_EFFECT;
