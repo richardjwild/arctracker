@@ -58,7 +58,9 @@ add_executable(arctracker
         src/arctracker.h
         src/config.h
         src/formats/modfile_formats.c
-        src/formats/modfile_formats.h)
+        src/formats/modfile_formats.h
+        src/audio_api/audio_api.c
+        src/audio_api/audio_api.h)
 
 target_link_libraries(
         arctracker
