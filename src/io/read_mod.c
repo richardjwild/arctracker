@@ -8,6 +8,7 @@
 #include <memory/heap.h>
 
 static const char *READONLY = "r";
+static const int OFFSET = 0;
 
 mapped_file_t load_file(char *);
 
@@ -39,7 +40,7 @@ mapped_file_t load_file(char *filename)
     }
     int file_descriptor = fileno(file_pointer);
     file.size = file_size(file_descriptor);
-    file.addr = mmap(NULL, file.size, PROT_READ, MAP_SHARED, file_descriptor, 0);
+    file.addr = mmap(NULL, file.size, PROT_READ, MAP_SHARED, file_descriptor, OFFSET);
     return file;
 }
 
