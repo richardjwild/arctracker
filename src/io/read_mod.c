@@ -7,7 +7,7 @@
 #include <config.h>
 #include <memory/heap.h>
 
-#define READONLY "r"
+static const char *READONLY = "r";
 
 mapped_file_t load_file(char *);
 
