@@ -15,6 +15,7 @@ static const int MAX_LEN_TUNENAME_TRK = 32;
 static const int MAX_LEN_AUTHOR_TRK = 32;
 static const int MAX_LEN_SAMPLENAME_TRK = 20;
 static const int NUM_SAMPLES = 256;
+static const int MODULE_GAIN_MAX = 255;
 
 static const char *TRACKER_FORMAT = "TRACKER";
 
@@ -141,18 +142,34 @@ size_t decode_tracker_event(const __uint32_t *raw, channel_event_t *decoded)
     return EVENT_SIZE_SINGLE_EFFECT;
 }
 
+static double *calculate_gain_curve()
+{
+    double *gain_curve = allocate_array(INTERNAL_GAIN_MAX + 1, sizeof(double));
+    for (int i = 0; i <= 127; i++)
+    {
+        double linear = mu_law_to_linear(255 - i);
+        gain_curve[(i * 2) + 1] = linear;
+        if (i >= 1)
+            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
+    }
+    gain_curve[0] = 0.0;
+    gain_curve[1] = gain_curve[2] / 2;
+    return gain_curve;
+}
+
 module_t read_tracker_module(mapped_file_t file)
 {
     void *chunk_address;
     long array_end = (long) file.addr + file.size;
     module_t module;
-    module_gain_goes_to(255);
 
     memset(&module, 0, sizeof(module_t));
     module.format = TRACKER_FORMAT;
     module.decode_event = decode_tracker_event;
     module.initial_speed = 6;
     module.samples = allocate_array(36, sizeof(sample_t));
+    module.gain_maximum = MODULE_GAIN_MAX;
+    module.gain_curve = calculate_gain_curve();
 
     if ((chunk_address = search_tff(file.addr, array_end, MVOX_CHUNK)) == CHUNK_NOT_FOUND)
         error("Modfile corrupt - MVOX chunk not found");
@@ -297,7 +314,7 @@ sample_t *get_sample_info(void *array_start, long array_end)
     else
     {
         __uint8_t *sample_data_mu_law = chunk_address + CHUNK_HEADER_LENGTH;
-        sample->sample_data = convert_mu_law_to_linear_pcm(sample_data_mu_law, sample->sample_length);
+        sample->sample_data = convert_vidc_encoded_sample(sample_data_mu_law, sample->sample_length);
     }
 
     // transpose all notes up an octave when playing a Tracker module

@@ -2,67 +2,43 @@
 #include <memory/bits.h>
 #include <memory/heap.h>
 
-static int vidc_pcm_encoding[256];
-static double gain_conversion[256];
-
-const double EXPANDED_MAX = 32124.0;
-const double GAIN_MAX = 8031.0;
 const int BIAS = 0x84;
 const unsigned int SIGN_BIT = 0x80;
 const unsigned int QUANTIZATION_BITS_MASK = 0xf;
 const unsigned int SEGMENT_SHIFT = 4;
 const unsigned int SEGMENT_NUMBER_MASK = 0x70;
+const double EXPANDED_MAX = 32124.0;
 
-int mu_law_to_linear(__int8_t mu_law)
+double mu_law_to_linear(__int8_t mu_law)
 {
     int normal_mu_law = ~mu_law;
     int biased_quantization_bits = ((normal_mu_law & QUANTIZATION_BITS_MASK) << 3) + BIAS;
     unsigned int segment_number = ((unsigned) normal_mu_law & SEGMENT_NUMBER_MASK) >> SEGMENT_SHIFT;
-    return normal_mu_law & SIGN_BIT
+    int linear = normal_mu_law & SIGN_BIT
             ? (BIAS - (biased_quantization_bits << segment_number))
             : ((biased_quantization_bits << segment_number) - BIAS);
+    return linear / EXPANDED_MAX;
 }
 
-void calculate_logarithmic_gain()
+void calculate_vidc_encoding(double *encoding)
 {
     for (int i = 0; i <= 127; i++)
     {
-        gain_conversion[(i * 2) + 1] = mu_law_to_linear(255 - i) / GAIN_MAX;
-        if (i >= 1)
-            gain_conversion[i * 2] = (gain_conversion[(i * 2) - 1] + gain_conversion[(i * 2) + 1]) / 2;
-    }
-    gain_conversion[0] = 0.0;
-    gain_conversion[1] = gain_conversion[2] / 2;
-}
-
-void calculate_vidc_encoding()
-{
-    for (int i = 0; i <= 127; i++)
-    {
-        vidc_pcm_encoding[i * 2] = mu_law_to_linear(127 - i);
-        vidc_pcm_encoding[(i * 2) + 1] = mu_law_to_linear(127 - i) * -1;
+        encoding[i * 2] = mu_law_to_linear(127 - i);
+        encoding[(i * 2) + 1] = mu_law_to_linear(127 - i) * -1;
     }
 }
 
-void precalculate_mu_law()
+double *convert_vidc_encoded_sample(const __uint8_t *mu_law_encoded, const int no_samples)
 {
-    calculate_vidc_encoding();
-    calculate_logarithmic_gain();
-}
-
-double *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, const int no_samples)
-{
+    double encoding[256];
+    calculate_vidc_encoding(encoding); // runs from -32124 to +32124
     double *linear = allocate_array(no_samples + 1, sizeof(double));
     for (int i = 0; i < no_samples; i++)
     {
         __uint8_t encoded = mu_law_encoded[i];
-        linear[i] = vidc_pcm_encoding[encoded] / EXPANDED_MAX;
+        linear[i] = encoding[encoded];
     }
     linear[no_samples] = 0.0;
     return linear;
-}
-
-double convert_to_linear_gain(const int logarithmic_gain)
-{
-    return gain_conversion[logarithmic_gain];
 }

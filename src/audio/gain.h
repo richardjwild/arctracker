@@ -14,7 +14,7 @@ typedef struct
 
 void set_master_gain(int gain);
 
-void module_gain_goes_to(int module_gain_maximum);
+void set_module_gain_characteristics(double *curve, int gain_maximum);
 
 int get_internal_gain(int module_gain);
 

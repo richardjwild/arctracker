@@ -20,6 +20,7 @@
 
 static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
+static const int MODULE_GAIN_MAX = 127;
 
 static const __uint8_t ARPEGGIO_COMMAND = 0x0;
 static const __uint8_t PORTUP_COMMAND = 0x1;
@@ -185,6 +186,20 @@ module_t read_desktop_tracker_module(mapped_file_t file)
     return module;
 }
 
+static double *calculate_gain_curve()
+{
+    double *gain_curve = allocate_array(INTERNAL_GAIN_MAX + 1, sizeof(double));
+    for (int i = 0; i <= 127; i++)
+    {
+        gain_curve[(i * 2) + 1] = mu_law_to_linear(255 - i);
+        if (i >= 1)
+            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
+    }
+    gain_curve[0] = 0.0;
+    gain_curve[1] = gain_curve[2] / 2;
+    return gain_curve;
+}
+
 static module_t create_module(dtt_file_format_t *file_format)
 {
     module_t module;
@@ -199,7 +214,8 @@ static module_t create_module(dtt_file_format_t *file_format)
     module.initial_speed = file_format->initial_speed;
     module.num_patterns = file_format->num_patterns;
     module.num_samples = file_format->num_samples;
-    module_gain_goes_to(127);
+    module.gain_maximum = MODULE_GAIN_MAX;
+    module.gain_curve = calculate_gain_curve();
     return module;
 }
 
@@ -230,7 +246,7 @@ static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples,
         samples[i].repeat_length = file_samples[i].repeat_length;
         samples[i].sample_length = file_samples[i].sample_length;
         __uint8_t *sample_data_mu_law = base_address + file_samples[i].sample_data_offset;
-        samples[i].sample_data = convert_mu_law_to_linear_pcm(sample_data_mu_law, samples[i].sample_length);
+        samples[i].sample_data = convert_vidc_encoded_sample(sample_data_mu_law, samples[i].sample_length);
         samples[i].repeats = (samples[i].repeat_length != 0);
     }
     return samples;

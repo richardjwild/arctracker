@@ -65,6 +65,7 @@ voice_t *initialise_player(module_t *module_p, const audio_api_t audio_api)
     args_t config = configuration();
     initialise_audio(audio_api, module.num_channels);
     set_master_gain(config.volume);
+    set_module_gain_characteristics(module.gain_curve, module.gain_maximum);
     set_clock(module.initial_speed, audio_api.sample_rate);
     initialise_sequence(module_p);
     configure_console(config.pianola, module_p);

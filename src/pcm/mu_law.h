@@ -3,10 +3,8 @@
 
 #include <stdint.h>
 
-void precalculate_mu_law();
+double mu_law_to_linear(__int8_t mu_law);
 
-double *convert_mu_law_to_linear_pcm(const __uint8_t *mu_law_encoded, int no_samples);
-
-double convert_to_linear_gain(int logarithmic_gain);
+double *convert_vidc_encoded_sample(const __uint8_t *mu_law_encoded, const int no_samples);
 
 #endif // ARCTRACKER_MU_LAW_H
