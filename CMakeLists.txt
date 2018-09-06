@@ -56,7 +56,9 @@ add_executable(arctracker
         src/playroutine/sequence.h
         src/arctracker.c
         src/arctracker.h
-        src/config.h)
+        src/config.h
+        src/formats/modfile_formats.c
+        src/formats/modfile_formats.h)
 
 target_link_libraries(
         arctracker
