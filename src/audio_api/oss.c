@@ -21,7 +21,7 @@ static
 void close_oss()
 {
     close(audio_handle);
-};
+}
 
 static
 void open_device()

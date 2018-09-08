@@ -1,8 +1,8 @@
 #include "write_audio.h"
-#include "audio_api.h"
 #include "mix.h"
 #include "resample.h"
 #include "gain.h"
+#include <audio_api/audio_api.h>
 #include <chrono/clock.h>
 #include <memory/heap.h>
 
