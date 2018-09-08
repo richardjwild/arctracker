@@ -4,7 +4,7 @@
 #include <bits/types.h>
 #include <io/configuration.h>
 
-static const int DEFAULT_SAMPLERATE = 44100;
+static const int SAMPLE_RATE = 44100;
 static const int AUDIO_BUFFER_SIZE_FRAMES = 1024;
 
 typedef struct {

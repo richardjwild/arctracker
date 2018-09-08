@@ -74,6 +74,6 @@ audio_api_t initialise_oss()
     open_device();
     set_sample_format();
     set_number_of_channels();
-    set_sample_rate(DEFAULT_SAMPLERATE);
-    return audio_api(AUDIO_BUFFER_SIZE_FRAMES, DEFAULT_SAMPLERATE);
+    set_sample_rate(SAMPLE_RATE);
+    return audio_api(AUDIO_BUFFER_SIZE_FRAMES, SAMPLE_RATE);
 }

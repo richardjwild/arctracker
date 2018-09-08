@@ -120,7 +120,7 @@ audio_api_t initialise_alsa()
     snd_pcm_hw_params_t *hw_params = initialise_hardware_params();
     set_access_type(hw_params);
     set_sample_format(hw_params);
-    unsigned int sample_rate = set_sample_rate(DEFAULT_SAMPLERATE, hw_params);
+    unsigned int sample_rate = set_sample_rate(SAMPLE_RATE, hw_params);
     set_number_of_channels(hw_params);
     set_parameters(hw_params);
     prepare_audio_device();
