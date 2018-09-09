@@ -13,7 +13,7 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 
 #include <alsa/asoundlib.h>
 
-static const char *PCM_DEVICE = "plughw:0,0";
+static const char *PCM_DEVICE = "default";
 static const int SILENT = 1;
 
 static snd_pcm_t *pcm_handle;
