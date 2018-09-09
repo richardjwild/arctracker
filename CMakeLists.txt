@@ -14,7 +14,6 @@ include_directories(src/pcm)
 include_directories(src/playroutine)
 
 add_executable(arctracker
-        src/audio/audio_api.h
         src/audio/gain.c
         src/audio/gain.h
         src/audio/mix.c
@@ -60,8 +59,11 @@ add_executable(arctracker
         src/formats/modfile_formats.c
         src/formats/modfile_formats.h
         src/audio_api/audio_api.c
-        src/audio_api/audio_api.h)
+        src/audio_api/audio_api.h
+        src/audio_api/port_audio.c
+        src/audio_api/port_audio.h)
 
 target_link_libraries(
         arctracker
-        asound)
+        asound
+        portaudio)

@@ -5,7 +5,7 @@
 
 typedef enum
 {
-    OSS, ALSA
+    OSS, ALSA, PORTAUDIO
 } output_api;
 
 typedef struct

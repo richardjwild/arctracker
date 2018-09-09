@@ -9,6 +9,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 AC_CHECK_LIB(asound, snd_pcm_writei)
+AC_CHECK_LIB(portaudio, Pa_WriteStream)
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h stdbool.h string.h sys/ioctl.h sys/soundcard.h sys/unistd.h sys/fcntl.h])

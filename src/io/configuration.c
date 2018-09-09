@@ -19,6 +19,7 @@ static const char *ARG_OUTPUT = "--output=";
 static const char *ARG_OUTPUT_S = "-o";
 static const char *ARG_VALUE_ALSA = "ALSA";
 static const char *ARG_VALUE_OSS = "OSS";
+static const char *ARG_VALUE_PORTAUDIO = "PORTAUDIO";
 static const char *ARG_LOOP = "--loop";
 static const char *ARG_LOOP_S = "-l";
 
@@ -118,8 +119,10 @@ bool handle_argument(const char *arg)
             config.api = ALSA;
         else if (strncmp(value, ARG_VALUE_OSS, strlen(ARG_VALUE_OSS)) == 0)
             config.api = OSS;
+        else if (strncmp(value, ARG_VALUE_PORTAUDIO, strlen(ARG_VALUE_PORTAUDIO)) == 0)
+            config.api = PORTAUDIO;
         else
-            error("Unrecognised output type. Try ALSA or OSS");
+            error("Unrecognised output type. Try ALSA, OSS or PORTAUDIO.");
     }
     else if (matches(arg, ARG_VOLUME, ARG_VOLUME_S))
     {
