@@ -14,14 +14,14 @@ SOURCES  := $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) $(wildcard $(SRCDIR)/*/*.h)
 
 clean :
-	rm -f $(BINDIR)/$(TARGET) 2>/dev/null
+	rm -f $(EXECUTABLE) 2>/dev/null
 	@echo "Clean done"
 
-all-local : $(BINDIR)/$(TARGET)
+all-local : $(EXECUTABLE)
 	@echo "All done"
 
 install : all
-	$(INSTALL) $(BINDIR)/$(TARGET) $(INSTALLDIR)/bin/$(TARGET)
+	$(INSTALL) $(EXECUTABLE) $(INSTALLDIR)/bin/$(TARGET)
 	@echo "Install done"
 
 uninstall :
