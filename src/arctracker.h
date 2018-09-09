@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define MAX_LEN_TUNENAME 65
 #define MAX_LEN_AUTHOR 65
@@ -51,7 +52,7 @@ typedef struct
 {
     int code;
     command_t command;
-    __uint8_t data;
+    uint8_t data;
 } effect_t;
 
 typedef struct

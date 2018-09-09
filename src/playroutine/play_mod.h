@@ -20,7 +20,7 @@ typedef struct {
     bool arpeggiator_on;
     int arpeggio_counter;
     int current_note;
-    __uint8_t effect_memory[MAX_EFFECTS];
+    uint8_t effect_memory[MAX_EFFECTS];
 } voice_t;
 
 void play_module(module_t *module, audio_api_t audio_api);

@@ -21,9 +21,9 @@ static const char *DEVICE_FILE_NAME = "/dev/dsp";
 static int audio_handle;
 
 static
-void write_audio(__int16_t *audio_buffer, long frames_in_buffer)
+void write_audio(int16_t *audio_buffer, long frames_in_buffer)
 {
-    const size_t bytes_to_write = frames_in_buffer * 2 * sizeof(__int16_t);
+    const size_t bytes_to_write = frames_in_buffer * 2 * sizeof(int16_t);
     if (write(audio_handle, audio_buffer, bytes_to_write) == -1)
         system_error("audio write failed");
 }

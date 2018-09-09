@@ -5,6 +5,6 @@
 
 void allocate_audio_buffer(int no_of_frames);
 
-__int16_t *mix(const stereo_frame_t *channel_buffer, int channels_to_mix);
+int16_t *mix(const stereo_frame_t *channel_buffer, int channels_to_mix);
 
 #endif // ARCTRACKER_MIX_H

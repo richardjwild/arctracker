@@ -50,7 +50,7 @@ bool buffer_filled()
 
 void mix_and_send()
 {
-    __int16_t *audio_buffer = mix(channel_buffer, channels);
+    int16_t *audio_buffer = mix(channel_buffer, channels);
     audio_output.write(audio_buffer, frames_filled);
 }
 

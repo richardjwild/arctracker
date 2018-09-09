@@ -37,23 +37,23 @@ static const char *ROFS_CHUNK = "ROFS";
 static const char *RLEN_CHUNK = "RLEN";
 static const char *SDAT_CHUNK = "SDAT";
 
-static const __uint8_t ARPEGGIO_COMMAND = 0;      // 0
-static const __uint8_t PORTUP_COMMAND = 1;        // 1
-static const __uint8_t PORTDOWN_COMMAND = 2;      // 2
-static const __uint8_t TONEPORT_COMMAND = 3;      // 3
-static const __uint8_t BREAK_COMMAND = 11;        // B
-static const __uint8_t STEREO_COMMAND = 14;       // E
-static const __uint8_t VOLSLIDEUP_COMMAND = 16;   // G
-static const __uint8_t VOLSLIDEDOWN_COMMAND = 17; // H
-static const __uint8_t JUMP_COMMAND = 19;         // J
-static const __uint8_t SPEED_COMMAND = 28;        // S
-static const __uint8_t VOLUME_COMMAND = 31;       // V
+static const uint8_t ARPEGGIO_COMMAND = 0;      // 0
+static const uint8_t PORTUP_COMMAND = 1;        // 1
+static const uint8_t PORTDOWN_COMMAND = 2;      // 2
+static const uint8_t TONEPORT_COMMAND = 3;      // 3
+static const uint8_t BREAK_COMMAND = 11;        // B
+static const uint8_t STEREO_COMMAND = 14;       // E
+static const uint8_t VOLSLIDEUP_COMMAND = 16;   // G
+static const uint8_t VOLSLIDEDOWN_COMMAND = 17; // H
+static const uint8_t JUMP_COMMAND = 19;         // J
+static const uint8_t SPEED_COMMAND = 28;        // S
+static const uint8_t VOLUME_COMMAND = 31;       // V
 
 void *search_tff(void *, long, const void *);
 
 module_t read_tracker_module(mapped_file_t);
 
-static int *convert_int_array(__uint8_t *, int);
+static int *convert_int_array(uint8_t *, int);
 
 void get_patterns(void *, long, void **);
 
@@ -91,7 +91,7 @@ void *search_tff(void *array_start, const long array_end, const void *to_find)
 }
 
 static inline
-command_t tracker_command(int code, __uint8_t data)
+command_t tracker_command(int code, uint8_t data)
 {
     if (code == VOLUME_COMMAND)
         return SET_VOLUME;
@@ -120,7 +120,7 @@ command_t tracker_command(int code, __uint8_t data)
 }
 
 static inline
-effect_t effect(const __uint8_t code, const __uint8_t data)
+effect_t effect(const uint8_t code, const uint8_t data)
 {
     const effect_t effect = {
             .code = code,
@@ -217,7 +217,7 @@ module_t read_tracker_module(mapped_file_t file)
     return module;
 }
 
-static int *convert_int_array(__uint8_t *unsigned_bytes, int num_elements)
+static int *convert_int_array(uint8_t *unsigned_bytes, int num_elements)
 {
     int *int_array = allocate_array(num_elements, sizeof(int));
     for (int i = 0; i < num_elements; i++)
@@ -313,7 +313,7 @@ sample_t *get_sample_info(void *array_start, long array_end)
         return SAMPLE_INVALID;
     else
     {
-        __uint8_t *sample_data_mu_law = chunk_address + CHUNK_HEADER_LENGTH;
+        uint8_t *sample_data_mu_law = chunk_address + CHUNK_HEADER_LENGTH;
         sample->sample_data = convert_vidc_encoded_sample(sample_data_mu_law, sample->sample_length);
     }
 

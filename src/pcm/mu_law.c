@@ -8,7 +8,7 @@ const unsigned int QUANTIZATION_BITS_MASK = 0xf;
 const unsigned int SEGMENT_NUMBER_MASK = 0x70;
 const double EXPANDED_MAX = 32124.0;
 
-double mu_law_to_linear(__int8_t mu_law)
+double mu_law_to_linear(int8_t mu_law)
 {
     int normal_mu_law = ~mu_law;
     int biased_quantization_bits = ((normal_mu_law & QUANTIZATION_BITS_MASK) << 3) + BIAS;
@@ -28,7 +28,7 @@ void calculate_vidc_encoding(double *encoding)
     }
 }
 
-double *convert_vidc_encoded_sample(const __uint8_t *mu_law_encoded, const int no_samples)
+double *convert_vidc_encoded_sample(const uint8_t *mu_law_encoded, const int no_samples)
 {
     // extend by 1 sample so that we don't have to worry about falling off
     // the end when interpolating between two samples
@@ -37,7 +37,7 @@ double *convert_vidc_encoded_sample(const __uint8_t *mu_law_encoded, const int n
     calculate_vidc_encoding(encoding);
     for (int i = 0; i < no_samples; i++)
     {
-        __uint8_t encoded = mu_law_encoded[i];
+        uint8_t encoded = mu_law_encoded[i];
         linear[i] = encoding[encoded];
     }
     // set the final sample to zero so that it will be interpolated correctly

@@ -6,33 +6,33 @@
 #include <memory/bits.h>
 #include <pcm/mu_law.h>
 
-static void volume_slide_up(voice_t *, __uint8_t);
+static void volume_slide_up(voice_t *, uint8_t);
 
-static void volume_slide_down(voice_t *, __uint8_t);
+static void volume_slide_down(voice_t *, uint8_t);
 
-static void volume_slide_combined(voice_t *, __int8_t);
+static void volume_slide_combined(voice_t *, int8_t);
 
-static void portamento_up(voice_t *, __uint8_t);
+static void portamento_up(voice_t *, uint8_t);
 
-static void portamento_down(voice_t *, __uint8_t);
+static void portamento_down(voice_t *, uint8_t);
 
-static void start_tone_portamento(voice_t *, int, __uint8_t);
+static void start_tone_portamento(voice_t *, int, uint8_t);
 
 static void tone_portamento(voice_t *, int);
 
 static void turn_arpeggiator_on(voice_t *);
 
-static void arpeggiate(voice_t *, __uint8_t);
+static void arpeggiate(voice_t *, uint8_t);
 
-static void set_volume(voice_t *, __uint8_t);
+static void set_volume(voice_t *, uint8_t);
 
-static void set_tempo(__uint8_t);
+static void set_tempo(uint8_t);
 
-static void set_voice_panning(voice_t *, __uint8_t);
+static void set_voice_panning(voice_t *, uint8_t);
 
-static void set_tempo_fine(__uint8_t);
+static void set_tempo_fine(uint8_t);
 
-static void portamento_fine(voice_t *, __uint8_t);
+static void portamento_fine(voice_t *, uint8_t);
 
 inline
 void reset_arpeggiator(voice_t *voice)
@@ -95,7 +95,7 @@ void handle_effects_off_event(channel_event_t *event, voice_t *voice)
 }
 
 static inline
-void volume_slide_up(voice_t *voice, __uint8_t data)
+void volume_slide_up(voice_t *voice, uint8_t data)
 {
     voice->gain += data;
     if (voice->gain > INTERNAL_GAIN_MAX)
@@ -103,7 +103,7 @@ void volume_slide_up(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void volume_slide_down(voice_t *voice, __uint8_t data)
+void volume_slide_down(voice_t *voice, uint8_t data)
 {
     voice->gain -= data;
     if (voice->gain < INTERNAL_GAIN_MIN)
@@ -111,7 +111,7 @@ void volume_slide_down(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void volume_slide_combined(voice_t *voice, __int8_t data)
+void volume_slide_combined(voice_t *voice, int8_t data)
 {
     voice->gain += data << 1;
     if (voice->gain > INTERNAL_GAIN_MAX)
@@ -121,7 +121,7 @@ void volume_slide_combined(voice_t *voice, __int8_t data)
 }
 
 static inline
-void portamento_up(voice_t *voice, __uint8_t data)
+void portamento_up(voice_t *voice, uint8_t data)
 {
     voice->period -= data;
     if (voice->period < PERIOD_MIN)
@@ -129,7 +129,7 @@ void portamento_up(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void portamento_down(voice_t *voice, __uint8_t data)
+void portamento_down(voice_t *voice, uint8_t data)
 {
     voice->period += data;
     if (voice->period > PERIOD_MAX)
@@ -137,7 +137,7 @@ void portamento_down(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void start_tone_portamento(voice_t *voice, int effect_no, __uint8_t data)
+void start_tone_portamento(voice_t *voice, int effect_no, uint8_t data)
 {
     if (data)
         voice->effect_memory[effect_no] = data;
@@ -169,7 +169,7 @@ void turn_arpeggiator_on(voice_t *voice)
 }
 
 static inline
-void arpeggiate(voice_t *voice, __uint8_t data)
+void arpeggiate(voice_t *voice, uint8_t data)
 {
     int chord[] = {
             voice->current_note,
@@ -186,13 +186,13 @@ void arpeggiate(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void set_volume(voice_t *voice, __uint8_t data)
+void set_volume(voice_t *voice, uint8_t data)
 {
     voice->gain = get_internal_gain(data);
 }
 
 static inline
-void portamento_fine(voice_t *voice, __uint8_t data)
+void portamento_fine(voice_t *voice, uint8_t data)
 {
     voice->period += data;
     if (voice->period > PERIOD_MAX)
@@ -202,20 +202,20 @@ void portamento_fine(voice_t *voice, __uint8_t data)
 }
 
 static inline
-void set_voice_panning(voice_t *voice, __uint8_t data)
+void set_voice_panning(voice_t *voice, uint8_t data)
 {
     voice->panning = data - 1;
 }
 
 static inline
-void set_tempo(__uint8_t data)
+void set_tempo(uint8_t data)
 {
     if (data > 0)
         set_ticks_per_event(data);
 }
 
 static inline
-void set_tempo_fine(__uint8_t data)
+void set_tempo_fine(uint8_t data)
 {
     if (data > 0)
         set_ticks_per_second(data);

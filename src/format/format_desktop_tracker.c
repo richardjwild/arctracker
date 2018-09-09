@@ -22,35 +22,35 @@ static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 static const int MODULE_GAIN_MAX = 127;
 
-static const __uint8_t ARPEGGIO_COMMAND = 0x0;
-static const __uint8_t PORTUP_COMMAND = 0x1;
-static const __uint8_t PORTDOWN_COMMAND = 0x2;
-static const __uint8_t TONEPORT_COMMAND = 0x3;
-static const __uint8_t VIBRATO_COMMAND_NOT_IMPLEMENTED = 0x4;
-static const __uint8_t DELAYEDNOTE_COMMAND_NOT_IMPLEMENTED = 0x5;
-static const __uint8_t RELEASESAMP_COMMAND_NOT_IMPLEMENTED = 0x6;
-static const __uint8_t TREMOLO_COMMAND_NOT_IMPLEMENTED = 0x7;
-static const __uint8_t PHASOR_COMMAND1_NOT_IMPLEMENTED = 0x8;
-static const __uint8_t PHASOR_COMMAND2_NOT_IMPLEMENTED = 0x9;
-static const __uint8_t VOLSLIDE_COMMAND = 0xa;
-static const __uint8_t JUMP_COMMAND = 0xb;
-static const __uint8_t VOLUME_COMMAND = 0xc;
-static const __uint8_t STEREO_COMMAND = 0xd;
-static const __uint8_t STEREOSLIDE_COMMAND_NOT_IMPLEMENTED = 0xe;
-static const __uint8_t SPEED_COMMAND = 0xf;
-static const __uint8_t ARPEGGIOSPEED_COMMAND_NOT_IMPLEMENTED = 0x10;
-static const __uint8_t FINEPORTAMENTO_COMMAND = 0x11;
-static const __uint8_t CLEAREPEAT_COMMAND_NOT_IMPLEMENTED = 0x12;
-static const __uint8_t SETVIBRATOWAVEFORM_COMMAND_NOT_IMPLEMENTED = 0x14;
-static const __uint8_t LOOP_COMMAND_NOT_IMPLEMENTED = 0x16;
-static const __uint8_t SETTREMOLOWAVEFORM_COMMAND_NOT_IMPLEMENTED = 0x17;
-static const __uint8_t SETFINETEMPO_COMMAND = 0x18;
-static const __uint8_t RETRIGGERSAMPLE_COMMAND_NOT_IMPLEMENTED = 0x19;
-static const __uint8_t FINEVOLSLIDE_COMMAND = 0x1a;
-static const __uint8_t HOLD_COMMAND_NOT_IMPLEMENTED = 0x1b;
-static const __uint8_t NOTECUT_COMMAND_NOT_IMPLEMENTED = 0x1c;
-static const __uint8_t NOTEDELAY_COMMAND_NOT_IMPLEMENTED = 0x1d;
-static const __uint8_t PATTERNDELAY_COMMAND_NOT_IMPLEMENTED = 0x1e;
+static const uint8_t ARPEGGIO_COMMAND = 0x0;
+static const uint8_t PORTUP_COMMAND = 0x1;
+static const uint8_t PORTDOWN_COMMAND = 0x2;
+static const uint8_t TONEPORT_COMMAND = 0x3;
+static const uint8_t VIBRATO_COMMAND_NOT_IMPLEMENTED = 0x4;
+static const uint8_t DELAYEDNOTE_COMMAND_NOT_IMPLEMENTED = 0x5;
+static const uint8_t RELEASESAMP_COMMAND_NOT_IMPLEMENTED = 0x6;
+static const uint8_t TREMOLO_COMMAND_NOT_IMPLEMENTED = 0x7;
+static const uint8_t PHASOR_COMMAND1_NOT_IMPLEMENTED = 0x8;
+static const uint8_t PHASOR_COMMAND2_NOT_IMPLEMENTED = 0x9;
+static const uint8_t VOLSLIDE_COMMAND = 0xa;
+static const uint8_t JUMP_COMMAND = 0xb;
+static const uint8_t VOLUME_COMMAND = 0xc;
+static const uint8_t STEREO_COMMAND = 0xd;
+static const uint8_t STEREOSLIDE_COMMAND_NOT_IMPLEMENTED = 0xe;
+static const uint8_t SPEED_COMMAND = 0xf;
+static const uint8_t ARPEGGIOSPEED_COMMAND_NOT_IMPLEMENTED = 0x10;
+static const uint8_t FINEPORTAMENTO_COMMAND = 0x11;
+static const uint8_t CLEAREPEAT_COMMAND_NOT_IMPLEMENTED = 0x12;
+static const uint8_t SETVIBRATOWAVEFORM_COMMAND_NOT_IMPLEMENTED = 0x14;
+static const uint8_t LOOP_COMMAND_NOT_IMPLEMENTED = 0x16;
+static const uint8_t SETTREMOLOWAVEFORM_COMMAND_NOT_IMPLEMENTED = 0x17;
+static const uint8_t SETFINETEMPO_COMMAND = 0x18;
+static const uint8_t RETRIGGERSAMPLE_COMMAND_NOT_IMPLEMENTED = 0x19;
+static const uint8_t FINEVOLSLIDE_COMMAND = 0x1a;
+static const uint8_t HOLD_COMMAND_NOT_IMPLEMENTED = 0x1b;
+static const uint8_t NOTECUT_COMMAND_NOT_IMPLEMENTED = 0x1c;
+static const uint8_t NOTEDELAY_COMMAND_NOT_IMPLEMENTED = 0x1d;
+static const uint8_t PATTERNDELAY_COMMAND_NOT_IMPLEMENTED = 0x1e;
 
 typedef struct
 {
@@ -60,7 +60,7 @@ typedef struct
     __uint32_t flags;
     __uint32_t num_channels;
     __uint32_t tune_length;
-    __uint8_t initial_stereo[8];
+    uint8_t initial_stereo[8];
     __uint32_t initial_speed;
     __uint32_t restart;
     __uint32_t num_patterns;
@@ -69,8 +69,8 @@ typedef struct
 
 typedef struct
 {
-    __uint8_t note;
-    __uint8_t volume;
+    uint8_t note;
+    uint8_t volume;
     __uint16_t unused;
     __uint32_t period;
     __uint32_t sustain_start;
@@ -88,7 +88,7 @@ module_t read_desktop_tracker_module(mapped_file_t);
 
 static module_t create_module(dtt_file_format_t *);
 
-static int *convert_int_array(const __uint8_t *, int);
+static int *convert_int_array(const uint8_t *, int);
 
 static void set_pattern_starts(module_t *, __uint32_t *, void *);
 
@@ -109,7 +109,7 @@ bool is_desktop_tracker_format(mapped_file_t file)
 }
 
 static inline
-command_t desktop_tracker_command(int code, __uint8_t data)
+command_t desktop_tracker_command(int code, uint8_t data)
 {
     if (code == VOLUME_COMMAND)
         return SET_VOLUME;
@@ -140,7 +140,7 @@ command_t desktop_tracker_command(int code, __uint8_t data)
 }
 
 static inline
-effect_t effect(const __uint8_t code, const __uint8_t data)
+effect_t effect(const uint8_t code, const uint8_t data)
 {
     const effect_t effect = {
             .code = code,
@@ -219,7 +219,7 @@ static module_t create_module(dtt_file_format_t *file_format)
     return module;
 }
 
-static int *convert_int_array(const __uint8_t *unsigned_bytes, int num_elements)
+static int *convert_int_array(const uint8_t *unsigned_bytes, int num_elements)
 {
     int *int_array = allocate_array(num_elements, sizeof(int));
     for (int i = 0; i < num_elements; i++)
@@ -245,7 +245,7 @@ static sample_t *get_samples(int num_samples, dtt_sample_format_t *file_samples,
         samples[i].repeat_offset = file_samples[i].repeat_offset;
         samples[i].repeat_length = file_samples[i].repeat_length;
         samples[i].sample_length = file_samples[i].sample_length;
-        __uint8_t *sample_data_mu_law = base_address + file_samples[i].sample_data_offset;
+        uint8_t *sample_data_mu_law = base_address + file_samples[i].sample_data_offset;
         samples[i].sample_data = convert_vidc_encoded_sample(sample_data_mu_law, samples[i].sample_length);
         samples[i].repeats = (samples[i].repeat_length != 0);
     }

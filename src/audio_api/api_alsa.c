@@ -20,7 +20,7 @@ static snd_pcm_t *pcm_handle;
 static int err;
 
 static
-void write_audio(__int16_t *audio_buffer, long frames_in_buffer)
+void write_audio(int16_t *audio_buffer, long frames_in_buffer)
 {
     snd_pcm_sframes_t frames_written = snd_pcm_writei(
             pcm_handle,
