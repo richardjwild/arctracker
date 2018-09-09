@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <io/error.h>
 
-#define NUM_SLOTS 256
-
 static const char *MALLOC_FAILED = "Could not allocate memory";
-static const char *ALL_SLOTS_USED = "The programmer needs to increase NUM_SLOTS.";
+static const int BATCH_SIZE = 256;
 
-static void *slots[NUM_SLOTS];
+static void **slots = NULL;
 static int slots_used = 0;
+static int slots_available = 0;
 
 static void store(void *);
+
+static void extend_slots();
 
 void *allocate_array(int no_elements, size_t element_size)
 {
@@ -27,13 +28,22 @@ void *allocate_array(int no_elements, size_t element_size)
 
 static void store(void *ptr)
 {
-    if (slots_used == NUM_SLOTS)
-        error(ALL_SLOTS_USED);
-    else
+    if (slots_used == slots_available)
     {
-        slots[slots_used] = ptr;
-        slots_used++;
+        extend_slots();
     }
+    slots[slots_used] = ptr;
+    slots_used++;
+}
+
+void extend_slots()
+{
+    int slots_required = slots_available + BATCH_SIZE;
+    slots = realloc(slots, slots_required * sizeof(void *));
+    if (slots == NULL)
+        error(MALLOC_FAILED);
+    else
+        slots_available += BATCH_SIZE;
 }
 
 void deallocate_all()
@@ -43,4 +53,7 @@ void deallocate_all()
         void *ptr = slots[slot];
         free(ptr);
     }
+    free(slots);
+    slots_used = 0;
+    slots_available = 0;
 }
