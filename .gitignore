@@ -19,3 +19,4 @@ install-sh
 *~
 .idea
 cmake-build-debug/
+arctracker-*.tar.gz
