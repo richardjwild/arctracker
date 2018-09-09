@@ -7,7 +7,7 @@ include_directories(src)
 include_directories(src/audio)
 include_directories(src/audio_api)
 include_directories(src/chrono)
-include_directories(src/formats)
+include_directories(src/format)
 include_directories(src/io)
 include_directories(src/memory)
 include_directories(src/pcm)
@@ -30,10 +30,10 @@ add_executable(arctracker
         src/audio_api/api_oss.h
         src/chrono/clock.c
         src/chrono/clock.h
-        src/formats/desktop_tracker_module.c
-        src/formats/desktop_tracker_module.h
-        src/formats/tracker_module.c
-        src/formats/tracker_module.h
+        src/format/format_desktop_tracker.c
+        src/format/format_desktop_tracker.h
+        src/format/format_tracker.c
+        src/format/format_tracker.h
         src/io/configuration.c
         src/io/configuration.h
         src/io/console.c
@@ -56,8 +56,8 @@ add_executable(arctracker
         src/arctracker.c
         src/arctracker.h
         src/config.h
-        src/formats/modfile_formats.c
-        src/formats/modfile_formats.h
+        src/format/format.c
+        src/format/format.h
         src/audio_api/api.c
         src/audio_api/api.h
         src/audio_api/api_portaudio.c

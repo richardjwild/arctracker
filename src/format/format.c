@@ -1,6 +1,6 @@
-#include "modfile_formats.h"
-#include "tracker_module.h"
-#include "desktop_tracker_module.h"
+#include "format.h"
+#include "format_tracker.h"
+#include "format_desktop_tracker.h"
 
 #define NUM_FORMATS 2
 

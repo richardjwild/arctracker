@@ -1,6 +1,6 @@
 #include "arctracker.h"
 #include <audio_api/api.h>
-#include <formats/modfile_formats.h>
+#include <format/format.h>
 #include <io/configuration.h>
 #include <io/read_mod.h>
 #include <playroutine/play_mod.h>
