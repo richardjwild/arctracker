@@ -4,6 +4,7 @@
 #include <io/configuration.h>
 #include <io/read_mod.h>
 #include <playroutine/play_mod.h>
+#include <memory/heap.h>
 
 int main(int argc, char *argv[])
 {
@@ -16,5 +17,6 @@ int main(int argc, char *argv[])
         play_module(&module, audio_api);
         audio_api.finish();
     }
+    deallocate_all();
     exit(EXIT_SUCCESS);
 }
