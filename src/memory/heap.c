@@ -5,7 +5,7 @@
 #define NUM_SLOTS 256
 
 static const char *MALLOC_FAILED = "Could not allocate memory";
-const char *ALL_SLOTS_USED = "The programmer needs to increase NUM_SLOTS.";
+static const char *ALL_SLOTS_USED = "The programmer needs to increase NUM_SLOTS.";
 
 static void *slots[NUM_SLOTS];
 static int slots_used = 0;
