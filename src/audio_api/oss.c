@@ -1,3 +1,14 @@
+#include <config.h>
+
+#ifndef HAVE_SYS_SOUNDCARD_H
+
+audio_api_t initialise_oss()
+{
+    error("OSS playback is not available");
+}
+
+#else //HAVE_SYS_SOUNDCARD_H
+
 #include "oss.h"
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
@@ -77,3 +88,5 @@ audio_api_t initialise_oss()
     set_sample_rate(SAMPLE_RATE);
     return audio_api(AUDIO_BUFFER_SIZE_FRAMES, SAMPLE_RATE);
 }
+
+#endif //HAVE_SYS_SOUNDCARD_H

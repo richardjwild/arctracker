@@ -1,6 +1,4 @@
-#include "alsa.h"
 #include <config.h>
-#include <io/error.h>
 
 #ifndef HAVE_LIBASOUND
 
@@ -11,7 +9,9 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 
 #else // HAVE_LIBASOUND
 
+#include "alsa.h"
 #include <alsa/asoundlib.h>
+#include <io/error.h>
 
 static const char *PCM_DEVICE = "default";
 static const int SILENT = 1;

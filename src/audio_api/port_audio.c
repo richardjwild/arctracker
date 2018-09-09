@@ -1,9 +1,4 @@
-#include <portaudio.h>
 #include <config.h>
-#include <stddef.h>
-#include <io/error.h>
-#include <stdio.h>
-#include "port_audio.h"
 
 #ifndef HAVE_LIBPORTAUDIO
 
@@ -13,6 +8,12 @@ audio_api_t initialise_portaudio()
 }
 
 #else // HAVE_LIBPORTAUDIO
+
+#include "port_audio.h"
+#include <portaudio.h>
+#include <stddef.h>
+#include <io/error.h>
+#include <stdio.h>
 
 static const char *NO_OUTPUT_DEVICE_AVAILABLE = "No output device available";
 static const char *FAILED_TO_INITIALIZE_PORTAUDIO = "Failed to initialise portaudio";
