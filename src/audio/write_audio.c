@@ -2,7 +2,7 @@
 #include "mix.h"
 #include "resample.h"
 #include "gain.h"
-#include <audio_api/audio_api.h>
+#include <audio_api/api.h>
 #include <chrono/clock.h>
 #include <memory/heap.h>
 

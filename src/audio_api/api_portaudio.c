@@ -9,7 +9,7 @@ audio_api_t initialise_portaudio()
 
 #else // HAVE_LIBPORTAUDIO
 
-#include "port_audio.h"
+#include "api_portaudio.h"
 #include <portaudio.h>
 #include <stddef.h>
 #include <io/error.h>

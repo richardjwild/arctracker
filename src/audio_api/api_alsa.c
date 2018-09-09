@@ -9,7 +9,7 @@ audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 
 #else // HAVE_LIBASOUND
 
-#include "alsa.h"
+#include "api_alsa.h"
 #include <alsa/asoundlib.h>
 #include <io/error.h>
 

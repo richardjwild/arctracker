@@ -24,10 +24,10 @@ add_executable(arctracker
         src/audio/resample.h
         src/audio/write_audio.c
         src/audio/write_audio.h
-        src/audio_api/alsa.c
-        src/audio_api/alsa.h
-        src/audio_api/oss.c
-        src/audio_api/oss.h
+        src/audio_api/api_alsa.c
+        src/audio_api/api_alsa.h
+        src/audio_api/api_oss.c
+        src/audio_api/api_oss.h
         src/chrono/clock.c
         src/chrono/clock.h
         src/formats/desktop_tracker_module.c
@@ -58,10 +58,10 @@ add_executable(arctracker
         src/config.h
         src/formats/modfile_formats.c
         src/formats/modfile_formats.h
-        src/audio_api/audio_api.c
-        src/audio_api/audio_api.h
-        src/audio_api/port_audio.c
-        src/audio_api/port_audio.h)
+        src/audio_api/api.c
+        src/audio_api/api.h
+        src/audio_api/api_portaudio.c
+        src/audio_api/api_portaudio.h)
 
 target_link_libraries(
         arctracker

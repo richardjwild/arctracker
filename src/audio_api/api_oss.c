@@ -9,7 +9,7 @@ audio_api_t initialise_oss()
 
 #else //HAVE_SYS_SOUNDCARD_H
 
-#include "oss.h"
+#include "api_oss.h"
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>

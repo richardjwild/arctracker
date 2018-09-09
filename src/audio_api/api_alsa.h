@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_ALSA_H
 #define ARCTRACKER_ALSA_H
 
-#include "audio_api.h"
+#include "api.h"
 
 audio_api_t initialise_alsa();
 

@@ -2,7 +2,7 @@
 #define ARCTRACKER_PLAY_MOD_H
 
 #include <arctracker.h>
-#include <audio_api/audio_api.h>
+#include <audio_api/api.h>
 
 #define MAX_EFFECTS 4
 

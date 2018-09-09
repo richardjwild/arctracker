@@ -1,7 +1,7 @@
-#include "audio_api.h"
-#include "alsa.h"
-#include "oss.h"
-#include "port_audio.h"
+#include "api.h"
+#include "api_alsa.h"
+#include "api_oss.h"
+#include "api_portaudio.h"
 
 audio_api_t initialise_audio_api(output_api api)
 {
