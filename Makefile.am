@@ -1,6 +1,7 @@
 TARGET = arctracker
 SRCDIR = src
 BINDIR = bin
+EXECUTABLE = $(BINDIR)/$(TARGET)
 
 CC = @CC@
 INSTALL = @INSTALL@
@@ -27,6 +28,8 @@ uninstall :
 	rm -f $(INSTALLDIR)/bin/$(TARGET) 2>/dev/null
 	@echo "Uninstall done"
 
-$(BINDIR)/$(TARGET) : $(SOURCES) $(INCLUDES)
+$(TARGET) : $(EXECUTABLE)
+
+$(EXECUTABLE) : $(SOURCES) $(INCLUDES)
 	@if [ ! -d "$(BINDIR)" ]; then mkdir $(BINDIR); fi
 	$(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS) $(CLIBS)
