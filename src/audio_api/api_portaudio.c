@@ -1,3 +1,4 @@
+#include "api_portaudio.h"
 #include <config.h>
 
 #ifndef HAVE_LIBPORTAUDIO
@@ -9,7 +10,6 @@ audio_api_t initialise_portaudio()
 
 #else // HAVE_LIBPORTAUDIO
 
-#include "api_portaudio.h"
 #include <portaudio.h>
 #include <stddef.h>
 #include <io/error.h>
