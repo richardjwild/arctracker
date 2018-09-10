@@ -7,7 +7,7 @@ DISTFILES = aclocal.m4 CMakeLists.txt configure configure.ac COPYING install-sh 
 
 CC = @CC@
 INSTALL = @INSTALL@
-CFLAGS = @CFLAGS@ -Winline -I $(SRCDIR)
+CFLAGS = @CFLAGS@ -Winline -Wno-return-type -I $(SRCDIR)
 LDFLAGS = @LDFLAGS@
 CLIBS = @LIBS@
 INSTALLDIR = @prefix@
