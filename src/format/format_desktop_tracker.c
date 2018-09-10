@@ -21,6 +21,7 @@
 static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 static const int MODULE_GAIN_MAX = 127;
+static const uint8_t VOLUME_VALUE_MASK = 0x7f;
 
 static const uint8_t ARPEGGIO_COMMAND = 0x0;
 static const uint8_t PORTUP_COMMAND = 0x1;
@@ -144,7 +145,7 @@ effect_t effect(const uint8_t code, const uint8_t data)
 {
     const effect_t effect = {
             .code = code,
-            .data = data,
+            .data = (code == VOLUME_COMMAND) ? (data & VOLUME_VALUE_MASK) : data,
             .command = desktop_tracker_command(code, data)
     };
     return effect;
