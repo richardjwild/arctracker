@@ -1,14 +1,7 @@
 #include "api_portaudio.h"
 #include <config.h>
 
-#ifndef HAVE_LIBPORTAUDIO
-
-audio_api_t initialise_portaudio()
-{
-    error("Portaudio playback is not available");
-}
-
-#else // HAVE_LIBPORTAUDIO
+#if HAVE_LIBPORTAUDIO
 
 #include <portaudio.h>
 #include <stddef.h>

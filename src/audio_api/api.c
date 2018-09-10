@@ -1,17 +1,31 @@
+#include <config.h>
+
+#if HAVE_LIBASOUND
+
 #include "api.h"
 #include "api_alsa.h"
-#include "api_oss.h"
+
+audio_api_t initialise_audio_api()
+{
+    return initialise_alsa();
+}
+
+#elif HAVE_LIBPORTAUDIO
+
 #include "api_portaudio.h"
 
-audio_api_t initialise_audio_api(output_api api)
+audio_api_t initialise_audio_api()
 {
-    switch (api)
-    {
-        case OSS:
-            return initialise_oss();
-        case ALSA:
-            return initialise_alsa();
-        case PORTAUDIO:
-            return initialise_portaudio();
-    }
+    return initialise_portaudio();
 }
+
+#elif HAVE_SYS_SOUNDCARD_H
+
+#include "api_oss.h"
+
+audio_api_t initialise_audio_api()
+{
+    return initialise_oss();
+}
+
+#endif

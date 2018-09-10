@@ -100,9 +100,6 @@ be played, and [options] can be any or none of the following:
     -c              Indicate when clipping occurs by printing a bang character
     --clip-warn     to stdout.
 
-    -o<type>        Set the audio output type. Valid types are ALSA and OSS. The
-    --output=<type> default is ALSA.
-
 -----------------------------------------------------------------
 Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
 

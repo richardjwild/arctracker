@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     module_t module = read_file(formats(), num_formats());
     if (!config.info)
     {
-        audio_api_t audio_api = initialise_audio_api(config.api);
+        audio_api_t audio_api = initialise_audio_api();
         play_module(&module, audio_api);
         audio_api.finish();
     }

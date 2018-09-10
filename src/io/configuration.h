@@ -3,11 +3,6 @@
 
 #include <stdbool.h>
 
-typedef enum
-{
-    OSS, ALSA, PORTAUDIO
-} output_api;
-
 typedef struct
 {
     char *mod_filename;
@@ -15,7 +10,6 @@ typedef struct
     bool pianola;
     bool info;
     bool clip_warning;
-    output_api api;
     bool loop_forever;
 } args_t;
 

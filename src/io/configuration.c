@@ -15,11 +15,6 @@ static const char *ARG_CLIP_WARN = "--clip-warn";
 static const char *ARG_CLIP_WARN_S = "-c";
 static const char *ARG_VOLUME = "--volume=";
 static const char *ARG_VOLUME_S = "-v";
-static const char *ARG_OUTPUT = "--output=";
-static const char *ARG_OUTPUT_S = "-o";
-static const char *ARG_VALUE_ALSA = "ALSA";
-static const char *ARG_VALUE_OSS = "OSS";
-static const char *ARG_VALUE_PORTAUDIO = "PORTAUDIO";
 static const char *ARG_LOOP = "--loop";
 static const char *ARG_LOOP_S = "-l";
 
@@ -33,7 +28,6 @@ static const char *USAGE_MESSAGE =
         "\t-l or --loop\n"
         "\t-c or --clip-warn\n"
         "\t-p or --pianola\n"
-        "\t-o<ALSA or OSS> or --output=<ALSA or OSS>\n"
         "\t-v<1 to 255> or --volume=<1 to 255>\n"
         "\n";
 
@@ -42,7 +36,6 @@ static args_t config = {
         .pianola = false,
         .info = false,
         .clip_warning = false,
-        .api = ALSA,
         .mod_filename = NULL,
         .loop_forever = false
 };
@@ -111,18 +104,6 @@ bool handle_argument(const char *arg)
     else if (matches(arg, ARG_LOOP, ARG_LOOP_S))
     {
         config.loop_forever = true;
-    }
-    else if (matches(arg, ARG_OUTPUT, ARG_OUTPUT_S))
-    {
-        const char *value = arg_value(arg, ARG_OUTPUT, ARG_OUTPUT_S);
-        if (strncmp(value, ARG_VALUE_ALSA, strlen(ARG_VALUE_ALSA)) == 0)
-            config.api = ALSA;
-        else if (strncmp(value, ARG_VALUE_OSS, strlen(ARG_VALUE_OSS)) == 0)
-            config.api = OSS;
-        else if (strncmp(value, ARG_VALUE_PORTAUDIO, strlen(ARG_VALUE_PORTAUDIO)) == 0)
-            config.api = PORTAUDIO;
-        else
-            error("Unrecognised output type. Try ALSA, OSS or PORTAUDIO.");
     }
     else if (matches(arg, ARG_VOLUME, ARG_VOLUME_S))
     {
