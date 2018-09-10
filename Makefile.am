@@ -33,8 +33,8 @@ uninstall :
 
 release :
 	@if [ ! -d "$(DISTDIR)" ]; then mkdir $(DISTDIR); fi
-	@cp -r $(SRCDIR) $(DISTDIR)/.
-	@cp -t $(DISTDIR) $(DISTFILES)
+	@cp -r $(SRCDIR) $(DISTDIR)
+	@cp $(DISTFILES) $(DISTDIR)
 	@mv $(DISTDIR) $(TARGET)-$(VERSION)
 	@tar -czf $(TARGET)-$(VERSION).tar.gz $(TARGET)-$(VERSION)
 	@rm -rf $(TARGET)-$(VERSION)
