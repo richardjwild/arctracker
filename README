@@ -23,14 +23,19 @@ Well, (2) never happened and nowadays Renoise does all that I could ever have
 imagined and much more besides. More recently this program has taken on a new
 lease of life as a refactoring project.
 
-How to build it on Linux
-------------------------
+How to build it
+---------------
 
 In this day and age Linux distributions have all dropped the Open Sound System.
 For ALSA playback then you need to have the ALSA header files installed. For
 example, on Debian-based distributions, do:
 
     apt-get install libasound2-dev
+
+If you are using Macos, you need to have PortAudio installed instead. If you
+use homebrew then you can do:
+
+    brew install portaudio
 
 If you are not building from a release tarball, you need to have GNU automake
 and autoconf installed. Assuming that requirement, run the following command:
@@ -41,7 +46,7 @@ If that succeeds, then run:
 
     ./configure
 
-You can then build the program with:
+You can now build the program with:
 
     make arctracker
 
@@ -49,24 +54,12 @@ and install it with:
 
     sudo make install
 
-How to build it on Macos
-------------------------
+To import the code into CLion then do either of these first as appropriate:
 
-You need to have PortAudio installed. If you have homebrew then do:
+    cp CMakeLists.txt.macos CMakeLists.txt
+    cp CMakeLists.txt.linux CMakeLists.txt
 
-    brew install portaudio
-
-Then download the latest release tarball of Arctracker, unpack it, and do:
-
-    ./configure
-
-You can then build the program with:
-
-    make arctracker
-
-and install it with:
-
-    sudo make install
+Now you can import it as an existing CMake project.
 
 How to run it
 -------------
