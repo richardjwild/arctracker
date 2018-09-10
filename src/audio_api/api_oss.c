@@ -1,11 +1,15 @@
 #include "api_oss.h"
 #include <config.h>
+#include <io/error.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 #ifndef HAVE_SYS_SOUNDCARD_H
 
 audio_api_t initialise_oss()
 {
     error("OSS playback is not available");
+    exit(EXIT_FAILURE);
 }
 
 #else //HAVE_SYS_SOUNDCARD_H

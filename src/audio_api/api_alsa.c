@@ -1,11 +1,15 @@
 #include "api_alsa.h"
 #include <config.h>
+#include <io/error.h>
+#include <io/error.h>
+#include <stdlib.h>
 
 #ifndef HAVE_LIBASOUND
 
 audio_api_t initialise_alsa(long sample_rate, int audio_buffer_frames)
 {
     error("ALSA playback is not available");
+    exit(EXIT_FAILURE);
 }
 
 #else // HAVE_LIBASOUND
