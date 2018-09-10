@@ -23,12 +23,12 @@ Well, (2) never happened and nowadays Renoise does all that I could ever have
 imagined and much more besides. More recently this program has taken on a new
 lease of life as a refactoring project.
 
-How to build it
----------------
+Build prerequisites
+-------------------
 
 In this day and age Linux distributions have all dropped the Open Sound System.
-For ALSA playback then you need to have the ALSA header files installed. For
-example, on Debian-based distributions, do:
+For ALSA playback you need to have the ALSA header files installed. For example
+on Debian-based distributions, do:
 
     apt-get install libasound2-dev
 
@@ -37,12 +37,16 @@ use homebrew then you can do:
 
     brew install portaudio
 
-If you are not building from a release tarball, you need to have GNU automake
-and autoconf installed. Assuming that requirement, run the following command:
+If you are building from master, rather than a release tarball, you need to
+have GNU automake and autoconf installed. Assuming that requirement, run the
+following command:
 
     autoreconf -vfi
 
-If that succeeds, then run:
+How to build it
+---------------
+
+Run the configure script:
 
     ./configure
 
@@ -53,13 +57,6 @@ You can now build the program with:
 and install it with:
 
     sudo make install
-
-To import the code into CLion then do either of these first as appropriate:
-
-    cp CMakeLists.txt.macos CMakeLists.txt
-    cp CMakeLists.txt.linux CMakeLists.txt
-
-Now you can import it as an existing CMake project.
 
 How to run it
 -------------
@@ -92,6 +89,17 @@ be played, and [options] can be any or none of the following:
 
     -c              Indicate when clipping occurs by printing a bang character
     --clip-warn     to stdout.
+
+
+How to hack it
+--------------
+
+To import the code into CLion then do either of these first as appropriate:
+
+    cp CMakeLists.txt.macos CMakeLists.txt
+    cp CMakeLists.txt.linux CMakeLists.txt
+
+Now you can import it as an existing CMake project.
 
 -----------------------------------------------------------------
 Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
