@@ -62,9 +62,7 @@ static void start_stream()
 
 static void write_audio(int16_t *audio_buffer, long frames_in_buffer)
 {
-    PaError err = Pa_WriteStream(stream, audio_buffer, (unsigned) frames_in_buffer);
-    if (err != paNoError)
-        error_with_detail(FAILED_TO_WRITE_AUDIO, Pa_GetErrorText(err));
+    Pa_WriteStream(stream, audio_buffer, (unsigned) frames_in_buffer);
 }
 
 static void terminate_portaudio()

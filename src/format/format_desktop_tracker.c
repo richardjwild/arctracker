@@ -52,6 +52,7 @@ static const uint8_t HOLD_COMMAND_NOT_IMPLEMENTED = 0x1b;
 static const uint8_t NOTECUT_COMMAND_NOT_IMPLEMENTED = 0x1c;
 static const uint8_t NOTEDELAY_COMMAND_NOT_IMPLEMENTED = 0x1d;
 static const uint8_t PATTERNDELAY_COMMAND_NOT_IMPLEMENTED = 0x1e;
+static const uint8_t CALLLINKEDCODE_COMMAND_NOT_IMPLEMENTED = 0x1f;
 
 typedef struct
 {

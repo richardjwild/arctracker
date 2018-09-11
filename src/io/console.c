@@ -53,7 +53,7 @@ void output_new_position()
 
 void pianola_roll(const channel_event_t *line)
 {
-    printf("%2d %2d | ", song_position(), pattern_position());
+    printf("%3d %3d | ", song_position(), pattern_position());
     for (int track = 0; track < pianola_tracks; track++)
     {
         channel_event_t event = line[track];
