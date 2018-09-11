@@ -74,14 +74,17 @@ static void collect_audio(int16_t *audio_buffer, long frames_in_buffer)
     frames_written += frames_in_buffer;
 }
 
-static void write_file()
+riff_header_t riff_header(size_t data_size)
 {
-    size_t data_size = (frames_written * FRAME_SIZE);
     riff_header_t riff_header;
     memcpy(&riff_header.ChunkID, CHUNK_ID, sizeof(uint32_t));
     riff_header.ChunkSize = sizeof(uint32_t) + sizeof(fmt_subchunk_t) + sizeof(data_subchunk_t) + data_size;
     memcpy(&riff_header.Format, FORMAT, sizeof(uint32_t));
-    wav_file->riff_chunk_descriptor = riff_header;
+    return riff_header;
+}
+
+fmt_subchunk_t fmt_subchunk()
+{
     fmt_subchunk_t fmt_subchunk;
     memcpy(&fmt_subchunk.Subchunk1ID, SUB_CHUNK_1_ID, sizeof(uint32_t));
     fmt_subchunk.Subchunk1Size = SUB_CHUNK_1_SIZE;
@@ -91,11 +94,19 @@ static void write_file()
     fmt_subchunk.ByteRate = BYTE_RATE;
     fmt_subchunk.BlockAlign = BLOCK_ALIGN;
     fmt_subchunk.BitsPerSample = BITS_PER_SAMPLE;
-    wav_file->fmt = fmt_subchunk;
+    return fmt_subchunk;
+}
+
+data_subchunk_t data_subchunk(size_t data_size)
+{
     data_subchunk_t data_subchunk;
     memcpy(&data_subchunk.Subchunk2ID, SUB_CHUNK_2_ID, sizeof(uint32_t));
     data_subchunk.Subchunk2Size = (uint32_t) data_size;
-    wav_file->data = data_subchunk;
+    return data_subchunk;
+}
+
+void write_file(size_t data_size)
+{
     size_t file_size = sizeof(wav_file_t) + data_size;
     FILE *file_pointer = fopen(file_name, WRITEONLY);
     fwrite(wav_file, file_size, 1, file_pointer);
@@ -107,6 +118,16 @@ static void write_file()
     fclose(file_pointer);
 }
 
+static void create_structure_and_write()
+{
+    size_t data_size = (frames_written * FRAME_SIZE);
+    wav_file->riff_chunk_descriptor = riff_header(data_size);
+    wav_file->fmt = fmt_subchunk();
+    wav_file->data = data_subchunk(data_size);
+    write_file(data_size);
+    free(wav_file);
+}
+
 audio_api_t initialise_wav(char *file_name_in)
 {
     file_name = file_name_in;
@@ -114,7 +135,7 @@ audio_api_t initialise_wav(char *file_name_in)
             .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
             .sample_rate = SAMPLE_RATE,
             .write = collect_audio,
-            .finish = write_file
+            .finish = create_structure_and_write
     };
     return audio_api;
 }
