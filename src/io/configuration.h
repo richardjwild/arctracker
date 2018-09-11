@@ -11,6 +11,7 @@ typedef struct
     bool info;
     bool clip_warning;
     bool loop_forever;
+    char *output_filename;
 } args_t;
 
 args_t configuration();

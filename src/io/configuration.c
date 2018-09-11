@@ -17,6 +17,8 @@ static const char *ARG_VOLUME = "--volume=";
 static const char *ARG_VOLUME_S = "-v";
 static const char *ARG_LOOP = "--loop";
 static const char *ARG_LOOP_S = "-l";
+static const char *ARG_OUTPUT = "--output=";
+static const char *ARG_OUTPUT_S = "-o";
 
 static const char *USAGE_MESSAGE =
         "Usage: arctracker [options] <modfile>\n"
@@ -37,7 +39,8 @@ static args_t config = {
         .info = false,
         .clip_warning = false,
         .mod_filename = NULL,
-        .loop_forever = false
+        .loop_forever = false,
+        .output_filename = NULL
 };
 
 bool handle_argument(const char *);
@@ -111,6 +114,11 @@ bool handle_argument(const char *arg)
         config.volume = atoi(value);
         if (config.volume < 1 || config.volume > 256)
             error("Volume must be a number between 1 and 256");
+    }
+    else if (matches(arg, ARG_OUTPUT, ARG_OUTPUT_S))
+    {
+        const char *value = arg_value(arg, ARG_OUTPUT, ARG_OUTPUT_S);
+        config.output_filename = (char *) value;
     }
     else
     {

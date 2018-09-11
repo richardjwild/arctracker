@@ -14,6 +14,6 @@ typedef struct {
     int sample_rate;
 } audio_api_t;
 
-audio_api_t initialise_audio_api();
+audio_api_t initialise_audio_api(args_t config);
 
 #endif //ARCTRACKER_AUDIO_API_H
