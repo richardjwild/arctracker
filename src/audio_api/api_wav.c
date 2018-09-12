@@ -13,9 +13,8 @@ static const int AUDIO_FORMAT_PCM = 1;
 static const int SUB_CHUNK_1_SIZE = 16;
 static const uint16_t BITS_PER_SAMPLE = 16;
 static const uint16_t NUM_CHANNELS = 2;
-static const uint16_t BLOCK_ALIGN = NUM_CHANNELS * BITS_PER_SAMPLE / 8;
-static const uint32_t BYTE_RATE = SAMPLE_RATE * NUM_CHANNELS * BITS_PER_SAMPLE / 8;
-static const size_t FRAME_SIZE = NUM_CHANNELS * sizeof(int16_t);
+
+#define FRAME_SIZE (NUM_CHANNELS * sizeof(int16_t))
 
 typedef struct {
     uint32_t ChunkID;
@@ -91,8 +90,8 @@ fmt_subchunk_t fmt_subchunk()
     fmt_subchunk.AudioFormat = AUDIO_FORMAT_PCM;
     fmt_subchunk.NumChannels = NUM_CHANNELS;
     fmt_subchunk.SampleRate = SAMPLE_RATE;
-    fmt_subchunk.ByteRate = BYTE_RATE;
-    fmt_subchunk.BlockAlign = BLOCK_ALIGN;
+    fmt_subchunk.ByteRate = SAMPLE_RATE * NUM_CHANNELS * BITS_PER_SAMPLE / 8;
+    fmt_subchunk.BlockAlign = NUM_CHANNELS * BITS_PER_SAMPLE / 8;
     fmt_subchunk.BitsPerSample = BITS_PER_SAMPLE;
     return fmt_subchunk;
 }

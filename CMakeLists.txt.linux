@@ -61,7 +61,9 @@ add_executable(arctracker
         src/audio_api/api.c
         src/audio_api/api.h
         src/audio_api/api_portaudio.c
-        src/audio_api/api_portaudio.h)
+        src/audio_api/api_portaudio.h
+        src/audio_api/api_wav.c
+        src/audio_api/api_wav.h)
 
 target_link_libraries(
         arctracker
