@@ -31,6 +31,7 @@ static const char *USAGE_MESSAGE =
         "\t-c or --clip-warn\n"
         "\t-p or --pianola\n"
         "\t-v<1 to 255> or --volume=<1 to 255>\n"
+        "\t-o<output file> or --output=<output file>\n"
         "\n";
 
 static args_t config = {

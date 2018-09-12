@@ -90,6 +90,9 @@ be played, and [options] can be any or none of the following:
     -c              Indicate when clipping occurs by printing a bang character
     --clip-warn     to stdout.
 
+    -o<file>        Write audio to named file in WAV format instead of playing
+    --output=<file> back through the audio system.
+
 
 How to hack it
 --------------
