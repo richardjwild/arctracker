@@ -17,7 +17,7 @@ static args_t config;
 
 voice_t *initialise_player(module_t *, audio_api_t);
 
-bool writing_to_file(args_t);
+bool writing_to_file();
 
 voice_t *initialise_voices();
 
@@ -64,21 +64,21 @@ void play_module(module_t *module, audio_api_t audio_api)
 voice_t *initialise_player(module_t *module_p, const audio_api_t audio_api)
 {
     module = *module_p;
-    args_t config = configuration();
+    config = configuration();
     initialise_audio(audio_api, module.num_channels);
     set_master_gain(config.volume);
     set_module_gain_characteristics(module.gain_curve, module.gain_maximum);
     set_clock(module.initial_speed, audio_api.sample_rate);
     initialise_sequence(module_p);
     configure_console(config.pianola, module_p);
-    if (writing_to_file(config))
+    if (writing_to_file())
     {
         forbid_jumping_backwards();
     }
     return initialise_voices();
 }
 
-bool writing_to_file(args_t config)
+bool writing_to_file()
 {
     return config.output_filename != NULL;
 }
