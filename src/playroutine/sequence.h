@@ -5,6 +5,8 @@
 
 void initialise_sequence(module_t *module);
 
+void forbid_jumping_backwards();
+
 int song_position();
 
 int pattern_position();

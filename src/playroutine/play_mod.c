@@ -17,6 +17,8 @@ static args_t config;
 
 voice_t *initialise_player(module_t *, audio_api_t);
 
+bool writing_to_file(args_t);
+
 voice_t *initialise_voices();
 
 channel_event_t *decode_next_events();
@@ -69,7 +71,16 @@ voice_t *initialise_player(module_t *module_p, const audio_api_t audio_api)
     set_clock(module.initial_speed, audio_api.sample_rate);
     initialise_sequence(module_p);
     configure_console(config.pianola, module_p);
+    if (writing_to_file(config))
+    {
+        forbid_jumping_backwards();
+    }
     return initialise_voices();
+}
+
+bool writing_to_file(args_t config)
+{
+    return config.output_filename != NULL;
 }
 
 void output_one_tick(voice_t *voices, const channel_event_t *events)

@@ -8,6 +8,7 @@ static long tune_length;
 static void **patterns;
 static int *pattern_lengths;
 static bool looped;
+static bool jump_backwards_permitted;
 
 void initialise_sequence(module_t *module)
 {
@@ -20,6 +21,12 @@ void initialise_sequence(module_t *module)
     int first_pattern = sequence[position_in_sequence];
     pattern_line_ptr = patterns[first_pattern];
     looped = false;
+    jump_backwards_permitted = true;
+}
+
+void forbid_jumping_backwards()
+{
+    jump_backwards_permitted = false;
 }
 
 int song_position()
@@ -72,9 +79,19 @@ void break_to_next_position()
     position_in_pattern = pattern_lengths[current_pattern] - 1;
 }
 
+static inline
+bool jump_permitted(int next_position)
+{
+    return (next_position < tune_length)
+           && (jump_backwards_permitted || (next_position > position_in_sequence));
+}
+
 void jump_to_position(int next_position)
 {
-    position_in_sequence = next_position - 1;
-    int current_pattern = sequence[position_in_sequence];
-    position_in_pattern = pattern_lengths[current_pattern] - 1;
+    if (jump_permitted(next_position))
+    {
+        position_in_sequence = next_position - 1;
+        int current_pattern = sequence[position_in_sequence];
+        position_in_pattern = pattern_lengths[current_pattern] - 1;
+    }
 }
