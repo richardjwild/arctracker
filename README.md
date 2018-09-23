@@ -68,13 +68,13 @@ be played, and `options` may be any or none of the following:
 
 | Short    | Long            | Description |
 | -------- | --------------- | ----------- |
-| -h       | --help          | Print usage information and exit. |
-| -i       | --info          | Print information about the module and exit. |
-| -l       | --loop          | Continually repeat the modfile until the program is interrupted by ctrl-c. The default is not to repeat. Looping is disabled when writing to a WAV file. |
-| -p       | --pianola       | Print the pattern information to stdout as the modfile is playing in the manner of an old pianola roll. |
-| -v<n>    | --volume=_n_    | Software-scale the volume where n is between 1 and 255. When playing modfiles with more than 4 channels (Desktop Tracker modfiles can have up to 16) a volume greater than 64 may cause clipping, which sounds distorted. If this happens then use a lower volume. |
-| -c       | --clip-warn     | Indicate when clipping occurs by printing a bang character to stdout. |
-| -o<file> | --output=_file_ | Write audio to named file in WAV format instead of playing back through the audio system. |
+| `-h`     | `--help`        | Print usage information and exit. |
+| `-i`     | `--info`        | Print information about the module and exit. |
+| `-l`     | `--loop`        | Continually repeat the modfile until the program is interrupted by ctrl-c. The default is not to repeat. Looping is disabled when writing to a WAV file. |
+| `-p`     | `--pianola`     | Print the pattern information to stdout as the modfile is playing in the manner of an old pianola roll. |
+| `-vn`    | `--volume=n`    | Software-scale the volume where 1 ≤ _n_ ≤ 255. When playing modfiles with more than 4 channels (Desktop Tracker modfiles can have up to 16) a volume greater than 64 may cause clipping, which sounds distorted. If this happens then use a lower volume. |
+| `-c`     | `--clip-warn`   | Indicate when clipping occurs by printing a bang character to stdout. |
+| `-ofile` | `--output=file` | Write audio to named _file_ in WAV format instead of playing back through the audio system. |
 
 ### How to hack it
 
