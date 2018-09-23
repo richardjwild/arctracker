@@ -1,5 +1,5 @@
-Arctracker, the Archimedes modfile player
------------------------------------------
+# Arctracker
+## The Archimedes modfile player
 
 This program is designed to play modfiles that have been created using the
 Tracker and Desktop Tracker programs that run on the Acorn Archimedes and
@@ -13,18 +13,17 @@ available for Linux (or Windows, to the best of my knowledge) will play them.
 
 This program existed for two reasons:
 
-(1) I wanted to be able to play all my old Tracker and Desktop Tracker modfiles
+1. I wanted to be able to play all my old Tracker and Desktop Tracker modfiles
 on my Linux machine, and
 
-(2) I wanted to write an advanced tracker editor of my own for Linux and this
+1. I wanted to write an advanced tracker editor of my own for Linux and this
 seemed like a useful exercise to try my hand at first.
 
-Well, (2) never happened and nowadays Renoise does all that I could ever have
+Well, 2 never happened and nowadays [Renoise](https://www.renoise.com/) does all that I could ever have
 imagined and much more besides. More recently this program has taken on a new
 lease of life as a refactoring project.
 
-Build prerequisites
--------------------
+### Build prerequisites
 
 In this day and age Linux distributions have all dropped the Open Sound System.
 For ALSA playback you need to have the ALSA header files installed. For example
@@ -43,8 +42,7 @@ following command:
 
     autoreconf -vfi
 
-How to build it
----------------
+### How to build it
 
 Run the configure script:
 
@@ -58,44 +56,27 @@ and install it with:
 
     sudo make install
 
-How to run it
--------------
+### How to run it
 
 Currently, the program runs from the command line only.  It is invoked like
 this:
 
     arctracker [options] <modfile>
 
-where <modfile> is the filename of the Tracker or Desktop Tracker modfile to
-be played, and [options] can be any or none of the following:
+where `modfile` is the filename of the Tracker or Desktop Tracker modfile to
+be played, and `options` may be any or none of the following:
 
-    -h              Print usage information and exit.
-    --help
-    
-    -i              Print information about the module and exit.
-    --info
+| Short    | Long            | Description |
+| -------- | --------------- | ----------- |
+| -h       | --help          | Print usage information and exit. |
+| -i       | --info          | Print information about the module and exit. |
+| -l       | --loop          | Continually repeat the modfile until the program is interrupted by ctrl-c. The default is not to repeat. Looping is disabled when writing to a WAV file. |
+| -p       | --pianola       | Print the pattern information to stdout as the modfile is playing in the manner of an old pianola roll. |
+| -v<n>    | --volume=_n_    | Software-scale the volume where n is between 1 and 255. When playing modfiles with more than 4 channels (Desktop Tracker modfiles can have up to 16) a volume greater than 64 may cause clipping, which sounds distorted. If this happens then use a lower volume. |
+| -c       | --clip-warn     | Indicate when clipping occurs by printing a bang character to stdout. |
+| -o<file> | --output=_file_ | Write audio to named file in WAV format instead of playing back through the audio system. |
 
-    -l              Continually repeat the modfile until the program is
-    --loop          interrupted by ctrl-c.  The default is not to repeat.
-
-    -p              Print the pattern information to stdout as the modfile is
-    --pianola       playing in the manner of an old pianola roll.
-
-    -v<n>           Software-scale the volume where n is between 1 and 255. When
-    --volume=<n>    playing modfiles with more than 4 channels (Desktop Tracker
-                    modfiles can have up to 16) a volume greater than 64 may
-                    cause clipping, which sounds distorted. If this happens then
-                    use a lower volume.
-
-    -c              Indicate when clipping occurs by printing a bang character
-    --clip-warn     to stdout.
-
-    -o<file>        Write audio to named file in WAV format instead of playing
-    --output=<file> back through the audio system.
-
-
-How to hack it
---------------
+### How to hack it
 
 To import the code into CLion then do either of these first as appropriate:
 
@@ -106,5 +87,3 @@ Now you can import it as an existing CMake project.
 
 -----------------------------------------------------------------
 Arctracker is copyright (c) Richard Wild 2003, 2004, 2005 & 2018.
-
-richardwild76@gmail.com
