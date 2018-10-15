@@ -3,7 +3,7 @@ project(arctracker C)
 
 set(CMAKE_C_STANDARD 11)
 
-include_directories(/usr/local/include)
+include_directories(/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include)
 include_directories(src)
 include_directories(src/audio)
 include_directories(src/audio_api)
@@ -13,7 +13,6 @@ include_directories(src/io)
 include_directories(src/memory)
 include_directories(src/pcm)
 include_directories(src/playroutine)
-link_directories(/usr/local/lib)
 
 add_executable(arctracker
         src/audio/gain.c
@@ -26,12 +25,20 @@ add_executable(arctracker
         src/audio/resample.h
         src/audio/write_audio.c
         src/audio/write_audio.h
+        src/audio_api/api.c
+        src/audio_api/api.h
         src/audio_api/api_alsa.c
         src/audio_api/api_alsa.h
         src/audio_api/api_oss.c
         src/audio_api/api_oss.h
+        src/audio_api/api_portaudio.c
+        src/audio_api/api_portaudio.h
+        src/audio_api/api_wav.c
+        src/audio_api/api_wav.h
         src/chrono/clock.c
         src/chrono/clock.h
+        src/format/format.c
+        src/format/format.h
         src/format/format_desktop_tracker.c
         src/format/format_desktop_tracker.h
         src/format/format_tracker.c
@@ -57,15 +64,7 @@ add_executable(arctracker
         src/playroutine/sequence.h
         src/arctracker.c
         src/arctracker.h
-        src/config.h
-        src/format/format.c
-        src/format/format.h
-        src/audio_api/api.c
-        src/audio_api/api.h
-        src/audio_api/api_portaudio.c
-        src/audio_api/api_portaudio.h
-        src/audio_api/api_wav.c
-        src/audio_api/api_wav.h)
+        src/config.h)
 
 target_link_libraries(
         arctracker
