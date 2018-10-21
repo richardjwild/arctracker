@@ -3,7 +3,7 @@ SRCDIR = src
 BINDIR = bin
 DISTDIR = dist
 EXECUTABLE = $(BINDIR)/$(TARGET)
-DISTFILES = aclocal.m4 CMakeLists.txt configure configure.ac COPYING install-sh Makefile.in Makefile.am README
+DISTFILES = aclocal.m4 CMakeLists.txt configure configure.ac COPYING install-sh Makefile.in Makefile.am README.md
 
 CC = @CC@
 INSTALL = @INSTALL@
