@@ -12,8 +12,8 @@ LDFLAGS = @LDFLAGS@
 CLIBS = @LIBS@
 INSTALLDIR = @prefix@
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h) $(wildcard $(SRCDIR)/*/*.h)
+SOURCES := $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
+AM_CPPFLAGS := $(wildcard $(SRCDIR)/*.h) $(wildcard $(SRCDIR)/*/*.h)
 
 clean :
 	@rm -f $(EXECUTABLE) 2>/dev/null
