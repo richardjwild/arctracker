@@ -13,6 +13,20 @@ static int *pattern_lengths;
 static bool looped;
 static bool jump_backwards_permitted;
 
+void begin_new_pattern();
+
+static inline bool end_of_sequence();
+
+void advance_sequence_position();
+
+static inline bool end_of_pattern();
+
+void advance_pattern_event();
+
+void go_to_jump_target();
+
+static inline bool jump_permitted(int);
+
 void initialise_sequence(module_t *module)
 {
     position_in_sequence = 0;
@@ -43,19 +57,6 @@ int pattern_position()
     return position_in_pattern;
 }
 
-void begin_new_pattern()
-{
-    int next_pattern = sequence[position_in_sequence];
-    pattern_line_ptr = patterns[next_pattern];
-    position_in_pattern = 0;
-}
-
-static inline
-bool end_of_sequence()
-{
-    return (position_in_sequence == tune_length);
-}
-
 void advance_sequence_position()
 {
     position_in_sequence += 1;
@@ -68,11 +69,24 @@ void advance_sequence_position()
 }
 
 static inline
-bool end_of_pattern()
+bool end_of_sequence()
 {
-    int current_pattern = sequence[position_in_sequence];
-    int pattern_length = pattern_lengths[current_pattern];
-    return (position_in_pattern == pattern_length);
+    return (position_in_sequence == tune_length);
+}
+
+void begin_new_pattern()
+{
+    int next_pattern = sequence[position_in_sequence];
+    pattern_line_ptr = patterns[next_pattern];
+    position_in_pattern = 0;
+}
+
+void next_event()
+{
+    if (jump_position_target == NO_JUMP)
+        advance_pattern_event();
+    else
+        go_to_jump_target();
 }
 
 void advance_pattern_event()
@@ -82,19 +96,19 @@ void advance_pattern_event()
         advance_sequence_position();
 }
 
+static inline
+bool end_of_pattern()
+{
+    int current_pattern = sequence[position_in_sequence];
+    int pattern_length = pattern_lengths[current_pattern];
+    return (position_in_pattern == pattern_length);
+}
+
 void go_to_jump_target()
 {
     position_in_sequence = jump_position_target;
     jump_position_target = NO_JUMP;
     begin_new_pattern();
-}
-
-void next_event()
-{
-    if (jump_position_target == NO_JUMP)
-        advance_pattern_event();
-    else
-        go_to_jump_target();
 }
 
 void *pattern_line()
@@ -112,17 +126,17 @@ bool looped_yet()
     return looped;
 }
 
+void jump_to_position(int next_position)
+{
+    if (jump_permitted(next_position))
+        jump_position_target = next_position;
+}
+
 static inline
 bool jump_permitted(int next_position)
 {
     return (next_position < tune_length)
            && (jump_backwards_permitted || (next_position > position_in_sequence));
-}
-
-void jump_to_position(int next_position)
-{
-    if (jump_permitted(next_position))
-        jump_position_target = next_position;
 }
 
 void break_to_next_position()
