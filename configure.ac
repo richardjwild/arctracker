@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([Arctracker], [0.4.1], [richardwild76@gmail.com])
+AC_INIT([Arctracker], [0.4.2], [richardwild76@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/arctracker.c])
 AC_CONFIG_HEADERS([src/config.h])
