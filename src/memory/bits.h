@@ -21,4 +21,8 @@
 
 #define ALIGN_TO_WORD(length) ((length % 4) ? (length) + (4 - ((length) % 4)) : (length))
 
+#define FROM_BIG_ENDIAN(x) ((((x & 0xff00) >> 8)) + ((x & 0xff) << 8))
+
+static const int AMIGA_WORD_LENGTH = 2;
+
 #endif //ARCTRACKER_BITS_H
