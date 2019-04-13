@@ -321,6 +321,10 @@ sample_t *get_sample_info(void *array_start, long array_end)
     // compensating for the greater chromatic range in a Desktop Tracker module
     sample->transpose = 12;
     sample->repeats = (sample->repeat_offset != 0 || sample->repeat_length != 2);
+    if (sample->repeats) {
+        sample->sample_data[sample->sample_length] = sample->sample_data[sample->repeat_offset];
+        sample->sample_data[sample->sample_length + 1] = sample->sample_data[sample->repeat_offset + 1];
+    }
 
     return sample;
 }

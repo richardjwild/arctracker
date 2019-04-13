@@ -30,9 +30,9 @@ void calculate_vidc_encoding(double *encoding)
 
 double *convert_vidc_encoded_sample(const uint8_t *mu_law_encoded, const int no_samples)
 {
-    // extend by 1 sample so that we don't have to worry about falling off
-    // the end when interpolating between two samples
-    double *linear = allocate_array(no_samples + 1, sizeof(double));
+    // extend by 2 sample to give us room to unroll the first two samples
+    // of the sample repeat (if it repeats)
+    double *linear = allocate_array(no_samples + 2, sizeof(double));
     double encoding[256];
     calculate_vidc_encoding(encoding);
     for (int i = 0; i < no_samples; i++)
@@ -40,7 +40,8 @@ double *convert_vidc_encoded_sample(const uint8_t *mu_law_encoded, const int no_
         uint8_t encoded = mu_law_encoded[i];
         linear[i] = encoding[encoded];
     }
-    // set the final sample to zero so that it will be interpolated correctly
+    // set the final samples to zero so that the interpolation will be done correctly
     linear[no_samples] = 0.0;
+    linear[no_samples + 1] = 0.0;
     return linear;
 }
