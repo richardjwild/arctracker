@@ -80,6 +80,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [
       { modifiers: "none", execute: commands.cursorFieldRight },
       { modifiers: "primary", execute: commands.sequenceSeekForwards },
+      { modifiers: "secondary", execute: () => commands.patternGridRight(true) },
     ],
   ],
   [
@@ -87,15 +88,14 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [
       { modifiers: "none", execute: commands.cursorFieldLeft },
       { modifiers: "primary", execute: commands.sequenceSeekBackwards },
+      { modifiers: "secondary", execute: () => commands.patternGridLeft(true) },
     ],
   ],
   [
     "Tab",
     [
       { modifiers: "none", execute: () => commands.patternGridRight(false) },
-      { modifiers: "secondary", execute: () => commands.patternGridRight(true) },
-      { modifiers: "tertiary", execute: () => commands.patternGridLeft(false) },
-      { modifiers: "secondary+tertiary", execute: () => commands.patternGridLeft(true) },
+      { modifiers: "secondary", execute: () => commands.patternGridLeft(false) },
     ],
   ],
   [
