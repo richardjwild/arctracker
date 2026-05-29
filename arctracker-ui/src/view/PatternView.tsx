@@ -7,6 +7,7 @@ import {
   getPatternContentDimensions, PatternRenderer,
 } from "../rendering/renderPattern.ts";
 import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
+import { patternGrid } from "../editing/patternGrid.ts";
 
 export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
@@ -58,11 +59,16 @@ export default function PatternView() {
   ) => {
     return () => {
       const currentPattern = useStore.getState().currentPattern;
-      const patternIndex = useStore.getState().transportState.patternIndex;
-      if (currentPattern) {
-        const patternRenderer = new PatternRenderer(currentPattern, ctx, viewportSizeRef.current, numChannels);
-        patternRenderer.renderPattern(patternIndex);
-      }
+      const patternIndex = useStore.getState().transportState.playing
+        ? useStore.getState().transportState.patternIndex
+        : patternGrid.currentPosition().patternIndex;
+      const patternRenderer = new PatternRenderer(
+        currentPattern,
+        ctx,
+        viewportSizeRef.current,
+        numChannels,
+      );
+      patternRenderer.renderPattern(patternIndex);
     };
   };
 

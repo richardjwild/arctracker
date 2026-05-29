@@ -162,6 +162,10 @@ export const cursor = {
     return moveCursor((cursor) => cursor.moveEventRight());
   },
 
+  currentPosition: (): CursorPosition => {
+    return new Cursor().currentPosition();
+  },
+
   updatePatternIndex: (patternIndex: number) => {
     const { editorState, setEditorState } = useStore.getState();
     if (patternIndex !== editorState.cursorPosition.patternIndex) {
