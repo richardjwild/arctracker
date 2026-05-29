@@ -24,6 +24,12 @@ type PatternLayout = {
   maxLines: number;
 };
 
+type GridViewportFit = {
+  playheadRowHeight: number;
+  linesToShow: number;
+  playheadLocationOnScreen: number;
+}
+
 export type PatternContentDimensions = {
   contentWidth: number;
   contentHeight: number;
@@ -128,9 +134,9 @@ function colours(atPlayhead: boolean = false): Colours {
     text: "#777777",
     cursor: "#00ff00",
     cursorText: "#003300",
-    note: "#00bbaa",
-    sample: "#aaaa22",
-    effect: "#bb7700",
+    note: "#00ddcc",
+    sample: "#cccc77",
+    effect: "#dd9900",
   };
 }
 
@@ -157,23 +163,24 @@ export class PatternRenderer {
   }
 
   public renderPattern(playheadIndex: number) {
-    const playheadRowHeight = this.patternLayout.rowHeight + (2 * this.patternLayout.playheadPadding);
-    const linesToShow = 1 + Math.floor((this.viewportSize.height - playheadRowHeight) / this.patternLayout.rowHeight);
-    const playheadLocationOnScreen = Math.floor(linesToShow / 2);
+    const gridViewportFit = this.calculateGridViewportFit();
     this.ctx.font = "16px FiraCode";
     this.ctx.textBaseline = "hanging";
     this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
     this.renderTrackLanes();
-    let y = 0;
-    for (let screenLine = 0; screenLine < linesToShow; screenLine++) {
-      const patternIndex = playheadIndex - playheadLocationOnScreen + screenLine;
-      const patternLine =
-        patternIndex >= 0 && patternIndex < this.pattern.lines.length
-          ? this.pattern.lines[patternIndex]
-          : null;
-      const atPlayhead = (patternIndex === playheadIndex);
-      y += this.renderPatternLine(patternLine, y, atPlayhead);
-    }
+    this.renderPlayhead(gridViewportFit);
+    if (this.editorState.editing) this.renderCursor(gridViewportFit);
+    this.renderPatternLines(gridViewportFit, playheadIndex);
+  }
+
+  private calculateGridViewportFit(): GridViewportFit {
+    const playheadRowHeight = this.patternLayout.rowHeight + (2 * this.patternLayout.playheadPadding);
+    const linesToShow = 1 + Math.floor((this.viewportSize.height - playheadRowHeight) / this.patternLayout.rowHeight);
+    return {
+      playheadRowHeight,
+      linesToShow,
+      playheadLocationOnScreen: Math.floor(linesToShow / 2),
+    };
   }
 
   private renderTrackLanes() {
@@ -183,6 +190,53 @@ export class PatternRenderer {
     }
     this.withFillStyle(colours().background)
       .fillRect(x, 0, this.viewportSize.width - x, this.viewportSize.height);
+  }
+
+  private renderPlayhead(gridViewportFit: GridViewportFit) {
+    const y = gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight;
+    this.withFillStyle(colours().playheadBackground)
+      .fillRect(0, y + this.patternLayout.playheadPadding, this.viewportSize.width, this.patternLayout.rowHeight);
+  }
+
+  private renderCursor(gridViewportFit: GridViewportFit) {
+    const cursorTrack = this.editorState.cursorPosition.track;
+    let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth;
+    for (let track = 0; track < cursorTrack; track++) {
+      x += this.patternLayout.getEventWidth(track);
+    }
+    const y = (gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight) + this.patternLayout.playheadPadding;
+    let cursorX = this.patternLayout.leftPadding + x - this.patternLayout.glyphWidth;
+    let cursorWidth = this.patternLayout.glyphWidth;
+    const cursor = new Cursor();
+    const cursorField = cursor.currentField();
+    if (cursorField.field === "note") {
+      cursorWidth = this.patternLayout.glyphWidth * 3;
+    } else if (cursorField.field === "sampleHigh") {
+      cursorX += this.patternLayout.glyphWidth * 4;
+    } else if (cursorField.field === "sampleLow") {
+      cursorX += this.patternLayout.glyphWidth * 5;
+    } else if (cursorField.field === "effectCode") {
+      cursorX += this.patternLayout.glyphWidth * (7 + (cursorField.effectIndex * 4));
+    } else if (cursorField.field === "effectData1") {
+      cursorX += this.patternLayout.glyphWidth * (8 + (cursorField.effectIndex * 4));
+    } else if (cursorField.field === "effectData2") {
+      cursorX += this.patternLayout.glyphWidth * (9 + (cursorField.effectIndex * 4));
+    }
+    this.withFillStyle(colours().cursor)
+      .fillRect(cursorX, y - 1, cursorWidth, this.patternLayout.rowHeight + 1);
+  }
+
+  private renderPatternLines(gridViewportFit: GridViewportFit, playheadIndex: number) {
+    let y = 0;
+    for (let screenLine = 0; screenLine < gridViewportFit.linesToShow; screenLine++) {
+      const patternIndex = playheadIndex - gridViewportFit.playheadLocationOnScreen + screenLine;
+      const patternLine =
+        patternIndex >= 0 && patternIndex < this.pattern.lines.length
+          ? this.pattern.lines[patternIndex]
+          : null;
+      const atPlayhead = (patternIndex === playheadIndex);
+      y += this.renderPatternLine(patternLine, y, atPlayhead);
+    }
   }
 
   private renderRowNumberLane(x: number): number {
@@ -201,9 +255,6 @@ export class PatternRenderer {
   private renderPatternLine(line: PatternLine | null, y: number, atPlayhead: boolean): number {
     if (line) {
       const rowNumber = Number(line.row).toString().padStart(3, " ");
-      if (atPlayhead) {
-        this.renderPlayhead(y);
-      }
       const eventY = atPlayhead ? y + this.patternLayout.playheadPadding : y;
       let x = this.patternLayout.leftPadding;
       x += this.renderRowNumber(rowNumber, x, eventY, atPlayhead);
@@ -218,11 +269,6 @@ export class PatternRenderer {
       : this.patternLayout.rowHeight;
   }
 
-  private renderPlayhead(y: number) {
-    this.withFillStyle(colours().playheadBackground)
-       .fillRect(0, y + this.patternLayout.playheadPadding, this.viewportSize.width, this.patternLayout.rowHeight);
-  }
-
   private renderRowNumber(rowNumber: string, x: number, y: number, atPlayhead: boolean): number {
     this.withFillStyle(colours(atPlayhead).text)
       .renderGlyph(rowNumber.charAt(0), x, y)
@@ -233,9 +279,6 @@ export class PatternRenderer {
 
   private renderEvent(track: number, event: PatternEvent, x: number, y: number, atPlayhead: boolean): number {
     const cursorOnEvent = (atPlayhead && this.editorState.editing && track === this.editorState.cursorPosition.track);
-    if (cursorOnEvent) {
-      this.renderCursor(x, y);
-    }
     x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent);
     x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent);
     for (let effectIndex = 0; effectIndex < this.editorState.effectsDisplayed[track]; effectIndex++) {
@@ -308,28 +351,6 @@ export class PatternRenderer {
       colour = (effectParam === "-") ? colours(atPlayhead).text : colours(atPlayhead).effect;
     this.withFillStyle(colour).renderGlyph(effectParam, x, y)
     return this.patternLayout.glyphWidth;
-  }
-
-  private renderCursor(x: number, y: number) {
-    let cursorX = this.patternLayout.leftPadding + x - this.patternLayout.glyphWidth;
-    let cursorWidth = this.patternLayout.glyphWidth;
-    const cursor = new Cursor();
-    const cursorField = cursor.currentField();
-    if (cursorField.field === "note") {
-      cursorWidth = this.patternLayout.glyphWidth * 3;
-    } else if (cursorField.field === "sampleHigh") {
-      cursorX += this.patternLayout.glyphWidth * 4;
-    } else if (cursorField.field === "sampleLow") {
-      cursorX += this.patternLayout.glyphWidth * 5;
-    } else if (cursorField.field === "effectCode") {
-      cursorX += this.patternLayout.glyphWidth * (7 + (cursorField.effectIndex * 4));
-    } else if (cursorField.field === "effectData1") {
-      cursorX += this.patternLayout.glyphWidth * (8 + (cursorField.effectIndex * 4));
-    } else if (cursorField.field === "effectData2") {
-      cursorX += this.patternLayout.glyphWidth * (9 + (cursorField.effectIndex * 4));
-    }
-    this.withFillStyle(colours().cursor)
-      .fillRect(cursorX, y - 1, cursorWidth, this.patternLayout.rowHeight + 1);
   }
 
   private withFillStyle(fillStyle: string): PatternRenderer {
