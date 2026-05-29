@@ -6,6 +6,7 @@ import { animation } from "../rendering/animation.ts";
 import {
   getPatternContentDimensions, PatternRenderer,
 } from "../rendering/renderPattern.ts";
+import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
 
 export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
@@ -113,6 +114,8 @@ export default function PatternView() {
           setCurrentPattern({ patternNo, lines: patternLines }),
         );
   }, [moduleId, moduleVersion, patternNo, numLines, numChannels, setCurrentPattern]);
+
+  useSyncCursorWithTransport();
 
   return (
     <div ref={containerRef} className="patternView uiArea" id="patternView">

@@ -78,6 +78,7 @@ function initialEditorState(numChannels: number = 0): EditorState {
     cursorPosition: {
       track: 0,
       field: 0,
+      patternIndex: 0,
     },
     effectsDisplayed: Array.from({ length: numChannels }, () => 1),
   };

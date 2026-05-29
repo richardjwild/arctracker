@@ -3,6 +3,7 @@ import { EditorState } from "./editor.ts";
 
 export type CursorPosition = {
   track: number;
+  patternIndex: number;
   field: number;
 };
 
@@ -28,7 +29,10 @@ export class Cursor {
   numTracks: number;
 
   constructor() {
-    const { editorState, module: { numChannels } } = useStore.getState();
+    const {
+      editorState,
+      module: { numChannels },
+    } = useStore.getState();
     this.editorState = {
       ...editorState,
       cursorPosition: { ...editorState.cursorPosition },
@@ -49,7 +53,8 @@ export class Cursor {
     } else if (this.editorState.cursorPosition.field === SAMPLE_LOW_FIELD) {
       return { field: "sampleLow" };
     } else {
-      const relativeField = this.editorState.cursorPosition.field - FIRST_EFFECT_FIELD;
+      const relativeField =
+        this.editorState.cursorPosition.field - FIRST_EFFECT_FIELD;
       const effectIndex = Math.floor(relativeField / FIELDS_PER_EFFECT);
       if (relativeField % 3 === 0) {
         return { field: "effectCode", effectIndex };
@@ -62,13 +67,17 @@ export class Cursor {
   }
 
   rightmostFieldFor(track: number): number {
-    return FIRST_EFFECT_FIELD + (this.editorState.effectsDisplayed[track] * 3) - 1;
+    return (
+      FIRST_EFFECT_FIELD + this.editorState.effectsDisplayed[track] * 3 - 1
+    );
   }
 
   public moveFieldLeft() {
     if (this.editorState.cursorPosition.field === 0) {
       if (this.editorState.cursorPosition.track === 0) return;
-      this.editorState.cursorPosition.field = this.rightmostFieldFor(this.editorState.cursorPosition.track - 1);
+      this.editorState.cursorPosition.field = this.rightmostFieldFor(
+        this.editorState.cursorPosition.track - 1,
+      );
       this.editorState.cursorPosition.track -= 1;
     } else {
       this.editorState.cursorPosition.field -= 1;
@@ -76,7 +85,10 @@ export class Cursor {
   }
 
   public moveFieldRight() {
-    if (this.editorState.cursorPosition.field === this.rightmostFieldFor(this.editorState.cursorPosition.track)) {
+    if (
+      this.editorState.cursorPosition.field ===
+      this.rightmostFieldFor(this.editorState.cursorPosition.track)
+    ) {
       if (this.editorState.cursorPosition.track === this.numTracks - 1) return;
       this.editorState.cursorPosition.field = 0;
       this.editorState.cursorPosition.track += 1;
@@ -100,16 +112,21 @@ export class Cursor {
   }
 
   ensureCursorStillVisible() {
-    const effectsDisplayed = this.editorState.effectsDisplayed[this.editorState.cursorPosition.track];
-    const totalFields = FIRST_EFFECT_FIELD + (effectsDisplayed * FIELDS_PER_EFFECT);
+    const effectsDisplayed =
+      this.editorState.effectsDisplayed[this.editorState.cursorPosition.track];
+    const totalFields =
+      FIRST_EFFECT_FIELD + effectsDisplayed * FIELDS_PER_EFFECT;
     while (this.editorState.cursorPosition.field >= totalFields)
       this.editorState.cursorPosition.field -= FIELDS_PER_EFFECT;
   }
 
   public effectsDisplayedDecreased() {
     if (this.editorState.cursorPosition.field < FIRST_EFFECT_FIELD) return;
-    const relativeField = this.editorState.cursorPosition.field - FIRST_EFFECT_FIELD;
-    const effectsDisplayed = this.editorState.effectsDisplayed[this.editorState.cursorPosition.track] - 1;
+    const relativeField =
+      this.editorState.cursorPosition.field - FIRST_EFFECT_FIELD;
+    const effectsDisplayed =
+      this.editorState.effectsDisplayed[this.editorState.cursorPosition.track] -
+      1;
     if (Math.floor(relativeField / FIELDS_PER_EFFECT) >= effectsDisplayed) {
       this.editorState.cursorPosition.field -= FIELDS_PER_EFFECT;
     }
@@ -119,8 +136,7 @@ export class Cursor {
 function moveCursor(moveOperation: (cursor: Cursor) => void): CursorPosition {
   let cursor = new Cursor();
   const { editorState, setEditorState } = useStore.getState();
-  if (!editorState.editing)
-    return cursor.currentPosition();
+  if (!editorState.editing) return cursor.currentPosition();
   moveOperation(cursor);
   setEditorState({
     ...editorState,
@@ -145,4 +161,17 @@ export const cursor = {
   moveEventRight: (): CursorPosition => {
     return moveCursor((cursor) => cursor.moveEventRight());
   },
-}
+
+  updatePatternIndex: (patternIndex: number) => {
+    const { editorState, setEditorState } = useStore.getState();
+    if (patternIndex !== editorState.cursorPosition.patternIndex) {
+      setEditorState({
+        ...editorState,
+        cursorPosition: {
+          ...editorState.cursorPosition,
+          patternIndex,
+        },
+      });
+    }
+  },
+};
