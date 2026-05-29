@@ -246,7 +246,7 @@ export class PatternRenderer {
       cursorX += this.patternLayout.glyphWidth * (9 + (cursorField.effectIndex * 4));
     }
     this.withFillStyle(colours().cursor)
-      .fillRect(cursorX, y - 1, cursorWidth, this.patternLayout.rowHeight + 1);
+      .fillRect(cursorX, y, cursorWidth, this.patternLayout.rowHeight);
   }
 
   private renderPatternLines(gridViewportFit: GridViewportFit, playheadIndex: number) {
