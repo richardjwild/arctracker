@@ -11,6 +11,7 @@ import {
   SAMPLE_LOW_FIELD
 } from "../editing/cursor.ts";
 import { hexadecimal } from "./hexadecimal.ts";
+import { PatternSelection, selection } from "../editing/selection.ts";
 
 type ViewportSize = { width: number; height: number };
 
@@ -116,6 +117,7 @@ interface Colours {
   note: string,
   sample: string,
   effect: string,
+  selectionBox: string,
 }
 
 function colours(atPlayhead: boolean = false): Colours {
@@ -128,6 +130,7 @@ function colours(atPlayhead: boolean = false): Colours {
     note: "#00ffee",
     sample: "#eeee33",
     effect: "#ffbb00",
+    selectionBox: "rgba(80, 140, 255, 0.25)",
   } : {
     background: "#171717",
     playheadBackground: "#333333",
@@ -137,6 +140,7 @@ function colours(atPlayhead: boolean = false): Colours {
     note: "#00ddcc",
     sample: "#cccc77",
     effect: "#dd9900",
+    selectionBox: "rgba(80, 140, 255, 0.25)",
   };
 }
 
@@ -145,6 +149,7 @@ export class PatternRenderer {
   private ctx: CanvasRenderingContext2D;
   private viewportSize: ViewportSize;
   private readonly editorState: EditorState;
+  private readonly patternSelection: PatternSelection | null;
   private patternLayout: PatternLayout;
   private readonly numChannels: number;
 
@@ -159,6 +164,7 @@ export class PatternRenderer {
     this.viewportSize = viewportSize;
     this.numChannels = numChannels;
     this.editorState = useStore.getState().editorState;
+    this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = getPatternLayout();
   }
 
@@ -169,6 +175,7 @@ export class PatternRenderer {
     this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
     this.renderTrackLanes();
     this.renderPlayhead(gridViewportFit);
+    if (this.patternSelection) this.renderSelection(gridViewportFit, playheadIndex);
     if (this.editorState.editing) this.renderCursor(gridViewportFit);
     this.renderPatternLines(gridViewportFit, playheadIndex);
   }
@@ -196,6 +203,22 @@ export class PatternRenderer {
     const y = gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight;
     this.withFillStyle(colours().playheadBackground)
       .fillRect(0, y + this.patternLayout.playheadPadding, this.viewportSize.width, this.patternLayout.rowHeight);
+  }
+
+  private renderSelection(gridViewportFit: GridViewportFit, playheadIndex: number) {
+    const bounds = selection.patternSelectionBounds();
+    let boxLeft = this.patternLayout.rowNumberWidth;
+    for (let track = 0; track < bounds.left; track++)
+      boxLeft += this.patternLayout.getEventWidth(track);
+    let boxWidth = 0;
+    for (let track = bounds.left; track <= bounds.right; track++)
+      boxWidth += this.patternLayout.getEventWidth(track);
+    const rowOffsetFromPlayhead = bounds.top - playheadIndex;
+    const top = (gridViewportFit.playheadLocationOnScreen + rowOffsetFromPlayhead) *
+      this.patternLayout.rowHeight +
+      this.patternLayout.playheadPadding;
+    const boxHeight = (bounds.bottom - bounds.top + 1) * this.patternLayout.rowHeight;
+    this.withFillStyle(colours().selectionBox).fillRect(boxLeft, top, boxWidth - 1, boxHeight);
   }
 
   private renderCursor(gridViewportFit: GridViewportFit) {
