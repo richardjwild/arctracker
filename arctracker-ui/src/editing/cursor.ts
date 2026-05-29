@@ -116,31 +116,33 @@ export class Cursor {
   }
 }
 
-function moveCursor(moveOperation: (cursor: Cursor) => void) {
-  const { editorState, setEditorState } = useStore.getState();
-  if (!editorState.editing) return;
+function moveCursor(moveOperation: (cursor: Cursor) => void): CursorPosition {
   let cursor = new Cursor();
+  const { editorState, setEditorState } = useStore.getState();
+  if (!editorState.editing)
+    return cursor.currentPosition();
   moveOperation(cursor);
   setEditorState({
     ...editorState,
     cursorPosition: cursor.currentPosition(),
   });
+  return cursor.currentPosition();
 }
 
 export const cursor = {
-  moveFieldLeft: () => {
-    moveCursor((cursor) => cursor.moveFieldLeft());
+  moveFieldLeft: (): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveFieldLeft());
   },
 
-  moveFieldRight: () => {
-    moveCursor((cursor) => cursor.moveFieldRight());
+  moveFieldRight: (): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveFieldRight());
   },
 
-  moveEventLeft: () => {
-    moveCursor((cursor) => cursor.moveEventLeft());
+  moveEventLeft: (): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveEventLeft());
   },
 
-  moveEventRight: () => {
-    moveCursor((cursor) => cursor.moveEventRight());
+  moveEventRight: (): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveEventRight());
   },
 }

@@ -12,7 +12,8 @@ type ModifierRequirement =
   | "primary"
   | "secondary"
   | "tertiary"
-  | "primary+secondary";
+  | "primary+secondary"
+  | "secondary+tertiary";
 
 interface KeyBinding {
   modifiers: ModifierRequirement;
@@ -32,24 +33,53 @@ const keyBindings = new Map<string, KeyBinding[]>([
       { modifiers: "primary+secondary", execute: commands.redoEdit },
     ],
   ],
-  ["ArrowUp", [{ modifiers: "none", execute: commands.patternGridUp }]],
-  ["ArrowDown", [{ modifiers: "none", execute: commands.patternGridDown }]],
+  [
+    "ArrowUp",
+    [
+      { modifiers: "none", execute: () => commands.patternGridUp(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridUp(true) },
+    ]
+  ],
+  [
+    "ArrowDown",
+    [
+      { modifiers: "none", execute: () => commands.patternGridDown(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridDown(true) },
+    ]
+  ],
   [
     "PageDown",
-    [{ modifiers: "none", execute: commands.patternGridStrideDown }],
+    [
+      { modifiers: "none", execute: () => commands.patternGridStrideDown(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridStrideDown(true) }
+    ],
   ],
   [
     "PageUp",
-    [{ modifiers: "none", execute: commands.patternGridStrideUp }],
+    [
+      { modifiers: "none", execute: () => commands.patternGridStrideUp(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridStrideUp(true) }
+    ],
   ],
-  ["Home", [{ modifiers: "none", execute: commands.patternGridJumpToTop }]],
-  ["End", [{ modifiers: "none", execute: commands.patternGridJumpToBottom }]],
+  [
+    "Home",
+    [
+      { modifiers: "none", execute: () => commands.patternGridJumpToTop(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridJumpToTop(true) }
+    ]
+  ],
+  [
+    "End",
+    [
+      { modifiers: "none", execute: () => commands.patternGridJumpToBottom(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridJumpToBottom(true) }
+    ]
+  ],
   [
     "ArrowRight",
     [
       { modifiers: "none", execute: commands.cursorFieldRight },
       { modifiers: "primary", execute: commands.sequenceSeekForwards },
-      { modifiers: "tertiary", execute: commands.patternGridRight },
     ],
   ],
   [
@@ -57,14 +87,15 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [
       { modifiers: "none", execute: commands.cursorFieldLeft },
       { modifiers: "primary", execute: commands.sequenceSeekBackwards },
-      { modifiers: "tertiary", execute: commands.patternGridLeft },
     ],
   ],
   [
     "Tab",
     [
-      { modifiers: "none", execute: commands.patternGridRight },
-      { modifiers: "secondary", execute: commands.patternGridLeft },
+      { modifiers: "none", execute: () => commands.patternGridRight(false) },
+      { modifiers: "secondary", execute: () => commands.patternGridRight(true) },
+      { modifiers: "tertiary", execute: () => commands.patternGridLeft(false) },
+      { modifiers: "secondary+tertiary", execute: () => commands.patternGridLeft(true) },
     ],
   ],
   [
@@ -98,6 +129,8 @@ function modifiersMatch(e: KeyboardEvent, modifier: ModifierRequirement) {
       return !primaryModifier(e) && !e.shiftKey && e.altKey;
     case "primary+secondary":
       return primaryModifier(e) && e.shiftKey && !e.altKey;
+    case "secondary+tertiary":
+      return !primaryModifier(e) && e.shiftKey && e.altKey;
   }
 }
 

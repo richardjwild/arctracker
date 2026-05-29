@@ -7,6 +7,7 @@ import { patternEvents } from "../editing/patternEvents.ts";
 import { AppPoller } from "../polling/poller.ts";
 import { audioExport } from "../audioExport/audioExport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
+import { selection } from "../editing/selection.ts";
 
 function processCommands() {
   const commands = commandQueue.consume();
@@ -39,28 +40,52 @@ function processCommands() {
         transport.sequenceSeekBackwards();
         break;
       case CommandType.PATTERN_GRID_DOWN:
-        patternGrid.moveDown(command.wrap);
+        selection.navigateGrid(
+          () => patternGrid.moveDown(command.wrap),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_UP:
-        patternGrid.moveUp();
+        selection.navigateGrid(
+          () => patternGrid.moveUp(),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_LEFT:
-        patternGrid.moveLeft();
+        selection.navigateGrid(
+          () => patternGrid.moveLeft(),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_RIGHT:
-        patternGrid.moveRight();
+        selection.navigateGrid(
+          () => patternGrid.moveRight(),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_STRIDE_DOWN:
-        patternGrid.strideDown();
+        selection.navigateGrid(
+          () => patternGrid.strideDown(),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_STRIDE_UP:
-        patternGrid.strideUp();
+        selection.navigateGrid(
+          () => patternGrid.strideUp(),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_JUMP_TO_TOP:
-        patternGrid.jumpToTop();
+        selection.navigateGrid(
+          () => patternGrid.jumpToTop(),
+          command.extendSelection,
+        );
         break;
       case CommandType.PATTERN_GRID_JUMP_TO_BOTTOM:
-        patternGrid.jumpToBottom();
+        selection.navigateGrid(
+          () => patternGrid.jumpToBottom(),
+          command.extendSelection,
+        );
         break;
       case CommandType.CURSOR_FIELD_LEFT:
         cursor.moveFieldLeft();

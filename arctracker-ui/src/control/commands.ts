@@ -52,14 +52,18 @@ export type Command =
   | { type: CommandType.TOGGLE_EDIT }
   | { type: CommandType.SEQUENCE_SEEK_FORWARDS }
   | { type: CommandType.SEQUENCE_SEEK_BACKWARDS }
-  | { type: CommandType.PATTERN_GRID_LEFT }
-  | { type: CommandType.PATTERN_GRID_RIGHT }
-  | { type: CommandType.PATTERN_GRID_DOWN; wrap: boolean }
-  | { type: CommandType.PATTERN_GRID_UP }
-  | { type: CommandType.PATTERN_GRID_STRIDE_DOWN }
-  | { type: CommandType.PATTERN_GRID_STRIDE_UP }
-  | { type: CommandType.PATTERN_GRID_JUMP_TO_TOP }
-  | { type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM }
+  | { type: CommandType.PATTERN_GRID_LEFT; extendSelection: boolean }
+  | { type: CommandType.PATTERN_GRID_RIGHT; extendSelection: boolean }
+  | {
+      type: CommandType.PATTERN_GRID_DOWN;
+      extendSelection: boolean;
+      wrap: boolean;
+    }
+  | { type: CommandType.PATTERN_GRID_UP; extendSelection: boolean }
+  | { type: CommandType.PATTERN_GRID_STRIDE_DOWN; extendSelection: boolean }
+  | { type: CommandType.PATTERN_GRID_STRIDE_UP; extendSelection: boolean }
+  | { type: CommandType.PATTERN_GRID_JUMP_TO_TOP; extendSelection: boolean }
+  | { type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM; extendSelection: boolean }
   | { type: CommandType.CURSOR_FIELD_LEFT }
   | { type: CommandType.CURSOR_FIELD_RIGHT }
   | { type: CommandType.INCREASE_EFFECTS_DISPLAYED }
@@ -109,22 +113,41 @@ export const commands = {
     commandQueue.push({ type: CommandType.SEQUENCE_SEEK_FORWARDS }),
   sequenceSeekBackwards: () =>
     commandQueue.push({ type: CommandType.SEQUENCE_SEEK_BACKWARDS }),
-  patternGridLeft: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_LEFT }),
-  patternGridRight: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_RIGHT }),
-  patternGridDown: (wrap: boolean = false) =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_DOWN, wrap }),
-  patternGridUp: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_UP }),
-  patternGridStrideDown: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_STRIDE_DOWN }),
-  patternGridStrideUp: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_STRIDE_UP }),
-  patternGridJumpToTop: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_JUMP_TO_TOP }),
-  patternGridJumpToBottom: () =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM }),
+  patternGridLeft: (extendSelection: boolean) =>
+    commandQueue.push({ type: CommandType.PATTERN_GRID_LEFT, extendSelection }),
+  patternGridRight: (extendSelection: boolean) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_RIGHT,
+      extendSelection,
+    }),
+  patternGridDown: (extendSelection: boolean, wrap: boolean = false) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_DOWN,
+      extendSelection,
+      wrap,
+    }),
+  patternGridUp: (extendSelection: boolean) =>
+    commandQueue.push({ type: CommandType.PATTERN_GRID_UP, extendSelection }),
+  patternGridStrideDown: (extendSelection: boolean) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_STRIDE_DOWN,
+      extendSelection,
+    }),
+  patternGridStrideUp: (extendSelection: boolean) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_STRIDE_UP,
+      extendSelection,
+    }),
+  patternGridJumpToTop: (extendSelection: boolean) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_JUMP_TO_TOP,
+      extendSelection,
+    }),
+  patternGridJumpToBottom: (extendSelection: boolean) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM,
+      extendSelection,
+    }),
   cursorFieldLeft: () =>
     commandQueue.push({ type: CommandType.CURSOR_FIELD_LEFT }),
   cursorFieldRight: () =>

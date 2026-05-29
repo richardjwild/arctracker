@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ExportState, Module, TransportState } from "../engine/engine.ts";
 import { CurrentPattern } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
+import { PatternSelection } from "../editing/selection.ts";
 
 interface AppStore {
   moduleId: number;
@@ -11,6 +12,7 @@ interface AppStore {
   patternGridStrideLength: number;
   transportState: TransportState;
   editorState: EditorState;
+  patternSelection: PatternSelection | null;
   exportMonitoring: boolean;
   exportState: ExportState | null;
   currentPattern: CurrentPattern | null;
@@ -22,6 +24,7 @@ interface AppStore {
   setPatternGridStrideLength: (lines: number) => void;
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
+  setPatternSelection: (selection: PatternSelection | null) => void;
   setExportMonitoring: (monitoring: boolean) => void;
   setExportState: (state: ExportState) => void;
   setCurrentPattern: (currentPattern: CurrentPattern) => void;
@@ -67,6 +70,7 @@ export const useStore = create<AppStore>((set) => ({
   patternGridStrideLength: 8,
   transportState: initialTransportState,
   editorState: initialEditorState(),
+  patternSelection: null,
   exportMonitoring: false,
   exportState: null,
   currentPattern: null,
@@ -84,6 +88,7 @@ export const useStore = create<AppStore>((set) => ({
       selectedChannel: 0,
       isLoadingModule: false,
       editorState: initialEditorState(result.numChannels),
+      patternSelection: null,
     })),
 
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
@@ -95,7 +100,8 @@ export const useStore = create<AppStore>((set) => ({
     });
   },
 
-  setPatternGridStrideLength: (patternGridStrideLength) => set({ patternGridStrideLength }),
+  setPatternGridStrideLength: (patternGridStrideLength) =>
+    set({ patternGridStrideLength }),
 
   setTransportState: (next) =>
     set((state) => {
@@ -117,6 +123,8 @@ export const useStore = create<AppStore>((set) => ({
     set({
       editorState: next,
     }),
+
+  setPatternSelection: (patternSelection) => set({ patternSelection }),
 
   setExportMonitoring: (exportMonitoring) => set({ exportMonitoring }),
 

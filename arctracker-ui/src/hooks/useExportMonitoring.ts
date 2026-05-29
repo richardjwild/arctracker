@@ -12,7 +12,6 @@ export default function useExportMonitoring() {
 
   useEffect(() => {
     if (!exportMonitoring) return;
-    console.log('registering audio export poller');
     return poller.registerPoller(audioExport.poller)
   }, [exportMonitoring]);
 }
