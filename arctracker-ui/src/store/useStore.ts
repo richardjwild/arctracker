@@ -15,7 +15,7 @@ interface AppStore {
   patternSelection: PatternSelection | null;
   exportMonitoring: boolean;
   exportState: ExportState | null;
-  currentPattern: CurrentPattern | null;
+  currentPattern: CurrentPattern;
   selectedSample: number | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
@@ -51,6 +51,27 @@ const initialTransportState: TransportState = {
   patternLength: 0,
 };
 
+const initialPattern: CurrentPattern = {
+  patternNo: 0,
+  lines: [
+    {
+      row: 0,
+      events: [
+        {
+          note: 0,
+          sampleNo: 0,
+          effects: Array.from({ length: 4 }, () => {
+            return {
+              effectCode: "",
+              effectData: [0, 0],
+            };
+          }),
+        },
+      ],
+    },
+  ],
+};
+
 function initialEditorState(numChannels: number = 0): EditorState {
   return {
     editing: false,
@@ -73,7 +94,7 @@ export const useStore = create<AppStore>((set) => ({
   patternSelection: null,
   exportMonitoring: false,
   exportState: null,
-  currentPattern: null,
+  currentPattern: initialPattern,
   selectedSample: null,
   isLoadingModule: false,
 

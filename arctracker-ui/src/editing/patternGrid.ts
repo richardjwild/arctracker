@@ -26,10 +26,8 @@ export const patternGrid = {
 
   moveUp: (): PatternGridPosition => {
     const {
-      currentPattern,
       transportState: { patternIndex },
     } = useStore.getState();
-    if (!currentPattern) return { track: 0, patternIndex: 0 };
     const newPatternIndex = patternIndex > 0 ? patternIndex - 1 : patternIndex;
     transport.patternSeek(newPatternIndex);
     return {
@@ -43,13 +41,10 @@ export const patternGrid = {
       currentPattern,
       transportState: { patternIndex },
     } = useStore.getState();
-    if (!currentPattern) return { track: 0, patternIndex: 0 };
     const lastPatternIndex = currentPattern.lines.length - 1;
     let newPatternIndex;
-    if (patternIndex < lastPatternIndex)
-      newPatternIndex = patternIndex + 1;
-    else
-      newPatternIndex = wrap ? 0 : lastPatternIndex;
+    if (patternIndex < lastPatternIndex) newPatternIndex = patternIndex + 1;
+    else newPatternIndex = wrap ? 0 : lastPatternIndex;
     transport.patternSeek(newPatternIndex);
     return {
       track: new Cursor().currentPosition().track,
@@ -59,11 +54,9 @@ export const patternGrid = {
 
   strideUp: (): PatternGridPosition => {
     const {
-      currentPattern,
       patternGridStrideLength,
       transportState: { patternIndex },
     } = useStore.getState();
-    if (!currentPattern) return { track: 0, patternIndex: 0 };
     let newPatternIndex = patternIndex - patternGridStrideLength;
     if (newPatternIndex < 0) newPatternIndex = 0;
     transport.patternSeek(newPatternIndex);
@@ -79,7 +72,6 @@ export const patternGrid = {
       patternGridStrideLength,
       transportState: { patternIndex },
     } = useStore.getState();
-    if (!currentPattern) return { track: 0, patternIndex: 0 };
     let newPatternIndex = patternIndex + patternGridStrideLength;
     if (newPatternIndex >= currentPattern.lines.length)
       newPatternIndex = currentPattern.lines.length - 1;
@@ -100,7 +92,6 @@ export const patternGrid = {
 
   jumpToBottom: (): PatternGridPosition => {
     const currentPattern = useStore.getState().currentPattern;
-    if (!currentPattern || currentPattern.lines.length === 0) return { track: 0, patternIndex: 0 };
     transport.patternSeek(currentPattern.lines.length - 1);
     return {
       track: new Cursor().currentPosition().track,
@@ -109,10 +100,9 @@ export const patternGrid = {
   },
 
   currentPosition: (): PatternGridPosition => {
-    const p = {
+    return {
       track: useStore.getState().editorState.cursorPosition.track,
       patternIndex: useStore.getState().transportState.patternIndex,
     };
-    return p;
   },
 };
