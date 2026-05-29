@@ -1,6 +1,8 @@
 arctracker
 *.o
 config.log
+config.guess
+config.sub
 arctracker.cbp
 arctracker.layout
 autom4te.cache/
@@ -21,3 +23,27 @@ cmake-build-debug/
 arctracker-*.tar.gz
 bin/
 CMakeLists.txt
+.DS_Store
+p.patch
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

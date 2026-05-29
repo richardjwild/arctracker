@@ -1,0 +1,49 @@
+@font-face {
+  font-family: FiraCode;
+  src: url('assets/fonts/FiraCode-Medium.woff2') format('woff2');
+}
+
+:root {
+  height: 100%;
+  margin: 0;
+  font-family: FiraCode, monospace;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: white;
+  background: #333333;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  margin: 5px;
+  padding-top: 5px;
+  height: calc(100vh - 25px); /* because margin: 10px */
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: 50px minmax(0, 1fr);
+  grid-template-areas:
+    "moduleHeader transport"
+    "patternView sampleList";
+}
+
+.uiArea {
+  background: #171717;
+  border-radius: 10px;
+  padding: 10px 10px 10px 10px;
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

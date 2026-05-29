@@ -1,0 +1,13 @@
+.patternView {
+    grid-area: patternView;
+    min-height: 0;
+    overflow: hidden;
+    font-family: FiraCode, monospace;
+    color: #00bb99;
+    padding: 0!important;
+}
+
+.patternView canvas {
+    display: block;
+    background-color: #111111;
+}

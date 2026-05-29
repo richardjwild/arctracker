@@ -1,0 +1,33 @@
+.transportBar {
+    grid-area: transport;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.transportBar button {
+    height: 30px;
+    width: 30px;
+    background: #dfdfdf;
+    color: black;
+    border-radius: 5px;
+    border: solid 1px black;
+    padding: 0;
+}
+
+.transportBar button:hover {
+    background: black;
+    color: #dfdfdf;
+    border: solid 1px #dfdfdf;
+}
+
+.transportBar .transportState {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 10px;
+    background-color: #171717;
+    color: #eeeeee;
+    font-size: 12px;
+}

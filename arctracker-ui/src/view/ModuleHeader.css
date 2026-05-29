@@ -1,0 +1,68 @@
+.moduleHeader {
+    grid-area: moduleHeader;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.moduleHeader .moduleInfo {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 10px;
+    background-color: #171717;
+    color: #eeeeee;
+    font-size: 16px;
+}
+
+.moduleHeader button {
+    height: 30px;
+    width: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    color: black;
+    border-radius: 5px;
+    border: solid 1px black;
+    padding: 0;
+}
+
+.moduleHeader button.loadButton {
+    background: #cc1111;
+}
+
+.moduleHeader button.loadButton:hover {
+    background: black;
+    color: #cc1111;
+    border: solid 1px #cc1111;
+}
+
+.moduleHeader button.saveButton {
+    background: #2222ff;
+}
+
+.moduleHeader button.saveButton:hover {
+    background: black;
+    color: #2222ff;
+    border: solid 1px #2222ff;
+}
+
+.moduleHeader button.exportButton {
+    background: #2222ff;
+}
+
+.moduleHeader button.exportButton:hover {
+    background: black;
+    color: #2222ff;
+    border: solid 1px #2222ff;
+}
+
+.moduleHeader button.bounceButton {
+    background: green;
+}
+
+.moduleHeader button.bounceButton:hover {
+    background: black;
+    color: green;
+    border: solid 1px green;
+}

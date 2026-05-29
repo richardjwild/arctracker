@@ -1,0 +1,33 @@
+#ifndef ARCTRACKER_ENGINE_MESSAGES_H
+#define ARCTRACKER_ENGINE_MESSAGES_H
+
+#define BAD_ARCTRACKER_HANDLE "Invalid arctracker handle"
+#define FILE_OPEN_FAILED "Could not open file"
+#define MODULE_TYPE_UNRECOGNISED "Not a recognised module type"
+#define MODULE_LOAD_FAILED "Failed to load module, either file corrupted or ran out of memory"
+#define MODULE_CREATE_FAILED "Failed to create module"
+#define NEW_MODULE_TITLE "(New module)"
+#define MEMORY_ALLOCATION_FAILED "Could not allocate memory"
+#define NO_MODULE_LOADED "No module loaded"
+#define NO_PATTERN_DATA "No pattern data in module"
+#define BAD_SAMPLE_NUMBER "Invalid sample number or slot not filled"
+#define PLAYER_ALREADY_RUNNING "Player is already running"
+#define PLAYER_NOT_RUNNING "Player is not running"
+#define EXPORT_NOT_STARTED "No export job was started"
+#define PLAYER_INIT_FAILED "Failed to initialize player"
+#define EXPORT_INIT_FAILED "Failed to export audio"
+#define VOICE_INIT_FAILED "Failed to initialise voices"
+#define AUDIO_INIT_FAILED "Failed to initialise audio"
+#define PLAYER_THREAD_CREATE_FAILED "Failed to create player thread"
+#define EXPORT_THREAD_CREATE_FAILED "Failed to create export thread"
+#define NO_OUTPUT_DEVICE_AVAILABLE "No output device available"
+#define FAILED_TO_INITIALIZE_PORTAUDIO "Failed to initialise portaudio"
+#define FAILED_TO_OPEN_STREAM "Failed to open stream"
+#define FAILED_TO_START_STREAM "Failed to start stream"
+#define PLAYER_STILL_RUNNING "Player still running"
+#define INVALID_PATTERN_NUMBER "Invalid pattern number"
+#define INVALID_PATTERN_INDEX "Invalid pattern index"
+#define INVALID_CHANNEL_NUMBER "Invalid channel number"
+#define BAD_EVENT_BUFFER "Invalid event buffer"
+
+#endif //ARCTRACKER_ENGINE_MESSAGES_H

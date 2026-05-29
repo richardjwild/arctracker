@@ -1,0 +1,13 @@
+use std::sync::{Arc, Mutex};
+
+use crate::arctracker::Arctracker;
+
+pub struct EditorState {
+    pub selected_sample: i32,
+    pub selected_channel: i32,
+}
+
+pub struct AppState {
+    pub tracker: Arc<Mutex<Arctracker>>,
+    pub editor: Mutex<EditorState>,
+}

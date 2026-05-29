@@ -1,0 +1,22 @@
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+}
+
+.modalDialog {
+    width: 160px;
+    height: 50px;
+    background: #222222;
+    border: 1px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    font-family: sans-serif;
+    z-index: 1001;
+    color: #dddddd;
+}

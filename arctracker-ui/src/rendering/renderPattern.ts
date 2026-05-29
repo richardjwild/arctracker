@@ -1,0 +1,349 @@
+import { CurrentPattern } from "../transport/transport.ts";
+import { Effect, PatternEvent, PatternLine } from "../engine/engine.ts";
+import { useStore } from "../store/useStore.ts";
+import { EditorState } from "../editing/editor.ts";
+import {
+  Cursor,
+  FIELDS_PER_EFFECT,
+  FIRST_EFFECT_FIELD,
+  NOTE_FIELD,
+  SAMPLE_HIGH_FIELD,
+  SAMPLE_LOW_FIELD
+} from "../editing/cursor.ts";
+import { hexadecimal } from "./hexadecimal.ts";
+
+type ViewportSize = { width: number; height: number };
+
+type PatternLayout = {
+  leftPadding: number;
+  glyphWidth: number;
+  rowHeight: number;
+  playheadPadding: number;
+  rowNumberWidth: number;
+  getEventWidth: (channelNo: number) => number;
+  maxLines: number;
+};
+
+export type PatternContentDimensions = {
+  contentWidth: number;
+  contentHeight: number;
+};
+
+export function getPatternContentDimensions(
+  numChannels: number,
+): PatternContentDimensions {
+  const patternLayout = getPatternLayout();
+  let eventsWidth = 0;
+  for (let channel = 0; channel < numChannels; channel++)
+    eventsWidth += patternLayout.getEventWidth(channel);
+  return {
+    contentWidth:
+      patternLayout.leftPadding +
+      patternLayout.rowNumberWidth +
+      eventsWidth,
+    contentHeight: patternLayout.maxLines * patternLayout.rowHeight,
+  };
+}
+
+const notes = [
+  "---",
+  "C1",
+  "C#1",
+  "D1",
+  "D#1",
+  "E1",
+  "F1",
+  "F#1",
+  "G1",
+  "G#1",
+  "A1",
+  "A#1",
+  "B1",
+  "C2",
+  "C#2",
+  "D2",
+  "D#2",
+  "E2",
+  "F2",
+  "F#2",
+  "G2",
+  "G#2",
+  "A2",
+  "A#2",
+  "B2",
+  "C3",
+  "C#3",
+  "D3",
+  "D#3",
+  "E3",
+  "F3",
+  "F#3",
+  "G3",
+  "G#3",
+  "A3",
+  "A#3",
+  "B3",
+];
+
+function getPatternLayout(): PatternLayout {
+  const leftPadding = 10;
+  const glyphHeight = 20;
+  const glyphWidth = 10;
+  const effectsDisplayed = useStore.getState().editorState.effectsDisplayed;
+  return {
+    leftPadding,
+    glyphWidth,
+    rowHeight: glyphHeight,
+    playheadPadding: 2,
+    rowNumberWidth: glyphWidth * 5,
+    getEventWidth: (channelNo: number) => ((glyphWidth * 8) + (effectsDisplayed[channelNo] * glyphWidth * 4)),
+    maxLines: 1000,
+  };
+}
+
+interface Colours {
+  background: string;
+  playheadBackground: string;
+  text: string,
+  cursor: string,
+  cursorText: string,
+  note: string,
+  sample: string,
+  effect: string,
+}
+
+function colours(atPlayhead: boolean = false): Colours {
+  return atPlayhead ? {
+    background: "#171717",
+    playheadBackground: "#333333",
+    text: "#ffffff",
+    cursor: "#00ff00",
+    cursorText: "#003300",
+    note: "#00ffee",
+    sample: "#eeee33",
+    effect: "#ffbb00",
+  } : {
+    background: "#171717",
+    playheadBackground: "#333333",
+    text: "#777777",
+    cursor: "#00ff00",
+    cursorText: "#003300",
+    note: "#00bbaa",
+    sample: "#aaaa22",
+    effect: "#bb7700",
+  };
+}
+
+export class PatternRenderer {
+  private readonly pattern: CurrentPattern;
+  private ctx: CanvasRenderingContext2D;
+  private viewportSize: ViewportSize;
+  private readonly editorState: EditorState;
+  private patternLayout: PatternLayout;
+  private readonly numChannels: number;
+
+  public constructor(
+    pattern: CurrentPattern,
+    ctx: CanvasRenderingContext2D,
+    viewportSize: ViewportSize,
+    numChannels: number,
+  ) {
+    this.pattern = pattern;
+    this.ctx = ctx;
+    this.viewportSize = viewportSize;
+    this.numChannels = numChannels;
+    this.editorState = useStore.getState().editorState;
+    this.patternLayout = getPatternLayout();
+  }
+
+  public renderPattern(playheadIndex: number) {
+    const playheadRowHeight = this.patternLayout.rowHeight + (2 * this.patternLayout.playheadPadding);
+    const linesToShow = 1 + Math.floor((this.viewportSize.height - playheadRowHeight) / this.patternLayout.rowHeight);
+    const playheadLocationOnScreen = Math.floor(linesToShow / 2);
+    this.ctx.font = "16px FiraCode";
+    this.ctx.textBaseline = "hanging";
+    this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
+    this.renderTrackLanes();
+    let y = 0;
+    for (let screenLine = 0; screenLine < linesToShow; screenLine++) {
+      const patternIndex = playheadIndex - playheadLocationOnScreen + screenLine;
+      const patternLine =
+        patternIndex >= 0 && patternIndex < this.pattern.lines.length
+          ? this.pattern.lines[patternIndex]
+          : null;
+      const atPlayhead = (patternIndex === playheadIndex);
+      y += this.renderPatternLine(patternLine, y, atPlayhead);
+    }
+  }
+
+  private renderTrackLanes() {
+    let x = this.renderRowNumberLane(0);
+    for (let channel = 0; channel < this.numChannels; channel++) {
+      x += this.renderTrackLane(x, channel);
+    }
+    this.withFillStyle(colours().background)
+      .fillRect(x, 0, this.viewportSize.width - x, this.viewportSize.height);
+  }
+
+  private renderRowNumberLane(x: number): number {
+    const laneWidth = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
+    this.withFillStyle(colours().background)
+      .fillRect(x, 0, laneWidth - 1, this.viewportSize.height);
+    return laneWidth;
+  }
+
+  private renderTrackLane(x: number, channel: number): number {
+    this.withFillStyle(colours().background)
+      .fillRect(x, 0, this.patternLayout.getEventWidth(channel) - 1, this.viewportSize.height);
+    return this.patternLayout.getEventWidth(channel);
+  }
+
+  private renderPatternLine(line: PatternLine | null, y: number, atPlayhead: boolean): number {
+    if (line) {
+      const rowNumber = Number(line.row).toString().padStart(3, " ");
+      if (atPlayhead) {
+        this.renderPlayhead(y);
+      }
+      const eventY = atPlayhead ? y + this.patternLayout.playheadPadding : y;
+      let x = this.patternLayout.leftPadding;
+      x += this.renderRowNumber(rowNumber, x, eventY, atPlayhead);
+      let track = 0;
+      for (const event of line.events) {
+        x += this.renderEvent(track, event, x, eventY, atPlayhead);
+        track++;
+      }
+    }
+    return atPlayhead
+      ? this.patternLayout.rowHeight + 2 * this.patternLayout.playheadPadding
+      : this.patternLayout.rowHeight;
+  }
+
+  private renderPlayhead(y: number) {
+    this.withFillStyle(colours().playheadBackground)
+       .fillRect(0, y + this.patternLayout.playheadPadding, this.viewportSize.width, this.patternLayout.rowHeight);
+  }
+
+  private renderRowNumber(rowNumber: string, x: number, y: number, atPlayhead: boolean): number {
+    this.withFillStyle(colours(atPlayhead).text)
+      .renderGlyph(rowNumber.charAt(0), x, y)
+      .renderGlyph(rowNumber.charAt(1), x + this.patternLayout.glyphWidth, y)
+      .renderGlyph(rowNumber.charAt(2), x + this.patternLayout.glyphWidth * 2, y);
+    return this.patternLayout.rowNumberWidth;
+  }
+
+  private renderEvent(track: number, event: PatternEvent, x: number, y: number, atPlayhead: boolean): number {
+    const cursorOnEvent = (atPlayhead && this.editorState.editing && track === this.editorState.cursorPosition.track);
+    if (cursorOnEvent) {
+      this.renderCursor(x, y);
+    }
+    x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent);
+    x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent);
+    for (let effectIndex = 0; effectIndex < this.editorState.effectsDisplayed[track]; effectIndex++) {
+      x += this.renderEffect(x, y, effectIndex, event.effects[effectIndex], atPlayhead, cursorOnEvent);
+    }
+    return this.patternLayout.getEventWidth(track);
+  }
+
+  private renderNote(x: number, y: number, note: number, atPlayhead: boolean, cursorOnEvent: boolean): number {
+    const noteStr = (note < 0 || note >= notes.length) ? "!!!" : notes[note];
+    let colour;
+    if (cursorOnEvent && this.editorState.cursorPosition.field === NOTE_FIELD)
+      colour = colours().cursorText;
+    else if (note === 0)
+      colour = colours(atPlayhead).text;
+    else
+      colour = colours(atPlayhead).note;
+    this.withFillStyle(colour)
+      .renderGlyph(noteStr.charAt(0), x, y)
+      .renderGlyph(noteStr.charAt(1), x + this.patternLayout.glyphWidth, y);
+    if (noteStr.length > 2)
+      this.renderGlyph(noteStr.charAt(2), x + this.patternLayout.glyphWidth * 2, y);
+    return this.patternLayout.glyphWidth * 4;
+  }
+
+  private renderSample(x: number, y: number, sampleNo: number, atPlayhead: boolean, cursorOnEvent: boolean) {
+    if (sampleNo === 0) {
+      x += this.renderSampleDigit(x, y, "-", SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent);
+      this.renderSampleDigit(x, y, "-", SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent);
+    } else {
+      const sampleNumber = hexadecimal.toHex(sampleNo, 2);
+      x += this.renderSampleDigit(x, y, sampleNumber.charAt(0), SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent);
+      this.renderSampleDigit(x, y, sampleNumber.charAt(1), SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent);
+    }
+    return this.patternLayout.glyphWidth * 3;
+  }
+
+  private renderSampleDigit(x: number, y: number, digit: string, field: number, atPlayhead: boolean, cursorOnEvent: boolean): number {
+    let colour;
+    if (cursorOnEvent && this.editorState.cursorPosition.field === field) {
+      colour = colours().cursorText;
+    } else {
+      colour = (digit === "-") ? colours(atPlayhead).text : colours(atPlayhead).sample;
+    }
+    this.withFillStyle(colour).renderGlyph(digit, x, y);
+    return this.patternLayout.glyphWidth;
+  }
+
+  private renderEffect(x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean): number {
+    if (effect.effectCode === "" && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
+      this.withFillStyle(colours(atPlayhead).text);
+      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 0);
+      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 1);
+      this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 2);
+    } else {
+      this.withFillStyle(colours(atPlayhead).effect);
+      x += this.renderEffectField(x, y, effectIndex, effect.effectCode, atPlayhead, cursorOnEvent, 0);
+      x += this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 1);
+      this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[1]), atPlayhead, cursorOnEvent, 2);
+    }
+    return this.patternLayout.glyphWidth * (FIELDS_PER_EFFECT + 1);
+  }
+
+  private renderEffectField(x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number): number {
+    const cursorField = FIRST_EFFECT_FIELD + (effectIndex * 3) + effectField;
+    let colour;
+    if (cursorOnEvent && this.editorState.cursorPosition.field === cursorField)
+      colour = colours().cursorText;
+    else
+      colour = (effectParam === "-") ? colours(atPlayhead).text : colours(atPlayhead).effect;
+    this.withFillStyle(colour).renderGlyph(effectParam, x, y)
+    return this.patternLayout.glyphWidth;
+  }
+
+  private renderCursor(x: number, y: number) {
+    let cursorX = this.patternLayout.leftPadding + x - this.patternLayout.glyphWidth;
+    let cursorWidth = this.patternLayout.glyphWidth;
+    const cursor = new Cursor();
+    const cursorField = cursor.currentField();
+    if (cursorField.field === "note") {
+      cursorWidth = this.patternLayout.glyphWidth * 3;
+    } else if (cursorField.field === "sampleHigh") {
+      cursorX += this.patternLayout.glyphWidth * 4;
+    } else if (cursorField.field === "sampleLow") {
+      cursorX += this.patternLayout.glyphWidth * 5;
+    } else if (cursorField.field === "effectCode") {
+      cursorX += this.patternLayout.glyphWidth * (7 + (cursorField.effectIndex * 4));
+    } else if (cursorField.field === "effectData1") {
+      cursorX += this.patternLayout.glyphWidth * (8 + (cursorField.effectIndex * 4));
+    } else if (cursorField.field === "effectData2") {
+      cursorX += this.patternLayout.glyphWidth * (9 + (cursorField.effectIndex * 4));
+    }
+    this.withFillStyle(colours().cursor)
+      .fillRect(cursorX, y - 1, cursorWidth, this.patternLayout.rowHeight + 1);
+  }
+
+  private withFillStyle(fillStyle: string): PatternRenderer {
+    this.ctx.fillStyle = fillStyle;
+    return this;
+  }
+
+  private fillRect(x: number, y: number, width: number, height: number): PatternRenderer {
+    this.ctx.fillRect(x, y, width, height);
+    return this;
+  }
+
+  private renderGlyph(glyph: string, x: number, y: number): PatternRenderer {
+    this.ctx.fillText(glyph, x, y);
+    return this;
+  }
+}
