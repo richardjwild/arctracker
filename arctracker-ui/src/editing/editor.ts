@@ -26,11 +26,13 @@ const redoStack: EditCommand[] = [];
 
 export const editor = {
   togglePatternEdit: () => {
-    const { editorState, setEditorState } = useStore.getState();
+    const { editorState, setEditorState, setPatternSelection } =
+      useStore.getState();
     setEditorState({
       ...editorState,
       editing: !editorState.editing,
     });
+    setPatternSelection(null);
   },
 
   increaseEffectsDisplayed: () => {
@@ -63,7 +65,10 @@ export const editor = {
   applyEdit: async (command: EditCommand) => {
     try {
       let revised = false;
-      if (command.type === EditType.EventEdit && !eventsEqual(command.before, command.after)) {
+      if (
+        command.type === EditType.EventEdit &&
+        !eventsEqual(command.before, command.after)
+      ) {
         await engine.setEvent(
           command.patternNo,
           command.patternIndex,
@@ -111,7 +116,7 @@ export const editor = {
           command.patternIndex,
           command.track,
           command.after,
-        )
+        );
       }
       useStore.getState().moduleRevised();
       undoStack.push(command);
@@ -119,4 +124,4 @@ export const editor = {
       throw err;
     }
   },
-}
+};
