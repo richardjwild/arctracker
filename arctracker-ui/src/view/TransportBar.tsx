@@ -93,20 +93,20 @@ export default function TransportBar() {
     </>
   );
 
-  const RecordIcon = () => (
-    <>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="19px"
-        height="19px"
-        viewBox="0 -960 960 960"
-        fill="currentColor"
-      >
-        <path d="M480-480ZM282-282q-82-82-82-198t82-198q82-82 198-82t198 82q82 82 82 198t-82 198q-82 82-198 82t-198-82Zm339.5-56.5Q680-397 680-480t-58.5-141.5Q563-680 480-680t-141.5 58.5Q280-563 280-480t58.5 141.5Q397-280 480-280t141.5-58.5Z" />
-      </svg>
-      <span className="visually-hidden">Start recording</span>
-    </>
-  );
+  // const RecordIcon = () => (
+  //   <>
+  //     <svg
+  //       xmlns="http://www.w3.org/2000/svg"
+  //       width="19px"
+  //       height="19px"
+  //       viewBox="0 -960 960 960"
+  //       fill="currentColor"
+  //     >
+  //       <path d="M480-480ZM282-282q-82-82-82-198t82-198q82-82 198-82t198 82q82 82 82 198t-82 198q-82 82-198 82t-198-82Zm339.5-56.5Q680-397 680-480t-58.5-141.5Q563-680 480-680t-141.5 58.5Q280-563 280-480t58.5 141.5Q397-280 480-280t141.5-58.5Z" />
+  //     </svg>
+  //     <span className="visually-hidden">Start recording</span>
+  //   </>
+  // );
 
   const playing = useStore((state) => state.transportState.playing);
   const looping = useStore((state) => state.transportState.looping);
@@ -131,9 +131,9 @@ export default function TransportBar() {
       <button title="Seek backwards" onClick={() => commands.sequenceSeekBackwards()} aria-label="Rewind">
         <RewindIcon />
       </button>
-      <button title="Record MIDI" onClick={() => {}} aria-label="Record">
-        <RecordIcon />
-      </button>
+      {/*<button title="Record MIDI" onClick={() => {}} aria-label="Record">*/}
+      {/*  <RecordIcon />*/}
+      {/*</button>*/}
       <div className="transportState">
         {tuneLength && (
           <span>
