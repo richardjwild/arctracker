@@ -24,7 +24,7 @@ export const selection = {
         focus: after,
       });
     } else {
-      useStore.getState().setPatternSelection(null);
+      selection.clearPatternSelection();
     }
   },
 
@@ -43,4 +43,8 @@ export const selection = {
       right: Math.max(selection.anchor.track, selection.focus.track),
     };
   },
+
+  clearPatternSelection: () => {
+    useStore.getState().setPatternSelection(null);
+  }
 }

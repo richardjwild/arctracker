@@ -25,6 +25,7 @@ function processCommands() {
         void audioExport.start();
         break;
       case CommandType.TOGGLE_PLAY:
+        selection.clearPatternSelection();
         transport.togglePlay();
         break;
       case CommandType.TOGGLE_LOOP:
