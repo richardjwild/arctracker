@@ -191,6 +191,7 @@ export const patternEvents = {
       buildEvent: emptyEvent,
     });
     await editor.applyEdit(command);
+    patternGrid.moveDown(true);
   },
 
   clearEvents: async (locations: EventLocation[]) => {

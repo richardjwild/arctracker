@@ -4,6 +4,7 @@ import { cursor } from "./cursor.ts";
 import { PasteBufferObjectType } from "./pasteBuffer.ts";
 import { engine, PatternEvent } from "../engine/engine.ts";
 import { EventLocation, patternEvents } from "./patternEvents.ts";
+import { patternGrid } from "./patternGrid.ts";
 
 export const copyPaste = {
   copyPatternEvents: async (): Promise<EventLocation[]> => {
@@ -64,8 +65,7 @@ export const copyPaste = {
 
   cutPatternEvents: async () => {
     const cutLocations = await copyPaste.copyPatternEvents();
-    if (cutLocations.length > 0)
-      await patternEvents.clearEvents(cutLocations);
+    if (cutLocations.length > 0) await patternEvents.clearEvents(cutLocations);
   },
 
   pastePatternEvents: async () => {
@@ -98,5 +98,9 @@ export const copyPaste = {
       }
     }
     await patternEvents.setEvents(pastedEvents);
+    patternGrid.moveTo({
+      track: cursorPosition.track,
+      patternIndex: cursorPosition.patternIndex + blockHeight - 1,
+    });
   },
 };

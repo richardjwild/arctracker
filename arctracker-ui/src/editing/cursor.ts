@@ -97,17 +97,22 @@ export class Cursor {
     }
   }
 
-  public moveEventLeft() {
+  public moveTrackLeft() {
     if (this.editorState.cursorPosition.track > 0) {
       this.editorState.cursorPosition.track -= 1;
     }
     this.ensureCursorStillVisible();
   }
 
-  public moveEventRight() {
+  public moveTrackRight() {
     if (this.editorState.cursorPosition.track < this.numTracks - 1) {
       this.editorState.cursorPosition.track += 1;
     }
+    this.ensureCursorStillVisible();
+  }
+
+  public moveToTrack(track: number) {
+    this.editorState.cursorPosition.track = track;
     this.ensureCursorStillVisible();
   }
 
@@ -154,12 +159,16 @@ export const cursor = {
     return moveCursor((cursor) => cursor.moveFieldRight());
   },
 
-  moveEventLeft: (): CursorPosition => {
-    return moveCursor((cursor) => cursor.moveEventLeft());
+  moveTrackLeft: (): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveTrackLeft());
   },
 
-  moveEventRight: (): CursorPosition => {
-    return moveCursor((cursor) => cursor.moveEventRight());
+  moveTrackRight: (): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveTrackRight());
+  },
+
+  moveToTrack: (track: number): CursorPosition => {
+    return moveCursor((cursor) => cursor.moveToTrack(track));
   },
 
   currentPosition: (): CursorPosition => {

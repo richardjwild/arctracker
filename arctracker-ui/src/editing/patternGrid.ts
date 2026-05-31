@@ -8,7 +8,7 @@ export type PatternGridPosition = {
 
 export const patternGrid = {
   moveLeft: (): PatternGridPosition => {
-    const newPosition = cursor.moveEventLeft();
+    const newPosition = cursor.moveTrackLeft();
     return {
       track: newPosition.track,
       patternIndex: cursor.currentPosition().patternIndex,
@@ -16,7 +16,7 @@ export const patternGrid = {
   },
 
   moveRight: (): PatternGridPosition => {
-    const newPosition = cursor.moveEventRight();
+    const newPosition = cursor.moveTrackRight();
     return {
       track: newPosition.track,
       patternIndex: cursor.currentPosition().patternIndex,
@@ -44,6 +44,15 @@ export const patternGrid = {
     return {
       track: new Cursor().currentPosition().track,
       patternIndex: newPatternIndex,
+    };
+  },
+
+  moveTo: (position: PatternGridPosition): PatternGridPosition => {
+    cursor.moveToTrack(position.track);
+    cursor.updatePatternIndex(position.patternIndex);
+    return {
+      track: position.track,
+      patternIndex: position.patternIndex,
     };
   },
 
