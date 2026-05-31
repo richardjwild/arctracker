@@ -64,6 +64,11 @@ async function applyCompoundEventEdit(
 }
 
 export const editor = {
+  editing: () => {
+    const { editorState } = useStore.getState();
+    return editorState.editing;
+  },
+
   togglePatternEdit: () => {
     const { editorState, setEditorState, setPatternSelection } =
       useStore.getState();

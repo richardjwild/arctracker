@@ -112,6 +112,10 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
   ],
   [
+    "KeyX",
+    [{ modifiers: "primary", execute: commands.cutPatternEvents }],
+  ],
+  [
     "KeyC",
     [{ modifiers: "primary", execute: commands.copyPatternEvents }],
   ],

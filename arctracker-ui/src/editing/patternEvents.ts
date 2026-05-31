@@ -1,6 +1,6 @@
 import { useStore } from "../store/useStore.ts";
 import { engine, Effect, PatternEvent } from "../engine/engine.ts";
-import {editor, EditCommand, EditType, EventEditCommand} from "./editor.ts";
+import { editor, EditCommand, EditType, EventEditCommand } from "./editor.ts";
 import { Cursor, CursorField } from "./cursor.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { patternGrid } from "./patternGrid.ts";
@@ -11,17 +11,14 @@ export type EventLocation = {
   track: number;
 };
 
-async function applyPatternEventEdit({
+async function buildEventEditCommand({
   eventLocation,
   buildEvent,
-  postAction,
 }: {
   eventLocation: EventLocation | null;
   buildEvent: (before: PatternEvent) => PatternEvent;
-  postAction: (() => void) | null;
-}) {
-  const { editorState, transportState } = useStore.getState();
-  if (!editorState.editing) return;
+}): Promise<EventEditCommand> {
+  const { transportState } = useStore.getState();
   try {
     const currentPosition = patternGrid.currentPosition();
     const location = eventLocation || {
@@ -35,7 +32,7 @@ async function applyPatternEventEdit({
       location.track,
     );
     const updatedEvent = buildEvent(currentEvent);
-    const command: EditCommand = {
+    return {
       type: EditType.EventEdit,
       patternNo: location.patternNo,
       patternIndex: location.patternIndex,
@@ -43,8 +40,6 @@ async function applyPatternEventEdit({
       before: currentEvent,
       after: updatedEvent,
     };
-    await editor.applyEdit(command);
-    if (postAction) postAction();
   } catch (err) {
     throw err;
   }
@@ -61,30 +56,41 @@ function copyEffects(effects: Effect[]) {
   return copy;
 }
 
+function emptyEvent(): PatternEvent {
+  return {
+    note: 0,
+    sampleNo: 0,
+    effects: Array.from({ length: 4 }, () => ({
+      effectCode: "",
+      effectData: [0, 0],
+    })),
+  };
+}
+
 export const patternEvents = {
   setEventNote: async (note: number) => {
+    if (!editor.editing()) return;
     const selectedSample = useStore.getState().selectedSample;
     if (selectedSample === null) return;
-    await applyPatternEventEdit({
+    const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: () => {
         return {
+          ...emptyEvent(),
           note,
           sampleNo: selectedSample + 1,
-          effects: Array.from({ length: 4 }, () => ({
-            effectCode: "",
-            effectData: [0, 0],
-          })),
         };
       },
-      postAction: () => patternGrid.moveDown(true),
     });
+    await editor.applyEdit(command);
+    patternGrid.moveDown(true);
   },
 
   setEventSample: async (field: CursorField, value: string) => {
+    if (!editor.editing()) return;
     const numberValue = hexadecimal.fromHexDigit(value);
     if (numberValue === null) return;
-    await applyPatternEventEdit({
+    const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: (currentEvent) => {
         const newSampleNo =
@@ -96,14 +102,15 @@ export const patternEvents = {
           sampleNo: newSampleNo,
         };
       },
-      postAction: null,
     });
+    await editor.applyEdit(command);
   },
 
   setEventEffectCode: async (field: CursorField, value: string) => {
+    if (!editor.editing()) return;
     if (field.field !== "effectCode") return false;
     const effectIndex = field.effectIndex;
-    await applyPatternEventEdit({
+    const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: (currentEvent) => {
         if (effectIndex < 0 || effectIndex >= currentEvent.effects.length) {
@@ -116,16 +123,17 @@ export const patternEvents = {
           effects,
         };
       },
-      postAction: null,
     });
+    await editor.applyEdit(command);
   },
 
   setEventEffectData: async (field: CursorField, value: string) => {
+    if (!editor.editing()) return;
     if (field.field !== "effectData1" && field.field !== "effectData2")
       return false;
     const numberValue = hexadecimal.fromHexDigit(value);
     if (numberValue === null) return;
-    await applyPatternEventEdit({
+    const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: (currentEvent) => {
         if (
@@ -142,14 +150,13 @@ export const patternEvents = {
           effects,
         };
       },
-      postAction: null,
     });
+    await editor.applyEdit(command);
   },
 
   clearEventField: async () => {
-    const { editorState } = useStore.getState();
-    if (!editorState.editing) return;
-    await applyPatternEventEdit({
+    if (!editor.editing()) return;
+    const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: (currentEvent) => {
         const cursorField = new Cursor().currentField();
@@ -173,34 +180,48 @@ export const patternEvents = {
           effects,
         };
       },
-      postAction: null,
     });
+    await editor.applyEdit(command);
   },
 
   clearEvent: async () => {
-    const { editorState } = useStore.getState();
-    if (!editorState.editing) return;
-    await applyPatternEventEdit({
+    if (!editor.editing()) return;
+    const command = await buildEventEditCommand({
       eventLocation: null,
-      buildEvent: () => {
-        return {
-          note: 0,
-          sampleNo: 0,
-          effects: Array.from({ length: 4 }, () => ({
-            effectCode: "",
-            effectData: [0, 0],
-          })),
-        };
-      },
-      postAction: null,
+      buildEvent: emptyEvent,
     });
+    await editor.applyEdit(command);
+  },
+
+  clearEvents: async (locations: EventLocation[]) => {
+    if (!editor.editing()) return;
+    const compoundEventEdit: EditCommand = {
+      type: EditType.CompoundEventEdit,
+      eventEdits: [],
+    };
+    for (const location of locations) {
+      const before = await engine.getEvent(
+        location.patternNo,
+        location.patternIndex,
+        location.track,
+      );
+      const eventEdit: EventEditCommand = {
+        type: EditType.EventEdit,
+        patternNo: location.patternNo,
+        patternIndex: location.patternIndex,
+        track: location.track,
+        before,
+        after: emptyEvent(),
+      };
+      compoundEventEdit.eventEdits.push(eventEdit);
+    }
+    await editor.applyEdit(compoundEventEdit);
   },
 
   setEvents: async (
     events: { location: EventLocation; event: PatternEvent }[],
   ) => {
-    const { editorState } = useStore.getState();
-    if (!editorState.editing) return;
+    if (!editor.editing()) return;
     const compoundEventEdit: EditCommand = {
       type: EditType.CompoundEventEdit,
       eventEdits: [],

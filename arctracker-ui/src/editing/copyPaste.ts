@@ -6,7 +6,7 @@ import { engine, PatternEvent } from "../engine/engine.ts";
 import { EventLocation, patternEvents } from "./patternEvents.ts";
 
 export const copyPaste = {
-  copyPatternEvents: async () => {
+  copyPatternEvents: async (): Promise<EventLocation[]> => {
     const cursorPosition = cursor.currentPosition();
     const patternSelectionBounds = selection.patternSelectionBounds() || {
       top: cursorPosition.patternIndex,
@@ -25,7 +25,7 @@ export const copyPaste = {
       patternSelectionBounds.right - patternSelectionBounds.left + 1,
       numChannels - patternSelectionBounds.left,
     );
-    if (blockHeight === 0 || blockWidth === 0) return; // Shouldn't really be possible, but belt & braces.
+    if (blockHeight === 0 || blockWidth === 0) return []; // Shouldn't really be possible, but belt & braces.
     let pasteBuffer: PasteBufferObjectType = {
       type: "patternEvents",
       block: {
@@ -34,13 +34,14 @@ export const copyPaste = {
         events: [],
       },
     };
+    let cutLocations: EventLocation[] = [];
     for (
-      let line = patternSelectionBounds.top;
-      line <= patternSelectionBounds.bottom &&
-      line < currentPattern.lines.length;
-      line++
+      let patternIndex = patternSelectionBounds.top;
+      patternIndex <= patternSelectionBounds.bottom &&
+      patternIndex < currentPattern.lines.length;
+      patternIndex++
     ) {
-      const bufferLine = line - patternSelectionBounds.top;
+      const bufferLine = patternIndex - patternSelectionBounds.top;
       pasteBuffer.block.events[bufferLine] = [];
       for (
         let track = patternSelectionBounds.left;
@@ -49,10 +50,22 @@ export const copyPaste = {
       ) {
         const bufferTrack = track - patternSelectionBounds.left;
         pasteBuffer.block.events[bufferLine][bufferTrack] =
-          await engine.getEvent(transportState.patternNo, line, track);
+          await engine.getEvent(transportState.patternNo, patternIndex, track);
+        cutLocations.push({
+          patternNo: transportState.patternNo,
+          patternIndex: patternIndex,
+          track,
+        });
       }
     }
     useStore.getState().setPasteBuffer(pasteBuffer);
+    return cutLocations;
+  },
+
+  cutPatternEvents: async () => {
+    const cutLocations = await copyPaste.copyPatternEvents();
+    if (cutLocations.length > 0)
+      await patternEvents.clearEvents(cutLocations);
   },
 
   pastePatternEvents: async () => {
