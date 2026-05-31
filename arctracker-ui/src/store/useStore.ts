@@ -3,6 +3,7 @@ import type { ExportState, Module, TransportState } from "../engine/engine.ts";
 import { CurrentPattern } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
+import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
 
 interface AppStore {
   moduleId: number;
@@ -13,6 +14,7 @@ interface AppStore {
   transportState: TransportState;
   editorState: EditorState;
   patternSelection: PatternSelection | null;
+  pasteBuffer: PasteBufferObjectType | null;
   exportMonitoring: boolean;
   exportState: ExportState | null;
   currentPattern: CurrentPattern;
@@ -25,6 +27,7 @@ interface AppStore {
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
   setPatternSelection: (selection: PatternSelection | null) => void;
+  setPasteBuffer: (buffer: PasteBufferObjectType | null) => void;
   setExportMonitoring: (monitoring: boolean) => void;
   setExportState: (state: ExportState) => void;
   setCurrentPattern: (currentPattern: CurrentPattern) => void;
@@ -93,6 +96,7 @@ export const useStore = create<AppStore>((set) => ({
   transportState: initialTransportState,
   editorState: initialEditorState(),
   patternSelection: null,
+  pasteBuffer: null,
   exportMonitoring: false,
   exportState: null,
   currentPattern: initialPattern,
@@ -111,6 +115,7 @@ export const useStore = create<AppStore>((set) => ({
       isLoadingModule: false,
       editorState: initialEditorState(result.numChannels),
       patternSelection: null,
+      pasteBuffer: null,
     })),
 
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
@@ -147,6 +152,8 @@ export const useStore = create<AppStore>((set) => ({
     }),
 
   setPatternSelection: (patternSelection) => set({ patternSelection }),
+
+  setPasteBuffer: (pasteBuffer) => set({ pasteBuffer }),
 
   setExportMonitoring: (exportMonitoring) => set({ exportMonitoring }),
 

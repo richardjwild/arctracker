@@ -39,6 +39,7 @@ export enum CommandType {
   EDIT_EFFECT_DATA,
   CLEAR_PATTERN_EVENT_FIELD,
   CLEAR_PATTERN_EVENT,
+  COPY_PATTERN_EVENTS,
   UNDO_EDIT,
   REDO_EDIT,
 }
@@ -86,6 +87,7 @@ export type Command =
     }
   | { type: CommandType.CLEAR_PATTERN_EVENT_FIELD }
   | { type: CommandType.CLEAR_PATTERN_EVENT }
+  | { type: CommandType.COPY_PATTERN_EVENTS }
   | { type: CommandType.UNDO_EDIT }
   | { type: CommandType.REDO_EDIT };
 
@@ -168,6 +170,8 @@ export const commands = {
     commandQueue.push({ type: CommandType.CLEAR_PATTERN_EVENT_FIELD }),
   clearPatternEvent: () =>
     commandQueue.push({ type: CommandType.CLEAR_PATTERN_EVENT }),
+  copyPatternEvents: () =>
+    commandQueue.push({ type: CommandType.COPY_PATTERN_EVENTS }),
   undoEdit: () => commandQueue.push({ type: CommandType.UNDO_EDIT }),
   redoEdit: () => commandQueue.push({ type: CommandType.REDO_EDIT }),
 };

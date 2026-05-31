@@ -8,6 +8,7 @@ import { AppPoller } from "../polling/poller.ts";
 import { audioExport } from "../audioExport/audioExport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
 import { selection } from "../editing/selection.ts";
+import {copyPaste} from "../editing/copyPaste.ts";
 
 function processCommands() {
   const commands = commandQueue.consume();
@@ -117,6 +118,9 @@ function processCommands() {
         break;
       case CommandType.CLEAR_PATTERN_EVENT:
         void patternEvents.clearPatternEvent();
+        break;
+      case CommandType.COPY_PATTERN_EVENTS:
+        copyPaste.copyPatternEvents();
         break;
       case CommandType.UNDO_EDIT:
         void editor.undo();

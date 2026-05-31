@@ -28,17 +28,18 @@ export const selection = {
     }
   },
 
-  patternSelectionBounds: (): PatternSelectionBounds => {
+  patternSelectionBounds: (): PatternSelectionBounds | null => {
     const selection = useStore.getState().patternSelection;
-    if (!selection) return {
-      top: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-    };
+    if (!selection) return null;
     return {
-      top: Math.min(selection.anchor.patternIndex, selection.focus.patternIndex),
-      bottom: Math.max(selection.anchor.patternIndex, selection.focus.patternIndex),
+      top: Math.min(
+        selection.anchor.patternIndex,
+        selection.focus.patternIndex,
+      ),
+      bottom: Math.max(
+        selection.anchor.patternIndex,
+        selection.focus.patternIndex,
+      ),
       left: Math.min(selection.anchor.track, selection.focus.track),
       right: Math.max(selection.anchor.track, selection.focus.track),
     };
@@ -46,5 +47,5 @@ export const selection = {
 
   clearPatternSelection: () => {
     useStore.getState().setPatternSelection(null);
-  }
-}
+  },
+};

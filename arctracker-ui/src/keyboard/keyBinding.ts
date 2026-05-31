@@ -111,6 +111,10 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "Backspace",
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
   ],
+  [
+    "KeyC",
+    [{ modifiers: "primary", execute: commands.copyPatternEvents }],
+  ],
 ]);
 
 function getKeyBindings(key: string): KeyBinding[] {
