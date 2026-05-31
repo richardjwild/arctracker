@@ -10,9 +10,10 @@ export type EditorState = {
 
 export enum EditType {
   EventEdit,
+  CompoundEventEdit,
 }
 
-export type EditCommand = {
+export type EventEditCommand = {
   type: EditType.EventEdit;
   patternNo: number;
   patternIndex: number;
@@ -21,8 +22,46 @@ export type EditCommand = {
   after: PatternEvent;
 };
 
+export type CompoundEventEditCommand = {
+  type: EditType.CompoundEventEdit;
+  eventEdits: EventEditCommand[];
+};
+
+export type EditCommand = EventEditCommand | CompoundEventEditCommand;
+
 const undoStack: EditCommand[] = [];
 const redoStack: EditCommand[] = [];
+
+async function applyEventEdit(command: EventEditCommand): Promise<boolean> {
+  if (!eventsEqual(command.before, command.after)) {
+    await engine.setEvent(
+      command.patternNo,
+      command.patternIndex,
+      command.track,
+      command.after,
+    );
+    return true;
+  }
+  return false;
+}
+
+async function applyCompoundEventEdit(
+  command: CompoundEventEditCommand,
+): Promise<boolean> {
+  let revised = false;
+  for (const edit of command.eventEdits) {
+    if (!eventsEqual(edit.before, edit.after)) {
+      await engine.setEvent(
+        edit.patternNo,
+        edit.patternIndex,
+        edit.track,
+        edit.after,
+      );
+      revised = true;
+    }
+  }
+  return revised;
+}
 
 export const editor = {
   togglePatternEdit: () => {
@@ -65,17 +104,11 @@ export const editor = {
   applyEdit: async (command: EditCommand) => {
     try {
       let revised = false;
-      if (
-        command.type === EditType.EventEdit &&
-        !eventsEqual(command.before, command.after)
-      ) {
-        await engine.setEvent(
-          command.patternNo,
-          command.patternIndex,
-          command.track,
-          command.after,
-        );
-        revised = true;
+      if (command.type === EditType.EventEdit) {
+        revised = await applyEventEdit(command);
+      }
+      if (command.type === EditType.CompoundEventEdit) {
+        revised = await applyCompoundEventEdit(command);
       }
       if (revised) {
         useStore.getState().moduleRevised();
@@ -92,12 +125,21 @@ export const editor = {
     if (!command) return;
     try {
       if (command.type === EditType.EventEdit) {
-        await engine.setEvent(
-          command.patternNo,
-          command.patternIndex,
-          command.track,
-          command.before,
-        );
+        await applyEventEdit({
+          ...command,
+          before: command.after,
+          after: command.before,
+        });
+      }
+      if (command.type === EditType.CompoundEventEdit) {
+        await applyCompoundEventEdit({
+          ...command,
+          eventEdits: command.eventEdits.map((edit) => ({
+            ...edit,
+            before: edit.after,
+            after: edit.before,
+          })),
+        });
       }
       useStore.getState().moduleRevised();
       redoStack.push(command);
@@ -111,12 +153,10 @@ export const editor = {
     if (!command) return;
     try {
       if (command.type === EditType.EventEdit) {
-        await engine.setEvent(
-          command.patternNo,
-          command.patternIndex,
-          command.track,
-          command.after,
-        );
+        await applyEventEdit(command);
+      }
+      if (command.type === EditType.CompoundEventEdit) {
+        await applyCompoundEventEdit(command);
       }
       useStore.getState().moduleRevised();
       undoStack.push(command);

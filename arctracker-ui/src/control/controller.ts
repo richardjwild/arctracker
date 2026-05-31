@@ -120,7 +120,10 @@ function processCommands() {
         void patternEvents.clearPatternEvent();
         break;
       case CommandType.COPY_PATTERN_EVENTS:
-        copyPaste.copyPatternEvents();
+        void copyPaste.copyPatternEvents();
+        break;
+      case CommandType.PASTE_PATTERN_EVENTS:
+        void copyPaste.pastePatternEvents();
         break;
       case CommandType.UNDO_EDIT:
         void editor.undo();

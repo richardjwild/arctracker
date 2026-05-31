@@ -115,6 +115,10 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "KeyC",
     [{ modifiers: "primary", execute: commands.copyPatternEvents }],
   ],
+  [
+    "KeyV",
+    [{ modifiers: "primary", execute: commands.pastePatternEvents }],
+  ],
 ]);
 
 function getKeyBindings(key: string): KeyBinding[] {
