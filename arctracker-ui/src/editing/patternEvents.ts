@@ -62,7 +62,7 @@ function copyEffects(effects: Effect[]) {
 }
 
 export const patternEvents = {
-  setNote: async (note: number) => {
+  setEventNote: async (note: number) => {
     const selectedSample = useStore.getState().selectedSample;
     if (selectedSample === null) return;
     await applyPatternEventEdit({
@@ -81,7 +81,7 @@ export const patternEvents = {
     });
   },
 
-  setSampleField: async (field: CursorField, value: string) => {
+  setEventSample: async (field: CursorField, value: string) => {
     const numberValue = hexadecimal.fromHexDigit(value);
     if (numberValue === null) return;
     await applyPatternEventEdit({
@@ -100,7 +100,7 @@ export const patternEvents = {
     });
   },
 
-  setEffectCode: async (field: CursorField, value: string) => {
+  setEventEffectCode: async (field: CursorField, value: string) => {
     if (field.field !== "effectCode") return false;
     const effectIndex = field.effectIndex;
     await applyPatternEventEdit({
@@ -120,7 +120,7 @@ export const patternEvents = {
     });
   },
 
-  setEffectData: async (field: CursorField, value: string) => {
+  setEventEffectData: async (field: CursorField, value: string) => {
     if (field.field !== "effectData1" && field.field !== "effectData2")
       return false;
     const numberValue = hexadecimal.fromHexDigit(value);
@@ -146,7 +146,7 @@ export const patternEvents = {
     });
   },
 
-  clearPatternEventField: async () => {
+  clearEventField: async () => {
     const { editorState } = useStore.getState();
     if (!editorState.editing) return;
     await applyPatternEventEdit({
@@ -177,7 +177,7 @@ export const patternEvents = {
     });
   },
 
-  clearPatternEvent: async () => {
+  clearEvent: async () => {
     const { editorState } = useStore.getState();
     if (!editorState.editing) return;
     await applyPatternEventEdit({

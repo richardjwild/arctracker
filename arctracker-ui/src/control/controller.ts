@@ -102,22 +102,22 @@ function processCommands() {
         editor.decreaseEffectsDisplayed();
         break;
       case CommandType.EDIT_NOTE_FIELD:
-        void patternEvents.setNote(command.note);
+        void patternEvents.setEventNote(command.note);
         break;
       case CommandType.EDIT_SAMPLE_FIELD:
-        void patternEvents.setSampleField(command.field, command.value);
+        void patternEvents.setEventSample(command.field, command.value);
         break;
       case CommandType.EDIT_EFFECT_CODE:
-        void patternEvents.setEffectCode(command.field, command.value);
+        void patternEvents.setEventEffectCode(command.field, command.value);
         break;
       case CommandType.EDIT_EFFECT_DATA:
-        void patternEvents.setEffectData(command.field, command.value);
+        void patternEvents.setEventEffectData(command.field, command.value);
         break;
       case CommandType.CLEAR_PATTERN_EVENT_FIELD:
-        void patternEvents.clearPatternEventField();
+        void patternEvents.clearEventField();
         break;
       case CommandType.CLEAR_PATTERN_EVENT:
-        void patternEvents.clearPatternEvent();
+        void patternEvents.clearEvent();
         break;
       case CommandType.COPY_PATTERN_EVENTS:
         void copyPaste.copyPatternEvents();
