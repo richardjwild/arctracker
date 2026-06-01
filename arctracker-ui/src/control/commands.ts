@@ -45,6 +45,9 @@ export enum CommandType {
   COPY_TRACK,
   CUT_TRACK,
   PASTE_TRACK,
+  COPY_PATTERN,
+  CUT_PATTERN,
+  PASTE_PATTERN,
   UNDO_EDIT,
   REDO_EDIT,
 }
@@ -98,6 +101,9 @@ export type Command =
   | { type: CommandType.COPY_TRACK }
   | { type: CommandType.CUT_TRACK }
   | { type: CommandType.PASTE_TRACK }
+  | { type: CommandType.COPY_PATTERN }
+  | { type: CommandType.CUT_PATTERN }
+  | { type: CommandType.PASTE_PATTERN }
   | { type: CommandType.UNDO_EDIT }
   | { type: CommandType.REDO_EDIT };
 
@@ -189,6 +195,9 @@ export const commands = {
   copyTrack: () => commandQueue.push({ type: CommandType.COPY_TRACK }),
   cutTrack: () => commandQueue.push({ type: CommandType.CUT_TRACK }),
   pasteTrack: () => commandQueue.push({ type: CommandType.PASTE_TRACK }),
+  copyPattern: () => commandQueue.push({ type: CommandType.COPY_PATTERN }),
+  cutPattern: () => commandQueue.push({ type: CommandType.CUT_PATTERN }),
+  pastePattern: () => commandQueue.push({ type: CommandType.PASTE_PATTERN }),
   undoEdit: () => commandQueue.push({ type: CommandType.UNDO_EDIT }),
   redoEdit: () => commandQueue.push({ type: CommandType.REDO_EDIT }),
 };

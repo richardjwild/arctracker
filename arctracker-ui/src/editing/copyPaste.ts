@@ -119,10 +119,10 @@ export const copyPaste = {
     }
   },
 
-  copyTrack: async () => {
+  copyTrack: async (): Promise<EventLocation[]> => {
     const track = patternGrid.currentPosition().track;
     const patternLength = useStore.getState().currentPattern.lines.length;
-    await copyPaste.copyPatternEvents({
+    return await copyPaste.copyPatternEvents({
       top: 0,
       bottom: patternLength - 1,
       left: track,
@@ -131,18 +131,7 @@ export const copyPaste = {
   },
 
   cutTrack: async () => {
-    const track = patternGrid.currentPosition().track;
-    const patternLength = useStore.getState().currentPattern.lines.length;
-    const patternNo = useStore.getState().transportState.patternNo;
-    let cutLocations: EventLocation[] = [];
-    for (let patternIndex = 0; patternIndex < patternLength; patternIndex++) {
-      cutLocations.push({
-        patternNo,
-        patternIndex,
-        track,
-      });
-    }
-    await copyPaste.copyTrack();
+    const cutLocations = await copyPaste.copyTrack();
     await patternEvents.clearEvents(cutLocations);
   },
 
@@ -150,4 +139,24 @@ export const copyPaste = {
     const track = patternGrid.currentPosition().track;
     await copyPaste.pastePatternEvents({ track, patternIndex: 0 });
   },
+
+  copyPattern: async (): Promise<EventLocation[]> => {
+    const numChannels = useStore.getState().module.numChannels;
+    const patternLength = useStore.getState().currentPattern.lines.length;
+    return await copyPaste.copyPatternEvents({
+      top: 0,
+      bottom: patternLength - 1,
+      left: 0,
+      right: numChannels - 1,
+    });
+  },
+
+  cutPattern: async () => {
+    const cutLocations = await copyPaste.copyPattern();
+    await patternEvents.clearEvents(cutLocations);
+  },
+
+  pastePattern: async () => {
+    await copyPaste.pastePatternEvents({ track: 0, patternIndex: 0 });
+  }
 };
