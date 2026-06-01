@@ -118,6 +118,7 @@ interface Colours {
   sample: string,
   effect: string,
   selectionBox: string,
+  selectionBoxOutline: string,
 }
 
 function colours(atPlayhead: boolean = false): Colours {
@@ -131,6 +132,7 @@ function colours(atPlayhead: boolean = false): Colours {
     sample: "#eeee33",
     effect: "#ffbb00",
     selectionBox: "rgba(80, 140, 255, 0.25)",
+    selectionBoxOutline: "rgba(80, 140, 255, 0.5)",
   } : {
     background: "#171717",
     playheadBackground: "#333333",
@@ -141,6 +143,7 @@ function colours(atPlayhead: boolean = false): Colours {
     sample: "#cccc77",
     effect: "#dd9900",
     selectionBox: "rgba(80, 140, 255, 0.25)",
+    selectionBoxOutline: "rgba(80, 140, 255, 0.5)",
   };
 }
 
@@ -207,6 +210,7 @@ export class PatternRenderer {
 
   private renderSelection(gridViewportFit: GridViewportFit, playheadIndex: number) {
     const bounds = selection.patternSelectionBounds();
+    if (!bounds) return;
     let boxLeft = this.patternLayout.rowNumberWidth;
     for (let track = 0; track < bounds.left; track++)
       boxLeft += this.patternLayout.getEventWidth(track);
@@ -219,6 +223,7 @@ export class PatternRenderer {
       this.patternLayout.playheadPadding;
     const boxHeight = (bounds.bottom - bounds.top + 1) * this.patternLayout.rowHeight;
     this.withFillStyle(colours().selectionBox).fillRect(boxLeft, top, boxWidth - 1, boxHeight);
+    this.withStrokeStyle(colours().selectionBoxOutline).strokeRect(boxLeft, top, boxWidth - 1, boxHeight);
   }
 
   private renderCursor(gridViewportFit: GridViewportFit) {
@@ -381,8 +386,18 @@ export class PatternRenderer {
     return this;
   }
 
+  private withStrokeStyle(strokeStyle: string): PatternRenderer {
+    this.ctx.strokeStyle = strokeStyle;
+    return this;
+  }
+
   private fillRect(x: number, y: number, width: number, height: number): PatternRenderer {
     this.ctx.fillRect(x, y, width, height);
+    return this;
+  }
+
+  private strokeRect(x: number, y: number, width: number, height: number): PatternRenderer {
+    this.ctx.strokeRect(x, y, width, height);
     return this;
   }
 
