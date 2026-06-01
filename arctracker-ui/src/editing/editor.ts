@@ -96,7 +96,7 @@ export const editor = {
     const track = editorState.cursorPosition.track;
     let cursor = new Cursor();
     let effectsDisplayed = [...editorState.effectsDisplayed];
-    if (effectsDisplayed[track] === 1) return;
+    if (effectsDisplayed[track] === 0) return;
     effectsDisplayed[track] -= 1;
     cursor.effectsDisplayedDecreased();
     setEditorState({
