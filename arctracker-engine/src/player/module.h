@@ -74,6 +74,7 @@ typedef struct
     char author[MAX_LEN_AUTHOR];
     int tune_length;
     int *sequence;
+    int sequence_capacity;
     int num_channels;
     int *initial_panning;
     int num_patterns;

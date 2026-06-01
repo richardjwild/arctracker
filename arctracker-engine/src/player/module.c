@@ -3,6 +3,8 @@
 #include "module.h"
 #include "memory/heap.h"
 
+#define INITIAL_SEQUENCE_CAPACITY 1024
+
 module_t *module_create(int num_channels, int sequence_len, int num_patterns, int num_samples)
 {
     module_t *module = allocate_array(MODULE, 1, sizeof(module_t));
@@ -10,9 +12,10 @@ module_t *module_create(int num_channels, int sequence_len, int num_patterns, in
         goto fail;
     module->num_channels = num_channels;
     module->tune_length = sequence_len;
+    module->sequence_capacity = sequence_len > INITIAL_SEQUENCE_CAPACITY ? sequence_len : INITIAL_SEQUENCE_CAPACITY;
     module->num_patterns = num_patterns;
     module->num_samples = num_samples;
-    module->sequence = allocate_array(MODULE, sequence_len, sizeof(int));
+    module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
         goto fail;
     module->initial_panning = allocate_array(MODULE, num_channels, sizeof(int));
