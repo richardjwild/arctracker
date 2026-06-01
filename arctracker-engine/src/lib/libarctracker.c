@@ -356,16 +356,6 @@ api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no,
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_clear_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int channel_no)
-{
-    if (arctracker == NULL)
-        return failure(BAD_ARCTRACKER_HANDLE);
-    edit_result_t result = editor_clear_event(arctracker->module, pattern_no, pattern_index, channel_no);
-    if (!result.success)
-        return failure(result.error_message);
-    return SUCCESS;
-}
-
 api_result_t arctracker_destroy(arctracker_t *arctracker)
 {
     if (arctracker == NULL)

@@ -157,13 +157,6 @@ fn edit_set_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_i
 }
 
 #[tauri::command]
-fn edit_clear_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, channel_no: i32) -> Result<(), String> {
-    let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_clear_event(pattern_no, pattern_index, channel_no).map_err(|e| e.message)?;
-    Ok(())
-}
-
-#[tauri::command]
 fn shutdown_app(app: AppHandle) {
     app.exit(1);
 }
@@ -194,6 +187,5 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             keyboard_note_on,
             edit_get_event,
             edit_set_event,
-            edit_clear_event,
         ])
 }

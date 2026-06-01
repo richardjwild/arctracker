@@ -555,17 +555,6 @@ impl Arctracker {
             })
         }
     }
-
-    pub fn edit_clear_event(&mut self, pattern_no: i32, pattern_index: i32, channel_no: i32) -> Result<(), ArctrackerError> {
-        let result = unsafe { ffi::arctracker_edit_clear_event(self.handle, pattern_no, pattern_index, channel_no) };
-        if result.success {
-            Ok(())
-        } else {
-            Err(ArctrackerError {
-                message: c_string_to_rust(&result.error_message),
-            })
-        }
-    }
 }
 
 impl Drop for Arctracker {

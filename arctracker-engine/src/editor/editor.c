@@ -30,16 +30,6 @@ edit_result_t editor_set_event(module_t *module, int pattern_no, int pattern_ind
     return result;
 }
 
-edit_result_t editor_clear_event(module_t *module, int pattern_no, int pattern_index, int channel_no)
-{
-    event_t *event = NULL;
-    edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &event);
-    if (!result.success)
-        return result;
-    memset(event, 0, sizeof(event_t));
-    return result;
-}
-
 static edit_result_t get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t **event)
 {
     *event = NULL;

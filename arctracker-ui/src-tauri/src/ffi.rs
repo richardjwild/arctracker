@@ -146,7 +146,6 @@ extern "C" {
     pub fn arctracker_export_cleanup(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_edit_get_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
     pub fn arctracker_edit_set_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
-    pub fn arctracker_edit_clear_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }
