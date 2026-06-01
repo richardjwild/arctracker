@@ -29,5 +29,7 @@
 #define INVALID_PATTERN_INDEX "Invalid pattern index"
 #define INVALID_CHANNEL_NUMBER "Invalid channel number"
 #define BAD_EVENT_BUFFER "Invalid event buffer"
+#define BAD_SEQUENCE_BUFFER "Invalid sequence buffer"
+#define INVALID_SEQUENCE_LENGTH "Invalid sequence length"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

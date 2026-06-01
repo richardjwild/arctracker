@@ -332,6 +332,8 @@ api_result_t arctracker_edit_get_event(arctracker_t *arctracker, int pattern_no,
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
     if (event_buffer == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t event = {0};
@@ -346,6 +348,8 @@ api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no,
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
     if (event == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t internal_event;
@@ -353,6 +357,38 @@ api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no,
     edit_result_t result = editor_set_event(arctracker->module, pattern_no, pattern_index, channel_no, &internal_event);
     if (!result.success)
         return failure(result.error_message);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_get_sequence(arctracker_t *arctracker, int *sequence, int max_sequence_len, int *actual_sequence_length)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (sequence == NULL)
+        return failure(BAD_SEQUENCE_BUFFER);
+    if (max_sequence_len <= 0)
+        return failure(INVALID_SEQUENCE_LENGTH);
+    module_t *module = arctracker->module;
+    if (actual_sequence_length != NULL)
+        *actual_sequence_length = module->tune_length;
+    const int length_to_copy = module->tune_length > max_sequence_len ? max_sequence_len : module->tune_length;
+    memcpy(sequence, module->sequence, length_to_copy * sizeof(int));
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_set_sequence(arctracker_t *arctracker, int *new_sequence, int sequence_len)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (new_sequence == NULL)
+        return failure(BAD_SEQUENCE_BUFFER);
+    if (sequence_len <= 0)
+        return failure(INVALID_SEQUENCE_LENGTH);
+    // TODO: Implement me!
     return SUCCESS;
 }
 

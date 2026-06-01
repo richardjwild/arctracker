@@ -47,6 +47,10 @@ api_result_t arctracker_edit_get_event(arctracker_t *handle, int pattern_no, int
 
 api_result_t arctracker_edit_set_event(arctracker_t *handle, int pattern_no, int pattern_index, int channel_no, ui_pattern_event_t *event);
 
+api_result_t arctracker_edit_get_sequence(arctracker_t *handle, int *sequence, int max_sequence_len, int *actual_sequence_length);
+
+api_result_t arctracker_edit_set_sequence(arctracker_t *handle, int *new_sequence, int sequence_len);
+
 api_result_t arctracker_destroy(arctracker_t *handle);
 
 #endif //ARCTRACKER_LIBARCTRACKER_H
