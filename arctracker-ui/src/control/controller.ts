@@ -27,6 +27,7 @@ function processCommands() {
         break;
       case CommandType.TOGGLE_PLAY:
         selection.clearPatternSelection();
+        editor.cancelPatternEdit();
         transport.togglePlay();
         break;
       case CommandType.TOGGLE_LOOP:

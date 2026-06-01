@@ -70,6 +70,7 @@ export const editor = {
   },
 
   togglePatternEdit: () => {
+    if (useStore.getState().transportState.playing) return;
     const { editorState, setEditorState, setPatternSelection } =
       useStore.getState();
     setEditorState({
@@ -77,6 +78,15 @@ export const editor = {
       editing: !editorState.editing,
     });
     setPatternSelection(null);
+  },
+
+  cancelPatternEdit: () => {
+    const { editorState, setEditorState } =
+        useStore.getState();
+    setEditorState({
+      ...editorState,
+      editing: false,
+    });
   },
 
   increaseEffectsDisplayed: () => {
