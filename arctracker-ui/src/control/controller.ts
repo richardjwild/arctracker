@@ -126,7 +126,13 @@ function processCommands() {
         void copyPaste.cutPatternEvents();
         break;
       case CommandType.PASTE_PATTERN_EVENTS:
-        void copyPaste.pastePatternEvents();
+        void copyPaste.pastePatternEvents(null);
+        break;
+      case CommandType.COPY_TRACK:
+        void copyPaste.copyTrack();
+        break;
+      case CommandType.PASTE_TRACK:
+        void copyPaste.pasteTrack();
         break;
       case CommandType.UNDO_EDIT:
         void editor.undo();

@@ -1,30 +1,41 @@
-import { selection } from "./selection.ts";
+import { PatternSelectionBounds, selection } from "./selection.ts";
 import { useStore } from "../store/useStore.ts";
 import { cursor } from "./cursor.ts";
 import { PasteBufferObjectType } from "./pasteBuffer.ts";
 import { engine, PatternEvent } from "../engine/engine.ts";
 import { EventLocation, patternEvents } from "./patternEvents.ts";
-import { patternGrid } from "./patternGrid.ts";
+import { patternGrid, PatternGridPosition } from "./patternGrid.ts";
+
+function getSelectionBounds(providedBounds: PatternSelectionBounds | null): PatternSelectionBounds {
+  if (providedBounds)
+    return providedBounds;
+  const selectedBounds = selection.patternSelectionBounds();
+  if (selectedBounds)
+    return selectedBounds;
+  const cursorPosition = cursor.currentPosition();
+  return {
+    top: cursorPosition.patternIndex,
+    bottom: cursorPosition.patternIndex,
+    left: cursorPosition.track,
+    right: cursorPosition.track,
+  };
+}
 
 export const copyPaste = {
-  copyPatternEvents: async (): Promise<EventLocation[]> => {
-    const cursorPosition = cursor.currentPosition();
-    const patternSelectionBounds = selection.patternSelectionBounds() || {
-      top: cursorPosition.patternIndex,
-      bottom: cursorPosition.patternIndex,
-      left: cursorPosition.track,
-      right: cursorPosition.track,
-    };
+  copyPatternEvents: async (
+    providedBounds: PatternSelectionBounds | null,
+  ): Promise<EventLocation[]> => {
+    const selectionBounds = getSelectionBounds(providedBounds);
     const { transportState } = useStore.getState();
     const currentPattern = useStore.getState().currentPattern;
     const numChannels = useStore.getState().module.numChannels;
     const blockHeight = Math.min(
-      patternSelectionBounds.bottom - patternSelectionBounds.top + 1,
-      currentPattern.lines.length - patternSelectionBounds.top,
+      selectionBounds.bottom - selectionBounds.top + 1,
+      currentPattern.lines.length - selectionBounds.top,
     );
     const blockWidth = Math.min(
-      patternSelectionBounds.right - patternSelectionBounds.left + 1,
-      numChannels - patternSelectionBounds.left,
+      selectionBounds.right - selectionBounds.left + 1,
+      numChannels - selectionBounds.left,
     );
     if (blockHeight === 0 || blockWidth === 0) return []; // Shouldn't really be possible, but belt & braces.
     let pasteBuffer: PasteBufferObjectType = {
@@ -37,19 +48,19 @@ export const copyPaste = {
     };
     let cutLocations: EventLocation[] = [];
     for (
-      let patternIndex = patternSelectionBounds.top;
-      patternIndex <= patternSelectionBounds.bottom &&
+      let patternIndex = selectionBounds.top;
+      patternIndex <= selectionBounds.bottom &&
       patternIndex < currentPattern.lines.length;
       patternIndex++
     ) {
-      const bufferLine = patternIndex - patternSelectionBounds.top;
+      const bufferLine = patternIndex - selectionBounds.top;
       pasteBuffer.block.events[bufferLine] = [];
       for (
-        let track = patternSelectionBounds.left;
-        track <= patternSelectionBounds.right && track < numChannels;
+        let track = selectionBounds.left;
+        track <= selectionBounds.right && track < numChannels;
         track++
       ) {
-        const bufferTrack = track - patternSelectionBounds.left;
+        const bufferTrack = track - selectionBounds.left;
         pasteBuffer.block.events[bufferLine][bufferTrack] =
           await engine.getEvent(transportState.patternNo, patternIndex, track);
         cutLocations.push({
@@ -64,11 +75,11 @@ export const copyPaste = {
   },
 
   cutPatternEvents: async () => {
-    const cutLocations = await copyPaste.copyPatternEvents();
+    const cutLocations = await copyPaste.copyPatternEvents(null);
     if (cutLocations.length > 0) await patternEvents.clearEvents(cutLocations);
   },
 
-  pastePatternEvents: async () => {
+  pastePatternEvents: async (pasteLocation: PatternGridPosition | null) => {
     const pasteBuffer = useStore.getState().pasteBuffer;
     if (!pasteBuffer || pasteBuffer.type !== "patternEvents") return;
     const currentPattern = useStore.getState().currentPattern;
@@ -84,9 +95,11 @@ export const copyPaste = {
     );
     const pastedEvents: { location: EventLocation; event: PatternEvent }[] = [];
     for (let line = 0; line < blockHeight; line++) {
-      const destLine = cursorPosition.patternIndex + line;
+      const destLine =
+        (pasteLocation?.patternIndex ?? cursorPosition.patternIndex) + line;
       for (let track = 0; track < blockWidth; track++) {
-        const destTrack = cursorPosition.track + track;
+        const destTrack =
+          (pasteLocation?.track ?? cursorPosition.track) + track;
         pastedEvents.push({
           location: {
             patternNo: useStore.getState().transportState.patternNo,
@@ -98,9 +111,27 @@ export const copyPaste = {
       }
     }
     await patternEvents.setEvents(pastedEvents);
-    patternGrid.moveTo({
-      track: cursorPosition.track,
-      patternIndex: cursorPosition.patternIndex + blockHeight - 1,
+    if (!pasteLocation) {
+      patternGrid.moveTo({
+        track: cursorPosition.track,
+        patternIndex: cursorPosition.patternIndex + blockHeight - 1,
+      });
+    }
+  },
+
+  copyTrack: async () => {
+    const track = patternGrid.currentPosition().track;
+    const patternLength = useStore.getState().currentPattern.lines.length;
+    await copyPaste.copyPatternEvents({
+      top: 0,
+      bottom: patternLength - 1,
+      left: track,
+      right: track,
     });
+  },
+
+  pasteTrack: async () => {
+    const track = patternGrid.currentPosition().track;
+    await copyPaste.pastePatternEvents({ track, patternIndex: 0 });
   },
 };

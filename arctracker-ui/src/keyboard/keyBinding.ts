@@ -38,49 +38,73 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [
       { modifiers: "none", execute: () => commands.patternGridUp(false) },
       { modifiers: "secondary", execute: () => commands.patternGridUp(true) },
-    ]
+    ],
   ],
   [
     "ArrowDown",
     [
       { modifiers: "none", execute: () => commands.patternGridDown(false) },
       { modifiers: "secondary", execute: () => commands.patternGridDown(true) },
-    ]
+    ],
   ],
   [
     "PageDown",
     [
-      { modifiers: "none", execute: () => commands.patternGridStrideDown(false) },
-      { modifiers: "secondary", execute: () => commands.patternGridStrideDown(true) }
+      {
+        modifiers: "none",
+        execute: () => commands.patternGridStrideDown(false),
+      },
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridStrideDown(true),
+      },
     ],
   ],
   [
     "PageUp",
     [
       { modifiers: "none", execute: () => commands.patternGridStrideUp(false) },
-      { modifiers: "secondary", execute: () => commands.patternGridStrideUp(true) }
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridStrideUp(true),
+      },
     ],
   ],
   [
     "Home",
     [
-      { modifiers: "none", execute: () => commands.patternGridJumpToTop(false) },
-      { modifiers: "secondary", execute: () => commands.patternGridJumpToTop(true) }
-    ]
+      {
+        modifiers: "none",
+        execute: () => commands.patternGridJumpToTop(false),
+      },
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridJumpToTop(true),
+      },
+    ],
   ],
   [
     "End",
     [
-      { modifiers: "none", execute: () => commands.patternGridJumpToBottom(false) },
-      { modifiers: "secondary", execute: () => commands.patternGridJumpToBottom(true) }
-    ]
+      {
+        modifiers: "none",
+        execute: () => commands.patternGridJumpToBottom(false),
+      },
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridJumpToBottom(true),
+      },
+    ],
   ],
   [
     "ArrowRight",
     [
       { modifiers: "none", execute: commands.cursorFieldRight },
       { modifiers: "primary", execute: commands.sequenceSeekForwards },
-      { modifiers: "secondary", execute: () => commands.patternGridRight(true) },
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridRight(true),
+      },
     ],
   ],
   [
@@ -95,7 +119,10 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "Tab",
     [
       { modifiers: "none", execute: () => commands.patternGridRight(false) },
-      { modifiers: "secondary", execute: () => commands.patternGridLeft(false) },
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridLeft(false),
+      },
     ],
   ],
   [
@@ -111,18 +138,11 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "Backspace",
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
   ],
-  [
-    "KeyX",
-    [{ modifiers: "primary", execute: commands.cutPatternEvents }],
-  ],
-  [
-    "KeyC",
-    [{ modifiers: "primary", execute: commands.copyPatternEvents }],
-  ],
-  [
-    "KeyV",
-    [{ modifiers: "primary", execute: commands.pastePatternEvents }],
-  ],
+  ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],
+  ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
+  ["KeyV", [{ modifiers: "primary", execute: commands.pastePatternEvents }]],
+  ["F4", [{ modifiers: "secondary", execute: commands.copyTrack }]],
+  ["F5", [{ modifiers: "secondary", execute: commands.pasteTrack }]],
 ]);
 
 function getKeyBindings(key: string): KeyBinding[] {
