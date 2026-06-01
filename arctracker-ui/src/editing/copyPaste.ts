@@ -6,12 +6,12 @@ import { engine, PatternEvent } from "../engine/engine.ts";
 import { EventLocation, patternEvents } from "./patternEvents.ts";
 import { patternGrid, PatternGridPosition } from "./patternGrid.ts";
 
-function getSelectionBounds(providedBounds: PatternSelectionBounds | null): PatternSelectionBounds {
-  if (providedBounds)
-    return providedBounds;
+function getSelectionBounds(
+  providedBounds: PatternSelectionBounds | null,
+): PatternSelectionBounds {
+  if (providedBounds) return providedBounds;
   const selectedBounds = selection.patternSelectionBounds();
-  if (selectedBounds)
-    return selectedBounds;
+  if (selectedBounds) return selectedBounds;
   const cursorPosition = cursor.currentPosition();
   return {
     top: cursorPosition.patternIndex,
@@ -128,6 +128,22 @@ export const copyPaste = {
       left: track,
       right: track,
     });
+  },
+
+  cutTrack: async () => {
+    const track = patternGrid.currentPosition().track;
+    const patternLength = useStore.getState().currentPattern.lines.length;
+    const patternNo = useStore.getState().transportState.patternNo;
+    let cutLocations: EventLocation[] = [];
+    for (let patternIndex = 0; patternIndex < patternLength; patternIndex++) {
+      cutLocations.push({
+        patternNo,
+        patternIndex,
+        track,
+      });
+    }
+    await copyPaste.copyTrack();
+    await patternEvents.clearEvents(cutLocations);
   },
 
   pasteTrack: async () => {

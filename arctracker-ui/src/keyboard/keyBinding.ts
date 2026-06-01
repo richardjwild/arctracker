@@ -141,6 +141,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
   ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
   ["KeyV", [{ modifiers: "primary", execute: commands.pastePatternEvents }]],
+  ["F3", [{ modifiers: "secondary", execute: commands.cutTrack }]],
   ["F4", [{ modifiers: "secondary", execute: commands.copyTrack }]],
   ["F5", [{ modifiers: "secondary", execute: commands.pasteTrack }]],
 ]);

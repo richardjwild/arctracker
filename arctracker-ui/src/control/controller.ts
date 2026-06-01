@@ -120,7 +120,7 @@ function processCommands() {
         void patternEvents.clearEvent();
         break;
       case CommandType.COPY_PATTERN_EVENTS:
-        void copyPaste.copyPatternEvents();
+        void copyPaste.copyPatternEvents(null);
         break;
       case CommandType.CUT_PATTERN_EVENTS:
         void copyPaste.cutPatternEvents();
@@ -130,6 +130,9 @@ function processCommands() {
         break;
       case CommandType.COPY_TRACK:
         void copyPaste.copyTrack();
+        break;
+      case CommandType.CUT_TRACK:
+        void copyPaste.cutTrack();
         break;
       case CommandType.PASTE_TRACK:
         void copyPaste.pasteTrack();
