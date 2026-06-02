@@ -157,6 +157,20 @@ fn edit_set_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_i
 }
 
 #[tauri::command]
+fn edit_get_sequence(state: tauri::State<Arc<AppState>>, expected_sequence_len: i32) -> Result<Vec<i32>, String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    let result = tracker.edit_get_sequence(expected_sequence_len).map_err(|e| e.message)?;
+    Ok(result)
+}
+
+#[tauri::command]
+fn edit_set_sequence(state: tauri::State<Arc<AppState>>, new_sequence: Vec<i32>) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.edit_set_sequence(&new_sequence).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn shutdown_app(app: AppHandle) {
     app.exit(1);
 }
@@ -187,5 +201,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             keyboard_note_on,
             edit_get_event,
             edit_set_event,
+            edit_get_sequence,
+            edit_set_sequence,
         ])
 }

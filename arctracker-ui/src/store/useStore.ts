@@ -9,6 +9,7 @@ interface AppStore {
   moduleId: number;
   moduleRevision: number;
   module: Module;
+  sequence: number[];
   pianoKeyboardTranspose: number;
   patternGridStrideLength: number;
   transportState: TransportState;
@@ -21,6 +22,7 @@ interface AppStore {
   selectedSample: number | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
+  setSequence: (sequence: number[]) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   moduleRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
@@ -40,7 +42,8 @@ const initialModule: Module = {
   name: "",
   author: "",
   numChannels: 0,
-  tuneLength: 0,
+  numPatterns: 0,
+  tuneLength: 1,
   numSamples: 0,
   samples: [],
 };
@@ -83,6 +86,7 @@ function initialEditorState(numChannels: number = 0): EditorState {
       field: 0,
       patternIndex: 0,
     },
+    sequencePosition: 0,
     effectsDisplayed: Array.from({ length: numChannels }, () => 1),
   };
 }
@@ -91,6 +95,7 @@ export const useStore = create<AppStore>((set) => ({
   moduleId: 0,
   moduleRevision: 0,
   module: initialModule,
+  sequence: [],
   pianoKeyboardTranspose: 13,
   patternGridStrideLength: 8,
   transportState: initialTransportState,
@@ -117,6 +122,8 @@ export const useStore = create<AppStore>((set) => ({
       patternSelection: null,
       pasteBuffer: null,
     })),
+
+  setSequence: (sequence) => set({ sequence }),
 
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
     set({ pianoKeyboardTranspose }),

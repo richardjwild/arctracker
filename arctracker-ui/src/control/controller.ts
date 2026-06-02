@@ -8,7 +8,8 @@ import { AppPoller } from "../polling/poller.ts";
 import { audioExport } from "../audioExport/audioExport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
 import { selection } from "../editing/selection.ts";
-import {copyPaste} from "../editing/copyPaste.ts";
+import { copyPaste } from "../editing/copyPaste.ts";
+import {sequence} from "../editing/sequence.ts";
 
 function processCommands() {
   const commands = commandQueue.consume();
@@ -36,10 +37,16 @@ function processCommands() {
       case CommandType.TOGGLE_EDIT:
         editor.togglePatternEdit();
         break;
+      case CommandType.SEQUENCE_SEEK:
+        selection.clearPatternSelection();
+        transport.sequenceSeek(command.position);
+        break;
       case CommandType.SEQUENCE_SEEK_FORWARDS:
+        selection.clearPatternSelection();
         transport.sequenceSeekForwards();
         break;
       case CommandType.SEQUENCE_SEEK_BACKWARDS:
+        selection.clearPatternSelection();
         transport.sequenceSeekBackwards();
         break;
       case CommandType.PATTERN_GRID_DOWN:
@@ -153,10 +160,18 @@ function processCommands() {
       case CommandType.REDO_EDIT:
         void editor.redo();
         break;
+      case CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION:
+        selection.clearPatternSelection();
+        sequence.incrementPatternAtCurrentPosition();
+        break;
+      case CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION:
+        selection.clearPatternSelection();
+        sequence.decrementPatternAtCurrentPosition();
+        break;
     }
   }
 }
 
 export const controller = {
   commandPoller: (() => processCommands()) as AppPoller,
-}
+};

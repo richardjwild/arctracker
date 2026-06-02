@@ -10,14 +10,24 @@ export interface CurrentPattern {
 }
 
 export const transport = {
+  playing: () => {
+    return useStore.getState().transportState.playing;
+  },
+
   togglePlay: () => {
-    if (!useStore.getState().transportState.playing)
+    if (!transport.playing())
       transport.patternSeek(0);
     engine.togglePlay();
   },
 
   toggleLoop: () => {
     engine.toggleLoop();
+  },
+
+  sequenceSeek: (toSequencePos: number) => {
+    const moduleInfo = useStore.getState().module;
+    if (toSequencePos >= 0 && toSequencePos < moduleInfo.tuneLength)
+      engine.seek(toSequencePos, 0);
   },
 
   sequenceSeekForwards: () => {

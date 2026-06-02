@@ -59,6 +59,7 @@ pub struct UiModuleInfo {
     pub num_channels: c_int,
     pub tune_length: c_int,
     pub num_samples: c_int,
+    pub num_patterns: c_int,
 }
 
 #[repr(C)]
@@ -146,6 +147,8 @@ extern "C" {
     pub fn arctracker_export_cleanup(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_edit_get_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
     pub fn arctracker_edit_set_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
+    pub fn arctracker_edit_get_sequence(handle: *mut ArctrackerHandle, sequence: *mut c_int, expected_sequence_len: c_int) -> ApiResult;
+    pub fn arctracker_edit_set_sequence(handle: *mut ArctrackerHandle, new_sequence: *const c_int, new_sequence_len: c_int) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

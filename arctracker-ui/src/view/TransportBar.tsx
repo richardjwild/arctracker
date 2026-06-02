@@ -114,7 +114,7 @@ export default function TransportBar() {
   const tuneLength = useStore((state) => state.module.tuneLength);
 
   return (
-    <div className="transportBar uiArea">
+    <div className="transportBar uiArea padded">
       <button
         title="Play/pause"
         onClick={() => commands.togglePlay()}

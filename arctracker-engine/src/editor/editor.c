@@ -1,9 +1,13 @@
 #include "editor.h"
 #include <string.h>
 #include "messages.h"
+#include "io/error.h"
 #include "memory/heap.h"
 
+#define MIN_SEQUENCE_CAPACITY 1024
+
 static edit_result_t get_event(module_t *, int, int, int, event_t **);
+static edit_result_t ensure_sequence_capacity(module_t *, int);
 static edit_result_t failure(char *);
 
 edit_result_t editor_get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t *event_buffer)
@@ -30,6 +34,24 @@ edit_result_t editor_set_event(module_t *module, int pattern_no, int pattern_ind
     return result;
 }
 
+edit_result_t editor_set_sequence(module_t *module, const int *new_sequence, const int new_sequence_len)
+{
+    if (new_sequence == NULL)
+        return failure(BAD_SEQUENCE_BUFFER);
+    if (new_sequence_len <= 0)
+        return failure(INVALID_SEQUENCE_LENGTH);
+    for (int i = 0; i < new_sequence_len; i++) {
+        if (new_sequence[i] < 0 || new_sequence[i] >= module->num_patterns)
+            return failure(INVALID_PATTERN_NUMBER);
+    }
+    edit_result_t result = ensure_sequence_capacity(module, new_sequence_len);
+    if (!result.success)
+        return result;
+    memcpy(module->sequence, new_sequence, new_sequence_len * sizeof(int));
+    module->tune_length = new_sequence_len;
+    return EDIT_SUCCESS;
+}
+
 static edit_result_t get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t **event)
 {
     *event = NULL;
@@ -47,6 +69,21 @@ static edit_result_t get_event(module_t *module, int pattern_no, int pattern_ind
     if (pattern_index < 0 || pattern_index >= pattern->num_lines)
         return failure(INVALID_PATTERN_INDEX);
     *event = pattern->events + (pattern_index * module->num_channels) + channel_no;
+    return EDIT_SUCCESS;
+}
+
+static edit_result_t ensure_sequence_capacity(module_t *module, int sequence_len)
+{
+    if (module->sequence_capacity >= sequence_len)
+        return EDIT_SUCCESS;
+    int required_capacity = module->sequence_capacity;
+    while (required_capacity < sequence_len)
+        required_capacity += MIN_SEQUENCE_CAPACITY;
+    int *new_sequence = reallocate_array(MODULE, module->sequence, required_capacity, sizeof(int));
+    if (new_sequence == NULL)
+        return failure(MEMORY_ALLOCATION_FAILED);
+    module->sequence = new_sequence;
+    module->sequence_capacity = required_capacity;
     return EDIT_SUCCESS;
 }
 

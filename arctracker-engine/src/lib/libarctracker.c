@@ -360,7 +360,7 @@ api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no,
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_get_sequence(arctracker_t *arctracker, int *sequence, int max_sequence_len, int *actual_sequence_length)
+api_result_t arctracker_edit_get_sequence(arctracker_t *arctracker, int *sequence, int expected_sequence_len)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -368,17 +368,14 @@ api_result_t arctracker_edit_get_sequence(arctracker_t *arctracker, int *sequenc
         return failure(NO_MODULE_LOADED);
     if (sequence == NULL)
         return failure(BAD_SEQUENCE_BUFFER);
-    if (max_sequence_len <= 0)
-        return failure(INVALID_SEQUENCE_LENGTH);
     module_t *module = arctracker->module;
-    if (actual_sequence_length != NULL)
-        *actual_sequence_length = module->tune_length;
-    const int length_to_copy = module->tune_length > max_sequence_len ? max_sequence_len : module->tune_length;
-    memcpy(sequence, module->sequence, length_to_copy * sizeof(int));
+    if (expected_sequence_len != module->tune_length)
+        return failure(INVALID_SEQUENCE_LENGTH);
+    memcpy(sequence, module->sequence, module->tune_length * sizeof(int));
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_sequence(arctracker_t *arctracker, int *new_sequence, int sequence_len)
+api_result_t arctracker_edit_set_sequence(arctracker_t *arctracker, const int *new_sequence, const int new_sequence_len)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -386,9 +383,11 @@ api_result_t arctracker_edit_set_sequence(arctracker_t *arctracker, int *new_seq
         return failure(NO_MODULE_LOADED);
     if (new_sequence == NULL)
         return failure(BAD_SEQUENCE_BUFFER);
-    if (sequence_len <= 0)
+    if (new_sequence_len <= 0)
         return failure(INVALID_SEQUENCE_LENGTH);
-    // TODO: Implement me!
+    edit_result_t result = editor_set_sequence(arctracker->module, new_sequence, new_sequence_len);
+    if (!result.success)
+        return failure(result.error_message);
     return SUCCESS;
 }
 

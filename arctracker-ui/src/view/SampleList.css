@@ -7,18 +7,23 @@
 }
 
 .sampleList button {
-    background-color: #171717;
-    color: #aaaa22;
+    background-color: #33330f;
+    color: black;
     font-family: FiraCode, monospace;
     font-size: 12px;
     width: 100%;
-    height: 25px;
-    border: none;
+    height: 21px;
+    border: solid #33330f 1px;
     text-align: left;
     padding-left: 10px;
+    border-radius: 5px;
+    margin-bottom: 4px;
 }
 
 .sampleList button.selected {
-    background-color: #aaaa22;
+    background-color: #cccc22;
     color: #111111;
+    border: solid #cccc22 1px;
+    border-radius: 5px;
+    margin-bottom: 4px;
 }

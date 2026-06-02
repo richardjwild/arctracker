@@ -162,6 +162,24 @@ const keyBindings = new Map<string, KeyBinding[]>([
       { modifiers: "secondary", execute: commands.pasteTrack },
     ],
   ],
+  [
+    "Equal",
+    [
+      {
+        modifiers: "secondary",
+        execute: commands.incrementPatternAtCurrentPosition,
+      },
+    ],
+  ],
+  [
+    "Minus",
+    [
+      {
+        modifiers: "secondary",
+        execute: commands.decrementPatternAtCurrentPosition,
+      },
+    ],
+  ],
 ]);
 
 function getKeyBindings(key: string): KeyBinding[] {

@@ -1,5 +1,5 @@
 use crate::ffi;
-use std::ffi::{c_char, CStr, CString};
+use std::ffi::{c_char, c_int, CStr, CString};
 use serde::{Deserialize, Serialize};
 
 pub struct Arctracker {
@@ -85,6 +85,7 @@ pub struct Module {
     pub num_channels: i32,
     pub tune_length: i32,
     pub num_samples: i32,
+    pub num_patterns: i32,
     pub samples: Vec<Sample>,
 }
 
@@ -236,6 +237,7 @@ impl Arctracker {
             num_channels: module.num_channels,
             tune_length: module.tune_length,
             num_samples: module.num_samples,
+            num_patterns: module.num_patterns,
             samples,
         })
     }
@@ -261,6 +263,7 @@ impl Arctracker {
             num_channels: module.num_channels,
             tune_length: module.tune_length,
             num_samples: module.num_samples,
+            num_patterns: module.num_patterns,
             samples,
         })
     }
@@ -313,6 +316,7 @@ impl Arctracker {
             num_channels: module_info.num_channels,
             tune_length: module_info.tune_length,
             num_samples: module_info.num_samples,
+            num_patterns: module_info.num_patterns,
             samples: Vec::new(),
         })
     }
@@ -541,6 +545,39 @@ impl Arctracker {
                 message: c_string_to_rust(&result.error_message),
             })
         }
+    }
+
+    pub fn edit_get_sequence(&mut self, sequence_len: i32) -> Result<Vec<i32>, ArctrackerError> {
+        let mut sequence = vec![0 as c_int; sequence_len as usize];
+        let result = unsafe {
+            ffi::arctracker_edit_get_sequence(
+                self.handle,
+                sequence.as_mut_ptr(),
+                sequence_len,
+            )
+        };
+        if !result.success {
+            return Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            });
+        }
+        Ok(sequence.into_iter().map(|x| x as i32).collect())
+    }
+
+    pub fn edit_set_sequence(&mut self, new_sequence: &[i32]) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_set_sequence(
+                self.handle,
+                new_sequence.as_ptr(),
+                new_sequence.len() as c_int,
+            )
+        };
+        if !result.success {
+            return Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            });
+        }
+        Ok(())
     }
 
     pub fn edit_set_event(&mut self, pattern_no: i32, pattern_index: i32, channel_no: i32, new_event: PatternEvent) -> Result<(), ArctrackerError> {

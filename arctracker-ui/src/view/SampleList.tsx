@@ -7,7 +7,7 @@ export default function SampleList() {
   const selectedSample = useStore((state) => state.selectedSample);
   const { setSelectedSample } = useStore.getState();
   return (
-    <div className="sampleList uiArea">
+    <div className="sampleList uiArea padded">
       {samples
         .map((sample, index) => ({ sample, index }))
         .filter(({ sample }) => sample.sampleLength > 0)

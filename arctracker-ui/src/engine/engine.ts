@@ -7,6 +7,7 @@ export interface Module {
   name: string;
   author: string;
   numChannels: number;
+  numPatterns: number;
   tuneLength: number;
   numSamples: number;
   samples: Sample[];
@@ -32,13 +33,13 @@ export interface TransportState {
 }
 
 export interface ExportState {
-  completed: boolean,
-  percentComplete: number,
+  completed: boolean;
+  percentComplete: number;
 }
 
 export interface Effect {
-  effectCode: string,
-  effectData: number[],
+  effectCode: string;
+  effectData: number[];
 }
 
 export interface PatternEvent {
@@ -64,9 +65,13 @@ export function eventsEqual(a: PatternEvent, b: PatternEvent): boolean {
   );
 }
 
+export function sequencesEqual(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
+
 export interface PatternLine {
-  row: number,
-  events: PatternEvent[],
+  row: number;
+  events: PatternEvent[];
 }
 
 function shutdownApp() {
@@ -153,7 +158,9 @@ export const engine = {
     return await invoke("poll_export_events");
   },
 
-  defaultExportPath: async (modulePath: string): Promise<string | undefined> => {
+  defaultExportPath: async (
+    modulePath: string,
+  ): Promise<string | undefined> => {
     return await invoke("default_export_path", {
       modulePath,
     });
@@ -179,7 +186,11 @@ export const engine = {
     });
   },
 
-  getEvent: async (patternNo: number, patternIndex: number, channelNo: number): Promise<PatternEvent> => {
+  getEvent: async (
+    patternNo: number,
+    patternIndex: number,
+    channelNo: number,
+  ): Promise<PatternEvent> => {
     return await invoke("edit_get_event", {
       patternNo,
       patternIndex,
@@ -187,12 +198,29 @@ export const engine = {
     });
   },
 
-  setEvent: async (patternNo: number, patternIndex: number, channelNo: number, newEvent: PatternEvent) => {
+  setEvent: async (
+    patternNo: number,
+    patternIndex: number,
+    channelNo: number,
+    newEvent: PatternEvent,
+  ) => {
     return await invoke("edit_set_event", {
       patternNo,
       patternIndex,
       channelNo,
       newEvent,
+    });
+  },
+
+  getSequence: async (expectedSequenceLen: number): Promise<number[]> => {
+    return await invoke("edit_get_sequence", {
+      expectedSequenceLen,
+    });
+  },
+
+  setSequence: async (newSequence: number[]) => {
+    return await invoke("edit_set_sequence", {
+      newSequence,
     });
   },
 };

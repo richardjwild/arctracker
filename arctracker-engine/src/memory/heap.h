@@ -11,6 +11,8 @@ typedef enum {
 
 void *allocate_array(resource_group_t, int no_elements, size_t element_size);
 
+void *reallocate_array(resource_group_t resource_group, void *array_before, int no_elements, size_t element_size);
+
 void deallocate(resource_group_t, void *);
 
 int resource_count_for(resource_group_t);

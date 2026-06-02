@@ -27,6 +27,7 @@ export enum CommandType {
   PATTERN_GRID_DOWN,
   INCREASE_EFFECTS_DISPLAYED,
   DECREASE_EFFECTS_DISPLAYED,
+  SEQUENCE_SEEK,
   SEQUENCE_SEEK_FORWARDS,
   SEQUENCE_SEEK_BACKWARDS,
   PATTERN_GRID_STRIDE_DOWN,
@@ -50,6 +51,8 @@ export enum CommandType {
   PASTE_PATTERN,
   UNDO_EDIT,
   REDO_EDIT,
+  INCREMENT_PATTERN_AT_CURRENT_POSITION,
+  DECREMENT_PATTERN_AT_CURRENT_POSITION,
 }
 
 export type Command =
@@ -59,6 +62,7 @@ export type Command =
   | { type: CommandType.TOGGLE_PLAY }
   | { type: CommandType.TOGGLE_LOOP }
   | { type: CommandType.TOGGLE_EDIT }
+  | { type: CommandType.SEQUENCE_SEEK; position: number }
   | { type: CommandType.SEQUENCE_SEEK_FORWARDS }
   | { type: CommandType.SEQUENCE_SEEK_BACKWARDS }
   | { type: CommandType.PATTERN_GRID_LEFT; extendSelection: boolean }
@@ -105,7 +109,9 @@ export type Command =
   | { type: CommandType.CUT_PATTERN }
   | { type: CommandType.PASTE_PATTERN }
   | { type: CommandType.UNDO_EDIT }
-  | { type: CommandType.REDO_EDIT };
+  | { type: CommandType.REDO_EDIT }
+  | { type: CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION }
+  | { type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION };
 
 const queue: Command[] = [];
 
@@ -127,6 +133,8 @@ export const commands = {
   togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
   toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
   toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),
+  sequenceSeek: (position: number) =>
+    commandQueue.push({ type: CommandType.SEQUENCE_SEEK, position }),
   sequenceSeekForwards: () =>
     commandQueue.push({ type: CommandType.SEQUENCE_SEEK_FORWARDS }),
   sequenceSeekBackwards: () =>
@@ -200,4 +208,12 @@ export const commands = {
   pastePattern: () => commandQueue.push({ type: CommandType.PASTE_PATTERN }),
   undoEdit: () => commandQueue.push({ type: CommandType.UNDO_EDIT }),
   redoEdit: () => commandQueue.push({ type: CommandType.REDO_EDIT }),
+  incrementPatternAtCurrentPosition: () =>
+    commandQueue.push({
+      type: CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION,
+    }),
+  decrementPatternAtCurrentPosition: () =>
+    commandQueue.push({
+      type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION,
+    }),
 };

@@ -86,6 +86,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->num_channels = module->num_channels;
     module_info->tune_length = module->tune_length;
     module_info->num_samples = module->num_samples;
+    module_info->num_patterns = module->num_patterns;
 }
 
 void module_get_sample_info(module_t *module, int sample_no, ui_sample_info_t *sample_info)

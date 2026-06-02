@@ -24,6 +24,7 @@ typedef struct ui_module_info {
     int num_channels;
     int tune_length;
     int num_samples;
+    int num_patterns;
 } ui_module_info_t;
 
 typedef struct ui_effect {

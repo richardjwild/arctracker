@@ -1,15 +1,17 @@
 import { useStore } from "../store/useStore.ts";
-import { engine, eventsEqual, PatternEvent } from "../engine/engine.ts";
+import {engine, eventsEqual, PatternEvent, sequencesEqual} from "../engine/engine.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 
 export type EditorState = {
   editing: boolean;
   cursorPosition: CursorPosition;
+  sequencePosition: number;
   effectsDisplayed: number[];
 };
 
 export enum EditType {
   EventEdit,
+  SequenceEdit,
   CompoundEventEdit,
 }
 
@@ -22,12 +24,21 @@ export type EventEditCommand = {
   after: PatternEvent;
 };
 
+export type SequenceEditCommand = {
+  type: EditType.SequenceEdit;
+  before: number[];
+  after: number[];
+};
+
 export type CompoundEventEditCommand = {
   type: EditType.CompoundEventEdit;
   eventEdits: EventEditCommand[];
 };
 
-export type EditCommand = EventEditCommand | CompoundEventEditCommand;
+export type EditCommand =
+  | EventEditCommand
+  | SequenceEditCommand
+  | CompoundEventEditCommand;
 
 const undoStack: EditCommand[] = [];
 const redoStack: EditCommand[] = [];
@@ -40,6 +51,15 @@ async function applyEventEdit(command: EventEditCommand): Promise<boolean> {
       command.track,
       command.after,
     );
+    return true;
+  }
+  return false;
+}
+
+async function applySequenceEdit(command: SequenceEditCommand): Promise<boolean> {
+  if (!sequencesEqual(command.before, command.after)) {
+    await engine.setSequence(command.after);
+    useStore.getState().setSequence(command.after);
     return true;
   }
   return false;
@@ -81,8 +101,7 @@ export const editor = {
   },
 
   cancelPatternEdit: () => {
-    const { editorState, setEditorState } =
-        useStore.getState();
+    const { editorState, setEditorState } = useStore.getState();
     setEditorState({
       ...editorState,
       editing: false,
@@ -122,6 +141,9 @@ export const editor = {
       if (command.type === EditType.EventEdit) {
         revised = await applyEventEdit(command);
       }
+      if (command.type === EditType.SequenceEdit) {
+        revised = await applySequenceEdit(command);
+      }
       if (command.type === EditType.CompoundEventEdit) {
         revised = await applyCompoundEventEdit(command);
       }
@@ -141,6 +163,13 @@ export const editor = {
     try {
       if (command.type === EditType.EventEdit) {
         await applyEventEdit({
+          ...command,
+          before: command.after,
+          after: command.before,
+        });
+      }
+      if (command.type === EditType.SequenceEdit) {
+        await applySequenceEdit({
           ...command,
           before: command.after,
           after: command.before,
@@ -169,6 +198,9 @@ export const editor = {
     try {
       if (command.type === EditType.EventEdit) {
         await applyEventEdit(command);
+      }
+      if (command.type === EditType.SequenceEdit) {
+        await applySequenceEdit(command);
       }
       if (command.type === EditType.CompoundEventEdit) {
         await applyCompoundEventEdit(command);

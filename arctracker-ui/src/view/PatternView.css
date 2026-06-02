@@ -4,7 +4,7 @@
     overflow: hidden;
     font-family: FiraCode, monospace;
     color: #00bb99;
-    padding: 0!important;
+    padding: 0;
 }
 
 .patternView canvas {

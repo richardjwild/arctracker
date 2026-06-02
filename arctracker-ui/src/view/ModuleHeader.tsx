@@ -73,7 +73,7 @@ export default function ModuleHeader() {
   };
 
   return (
-    <div className="moduleHeader uiArea">
+    <div className="moduleHeader uiArea padded">
       <button
         title="Load module"
         className="loadButton"
