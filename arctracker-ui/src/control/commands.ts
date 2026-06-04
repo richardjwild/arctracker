@@ -53,6 +53,9 @@ export enum CommandType {
   REDO_EDIT,
   INCREMENT_PATTERN_AT_CURRENT_POSITION,
   DECREMENT_PATTERN_AT_CURRENT_POSITION,
+  INSERT_SEQUENCE_POSITION_BEFORE,
+  INSERT_SEQUENCE_POSITION_AFTER,
+  DELETE_SEQUENCE_POSITION,
 }
 
 export type Command =
@@ -111,7 +114,16 @@ export type Command =
   | { type: CommandType.UNDO_EDIT }
   | { type: CommandType.REDO_EDIT }
   | { type: CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION }
-  | { type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION };
+  | { type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION }
+  | {
+      type: CommandType.INSERT_SEQUENCE_POSITION_BEFORE;
+      createNewPattern: boolean;
+    }
+  | {
+      type: CommandType.INSERT_SEQUENCE_POSITION_AFTER;
+      createNewPattern: boolean;
+    }
+  | { type: CommandType.DELETE_SEQUENCE_POSITION };
 
 const queue: Command[] = [];
 
@@ -216,4 +228,16 @@ export const commands = {
     commandQueue.push({
       type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION,
     }),
+  insertSequencePositionBefore: (createNewPattern: boolean = false) =>
+    commandQueue.push({
+      type: CommandType.INSERT_SEQUENCE_POSITION_BEFORE,
+      createNewPattern,
+    }),
+  insertSequencePositionAfter: (createNewPattern: boolean = false) =>
+    commandQueue.push({
+      type: CommandType.INSERT_SEQUENCE_POSITION_AFTER,
+      createNewPattern,
+    }),
+  deleteSequencePosition: () =>
+    commandQueue.push({ type: CommandType.DELETE_SEQUENCE_POSITION }),
 };

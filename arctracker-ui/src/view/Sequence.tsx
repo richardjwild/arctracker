@@ -4,15 +4,16 @@ import { engine } from "../engine/engine.ts";
 import "./Sequence.css";
 import useSyncSequenceWithTransport from "../hooks/useSyncSequenceWithTransport.ts";
 import { commands } from "../control/commands.ts";
+import useSequencePosition from "../hooks/useSequencePosition.ts";
 
 export default function Sequence() {
   const moduleId = useStore((state) => state.moduleId);
   const tuneLength = useStore((state) => state.module.tuneLength);
-  const moduleRevision = useStore((state) => state.moduleRevision);
-  const sequence = useStore((state) => state.sequence);
-  const sequencePos = useStore((state) => state.transportState.sequencePos);
+  const sequenceRevision = useStore((state) => state.sequenceRevision);
+  const moduleSequence = useStore((state) => state.sequence);
   const playing = useStore((state) => state.transportState.playing);
   const numPatterns = useStore((state) => state.module.numPatterns);
+  const { sequencePos } = useSequencePosition();
 
   const digits = Math.max(2, String(numPatterns - 1).length);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -31,7 +32,7 @@ export default function Sequence() {
     engine.getSequence(tuneLength).then((sequence) => {
       useStore.getState().setSequence(sequence);
     });
-  }, [moduleId, tuneLength, moduleRevision]);
+  }, [moduleId, tuneLength, sequenceRevision]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -47,7 +48,7 @@ export default function Sequence() {
     if (cellRef.current) {
       setCellWidth(cellRef.current.offsetWidth);
     }
-  }, [digits, sequence.length]);
+  }, [digits, moduleSequence.length]);
 
   useEffect(() => {
     setFirstVisiblePos((current) => {
@@ -61,15 +62,67 @@ export default function Sequence() {
 
   useSyncSequenceWithTransport();
 
-  const visibleSequence = sequence.slice(
+  const visibleSequence = moduleSequence.slice(
     firstVisiblePos,
     firstVisiblePos + visibleCount,
+  );
+
+  const InsertBeforeIcon = () => (
+    <>
+      <svg
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M4 9v6M1 12h6" />
+        <rect x="9" y="6" width="12" height="12" rx="1" />
+      </svg>
+      <span className="visually-hidden">Insert before</span>
+    </>
+  );
+
+  const InsertAfterIcon = () => (
+    <>
+      <svg
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <rect x="3" y="6" width="12" height="12" rx="1" />
+        <path d="M20 9v6M17 12h6" />
+      </svg>
+      <span className="visually-hidden">Insert after</span>
+    </>
+  );
+
+  const DeleteIcon = () => (
+    <>
+      <svg
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <rect x="6" y="6" width="12" height="12" rx="1" />
+        <path d="M9 9 L15 15 M15 9 L9 15" />
+      </svg>
+      <span className="visually-hidden">Delete</span>
+    </>
   );
 
   const IncrementPatternButton = () => {
     return (
       <button
         type="button"
+        disabled={playing}
         className={`changePatternButton increment ${playing ? "disabled" : "enabled"}`}
         onClick={commands.incrementPatternAtCurrentPosition}
       >
@@ -90,6 +143,7 @@ export default function Sequence() {
     return (
       <button
         type="button"
+        disabled={playing}
         className={`changePatternButton decrement ${playing ? "disabled" : "enabled"}`}
         onClick={commands.decrementPatternAtCurrentPosition}
       >
@@ -118,6 +172,7 @@ export default function Sequence() {
           <IncrementPatternButton />
           <button
             type="button"
+            title="Increment pattern at this position"
             className="sequencePos current"
             style={{ "--sequence-digits": digits } as React.CSSProperties}
             ref={visibleIndex === 0 ? cellRef : undefined}
@@ -131,6 +186,7 @@ export default function Sequence() {
       return (
         <button
           type="button"
+          title="Decrement pattern at this position"
           key={absolutePos}
           className="sequencePos"
           style={{ "--sequence-digits": digits } as React.CSSProperties}
@@ -143,10 +199,41 @@ export default function Sequence() {
   };
 
   return (
-    <div className="sequenceView uiArea" ref={containerRef}>
-      {visibleSequence.map((patternNo, index) =>
-        renderSequencePosition(patternNo, firstVisiblePos + index, index),
-      )}
+    <div className="sequenceView uiArea">
+      <div className="sequence" ref={containerRef}>
+        {visibleSequence.map((patternNo, index) =>
+          renderSequencePosition(patternNo, firstVisiblePos + index, index),
+        )}
+      </div>
+      <div className="sequenceEditButtons">
+        <button
+          type="button"
+          title="Insert new position before current"
+          disabled={playing}
+          className={playing ? "disabled" : "enabled"}
+          onClick={() => commands.insertSequencePositionBefore(false)}
+        >
+          <InsertBeforeIcon />
+        </button>
+        <button
+          type="button"
+          title="Insert new position after current"
+          disabled={playing}
+          className={playing ? "disabled" : "enabled"}
+          onClick={() => commands.insertSequencePositionAfter(false)}
+        >
+          <InsertAfterIcon />
+        </button>
+        <button
+          type="button"
+          title="Delete position at current"
+          disabled={playing}
+          className={playing ? "disabled" : "enabled"}
+          onClick={commands.deleteSequencePosition}
+        >
+          <DeleteIcon />
+        </button>
+      </div>
     </div>
   );
 }

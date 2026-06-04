@@ -108,8 +108,14 @@ function getPatternLayout(): PatternLayout {
   };
 }
 
+function cssColour(name: string): string {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+}
+
 interface Colours {
-  background: string;
+  trackLaneSeparator: string;
   playheadBackground: string;
   text: string,
   cursor: string,
@@ -121,30 +127,34 @@ interface Colours {
   selectionBoxOutline: string,
 }
 
+const coloursAtPlayhead = {
+  trackLaneSeparator: cssColour("--colour-track-lane-separator"),
+  playheadBackground: cssColour("--colour-playhead"),
+  text: cssColour("--colour-pattern-text-bright"),
+  cursor: cssColour("--colour-cursor"),
+  cursorText: cssColour("--colour-cursor-text"),
+  note: cssColour("--colour-note-at-playhead"),
+  sample: cssColour("--colour-sample-at-playhead"),
+  effect: cssColour("--colour-effect-at-playhead"),
+  selectionBox: cssColour("--colour-selection-fill"),
+  selectionBoxOutline: cssColour("--colour-selection-outline"),
+};
+
+const coloursOffPlayhead = {
+  trackLaneSeparator: cssColour("--colour-track-lane-separator"),
+  playheadBackground: cssColour("--colour-playhead"),
+  text: cssColour("--colour-pattern-text-muted"),
+  cursor: cssColour("--colour-cursor"),
+  cursorText: cssColour("--colour-cursor-text"),
+  note: cssColour("--colour-note"),
+  sample: cssColour("--colour-sample"),
+  effect: cssColour("--colour-effect"),
+  selectionBox: cssColour("--colour-selection-fill"),
+  selectionBoxOutline: cssColour("--colour-selection-outline"),
+};
+
 function colours(atPlayhead: boolean = false): Colours {
-  return atPlayhead ? {
-    background: "#171717",
-    playheadBackground: "#333333",
-    text: "#ffffff",
-    cursor: "#00ff00",
-    cursorText: "#003300",
-    note: "#00ffee",
-    sample: "#eeee33",
-    effect: "#ffbb00",
-    selectionBox: "rgba(80, 140, 255, 0.25)",
-    selectionBoxOutline: "rgba(80, 140, 255, 0.5)",
-  } : {
-    background: "#171717",
-    playheadBackground: "#333333",
-    text: "#777777",
-    cursor: "#00ff00",
-    cursorText: "#003300",
-    note: "#00ddcc",
-    sample: "#cccc77",
-    effect: "#dd9900",
-    selectionBox: "rgba(80, 140, 255, 0.25)",
-    selectionBoxOutline: "rgba(80, 140, 255, 0.5)",
-  };
+  return atPlayhead ? coloursAtPlayhead : coloursOffPlayhead;
 }
 
 export class PatternRenderer {
@@ -194,12 +204,10 @@ export class PatternRenderer {
   }
 
   private renderTrackLanes() {
-    let x = this.renderRowNumberLane(0);
-    for (let channel = 0; channel < this.numChannels; channel++) {
+    let x = this.renderRowNumberLane();
+    for (let channel = 0; channel <= this.numChannels; channel++) {
       x += this.renderTrackLane(x, channel);
     }
-    this.withFillStyle(colours().background)
-      .fillRect(x, 0, this.viewportSize.width - x, this.viewportSize.height);
   }
 
   private renderPlayhead(gridViewportFit: GridViewportFit) {
@@ -267,16 +275,16 @@ export class PatternRenderer {
     }
   }
 
-  private renderRowNumberLane(x: number): number {
+  private renderRowNumberLane(): number {
     const laneWidth = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
-    this.withFillStyle(colours().background)
-      .fillRect(x, 0, laneWidth - 1, this.viewportSize.height);
+    this.withStrokeStyle(colours().trackLaneSeparator)
+      .renderLine(laneWidth, 0, laneWidth, this.viewportSize.height);
     return laneWidth;
   }
 
   private renderTrackLane(x: number, channel: number): number {
-    this.withFillStyle(colours().background)
-      .fillRect(x, 0, this.patternLayout.getEventWidth(channel) - 1, this.viewportSize.height);
+    this.withStrokeStyle(colours().trackLaneSeparator)
+      .renderLine(x, 0, x, this.viewportSize.height);
     return this.patternLayout.getEventWidth(channel);
   }
 
@@ -398,6 +406,14 @@ export class PatternRenderer {
 
   private strokeRect(x: number, y: number, width: number, height: number): PatternRenderer {
     this.ctx.strokeRect(x, y, width, height);
+    return this;
+  }
+
+  private renderLine(startX: number, startY: number, endX: number, endY: number): PatternRenderer {
+    this.ctx.beginPath();
+    this.ctx.moveTo(startX, startY);
+    this.ctx.lineTo(endX, endY);
+    this.ctx.stroke();
     return this;
   }
 

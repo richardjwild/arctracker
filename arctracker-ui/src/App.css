@@ -10,8 +10,8 @@
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
-  color: white;
-  background: #333333;
+  color: var(--colour-text);
+  background: var(--colour-ui-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -34,7 +34,7 @@
 }
 
 .uiArea {
-  background: #171717;
+  background: var(--colour-panel-bg);
   border-radius: 10px;
 }
 

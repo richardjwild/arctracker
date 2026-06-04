@@ -78,7 +78,8 @@ typedef struct
     int num_channels;
     int *initial_panning;
     int num_patterns;
-    pattern_t **patterns;
+    pattern_t *patterns;
+    int pattern_capacity;
     int num_samples;
     sample_t *samples;
     int initial_speed;
@@ -91,7 +92,7 @@ module_t *module_create(int num_channels, int sequence_len, int num_patterns, in
 
 bool module_init(module_t *module);
 
-bool module_create_pattern(module_t *module, int pattern_index, int num_lines);
+bool module_create_pattern(module_t *module, int pattern_no, int num_lines);
 
 void module_destroy(module_t *module);
 

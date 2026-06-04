@@ -121,6 +121,11 @@ extern "C" {
         sample_no: c_int,
         sample_info: *mut UiSampleInfo,
     ) -> ApiResult;
+    pub fn arctracker_get_pattern_lengths(
+        handle: *mut ArctrackerHandle,
+        pattern_lengths: *mut c_int,
+        num_patterns: c_int
+    ) -> ApiResult;
     pub fn arctracker_player_start(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_player_cmd(
         handle: *mut ArctrackerHandle,

@@ -5,9 +5,12 @@
 #include "memory/heap.h"
 
 #define MIN_SEQUENCE_CAPACITY 1024
+#define MIN_PATTERN_CAPACITY 1024
+#define MAX_PATTERN_LENGTH 1000
 
 static edit_result_t get_event(module_t *, int, int, int, event_t **);
 static edit_result_t ensure_sequence_capacity(module_t *, int);
+static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns);
 static edit_result_t failure(char *);
 
 edit_result_t editor_get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t *event_buffer)
@@ -52,6 +55,20 @@ edit_result_t editor_set_sequence(module_t *module, const int *new_sequence, con
     return EDIT_SUCCESS;
 }
 
+edit_result_t editor_create_pattern(module_t *module, const int pattern_length, int *new_pattern_no)
+{
+    if (pattern_length < 1 || pattern_length > MAX_PATTERN_LENGTH)
+        return failure(INVALID_PATTERN_LENGTH);
+    edit_result_t result = ensure_pattern_capacity(module, module->num_patterns + 1);
+    if (!result.success)
+        return result;
+    *new_pattern_no = module->num_patterns;
+    if (!module_create_pattern(module, *new_pattern_no, pattern_length))
+        return failure(MEMORY_ALLOCATION_FAILED);
+    module->num_patterns++;
+    return EDIT_SUCCESS;
+}
+
 static edit_result_t get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t **event)
 {
     *event = NULL;
@@ -63,12 +80,10 @@ static edit_result_t get_event(module_t *module, int pattern_no, int pattern_ind
         return failure(INVALID_CHANNEL_NUMBER);
     if (module->patterns == NULL)
         return failure(NO_PATTERN_DATA);
-    pattern_t *pattern = module->patterns[pattern_no];
-    if (pattern == NULL || pattern->events == NULL)
-        return failure(INVALID_PATTERN_NUMBER);
-    if (pattern_index < 0 || pattern_index >= pattern->num_lines)
+    pattern_t pattern = module->patterns[pattern_no];
+    if (pattern_index < 0 || pattern_index >= pattern.num_lines)
         return failure(INVALID_PATTERN_INDEX);
-    *event = pattern->events + (pattern_index * module->num_channels) + channel_no;
+    *event = pattern.events + (pattern_index * module->num_channels) + channel_no;
     return EDIT_SUCCESS;
 }
 
@@ -84,6 +99,21 @@ static edit_result_t ensure_sequence_capacity(module_t *module, int sequence_len
         return failure(MEMORY_ALLOCATION_FAILED);
     module->sequence = new_sequence;
     module->sequence_capacity = required_capacity;
+    return EDIT_SUCCESS;
+}
+
+static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns)
+{
+    if (module->pattern_capacity >= num_patterns)
+        return EDIT_SUCCESS;
+    int required_capacity = module->pattern_capacity;
+    while (required_capacity < num_patterns)
+        required_capacity += MIN_PATTERN_CAPACITY;
+    pattern_t *new_patterns = reallocate_array(MODULE, module->patterns, required_capacity, sizeof(pattern_t));
+    if (new_patterns == NULL)
+        return failure(MEMORY_ALLOCATION_FAILED);
+    module->patterns = new_patterns;
+    module->pattern_capacity = required_capacity;
     return EDIT_SUCCESS;
 }
 

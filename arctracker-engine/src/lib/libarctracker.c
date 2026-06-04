@@ -108,6 +108,22 @@ api_result_t arctracker_module_create(arctracker_t *arctracker, int num_channels
     return SUCCESS;
 }
 
+api_result_t arctracker_get_pattern_lengths(arctracker_t *arctracker, int *pattern_lengths, int num_patterns)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (pattern_lengths == NULL)
+        return failure(BAD_PATTERN_LENGTH_BUFFER);
+    const module_t *module = arctracker->module;
+    if (num_patterns != module->num_patterns)
+        return failure(INVALID_PATTERN_COUNT);
+    for (int pattern = 0; pattern < num_patterns; pattern++)
+        pattern_lengths[pattern] = module->patterns[pattern].num_lines;
+    return SUCCESS;
+}
+
 api_result_t arctracker_player_start(arctracker_t *arctracker)
 {
     if (arctracker == NULL)
@@ -196,7 +212,7 @@ static void get_transport_state(player_t *player, module_t *module, ui_transport
     transport_state->sequence_pos = sequence.sequence_pos;
     transport_state->pattern_index = sequence.pattern_index;
     transport_state->pattern_no = pattern_no;
-    transport_state->pattern_length = module->patterns[pattern_no]->num_lines;
+    transport_state->pattern_length = module->patterns[pattern_no].num_lines;
 }
 
 void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_channels)
@@ -210,14 +226,14 @@ void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern
     const module_t *module = arctracker->module;
     if (pattern_no < 0 || pattern_no >= module->num_patterns)
         return;
-    const pattern_t *pattern = module->patterns[pattern_no];
-    if (pattern == NULL || pattern->events == NULL)
+    const pattern_t pattern = module->patterns[pattern_no];
+    if (pattern.events == NULL)
         return;
-    event_t *events = pattern->events;
+    event_t *events = pattern.events;
     ui_pattern_event_t *line_buffer = pattern_buffer;
     for (int line = 0; line < requested_lines; line++)
     {
-        if (line < pattern->num_lines)
+        if (line < pattern.num_lines)
             copy_pattern_line(line_buffer, events, requested_channels, module->num_channels);
         line_buffer += requested_channels;
         events += module->num_channels;
@@ -385,7 +401,26 @@ api_result_t arctracker_edit_set_sequence(arctracker_t *arctracker, const int *n
         return failure(BAD_SEQUENCE_BUFFER);
     if (new_sequence_len <= 0)
         return failure(INVALID_SEQUENCE_LENGTH);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
     edit_result_t result = editor_set_sequence(arctracker->module, new_sequence, new_sequence_len);
+    if (!result.success)
+        return failure(result.error_message);
+    player_sequence_changed(arctracker->playback.player, arctracker->module);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_create_pattern(arctracker_t *arctracker, const int pattern_length, int *new_pattern_no)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (pattern_length < 1)
+        return failure(INVALID_PATTERN_LENGTH);
+    if (new_pattern_no == NULL)
+        return failure(BAD_BUFFER);
+    edit_result_t result = editor_create_pattern(arctracker->module, pattern_length, new_pattern_no);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;

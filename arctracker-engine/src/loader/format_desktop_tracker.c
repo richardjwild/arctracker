@@ -184,7 +184,7 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
             for (int channel = 0; channel < module->num_channels; channel++)
             {
                 const int event_index = (line * module->num_channels) + channel;
-                event_t *event = module->patterns[pno]->events + event_index;
+                event_t *event = module->patterns[pno].events + event_index;
                 raw_pattern_data += decode_desktop_tracker_event(raw_pattern_data, event);
             }
         }

@@ -12,6 +12,7 @@
 #define NO_PATTERN_DATA "No pattern data in module"
 #define BAD_SAMPLE_NUMBER "Invalid sample number or slot not filled"
 #define PLAYER_ALREADY_RUNNING "Player is already running"
+#define PLAYER_PLAYING "Player is currently playing"
 #define PLAYER_NOT_RUNNING "Player is not running"
 #define EXPORT_NOT_STARTED "No export job was started"
 #define PLAYER_INIT_FAILED "Failed to initialize player"
@@ -31,5 +32,8 @@
 #define BAD_EVENT_BUFFER "Invalid event buffer"
 #define BAD_SEQUENCE_BUFFER "Invalid sequence buffer"
 #define INVALID_SEQUENCE_LENGTH "Invalid sequence length"
-
+#define BAD_PATTERN_LENGTH_BUFFER "Invalid pattern length buffer"
+#define INVALID_PATTERN_COUNT "Invalid number of patterns"
+#define INVALID_PATTERN_LENGTH "Invalid pattern length"
+#define BAD_BUFFER "Invalid buffer pointer"
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

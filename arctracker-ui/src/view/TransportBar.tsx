@@ -111,7 +111,7 @@ export default function TransportBar() {
   const playing = useStore((state) => state.transportState.playing);
   const looping = useStore((state) => state.transportState.looping);
   const sequencePos = useStore((state) => state.transportState.sequencePos);
-  const tuneLength = useStore((state) => state.module.tuneLength);
+  const tuneLength = useStore((state) => state.sequence.length);
 
   return (
     <div className="transportBar uiArea padded">
@@ -119,16 +119,32 @@ export default function TransportBar() {
         title="Play/pause"
         onClick={() => commands.togglePlay()}
         aria-label="Play/Pause"
+        className="playPause"
       >
         {playing ? <PauseIcon /> : <PlayIcon />}
       </button>
-      <button title="Repeat on/off" onClick={() => commands.toggleLoop()} aria-label="Repeat on/off">
+      <button
+        title="Repeat on/off"
+        onClick={() => commands.toggleLoop()}
+        aria-label="Repeat on/off"
+        className="repeatOnOff"
+      >
         {looping ? <TurnRepeatOffIcon /> : <TurnRepeatOnIcon />}
       </button>
-      <button title="Seek forwards" onClick={() => commands.sequenceSeekForwards()} aria-label="Fast forward">
+      <button
+        title="Seek forwards"
+        onClick={() => commands.sequenceSeekForwards()}
+        aria-label="Fast forward"
+        className="fastForward"
+      >
         <FastForwardIcon />
       </button>
-      <button title="Seek backwards" onClick={() => commands.sequenceSeekBackwards()} aria-label="Rewind">
+      <button
+        title="Seek backwards"
+        onClick={() => commands.sequenceSeekBackwards()}
+        aria-label="Rewind"
+        className="rewind"
+      >
         <RewindIcon />
       </button>
       {/*<button title="Record MIDI" onClick={() => {}} aria-label="Record">*/}

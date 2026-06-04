@@ -218,7 +218,7 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
             for (int channel = 0; channel < module->num_channels; channel++)
             {
                 const int event_index = (line * module->num_channels) + channel;
-                event_t *event = module->patterns[pno]->events + event_index;
+                event_t *event = module->patterns[pno].events + event_index;
                 raw_pattern_data += decode_tracker_event(raw_pattern_data, event);
             }
         }

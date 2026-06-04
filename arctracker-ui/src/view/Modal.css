@@ -11,12 +11,12 @@
 .modalDialog {
     width: 160px;
     height: 50px;
-    background: #222222;
-    border: 1px solid #555555;
+    background: var(--colour-modal-background);
+    border: 1px solid var(--colour-modal-border);
     border-radius: 8px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     padding: 20px;
     font-family: sans-serif;
     z-index: 1001;
-    color: #dddddd;
+    color: var(--colour-text);
 }

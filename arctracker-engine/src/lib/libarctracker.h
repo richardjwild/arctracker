@@ -21,6 +21,8 @@ api_result_t arctracker_module_load(arctracker_t *handle, char *mod_filename, ui
 
 api_result_t arctracker_get_sample_info(arctracker_t *handle, int sample_no, ui_sample_info_t *sample_info);
 
+api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_lengths, int num_patterns);
+
 api_result_t arctracker_module_create(arctracker_t *handle, int num_channels, ui_module_info_t *module_info);
 
 api_result_t arctracker_player_start(arctracker_t *handle);
@@ -50,6 +52,8 @@ api_result_t arctracker_edit_set_event(arctracker_t *handle, int pattern_no, int
 api_result_t arctracker_edit_get_sequence(arctracker_t *handle, int *sequence, int expected_sequence_len);
 
 api_result_t arctracker_edit_set_sequence(arctracker_t *handle, const int *new_sequence, int new_sequence_len);
+
+api_result_t arctracker_edit_create_pattern(arctracker_t *handle, int pattern_length, int *new_pattern_no);
 
 api_result_t arctracker_destroy(arctracker_t *handle);
 

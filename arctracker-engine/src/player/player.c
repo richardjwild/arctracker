@@ -93,6 +93,11 @@ void player_shutdown(player_t *player)
     player->running = false;
 }
 
+void player_sequence_changed(player_t *player, module_t *module)
+{
+    player->sequence = reinitialise_sequence(module, &player->sequence, false);
+}
+
 void player_destroy(player_t *player)
 {
     command_queue_destroy(player->command_queue);
@@ -200,8 +205,8 @@ static event_t *get_events(const player_t *player)
     const int num_channels = player->module->num_channels;
     const sequence_t *sequence = &player->sequence;
     const int pattern_no = sequence->sequence[sequence->sequence_pos];
-    const pattern_t *pattern = player->module->patterns[pattern_no];
-    return pattern->events + (sequence->pattern_index * num_channels);
+    const pattern_t pattern = player->module->patterns[pattern_no];
+    return pattern.events + (sequence->pattern_index * num_channels);
 }
 
 static bool audio_consume(player_t *player)

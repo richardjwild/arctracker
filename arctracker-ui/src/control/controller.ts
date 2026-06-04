@@ -16,13 +16,23 @@ function processCommands() {
   for (const command of commands) {
     switch (command.type) {
       case CommandType.CREATE_MODULE:
-        void module.create(command.numChannels);
-        // Don't execute any more commands if we are creating a new module.
-        return;
+        let moduleCreated = false;
+        module.create(command.numChannels).then((success) => {
+          editor.clearUndoBuffer();
+          moduleCreated = success;
+        });
+        // Don't execute any more commands if we have created a new module.
+        if (moduleCreated) return;
+        break;
       case CommandType.LOAD_FILE:
-        void module.load();
-        // Don't execute any more commands if we are loading a new module.
-        return;
+        let moduleLoaded = false;
+        module.load().then((success) => {
+          editor.clearUndoBuffer();
+          moduleLoaded = success;
+        });
+        // Don't execute any more commands if we have loaded a new module.
+        if (moduleLoaded) return;
+        break;
       case CommandType.EXPORT_AUDIO:
         void audioExport.start();
         break;
@@ -39,15 +49,18 @@ function processCommands() {
         break;
       case CommandType.SEQUENCE_SEEK:
         selection.clearPatternSelection();
-        transport.sequenceSeek(command.position);
+        if (transport.playing()) transport.sequenceSeek(command.position)
+        else sequence.updatePosition(command.position);
         break;
       case CommandType.SEQUENCE_SEEK_FORWARDS:
         selection.clearPatternSelection();
-        transport.sequenceSeekForwards();
+        if (transport.playing()) transport.sequenceSeekForwards()
+        else sequence.advance();
         break;
       case CommandType.SEQUENCE_SEEK_BACKWARDS:
         selection.clearPatternSelection();
-        transport.sequenceSeekBackwards();
+        if (transport.playing()) transport.sequenceSeekBackwards()
+        else sequence.reverse();
         break;
       case CommandType.PATTERN_GRID_DOWN:
         selection.navigateGrid(
@@ -167,6 +180,18 @@ function processCommands() {
       case CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION:
         selection.clearPatternSelection();
         sequence.decrementPatternAtCurrentPosition();
+        break;
+      case CommandType.INSERT_SEQUENCE_POSITION_BEFORE:
+        selection.clearPatternSelection();
+        void sequence.insertBefore(command.createNewPattern);
+        break;
+      case CommandType.INSERT_SEQUENCE_POSITION_AFTER:
+        selection.clearPatternSelection();
+        void sequence.insertAfter(command.createNewPattern);
+        break;
+      case CommandType.DELETE_SEQUENCE_POSITION:
+        selection.clearPatternSelection();
+        void sequence.delete();
         break;
     }
   }

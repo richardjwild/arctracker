@@ -8,6 +8,7 @@ export interface Module {
   author: string;
   numChannels: number;
   numPatterns: number;
+  patternLengths: number[];
   tuneLength: number;
   numSamples: number;
   samples: Sample[];

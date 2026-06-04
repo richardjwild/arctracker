@@ -180,6 +180,14 @@ const keyBindings = new Map<string, KeyBinding[]>([
       },
     ],
   ],
+  [
+    "KeyI",
+    [{ modifiers: "primary", execute: commands.insertSequencePositionBefore }],
+  ],
+  [
+    "KeyA",
+    [{ modifiers: "primary", execute: commands.insertSequencePositionAfter }],
+  ],
 ]);
 
 function getKeyBindings(key: string): KeyBinding[] {

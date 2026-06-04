@@ -4,22 +4,23 @@ import { useEffect, useRef } from "react";
 import { engine } from "../engine/engine.ts";
 import { animation } from "../rendering/animation.ts";
 import {
-  getPatternContentDimensions, PatternRenderer,
+  getPatternContentDimensions,
+  PatternRenderer,
 } from "../rendering/renderPattern.ts";
 import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
+import useSequencePosition from "../hooks/useSequencePosition.ts";
 
 export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
-  const moduleVersion = useStore((state) => state.moduleRevision);
-  const patternNo = useStore((state) => state.transportState.patternNo);
-  const numLines = useStore((state) => state.transportState.patternLength);
+  const moduleVersion = useStore((state) => state.patternRevision);
   const numChannels = useStore((state) => state.module.numChannels);
   const setCurrentPattern = useStore((state) => state.setCurrentPattern);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const viewportSizeRef = useRef({ width: 0, height: 0 });
+  const { patternNo, patternLength } = useSequencePosition();
 
   const resizeCanvas = (
     canvas: HTMLCanvasElement,
@@ -53,15 +54,19 @@ export default function PatternView() {
     };
   };
 
+  const getPatternIndex = (): number => {
+    return useStore.getState().transportState.playing
+      ? useStore.getState().transportState.patternIndex
+      : patternGrid.currentPosition().patternIndex;
+  }
+
   const getPatternViewRenderer = (
     ctx: CanvasRenderingContext2D,
     numChannels: number,
   ) => {
     return () => {
       const currentPattern = useStore.getState().currentPattern;
-      const patternIndex = useStore.getState().transportState.playing
-        ? useStore.getState().transportState.patternIndex
-        : patternGrid.currentPosition().patternIndex;
+      const patternIndex = getPatternIndex();
       const patternRenderer = new PatternRenderer(
         currentPattern,
         ctx,
@@ -113,19 +118,26 @@ export default function PatternView() {
 
   useEffect(() => {
     // Get the current pattern whenever it changes.
-    if (numLines > 0 && numChannels > 0)
+    if (patternLength > 0 && numChannels > 0)
       engine
-        .getPattern(patternNo, numLines, numChannels)
+        .getPattern(patternNo, patternLength, numChannels)
         .then((patternLines) =>
           setCurrentPattern({ patternNo, lines: patternLines }),
         );
-  }, [moduleId, moduleVersion, patternNo, numLines, numChannels, setCurrentPattern]);
+  }, [
+    moduleId,
+    moduleVersion,
+    patternNo,
+    patternLength,
+    numChannels,
+    setCurrentPattern,
+  ]);
 
   useSyncCursorWithTransport();
 
   return (
     <div ref={containerRef} className="patternView uiArea" id="patternView">
-      <canvas ref={canvasRef} width="1024" height="1024" />
+      <canvas className="uiArea" ref={canvasRef} width="1024" height="1024" />
     </div>
   );
 }

@@ -9,17 +9,29 @@
 .transportBar button {
     height: 30px;
     width: 30px;
-    background: #dfdfdf;
-    color: black;
+    background: var(--colour-transport-button-bg);
+    color: var(--colour-button-fg);
     border-radius: 5px;
-    border: solid 1px black;
+    border: solid 1px var(--colour-button-fg);
     padding: 0;
 }
 
 .transportBar button:hover {
-    background: black;
-    color: #dfdfdf;
-    border: solid 1px #dfdfdf;
+    background: var(--colour-button-fg);
+    color: var(--colour-transport-button-bg);
+    border: solid 1px var(--colour-transport-button-bg);
+}
+
+.transportBar button.playPause svg {
+    transform: translateX(0px) translateY(1px);
+}
+
+.transportBar button.fastForward svg {
+    transform: translateX(1px) translateY(1px);
+}
+
+.transportBar button.rewind svg {
+    transform: translateX(-1px) translateY(1px);
 }
 
 .transportBar .transportState {
@@ -27,7 +39,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     margin-left: 10px;
-    background-color: #171717;
-    color: #eeeeee;
+    background-color: transparent;
+    color: var(--colour-text);
     font-size: 12px;
 }

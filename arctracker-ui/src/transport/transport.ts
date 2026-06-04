@@ -1,6 +1,7 @@
 import { engine, type PatternLine, TransportState } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import { AppPoller } from "../polling/poller.ts";
+import { sequence } from "../editing/sequence.ts";
 
 export type { TransportState };
 
@@ -16,7 +17,7 @@ export const transport = {
 
   togglePlay: () => {
     if (!transport.playing())
-      transport.patternSeek(0);
+      transport.sequenceSeek(sequence.currentPosition());
     engine.togglePlay();
   },
 
@@ -25,30 +26,19 @@ export const transport = {
   },
 
   sequenceSeek: (toSequencePos: number) => {
-    const moduleInfo = useStore.getState().module;
-    if (toSequencePos >= 0 && toSequencePos < moduleInfo.tuneLength)
+    const sequence = useStore.getState().sequence;
+    if (toSequencePos >= 0 && toSequencePos < sequence.length)
       engine.seek(toSequencePos, 0);
   },
 
   sequenceSeekForwards: () => {
-    const moduleInfo = useStore.getState().module;
     const sequencePos = useStore.getState().transportState.sequencePos;
-    const newSequencePos = sequencePos + 1;
-    if (newSequencePos < moduleInfo.tuneLength) engine.seek(newSequencePos, 0);
+    transport.sequenceSeek(sequencePos + 1);
   },
 
   sequenceSeekBackwards: () => {
     const sequencePos = useStore.getState().transportState.sequencePos;
-    const newSequencePos = sequencePos - 1;
-    if (newSequencePos >= 0) engine.seek(newSequencePos, 0);
-  },
-
-  patternSeek: (toPatternIndex: number) => {
-    const currentPattern = useStore.getState().currentPattern;
-    if (!currentPattern) return;
-    if (toPatternIndex < 0 || toPatternIndex >= currentPattern.lines.length) return;
-    const { sequencePos } = useStore.getState().transportState;
-    engine.seek(sequencePos, toPatternIndex);
+    transport.sequenceSeek(sequencePos - 1);
   },
 
   getTransportState: async (): Promise<TransportState> => {

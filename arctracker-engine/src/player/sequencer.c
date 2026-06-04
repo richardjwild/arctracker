@@ -33,6 +33,23 @@ sequence_t initialise_sequence(module_t *module, bool bouncing)
     return sequence;
 }
 
+sequence_t reinitialise_sequence(module_t *module, sequence_t *old_sequence, bool bouncing)
+{
+    sequence_t sequence = (sequence_t) {
+        .sequence_pos = old_sequence->sequence_pos,
+        .looping_state = old_sequence->looping_state,
+        .pattern_index = 0,
+        .jump_target = NO_JUMP,
+        .sequence = module->sequence,
+        .tune_length = module->tune_length,
+        .patterns = module->patterns,
+        .allow_backwards_jump = !bouncing,
+    };
+    if (sequence.sequence_pos >= sequence.tune_length)
+        sequence.sequence_pos = sequence.tune_length - 1;
+    return sequence;
+}
+
 void sequence_advance(sequence_t *sequence)
 {
     if (sequence->jump_target == NO_JUMP || sequence->looping_state.looping)
@@ -54,7 +71,7 @@ void set_pattern_loop(sequence_t *sequence)
     sequence->looping_state.looping = true;
     sequence->looping_state.loop_sequence_pos = current_sequence_pos;
     sequence->looping_state.loop_pattern_start = 0;
-    sequence->looping_state.loop_pattern_end = sequence->patterns[current_pattern]->num_lines - 1;
+    sequence->looping_state.loop_pattern_end = sequence->patterns[current_pattern].num_lines - 1;
 }
 
 void clear_pattern_loop(sequence_t *sequence)
@@ -114,7 +131,7 @@ static void advance_pattern_event(sequence_t *sequence)
 static bool end_of_pattern(sequence_t *sequence)
 {
     int current_pattern = sequence->sequence[sequence->sequence_pos];
-    int pattern_length = sequence->patterns[current_pattern]->num_lines;
+    int pattern_length = sequence->patterns[current_pattern].num_lines;
     return (sequence->pattern_index == pattern_length);
 }
 

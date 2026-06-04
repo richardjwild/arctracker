@@ -1,0 +1,36 @@
+:root {
+    --colour-ui-bg: #333333;
+    --colour-panel-bg: #1c1c1c;
+    --colour-track-lane-separator: #111111;
+    --colour-text: #dddddd;
+    --colour-pattern-text-muted: #777777;
+    --colour-pattern-text-bright: #ffffff;
+    --colour-playhead: #333333;
+    --colour-note: #00ddcc;
+    --colour-note-at-playhead: #00ffee;
+    --colour-sample: #cccc77;
+    --colour-sample-at-playhead: #eeee33;
+    --colour-effect: #dd9900;
+    --colour-effect-at-playhead: #ffbb00;
+    --colour-cursor: #00ff00;
+    --colour-cursor-text: #003300;
+    --colour-selection-fill: rgba(80, 140, 255, 0.25);
+    --colour-selection-outline: rgba(80, 140, 255, 0.5);
+    --colour-modal-background: #222222;
+    --colour-modal-border: #555555;
+    --colour-button-fg: black;
+    --colour-button-load-module-bg: #cc1111;
+    --colour-button-save-module-bg: #2222ff;
+    --colour-button-export-module-bg: #2222ff;
+    --colour-button-bounce-module-bg: green;
+    --colour-samplelist-button-bg: #33330f;
+    --colour-samplelist-button-selected-bg: #cccc22;
+    --colour-sequence-position-fg: black;
+    --colour-sequence-position-bg: #33330f;
+    --colour-sequence-position-current-bg: #cccc22;
+    --colour-sequence-change-pattern: #33330f;
+    --colour-sequence-change-pattern-enabled: #cccc22;
+    --colour-sequence-edit-button-bg: #33330f;
+    --colour-sequence-edit-button-enabled-bg: #cccc22;
+    --colour-transport-button-bg: #dfdfdf;
+}

@@ -86,6 +86,7 @@ pub struct Module {
     pub tune_length: i32,
     pub num_samples: i32,
     pub num_patterns: i32,
+    pub pattern_lengths: Vec<i32>,
     pub samples: Vec<Sample>,
 }
 
@@ -231,6 +232,8 @@ impl Arctracker {
             let sample = self.get_sample_info(sample_no).map_err(|e| format!("Failed to get sample info: {}", e.message))?;
             samples.push(sample);
         }
+        let pattern_lengths = self.get_pattern_lengths(module.num_patterns)
+            .map_err(|e| format!("Failed to get pattern lengths: {}", e.message))?;
         Ok(Module {
             name: c_string_to_rust(&module.name),
             author: c_string_to_rust(&module.author),
@@ -238,8 +241,31 @@ impl Arctracker {
             tune_length: module.tune_length,
             num_samples: module.num_samples,
             num_patterns: module.num_patterns,
+            pattern_lengths,
             samples,
         })
+    }
+
+    fn get_pattern_lengths(&mut self, num_patterns: i32) -> Result<Vec<i32>, ArctrackerError> {
+        if num_patterns <= 0 {
+            return Err(ArctrackerError {
+                message: "Invalid number of patterns".to_string(),
+            });
+        }
+        let mut pattern_lengths = vec![0 as c_int; num_patterns as usize];
+        let result = unsafe {
+            ffi::arctracker_get_pattern_lengths(
+                self.handle,
+                pattern_lengths.as_mut_ptr(),
+                num_patterns,
+            )
+        };
+        if !result.success {
+            return Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            });
+        }
+        Ok(pattern_lengths.into_iter().map(|x| x as i32).collect())
     }
 
     pub fn load_module_with_info(&mut self, path: &str) -> Result<Module, String> {
@@ -257,6 +283,8 @@ impl Arctracker {
             let sample = self.get_sample_info(sample_no).map_err(|e| format!("Failed to get sample info: {}", e.message))?;
             samples.push(sample);
         }
+        let pattern_lengths = self.get_pattern_lengths(module.num_patterns)
+            .map_err(|e| format!("Failed to get pattern lengths: {}", e.message))?;
         Ok(Module {
             name: c_string_to_rust(&module.name),
             author: c_string_to_rust(&module.author),
@@ -264,6 +292,7 @@ impl Arctracker {
             tune_length: module.tune_length,
             num_samples: module.num_samples,
             num_patterns: module.num_patterns,
+            pattern_lengths,
             samples,
         })
     }
@@ -310,6 +339,7 @@ impl Arctracker {
             });
         }
         let module_info = unsafe { module_info.assume_init() };
+        let pattern_lengths = self.get_pattern_lengths(module_info.num_patterns).map_err(|e| e)?;
         Ok(Module {
             name: c_string_to_rust(&module_info.name),
             author: c_string_to_rust(&module_info.author),
@@ -317,6 +347,7 @@ impl Arctracker {
             tune_length: module_info.tune_length,
             num_samples: module_info.num_samples,
             num_patterns: module_info.num_patterns,
+            pattern_lengths,
             samples: Vec::new(),
         })
     }

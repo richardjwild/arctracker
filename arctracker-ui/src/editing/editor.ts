@@ -1,5 +1,10 @@
 import { useStore } from "../store/useStore.ts";
-import {engine, eventsEqual, PatternEvent, sequencesEqual} from "../engine/engine.ts";
+import {
+  engine,
+  eventsEqual,
+  PatternEvent,
+  sequencesEqual,
+} from "../engine/engine.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 
 export type EditorState = {
@@ -56,7 +61,9 @@ async function applyEventEdit(command: EventEditCommand): Promise<boolean> {
   return false;
 }
 
-async function applySequenceEdit(command: SequenceEditCommand): Promise<boolean> {
+async function applySequenceEdit(
+  command: SequenceEditCommand,
+): Promise<boolean> {
   if (!sequencesEqual(command.before, command.after)) {
     await engine.setSequence(command.after);
     useStore.getState().setSequence(command.after);
@@ -81,6 +88,18 @@ async function applyCompoundEventEdit(
     }
   }
   return revised;
+}
+
+function markRevision(editType: EditType) {
+  switch (editType) {
+    case EditType.EventEdit: /* fall through */
+    case EditType.CompoundEventEdit:
+      useStore.getState().patternRevised();
+      break;
+    case EditType.SequenceEdit:
+      useStore.getState().sequenceRevised();
+      break;
+  }
 }
 
 export const editor = {
@@ -148,7 +167,7 @@ export const editor = {
         revised = await applyCompoundEventEdit(command);
       }
       if (revised) {
-        useStore.getState().moduleRevised();
+        markRevision(command.type);
         undoStack.push(command);
         redoStack.length = 0;
       }
@@ -185,7 +204,7 @@ export const editor = {
           })),
         });
       }
-      useStore.getState().moduleRevised();
+      markRevision(command.type);
       redoStack.push(command);
     } catch (err) {
       throw err;
@@ -205,10 +224,15 @@ export const editor = {
       if (command.type === EditType.CompoundEventEdit) {
         await applyCompoundEventEdit(command);
       }
-      useStore.getState().moduleRevised();
+      markRevision(command.type);
       undoStack.push(command);
     } catch (err) {
       throw err;
     }
+  },
+
+  clearUndoBuffer: () => {
+    undoStack.length = 0;
+    redoStack.length = 0;
   },
 };

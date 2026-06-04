@@ -17,7 +17,7 @@ export const module = {
       .then((module) => useStore.getState().setModule(module));
   },
 
-  load: async () => {
+  load: async (): Promise<boolean> => {
     const { setLoadingModule, setModule } = useStore.getState();
     setLoadingModule(true);
     try {
@@ -33,19 +33,23 @@ export const module = {
           setModule(module);
         }
       }
+      return true;
     } catch (err) {
       await message(err as string, { title: "Arctracker", kind: "error" });
+      return false;
     } finally {
       setLoadingModule(false);
     }
   },
 
-  create: async (numChannels: number) => {
+  create: async (numChannels: number): Promise<boolean> => {
     try {
       const newModule = await engine.createModule(numChannels);
       if (newModule) useStore.getState().setModule(newModule);
+      return true;
     } catch (err) {
       await message(err as string, { title: "Arctracker", kind: "error" });
+      return false;
     }
   },
 };

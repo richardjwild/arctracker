@@ -15,7 +15,7 @@ typedef struct {
     const int *sequence;
     looping_state_t looping_state;
     int tune_length;
-    pattern_t **patterns;
+    pattern_t *patterns;
     int sequence_pos;
     int pattern_index;
     int jump_target;
@@ -24,6 +24,8 @@ typedef struct {
 } sequence_t;
 
 sequence_t initialise_sequence(module_t *module, bool bouncing);
+
+sequence_t reinitialise_sequence(module_t *module, sequence_t *old_sequence, bool bouncing);
 
 void sequence_advance(sequence_t *);
 

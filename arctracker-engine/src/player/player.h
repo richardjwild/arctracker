@@ -46,6 +46,8 @@ bool player_queue_command(player_t *, player_command_t);
 
 void player_shutdown(player_t *);
 
+void player_sequence_changed(player_t *, module_t *);
+
 void player_destroy(player_t *);
 
 #endif //ARCTRACKER_PLAY_MOD_H

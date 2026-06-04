@@ -4,37 +4,47 @@
     align-items: flex-start;
     gap: 5px;
     overflow: hidden;
-    padding: 0 0 0 10px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
-.sequenceView .withPatternControls {
+.sequence {
+    display: flex;
+    align-items: flex-start;
+    flex-grow: 1;
+    gap: 5px;
+    overflow: hidden;
+    padding: 0;
+}
+
+.sequence .withPatternControls {
     height: 100%;
 }
 
-.sequenceView .sequencePos {
+.sequence .sequencePos {
     display: block;
     min-width: calc(var(--sequence-digits) * 0.6em + 10px);
     width: 25px;
     height: 25px;
     font-family: FiraCode, monospace;
     font-size: 12px;
-    color: black;
+    color: var(--colour-sequence-position-fg);
     text-align: center;
     vertical-align: middle;
-    background-color: #33330f;
-    border: solid 1px #33330f;
+    background-color: var(--colour-sequence-position-bg);
+    border: solid 1px var(--colour-sequence-position-bg);
     border-radius: 5px;
     margin-top: 13px;
     padding: 0;
 }
 
-.sequenceView .sequencePos.current {
-    background-color: #cccc22;
-    border: solid 1px #cccc22;
+.sequence .sequencePos.current {
+    background-color: var(--colour-sequence-position-current-bg);
+    border: solid 1px var(--colour-sequence-position-current-bg);
     margin: 0;
 }
 
-.sequenceView .changePatternButton {
+.sequence .changePatternButton {
     display: block;
     background-color: transparent;
     border: none;
@@ -43,18 +53,54 @@
     height: 13px;
 }
 
-.sequenceView .changePatternButton.increment svg {
+.sequence .changePatternButton.increment svg {
     transform: translateY(-4.5px);
 }
 
-.sequenceView .changePatternButton.decrement svg {
-    transform: translateY(-6px);
+.sequence .changePatternButton.decrement svg {
+    transform: translateY(-6.5px);
 }
 
-.sequenceView .enabled {
-    color: #cccc22;
+.sequence .enabled {
+    color: var(--colour-sequence-change-pattern-enabled);
 }
 
-.sequenceView .disabled {
-    color: #33330f;
+.sequence .disabled {
+    color: var(--colour-sequence-change-pattern);
+}
+
+.sequenceEditButtons {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    width: 100px;
+    margin-top: 10px;
+}
+
+.sequenceEditButtons button {
+    height: 30px;
+    width: 30px;
+    border-radius: 5px;
+    border: solid 1px var(--colour-button-fg);
+    padding: 0;
+}
+
+.sequenceEditButtons button svg {
+    transform: translateY(1px);
+}
+
+.sequenceEditButtons button.disabled {
+    background-color: var(--colour-sequence-edit-button-bg);
+    border: solid 1px transparent;
+}
+
+.sequenceEditButtons button.enabled {
+    color: var(--colour-button-fg);
+    background-color: var(--colour-sequence-edit-button-enabled-bg);
+}
+
+.sequenceEditButtons button.enabled:hover {
+    background-color: var(--colour-button-fg);
+    color: var(--colour-sequence-edit-button-enabled-bg);
+    border: solid 1px var(--colour-sequence-edit-button-enabled-bg);
 }

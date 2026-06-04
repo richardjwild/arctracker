@@ -7,7 +7,8 @@ import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
 
 interface AppStore {
   moduleId: number;
-  moduleRevision: number;
+  patternRevision: number;
+  sequenceRevision: number;
   module: Module;
   sequence: number[];
   pianoKeyboardTranspose: number;
@@ -24,7 +25,8 @@ interface AppStore {
   setModule: (result: Module) => void;
   setSequence: (sequence: number[]) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
-  moduleRevised: () => void;
+  patternRevised: () => void;
+  sequenceRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
@@ -43,6 +45,7 @@ const initialModule: Module = {
   author: "",
   numChannels: 0,
   numPatterns: 0,
+  patternLengths: [],
   tuneLength: 1,
   numSamples: 0,
   samples: [],
@@ -93,7 +96,8 @@ function initialEditorState(numChannels: number = 0): EditorState {
 
 export const useStore = create<AppStore>((set) => ({
   moduleId: 0,
-  moduleRevision: 0,
+  patternRevision: 0,
+  sequenceRevision: 0,
   module: initialModule,
   sequence: [],
   pianoKeyboardTranspose: 13,
@@ -111,7 +115,8 @@ export const useStore = create<AppStore>((set) => ({
   setModule: (result) =>
     set((state) => ({
       moduleId: state.moduleId + 1,
-      moduleRevision: 0,
+      patternRevision: 0,
+      sequenceRevision: 0,
       module: result,
       selectedSample: result.samples.some((sample) => sample.sampleLength > 0)
         ? 0
@@ -128,9 +133,15 @@ export const useStore = create<AppStore>((set) => ({
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
     set({ pianoKeyboardTranspose }),
 
-  moduleRevised: (): void => {
+  patternRevised: (): void => {
     set((state) => {
-      return { moduleRevision: state.moduleRevision + 1 };
+      return { patternRevision: state.patternRevision + 1 };
+    });
+  },
+
+  sequenceRevised: (): void => {
+    set((state) => {
+      return { sequenceRevision: state.sequenceRevision + 1 };
     });
   },
 
