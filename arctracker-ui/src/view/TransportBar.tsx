@@ -1,6 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import "./TransportBar.css";
 import { commands } from "../control/commands.ts";
+import useSequencePosition from "../hooks/useSequencePosition.ts";
 
 export default function TransportBar() {
   const PlayIcon = () => (
@@ -110,8 +111,8 @@ export default function TransportBar() {
 
   const playing = useStore((state) => state.transportState.playing);
   const looping = useStore((state) => state.transportState.looping);
-  const sequencePos = useStore((state) => state.transportState.sequencePos);
   const tuneLength = useStore((state) => state.sequence.length);
+  const { sequencePos } = useSequencePosition();
 
   return (
     <div className="transportBar uiArea padded">

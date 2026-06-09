@@ -55,6 +55,8 @@ api_result_t arctracker_edit_set_sequence(arctracker_t *handle, const int *new_s
 
 api_result_t arctracker_edit_create_pattern(arctracker_t *handle, int pattern_length, int *new_pattern_no);
 
+api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, int pattern_no);
+
 api_result_t arctracker_destroy(arctracker_t *handle);
 
 #endif //ARCTRACKER_LIBARCTRACKER_H

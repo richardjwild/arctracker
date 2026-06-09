@@ -11,6 +11,7 @@ pub struct Arctracker {
 pub enum PlayerEventType {
     PlayerError = 0,
     UserMidiNoteOn = 1,
+    AudioOverflowed = 2,
 }
 
 impl From<ffi::PlayerEventType> for PlayerEventType {
@@ -18,6 +19,9 @@ impl From<ffi::PlayerEventType> for PlayerEventType {
         match event_type {
             ffi::PlayerEventType::PLAYER_ERROR => {
                 PlayerEventType::PlayerError
+            }
+            ffi::PlayerEventType::AUDIO_OVERFLOWED => {
+                PlayerEventType::AudioOverflowed
             }
             ffi::PlayerEventType::USER_MIDI_NOTE_ON => {
                 PlayerEventType::UserMidiNoteOn
@@ -616,6 +620,34 @@ impl Arctracker {
             .map_err(|message| ArctrackerError { message })?;
         let result = unsafe { ffi::arctracker_edit_set_event(self.handle, pattern_no, pattern_index, channel_no, &mut event) };
         if result.success {
+            Ok(())
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
+    }
+    
+    pub fn edit_create_pattern(&mut self, pattern_length: i32) -> Result<i32, ArctrackerError> {
+        let mut pattern_no = std::mem::MaybeUninit::<c_int>::uninit();
+        let result = unsafe {
+            ffi::arctracker_edit_create_pattern(self.handle, pattern_length, pattern_no.as_mut_ptr())
+        };
+        let pattern_no = unsafe { pattern_no.assume_init() };
+        if result.success {
+            Ok(pattern_no)
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
+    }
+    
+    pub fn edit_delete_pattern(&mut self, pattern_no: i32) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_delete_pattern(self.handle, pattern_no)
+        };
+        if (result.success) {
             Ok(())
         } else {
             Err(ArctrackerError {

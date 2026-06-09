@@ -5,7 +5,8 @@ import { commands } from "../control/commands.ts";
 
 export type PlayerEvent =
   { eventType: "playerError"; errorMessage: string } |
-  { eventType: "userMidiNoteOn"; midiNote: number };
+  { eventType: "userMidiNoteOn"; midiNote: number } |
+  { eventType: "audioOverflowed" };
 
 function handlePlayerError(errorMessage: string) {
   message(
@@ -28,6 +29,9 @@ function processPlayerEvents() {
           return; // No point trying to handle any other events in this case.
         case "userMidiNoteOn":
           commands.editNoteField(event.midiNote);
+          break;
+        case "audioOverflowed":
+          console.log("Audio overflowed"); // TODO: Light an indicator or something.
           break;
       }
     }

@@ -12,9 +12,9 @@ typedef struct {
     int sample_end;
     int repeat_length;
     float *sample_pointer;
-    int gain;
+    uint8_t volume;
     bool channel_playing;
-    int panning;
+    uint8_t panning;
     bool arpeggiator_on;
     int arpeggio_counter;
     int current_note;

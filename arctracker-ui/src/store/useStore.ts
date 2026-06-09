@@ -23,6 +23,7 @@ interface AppStore {
   selectedSample: number | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
+  updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
   setSequence: (sequence: number[]) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
@@ -126,6 +127,15 @@ export const useStore = create<AppStore>((set) => ({
       editorState: initialEditorState(result.numChannels),
       patternSelection: null,
       pasteBuffer: null,
+    })),
+
+  updatePatterns: (numPatterns: number, patternLengths: number[]) =>
+    set((state) => ({
+      module: {
+        ...state.module,
+        numPatterns,
+        patternLengths,
+      },
     })),
 
   setSequence: (sequence) => set({ sequence }),

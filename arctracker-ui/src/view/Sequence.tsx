@@ -122,6 +122,7 @@ export default function Sequence() {
     return (
       <button
         type="button"
+        title="Increment pattern at this position"
         disabled={playing}
         className={`changePatternButton increment ${playing ? "disabled" : "enabled"}`}
         onClick={commands.incrementPatternAtCurrentPosition}
@@ -143,6 +144,7 @@ export default function Sequence() {
     return (
       <button
         type="button"
+        title="Decrement pattern at this position"
         disabled={playing}
         className={`changePatternButton decrement ${playing ? "disabled" : "enabled"}`}
         onClick={commands.decrementPatternAtCurrentPosition}
@@ -172,7 +174,6 @@ export default function Sequence() {
           <IncrementPatternButton />
           <button
             type="button"
-            title="Increment pattern at this position"
             className="sequencePos current"
             style={{ "--sequence-digits": digits } as React.CSSProperties}
             ref={visibleIndex === 0 ? cellRef : undefined}
@@ -186,7 +187,7 @@ export default function Sequence() {
       return (
         <button
           type="button"
-          title="Decrement pattern at this position"
+          title={`Jump to position ${absolutePos + 1}`}
           key={absolutePos}
           className="sequencePos"
           style={{ "--sequence-digits": digits } as React.CSSProperties}
@@ -208,19 +209,19 @@ export default function Sequence() {
       <div className="sequenceEditButtons">
         <button
           type="button"
-          title="Insert new position before current"
+          title="Insert new position before current (shift-click to create new pattern)"
           disabled={playing}
           className={playing ? "disabled" : "enabled"}
-          onClick={() => commands.insertSequencePositionBefore(false)}
+          onClick={(event) => commands.insertSequencePositionBefore(event.shiftKey)}
         >
           <InsertBeforeIcon />
         </button>
         <button
           type="button"
-          title="Insert new position after current"
+          title="Insert new position after current (shift-click to create new pattern)"
           disabled={playing}
           className={playing ? "disabled" : "enabled"}
-          onClick={() => commands.insertSequencePositionAfter(false)}
+          onClick={(event) => commands.insertSequencePositionAfter(event.shiftKey)}
         >
           <InsertAfterIcon />
         </button>

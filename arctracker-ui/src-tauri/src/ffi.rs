@@ -1,4 +1,5 @@
 use std::os::raw::{c_char, c_int};
+use std::sync::Arc;
 
 #[repr(C)]
 pub struct ArctrackerHandle {
@@ -10,6 +11,7 @@ pub struct ArctrackerHandle {
 pub enum PlayerEventType {
     PLAYER_ERROR = 0,
     USER_MIDI_NOTE_ON = 1,
+    AUDIO_OVERFLOWED = 2,
 }
 
 #[repr(C)]
@@ -154,6 +156,8 @@ extern "C" {
     pub fn arctracker_edit_set_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
     pub fn arctracker_edit_get_sequence(handle: *mut ArctrackerHandle, sequence: *mut c_int, expected_sequence_len: c_int) -> ApiResult;
     pub fn arctracker_edit_set_sequence(handle: *mut ArctrackerHandle, new_sequence: *const c_int, new_sequence_len: c_int) -> ApiResult;
+    pub fn arctracker_edit_create_pattern(handle: *mut ArctrackerHandle, pattern_length: c_int, new_pattern_no: *mut c_int) -> ApiResult;
+    pub fn arctracker_edit_delete_pattern(handle: *mut ArctrackerHandle, pattern_no: c_int) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

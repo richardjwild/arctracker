@@ -26,6 +26,10 @@
     transform: translateX(0px) translateY(1px);
 }
 
+.transportBar button.repeatOnOff svg {
+    transform: translateX(0px) translateY(1px);
+}
+
 .transportBar button.fastForward svg {
     transform: translateX(1px) translateY(1px);
 }

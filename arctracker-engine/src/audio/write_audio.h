@@ -9,11 +9,11 @@ typedef struct
 {
     int num_channels;
     float master_gain;
-    float *gain_curve;
+    float gain_curve[256];
     float *phase_increments;
     float *resample_buffer;
-    stereo_frame_t *channel_buffer;
-    int16_t *output_buffer;
+    stereo_frame_t *mix_buffer;
+    stereo_frame_t *output_buffer;
     int frames_filled;
     audio_api_t api;
     bool healthy;
@@ -21,10 +21,11 @@ typedef struct
 
 typedef struct {
     bool success;
+    bool overflowed;
     char *error_message;
 } audio_out_result_t;
 
-audio_out_result_t initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain, float *gain_curve);
+audio_out_result_t initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain);
 
 audio_out_result_t write_audio_data(audio_out_t *, voice_t *, int);
 

@@ -20,4 +20,6 @@ edit_result_t editor_set_sequence(module_t *module, const int *new_sequence, int
 
 edit_result_t editor_create_pattern(module_t *module, int pattern_length, int *new_pattern_no);
 
+edit_result_t editor_delete_pattern(module_t *module, int pattern_no);
+
 #endif //ARCTRACKER_ENGINE_EDITOR_H

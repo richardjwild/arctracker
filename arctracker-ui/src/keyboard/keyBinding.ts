@@ -182,11 +182,23 @@ const keyBindings = new Map<string, KeyBinding[]>([
   ],
   [
     "KeyI",
-    [{ modifiers: "primary", execute: commands.insertSequencePositionBefore }],
+    [
+      { modifiers: "primary", execute: commands.insertSequencePositionBefore },
+      {
+        modifiers: "primary+secondary",
+        execute: () => commands.insertSequencePositionBefore(true),
+      },
+    ],
   ],
   [
     "KeyA",
-    [{ modifiers: "primary", execute: commands.insertSequencePositionAfter }],
+    [
+      { modifiers: "primary", execute: commands.insertSequencePositionAfter },
+      {
+        modifiers: "primary+secondary",
+        execute: () => commands.insertSequencePositionAfter(true),
+      },
+    ],
   ],
 ]);
 

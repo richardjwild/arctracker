@@ -20,19 +20,21 @@ typedef enum
 {
     NO_EFFECT = '\0',
     ARPEGGIO = '0',
-    PORTAMENTO_UP = '1',
-    PORTAMENTO_DOWN = '2',
-    TONE_PORTAMENTO = '3',
-    VOLUME_SLIDE = 'A',
-    BREAK_PATTERN = 'B',
-    PORTAMENTO_FINE = 'C',
-    SET_TEMPO_FINE = 'D',
-    SET_TRACK_STEREO = 'E',
-    VOLUME_SLIDE_FINE = 'F',
-    VOLUME_SLIDE_UP = 'G',
-    VOLUME_SLIDE_DOWN = 'H',
-    JUMP_TO_POSITION = 'J',
-    SET_TEMPO = 'S',
+    PITCH_SLIDE_UP = '1',
+    PITCH_SLIDE_DOWN = '2',
+    PORTAMENTO = '3',
+    // TODO: Implement vibrato (4).
+    // TODO: Implement tremolo (5).
+    FINE_PORTAMENTO = '6',
+    PATTERN_BREAK = 'B',
+    CRESCENDO = 'C',
+    DECRESCENDO = 'D',
+    FINE_CRESCENDO = 'E',
+    FINE_DECRESCENDO = 'F',
+    SEQUENCE_JUMP = 'J',
+    SET_PANNING = 'P',
+    SET_TICKS_PER_EVENT = 'S',
+    SET_TICKS_PER_SECOND = 'T',
     SET_VOLUME = 'V',
 } command_t;
 
@@ -58,7 +60,7 @@ typedef struct
 typedef struct
 {
     char name[MAX_LEN_SAMPLENAME];
-    int default_gain;
+    uint8_t default_volume;
     int sample_length;
     bool repeats;
     int repeat_offset;
@@ -83,9 +85,7 @@ typedef struct
     int num_samples;
     sample_t *samples;
     int initial_speed;
-    float volume_cmd_gain_factor;
     float master_gain;
-    float *gain_curve;
 } module_t;
 
 module_t *module_create(int num_channels, int sequence_len, int num_patterns, int num_samples);
@@ -93,6 +93,8 @@ module_t *module_create(int num_channels, int sequence_len, int num_patterns, in
 bool module_init(module_t *module);
 
 bool module_create_pattern(module_t *module, int pattern_no, int num_lines);
+
+void module_delete_pattern(module_t *module, int pattern_no);
 
 void module_destroy(module_t *module);
 

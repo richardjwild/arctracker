@@ -2,6 +2,7 @@ import { useStore } from "../store/useStore.ts";
 import { editor, EditType, SequenceEditCommand } from "./editor.ts";
 import { transport } from "../transport/transport.ts";
 import { cursor } from "./cursor.ts";
+import { pattern } from "./pattern.ts";
 
 async function setPattern(sequenceIndex: number, patternNo: number) {
   if (transport.playing()) return;
@@ -71,7 +72,7 @@ export const sequence = {
     const sequencePosition = sequence.currentPosition();
     const moduleSequence = useStore.getState().sequence;
     const patternNo = createNewPattern
-      ? 0 // TODO: Implement create new pattern.
+      ? await pattern.createPattern(64) // TODO: Implement default length.
       : moduleSequence[sequencePosition];
     const updatedSequence = [...moduleSequence];
     updatedSequence.splice(sequencePosition, 0, patternNo);
@@ -81,7 +82,6 @@ export const sequence = {
       after: updatedSequence,
     };
     await editor.applyEdit(command);
-    sequence.advance();
   },
 
   insertAfter: async (createNewPattern: boolean = false) => {
@@ -89,7 +89,7 @@ export const sequence = {
     const sequencePosition = sequence.currentPosition();
     const moduleSequence = useStore.getState().sequence;
     const patternNo = createNewPattern
-      ? 0 // TODO: Implement create new pattern.
+      ? await pattern.createPattern(64) // TODO: Implement default length.
       : moduleSequence[sequencePosition];
     const updatedSequence = [...moduleSequence];
     updatedSequence.splice(sequencePosition + 1, 0, patternNo);
@@ -99,6 +99,7 @@ export const sequence = {
       after: updatedSequence,
     };
     await editor.applyEdit(command);
+    sequence.advance();
   },
 
   delete: async () => {

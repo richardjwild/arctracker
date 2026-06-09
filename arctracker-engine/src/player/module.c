@@ -29,9 +29,6 @@ module_t *module_create(int num_channels, int sequence_len, int num_patterns, in
     module->samples = allocate_array(MODULE, num_samples, sizeof(sample_t));
     if (module->samples == NULL)
         goto fail;
-    module->gain_curve = allocate_array(MODULE, INTERNAL_GAIN_MAX + 1, sizeof(float));
-    if (module->gain_curve == NULL)
-        goto fail;
     return module;
 fail:
     if (module != NULL) module_destroy(module);
@@ -61,7 +58,23 @@ bool module_create_pattern(module_t *module, int pattern_no, int num_lines)
     if (pattern.events == NULL)
         return false;
     module->patterns[pattern_no] = pattern;
+    module->num_patterns++;
     return true;
+}
+
+void module_delete_pattern(module_t *module, int pattern_no)
+{
+    if (pattern_no != module->num_patterns - 1)
+    {
+        // TODO: Make this capable of deleting a pattern from the middle of the array.
+        return;
+    }
+    deallocate(MODULE, module->patterns[pattern_no].events);
+    module->patterns[pattern_no] = (pattern_t) {
+        .num_lines = 0,
+        .events = NULL,
+    };
+    module->num_patterns--;
 }
 
 void module_destroy(module_t *module)
@@ -71,7 +84,6 @@ void module_destroy(module_t *module)
     for (int i = 0; i < module->num_patterns; i++)
         deallocate(MODULE, module->patterns[i].events);
     deallocate(MODULE, module->patterns);
-    deallocate(MODULE, module->gain_curve);
     deallocate(MODULE, module->initial_panning);
     deallocate(MODULE, module->sequence);
     deallocate(MODULE, module->samples);
@@ -92,7 +104,7 @@ void module_get_sample_info(module_t *module, int sample_no, ui_sample_info_t *s
 {
     sample_t sample = module->samples[sample_no];
     snprintf(sample_info->name, sizeof sample_info->name, "%s", sample.name);
-    sample_info->default_gain = sample.default_gain;
+    sample_info->default_gain = sample.default_volume;
     sample_info->sample_length = sample.sample_length;
     sample_info->repeats = sample.repeats;
     sample_info->repeat_offset = sample.repeat_offset;

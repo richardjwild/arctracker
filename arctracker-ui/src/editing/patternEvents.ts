@@ -18,11 +18,12 @@ async function buildEventEditCommand({
   eventLocation: EventLocation | null;
   buildEvent: (before: PatternEvent) => PatternEvent;
 }): Promise<EventEditCommand> {
-  const { transportState } = useStore.getState();
+  const { sequence } = useStore.getState();
+  const { sequencePosition } = useStore.getState().editorState;
   try {
     const currentPosition = patternGrid.currentPosition();
     const location = eventLocation || {
-      patternNo: transportState.patternNo,
+      patternNo: sequence[sequencePosition],
       patternIndex: currentPosition.patternIndex,
       track: currentPosition.track,
     };

@@ -78,12 +78,26 @@ static void ensure_capacity(int required_frames)
     data_capacity = new_capacity;
 }
 
-static audio_api_result_t collect_audio(int16_t *audio_buffer, int frames_in_buffer)
+static int16_t clamp_to_pcm16(const float sample)
+{
+    if (sample <= -1.0f) return INT16_MIN;
+    if (sample >= 1.0f) return INT16_MAX;
+    return (int16_t)(sample * INT16_MAX);
+}
+
+static audio_api_result_t collect_audio(stereo_frame_t *audio_buffer, int frames_in_buffer)
 {
     ensure_capacity(frames_written + frames_in_buffer);
     int16_t *data_ptr = wav_file->Data + (frames_written * NUM_CHANNELS);
-    memcpy(data_ptr, audio_buffer, (frames_in_buffer * FRAME_SIZE));
-    frames_written += frames_in_buffer;
+    while (frames_in_buffer > 0)
+    {
+        data_ptr[0] = clamp_to_pcm16(audio_buffer->l);
+        data_ptr[1] = clamp_to_pcm16(audio_buffer->r);
+        data_ptr += 2;
+        audio_buffer++;
+        frames_written++;
+        frames_in_buffer--;
+    }
     return AUDIO_API_SUCCESS;
 }
 

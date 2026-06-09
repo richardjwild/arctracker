@@ -21,8 +21,6 @@
 
 static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
-static const int MODULE_GAIN_MAX = 127;
-// static const int INTERNAL_GAIN_MAX = 255;
 static const uint8_t VOLUME_VALUE_MASK = 0x7f;
 
 static const uint8_t ARPEGGIO_COMMAND = 0x0;
@@ -86,13 +84,14 @@ typedef struct
     uint32_t sample_data_offset;
 } dtt_sample_format_t;
 
+static const int PANNING[] = {1, 43, 86, 128, 170, 213, 255};
+
 static bool is_desktop_tracker_format(mapped_file_t);
 static module_t *read_desktop_tracker_module(mapped_file_t);
-static void calculate_gain_curve(float *gain_curve);
 static bool decode_dtt_patterns(uint8_t *, const uint32_t *, module_t *, const int *);
 static size_t decode_desktop_tracker_event(const uint8_t *, event_t *);
 static effect_t effect(uint8_t, uint8_t);
-static command_t desktop_tracker_command(int, uint8_t);
+static command_t desktop_tracker_command(uint8_t, uint8_t);
 static void copy_int_array(const uint8_t *, int *, int);
 static bool get_samples(module_t *, dtt_sample_format_t *, uint8_t *);
 
@@ -125,12 +124,19 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
         goto fail;
     module->format = DESKTOP_TRACKER_FORMAT;
     module->initial_speed = file_format->initial_speed;
-    module->volume_cmd_gain_factor = (float) INTERNAL_GAIN_MAX / MODULE_GAIN_MAX;
     module->master_gain = 0.25f;
     strncpy(module->name, file_format->name, MAX_LEN_TUNENAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
-    calculate_gain_curve(module->gain_curve);
-    copy_int_array(file_format->initial_stereo, module->initial_panning, module->num_channels);
+    for (int track = 0; track < module->num_channels; track++)
+    {
+        const uint8_t track_panning = file_format->initial_stereo[track];
+        if (track_panning == 0 || track_panning > 7)
+        {
+            module->initial_panning[track] = 128;
+            continue;
+        }
+        module->initial_panning[track] = PANNING[track_panning - 1];
+    }
     uint8_t *positions_start = file.addr + sizeof(dtt_file_format_t);
     copy_int_array(positions_start, module->sequence, module->tune_length);
     uint8_t *pattern_offsets_start = positions_start + ALIGN_TO_WORD(module->tune_length);
@@ -155,18 +161,6 @@ fail:
         deallocate(MODULE, pattern_lengths);
     destroy_encoding_buffer();
     return NULL;
-}
-
-static void calculate_gain_curve(float *gain_curve)
-{
-    for (int i = 0; i <= 127; i++)
-    {
-        gain_curve[(i * 2) + 1] = mu_law_to_linear(255 - i);
-        if (i >= 1)
-            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
-    }
-    gain_curve[0] = 0.0f;
-    gain_curve[1] = gain_curve[2] / 2;
 }
 
 static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_offsets, module_t *module, const int *pattern_lengths)
@@ -214,32 +208,49 @@ static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *deco
 
 static effect_t effect(const uint8_t code, const uint8_t data)
 {
-    char command = desktop_tracker_command(code, data);
-    const effect_t effect = {
-        .data = (command == VOLUME_COMMAND) ? (data & VOLUME_VALUE_MASK) : data,
+    const char command = desktop_tracker_command(code, data);
+    uint8_t effect_data = data;
+    if (command == SET_VOLUME)
+        effect_data = (data & VOLUME_VALUE_MASK) * 2;
+    if (command == CRESCENDO || command == FINE_CRESCENDO)
+    {
+        // DSKT volume slide parameter has twice the resolution of the equivalent Tracker effect.
+        effect_data = (data * 2);
+    }
+    if (command == DECRESCENDO || command == FINE_DECRESCENDO)
+    {
+        // DSKT volume slide command data is a signed integer: negative values slide the volume down.
+        const int amount = (256 - data) * 2;
+        effect_data = amount > UINT8_MAX ? UINT8_MAX : amount;
+    }
+    if (command == SET_PANNING)
+    {
+        if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
+        else effect_data = PANNING[data - 1];
+    }
+    return (effect_t) {
+        .data = effect_data,
         .command = command,
     };
-    return effect;
 }
 
-static command_t desktop_tracker_command(int code, uint8_t data)
+static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
 {
-    switch (code)
-    {
-        case VOLUME_COMMAND: return SET_VOLUME;
-        case SPEED_COMMAND: return SET_TEMPO;
-        case STEREO_COMMAND: return SET_TRACK_STEREO;
-        case VOLSLIDE_COMMAND: return VOLUME_SLIDE;
-        case PORTUP_COMMAND: return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND: return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND: return TONE_PORTAMENTO;
-        case JUMP_COMMAND: return JUMP_TO_POSITION;
-        case SETFINETEMPO_COMMAND: return SET_TEMPO_FINE;
-        case FINEPORTAMENTO_COMMAND: return PORTAMENTO_FINE;
-        case FINEVOLSLIDE_COMMAND: return VOLUME_SLIDE_FINE;
-        case ARPEGGIO_COMMAND: return (data == 0) ? NO_EFFECT : ARPEGGIO;
-        default: return NO_EFFECT;
-    }
+    if (code == VOLUME_COMMAND) return SET_VOLUME;
+    if (code == SPEED_COMMAND) return SET_TICKS_PER_EVENT;
+    if (code == STEREO_COMMAND) return SET_PANNING;
+    if (code == VOLSLIDE_COMMAND && (data & 0x80) == 0) return CRESCENDO;
+    if (code == VOLSLIDE_COMMAND && (data & 0x80) > 0) return DECRESCENDO;
+    if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
+    if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
+    if (code == TONEPORT_COMMAND) return PORTAMENTO;
+    if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
+    if (code == SETFINETEMPO_COMMAND) return SET_TICKS_PER_SECOND;
+    if (code == FINEPORTAMENTO_COMMAND) return FINE_PORTAMENTO;
+    if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) == 0) return FINE_CRESCENDO;
+    if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) > 0) return FINE_DECRESCENDO;
+    if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    return NO_EFFECT;
 }
 
 static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uint8_t *base_address)
@@ -250,7 +261,7 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
         dtt_sample_format_t file_sample = file_samples[i];
         strncpy(sample->name, file_sample.name, MAX_LEN_SAMPLENAME_DSKT);
         sample->transpose = 26 - file_sample.note;
-        sample->default_gain = file_sample.volume * module->volume_cmd_gain_factor;
+        sample->default_volume = file_sample.volume * 2;
         sample->repeat_offset = file_sample.repeat_offset;
         sample->repeat_length = file_sample.repeat_length;
         if (file_sample.repeat_offset + file_sample.repeat_length > file_sample.sample_length)

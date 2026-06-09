@@ -21,6 +21,7 @@ static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
 static player_event_t create_user_midi_event(int note);
+static player_event_t create_audio_overflowed_event(void);
 static player_event_t create_error_event(char *error_message);
 
 player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue)
@@ -42,7 +43,7 @@ player_t *player_create(module_t *module, audio_api_t audio_api, player_event_qu
     player->voices = initialise_voices(player);
     if (player->voices == NULL)
         goto init_failed;
-    audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_channels, player->master_gain, module->gain_curve);
+    audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_channels, player->master_gain);
     if (!audio_init_result.success)
     {
         error_with_detail(AUDIO_INIT_FAILED, audio_init_result.error_message);
@@ -175,7 +176,7 @@ static voice_t *initialise_voices(player_t *player)
         voices[channel].channel_playing = false;
         voices[channel].arpeggiator_on = false;
         voices[channel].panning = player->module->initial_panning[channel] - 1;
-        voices[channel].gain = INTERNAL_GAIN_MAX;
+        voices[channel].volume = INTERNAL_GAIN_MAX;
     }
     return voices;
 }
@@ -215,7 +216,11 @@ static bool audio_consume(player_t *player)
     const int samples_to_write = tick_scheduler_samples_to_write(audio_accumulator);
     const audio_out_result_t result = write_audio_data(&player->audio_out, player->voices, samples_to_write);
     if (result.success)
+    {
         tick_scheduler_consume_samples(audio_accumulator);
+        if (result.overflowed)
+            event_queue_add(player->player_event_queue, create_audio_overflowed_event());
+    }
     else
         player->error_message = result.error_message;
     return result.success;;
@@ -250,7 +255,7 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
     else
     {
         if (event->sample_no)
-            voice->gain = sample->default_gain;
+            voice->volume = sample->default_volume;
     }
     reset_arpeggiator(voice);
     handle_effects_on_event(event, voice, player);
@@ -265,7 +270,7 @@ static void note_on(int note, const sample_t *sample, voice_t *voice)
     voice->current_note = note + sample->transpose;
     voice->period = period_for_note(voice->current_note);
     voice->tone_portamento_target_period = voice->period;
-    voice->gain = sample->default_gain;
+    voice->volume = sample->default_volume;
     voice->sample_repeats = sample->repeats;
     voice->repeat_length = sample->repeat_length;
     voice->sample_end = voice->sample_repeats
@@ -299,6 +304,13 @@ static player_event_t create_user_midi_event(int note)
     event.type = USER_MIDI_NOTE_ON;
     event.midi_note = note;
     return event;
+}
+
+static player_event_t create_audio_overflowed_event(void)
+{
+    return (player_event_t) {
+        .type = AUDIO_OVERFLOWED
+    };
 }
 
 static player_event_t create_error_event(char *error_message)

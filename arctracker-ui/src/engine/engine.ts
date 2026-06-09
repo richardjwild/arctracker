@@ -224,4 +224,16 @@ export const engine = {
       newSequence,
     });
   },
+
+  createPattern: async (patternLength: number): Promise<number> => {
+    return await invoke("edit_create_pattern", {
+      patternLength,
+    });
+  },
+
+  deletePattern: async (patternNo: number) => {
+    await invoke("edit_delete_pattern", {
+      patternNo
+    });
+  }
 };

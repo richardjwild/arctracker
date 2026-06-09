@@ -1,11 +1,10 @@
-#include <string.h>
 #include "resample.h"
+#include <string.h>
 #include "memory/heap.h"
 
 const static int PITCH_QUANTA = 2047;
 const static float PHASE_INCREMENT_CONVERSION = 3273808.59375f;
 
-static void write_audio_to_resample_buffer(voice_t *voice, float *, float *, int);
 static float interpolate(const float *sample, float);
 
 float *calculate_phase_increments(const int sample_rate)
@@ -21,35 +20,38 @@ float *allocate_resample_buffer(const int no_of_frames)
     return allocate_array(AUDIO, no_of_frames, sizeof(float));
 }
 
-float *resample(voice_t *voice, float *resample_buffer, const size_t resample_buffer_bytes, float *phase_increments, const int frames_to_write)
+void resample(voice_t *voice, float *resample_buffer, const float *phase_increments, int frames_to_write)
 {
-    memset(resample_buffer, 0, resample_buffer_bytes);
-    if (voice->channel_playing)
-        write_audio_to_resample_buffer(voice, resample_buffer, phase_increments, frames_to_write);
-    return resample_buffer;
-}
-
-static void write_audio_to_resample_buffer(voice_t *voice, float *resample_buffer, float *phase_increments, const int frames_to_write)
-{
+    if (!voice->channel_playing)
+    {
+        // Fill the buffer with silence.
+        memset(resample_buffer, 0, frames_to_write * sizeof(float));
+        return;
+    }
     const float *sample = voice->sample_pointer;
     const float phase_increment = phase_increments[voice->period];
-    const float sample_end = voice->sample_end;
-    const float repeat_length = voice->repeat_length;
+    const float sample_end = (float) voice->sample_end;
+    const float repeat_length = (float) voice->repeat_length;
     const bool sample_repeats = voice->sample_repeats;
     float phase_accumulator = voice->phase_accumulator;
-    for (int frame = 0; frame < frames_to_write; frame++)
+    int offset = 0;
+    while (frames_to_write > 0)
     {
-        resample_buffer[frame] = interpolate(sample, phase_accumulator);
+        resample_buffer[offset++] = interpolate(sample, phase_accumulator);
+        frames_to_write--;
         phase_accumulator += phase_increment;
         if (phase_accumulator >= sample_end)
         {
-            if (!sample_repeats)
-            {
-                voice->channel_playing = false;
-                break;
-            }
+            if (!sample_repeats || repeat_length <= 0) break;
             phase_accumulator -= repeat_length;
         }
+    }
+    if (frames_to_write > 0)
+    {
+        // The sample ended before we wrote all the requested frames.
+        voice->channel_playing = false;
+        // Fill the remainder of the buffer with silence.
+        memset(resample_buffer + offset, 0, frames_to_write * sizeof(float));
     }
     voice->phase_accumulator = phase_accumulator;
 }

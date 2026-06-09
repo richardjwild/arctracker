@@ -47,15 +47,16 @@ static const uint8_t JUMP_COMMAND = 19;         // J
 static const uint8_t SPEED_COMMAND = 28;        // S
 static const uint8_t VOLUME_COMMAND = 31;       // V
 
+static const int PANNING[] = {1, 43, 86, 128, 170, 213, 255};
+
 static bool is_tracker_format(mapped_file_t);
 static module_t *read_tracker_module(mapped_file_t);
 static uint8_t *search_tff(uint8_t *, long, const char *);
-static void calculate_gain_curve(float *);
 static bool decode_patterns(uint8_t *, long, module_t *, const int *);
 static size_t decode_tracker_event(const uint8_t *, event_t *);
 static effect_t effect(uint8_t code, uint8_t);
-static int get_samples(void *, long, sample_t *, float);
-static bool get_sample_info(void *, long, float, sample_t *);
+static int get_samples(void *, long, sample_t *);
+static bool get_sample_info(void *, long, sample_t *);
 static void copy_int_array(uint8_t *, int *, int);
 
 format_t tracker_format(void)
@@ -104,15 +105,23 @@ static module_t *read_tracker_module(mapped_file_t file)
     }
     module->format = TRACKER_FORMAT;
     module->initial_speed = 6;
-    module->volume_cmd_gain_factor = 1.0f;
     module->master_gain = 0.25f;
-    calculate_gain_curve(module->gain_curve);
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
     {
         error("Modfile corrupt - STER chunk not found");
         goto fail;
     }
-    memcpy(module->initial_panning, chunk_address + 8, sizeof(int) * module->num_channels);
+    const uint8_t *initial_stereo = chunk_address + 8;
+    for (int track = 0; track < module->num_channels; track++)
+    {
+        const uint8_t track_panning = initial_stereo[track];
+        if (track_panning == 0 || track_panning > 7)
+        {
+            module->initial_panning[track] = 128;
+            continue;
+        }
+        module->initial_panning[track] = PANNING[track_panning - 1];
+    }
     if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK)) == CHUNK_NOT_FOUND)
     {
         error("Modfile corrupt - MNAM chunk not found");
@@ -144,7 +153,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     copy_int_array(chunk_address + 8, module->sequence, module->tune_length);
     if (!decode_patterns(file.addr, array_end, module, pattern_lengths))
         goto fail;
-    module->num_samples = get_samples(file.addr, array_end, module->samples, module->volume_cmd_gain_factor);
+    module->num_samples = get_samples(file.addr, array_end, module->samples);
     destroy_encoding_buffer();
     deallocate(MODULE, pattern_lengths);
     return module;
@@ -168,36 +177,20 @@ static uint8_t *search_tff(uint8_t *array_start, const long array_end, const cha
     return CHUNK_NOT_FOUND;
 }
 
-static void calculate_gain_curve(float *gain_curve)
+static command_t tracker_command(const int code, const uint8_t data)
 {
-    for (int i = 0; i <= 127; i++)
-    {
-        float linear = mu_law_to_linear(255 - i);
-        gain_curve[(i * 2) + 1] = linear;
-        if (i >= 1)
-            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
-    }
-    gain_curve[0] = 0.0f;
-    gain_curve[1] = gain_curve[2] / 2;
-}
-
-static command_t tracker_command(int code, uint8_t data)
-{
-    switch (code)
-    {
-        case VOLUME_COMMAND: return SET_VOLUME;
-        case SPEED_COMMAND: return SET_TEMPO;
-        case STEREO_COMMAND: return SET_TRACK_STEREO;
-        case VOLSLIDEUP_COMMAND: return VOLUME_SLIDE_UP;
-        case VOLSLIDEDOWN_COMMAND: return VOLUME_SLIDE_DOWN;
-        case PORTUP_COMMAND: return PORTAMENTO_UP;
-        case PORTDOWN_COMMAND: return PORTAMENTO_DOWN;
-        case TONEPORT_COMMAND: return TONE_PORTAMENTO;
-        case BREAK_COMMAND: return BREAK_PATTERN;
-        case JUMP_COMMAND: return JUMP_TO_POSITION;
-        case ARPEGGIO_COMMAND: return (data == 0) ? NO_EFFECT : ARPEGGIO;
-        default: return NO_EFFECT;
-    }
+    if (code == VOLUME_COMMAND) return SET_VOLUME;
+    if (code == SPEED_COMMAND) return SET_TICKS_PER_EVENT;
+    if (code == STEREO_COMMAND) return SET_PANNING;
+    if (code == VOLSLIDEUP_COMMAND) return CRESCENDO;
+    if (code == VOLSLIDEDOWN_COMMAND) return DECRESCENDO;
+    if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
+    if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
+    if (code == TONEPORT_COMMAND) return PORTAMENTO;
+    if (code == BREAK_COMMAND) return PATTERN_BREAK;
+    if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
+    if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    return NO_EFFECT;
 }
 
 static bool decode_patterns(uint8_t *array_start, const long array_end, module_t *module, const int *pattern_lengths)
@@ -247,14 +240,20 @@ static size_t decode_tracker_event(const uint8_t *event_p, event_t *decoded)
 
 static effect_t effect(const uint8_t code, const uint8_t data)
 {
-    const effect_t effect = {
-            .data = data,
-            .command = tracker_command(code, data)
+    const char command = tracker_command(code, data);
+    uint8_t effect_data = data;
+    if (command == SET_PANNING)
+    {
+        if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
+        else effect_data = PANNING[data - 1];
+    }
+    return (effect_t) {
+        .data = effect_data,
+        .command = command,
     };
-    return effect;
 }
 
-static int get_samples(void *array_start, long array_end, sample_t *samples, float gain_factor)
+static int get_samples(void *array_start, long array_end, sample_t *samples)
 {
     int chunks_found = 0;
     int samples_found = 0;
@@ -262,7 +261,7 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, flo
     while (chunk_address != CHUNK_NOT_FOUND && chunks_found < NUM_SAMPLES)
     {
         chunks_found++;
-        if (get_sample_info(chunk_address, array_end, gain_factor, samples))
+        if (get_sample_info(chunk_address, array_end, samples))
         {
             samples++;
             samples_found++;
@@ -274,7 +273,7 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, flo
     return samples_found;
 }
 
-static bool get_sample_info(void *array_start, long array_end, float gain_factor, sample_t *sample)
+static bool get_sample_info(void *array_start, long array_end, sample_t *sample)
 {
     uint8_t *chunk_address;
 
@@ -286,7 +285,7 @@ static bool get_sample_info(void *array_start, long array_end, float gain_factor
     // Sample volume.
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
         goto get_sample_info_failed;
-    sample->default_gain = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH) * gain_factor;
+    sample->default_volume = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
 
     // Sample length.
     if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)

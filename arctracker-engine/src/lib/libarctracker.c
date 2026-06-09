@@ -426,6 +426,20 @@ api_result_t arctracker_edit_create_pattern(arctracker_t *arctracker, const int 
     return SUCCESS;
 }
 
+api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, const int pattern_no)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (pattern_no != arctracker->module->num_patterns - 1)
+        return failure(INVALID_PATTERN_NUMBER);
+    edit_result_t result = editor_delete_pattern(arctracker->module, pattern_no);
+    if (!result.success)
+        return failure(result.error_message);
+    return SUCCESS;
+}
+
 api_result_t arctracker_destroy(arctracker_t *arctracker)
 {
     if (arctracker == NULL)
