@@ -58,7 +58,6 @@ bool module_create_pattern(module_t *module, int pattern_no, int num_lines)
     if (pattern.events == NULL)
         return false;
     module->patterns[pattern_no] = pattern;
-    module->num_patterns++;
     return true;
 }
 

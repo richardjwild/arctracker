@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { PlayerEvent } from "./playerEvents.ts";
 import { message } from "@tauri-apps/plugin-dialog";
 
-export interface Module {
+export type Module = {
   fileName: string | null;
   name: string;
   author: string;
@@ -14,7 +14,7 @@ export interface Module {
   samples: Sample[];
 }
 
-export interface Sample {
+export type Sample = {
   name: string;
   defaultGain: number;
   sampleLength: number;
@@ -24,7 +24,7 @@ export interface Sample {
   transpose: number;
 }
 
-export interface TransportState {
+export type TransportState = {
   playing: boolean;
   looping: boolean;
   sequencePos: number;
@@ -33,17 +33,17 @@ export interface TransportState {
   patternLength: number;
 }
 
-export interface ExportState {
+export type ExportState = {
   completed: boolean;
   percentComplete: number;
 }
 
-export interface Effect {
+export type Effect = {
   effectCode: string;
   effectData: number[];
 }
 
-export interface PatternEvent {
+export type PatternEvent = {
   note: number;
   sampleNo: number;
   effects: Effect[];
@@ -70,7 +70,7 @@ export function sequencesEqual(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((value, i) => value === b[i]);
 }
 
-export interface PatternLine {
+export type PatternLine = {
   row: number;
   events: PatternEvent[];
 }

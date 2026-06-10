@@ -9,7 +9,6 @@ import useSequencePosition from "../hooks/useSequencePosition.ts";
 export default function Sequence() {
   const moduleId = useStore((state) => state.moduleId);
   const tuneLength = useStore((state) => state.module.tuneLength);
-  const sequenceRevision = useStore((state) => state.sequenceRevision);
   const moduleSequence = useStore((state) => state.sequence);
   const playing = useStore((state) => state.transportState.playing);
   const numPatterns = useStore((state) => state.module.numPatterns);
@@ -29,10 +28,12 @@ export default function Sequence() {
       : 1;
 
   useEffect(() => {
+    // We use the tune length as the source of truth before we have loaded the sequence.
+    // We use the sequence itself as the source of truth thereafter.
     engine.getSequence(tuneLength).then((sequence) => {
       useStore.getState().setSequence(sequence);
     });
-  }, [moduleId, tuneLength, sequenceRevision]);
+  }, [moduleId, tuneLength]);
 
   useEffect(() => {
     const container = containerRef.current;

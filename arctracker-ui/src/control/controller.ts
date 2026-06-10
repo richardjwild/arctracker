@@ -168,10 +168,10 @@ function processCommands() {
         void copyPaste.pastePattern();
         break;
       case CommandType.UNDO_EDIT:
-        void editor.undo();
+        void editor.undoEdit();
         break;
       case CommandType.REDO_EDIT:
-        void editor.redo();
+        void editor.redoEdit();
         break;
       case CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION:
         selection.clearPatternSelection();

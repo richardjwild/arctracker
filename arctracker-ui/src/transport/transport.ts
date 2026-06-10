@@ -5,7 +5,7 @@ import { sequence } from "../editing/sequence.ts";
 
 export type { TransportState };
 
-export interface CurrentPattern {
+export type CurrentPattern = {
   patternNo: number;
   lines: PatternLine[];
 }

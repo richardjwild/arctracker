@@ -8,7 +8,6 @@ import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
 interface AppStore {
   moduleId: number;
   patternRevision: number;
-  sequenceRevision: number;
   module: Module;
   sequence: number[];
   pianoKeyboardTranspose: number;
@@ -27,7 +26,6 @@ interface AppStore {
   setSequence: (sequence: number[]) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
-  sequenceRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
@@ -119,6 +117,7 @@ export const useStore = create<AppStore>((set) => ({
       patternRevision: 0,
       sequenceRevision: 0,
       module: result,
+      sequence: [],
       selectedSample: result.samples.some((sample) => sample.sampleLength > 0)
         ? 0
         : null,
@@ -146,12 +145,6 @@ export const useStore = create<AppStore>((set) => ({
   patternRevised: (): void => {
     set((state) => {
       return { patternRevision: state.patternRevision + 1 };
-    });
-  },
-
-  sequenceRevised: (): void => {
-    set((state) => {
-      return { sequenceRevision: state.sequenceRevision + 1 };
     });
   },
 

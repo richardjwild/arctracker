@@ -11,7 +11,6 @@ export const pattern = {
     return patternNo;
   },
 
-  // TODO: Make "insert sequence position with new pattern" atomic so that the pattern creation can be undone as well.
   deletePattern: async (patternNo: number) => {
     await engine.deletePattern(patternNo);
     const module = useStore.getState().module;

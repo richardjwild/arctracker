@@ -1,8 +1,32 @@
 import { useStore } from "../store/useStore.ts";
-import { editor, EditType, SequenceEditCommand } from "./editor.ts";
+import { editor, EditCommand } from "./editor.ts";
 import { transport } from "../transport/transport.ts";
 import { cursor } from "./cursor.ts";
 import { pattern } from "./pattern.ts";
+import { engine } from "../engine/engine.ts";
+
+function ensureSequencePosition() {
+  const moduleSequence = useStore.getState().sequence;
+  if (sequence.currentPosition() >= moduleSequence.length)
+    sequence.updatePosition(moduleSequence.length - 1);
+}
+
+function basicEditCommand(before: number[], after: number[]): EditCommand {
+  return {
+    apply: async () => {
+      await engine.setSequence(after);
+      useStore.getState().setSequence(after);
+      ensureSequencePosition();
+      return true;
+    },
+    undo: async () => {
+      await engine.setSequence(before);
+      useStore.getState().setSequence(before);
+      ensureSequencePosition();
+    },
+    postApply: ensureSequencePosition,
+  };
+}
 
 async function setPattern(sequenceIndex: number, patternNo: number) {
   if (transport.playing()) return;
@@ -12,11 +36,7 @@ async function setPattern(sequenceIndex: number, patternNo: number) {
   if (patternNo < 0 || patternNo >= numPatterns) return;
   const updatedSequence = [...sequence];
   updatedSequence[sequenceIndex] = patternNo;
-  const command: SequenceEditCommand = {
-    type: EditType.SequenceEdit,
-    before: sequence,
-    after: updatedSequence,
-  };
+  const command = basicEditCommand(sequence, updatedSequence);
   await editor.applyEdit(command);
 }
 
@@ -70,36 +90,64 @@ export const sequence = {
   insertBefore: async (createNewPattern: boolean = false) => {
     if (transport.playing()) return;
     const sequencePosition = sequence.currentPosition();
-    const moduleSequence = useStore.getState().sequence;
-    const patternNo = createNewPattern
-      ? await pattern.createPattern(64) // TODO: Implement default length.
-      : moduleSequence[sequencePosition];
-    const updatedSequence = [...moduleSequence];
-    updatedSequence.splice(sequencePosition, 0, patternNo);
-    const command: SequenceEditCommand = {
-      type: EditType.SequenceEdit,
-      before: moduleSequence,
-      after: updatedSequence,
-    };
+    const command: EditCommand = {
+      apply: async () => {
+        const moduleSequence = useStore.getState().sequence;
+        const patternNo = createNewPattern
+          ? await pattern.createPattern(64) // TODO: Implement default length.
+          : moduleSequence[sequencePosition];
+        const updatedSequence = [...moduleSequence];
+        updatedSequence.splice(sequencePosition, 0, patternNo);
+        useStore.getState().setSequence(updatedSequence);
+        await engine.setSequence(updatedSequence);
+        return true;
+      },
+      undo: async () => {
+        const moduleSequence = useStore.getState().sequence;
+        const updatedSequence = [...moduleSequence];
+        updatedSequence.splice(sequencePosition, 1);
+        await engine.setSequence(updatedSequence);
+        useStore.getState().setSequence(updatedSequence);
+        if (createNewPattern) {
+          const createdPattern = moduleSequence[sequencePosition];
+          await pattern.deletePattern(createdPattern);
+          ensureSequencePosition();
+        }
+      },
+    }
     await editor.applyEdit(command);
   },
 
   insertAfter: async (createNewPattern: boolean = false) => {
     if (transport.playing()) return;
     const sequencePosition = sequence.currentPosition();
-    const moduleSequence = useStore.getState().sequence;
-    const patternNo = createNewPattern
-      ? await pattern.createPattern(64) // TODO: Implement default length.
-      : moduleSequence[sequencePosition];
-    const updatedSequence = [...moduleSequence];
-    updatedSequence.splice(sequencePosition + 1, 0, patternNo);
-    const command: SequenceEditCommand = {
-      type: EditType.SequenceEdit,
-      before: moduleSequence,
-      after: updatedSequence,
-    };
+    const command: EditCommand = {
+      apply: async () => {
+        const moduleSequence = useStore.getState().sequence;
+        const patternNo = createNewPattern
+          ? await pattern.createPattern(64) // TODO: Implement default length.
+          : moduleSequence[sequencePosition];
+        const updatedSequence = [...moduleSequence];
+        updatedSequence.splice(sequencePosition + 1, 0, patternNo);
+        useStore.getState().setSequence(updatedSequence);
+        await engine.setSequence(updatedSequence);
+        sequence.advance();
+        return true;
+      },
+      undo: async () => {
+        const moduleSequence = useStore.getState().sequence;
+        const updatedSequence = [...moduleSequence];
+        updatedSequence.splice(sequencePosition + 1, 1);
+        await engine.setSequence(updatedSequence);
+        useStore.getState().setSequence(updatedSequence);
+        if (createNewPattern) {
+          const createdPattern = moduleSequence[sequencePosition + 1];
+          await pattern.deletePattern(createdPattern);
+          ensureSequencePosition();
+        }
+      },
+    }
     await editor.applyEdit(command);
-    sequence.advance();
   },
 
   delete: async () => {
@@ -109,14 +157,7 @@ export const sequence = {
     const sequencePosition = sequence.currentPosition();
     const updatedSequence = [...moduleSequence];
     updatedSequence.splice(sequencePosition, 1);
-    const command: SequenceEditCommand = {
-      type: EditType.SequenceEdit,
-      before: moduleSequence,
-      after: updatedSequence,
-    };
+    const command = basicEditCommand(moduleSequence, updatedSequence);
     await editor.applyEdit(command);
-    if (sequencePosition >= updatedSequence.length) {
-      sequence.updatePosition(updatedSequence.length - 1);
-    }
   },
 };

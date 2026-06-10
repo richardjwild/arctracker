@@ -1,10 +1,4 @@
 import { useStore } from "../store/useStore.ts";
-import {
-  engine,
-  eventsEqual,
-  PatternEvent,
-  sequencesEqual,
-} from "../engine/engine.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 
 export type EditorState = {
@@ -14,93 +8,13 @@ export type EditorState = {
   effectsDisplayed: number[];
 };
 
-export enum EditType {
-  EventEdit,
-  SequenceEdit,
-  CompoundEventEdit,
-}
-
-export type EventEditCommand = {
-  type: EditType.EventEdit;
-  patternNo: number;
-  patternIndex: number;
-  track: number;
-  before: PatternEvent;
-  after: PatternEvent;
+export type EditCommand = {
+  apply: (redoing: boolean) => Promise<boolean>;
+  undo: () => Promise<void>;
 };
-
-export type SequenceEditCommand = {
-  type: EditType.SequenceEdit;
-  before: number[];
-  after: number[];
-};
-
-export type CompoundEventEditCommand = {
-  type: EditType.CompoundEventEdit;
-  eventEdits: EventEditCommand[];
-};
-
-export type EditCommand =
-  | EventEditCommand
-  | SequenceEditCommand
-  | CompoundEventEditCommand;
 
 const undoStack: EditCommand[] = [];
 const redoStack: EditCommand[] = [];
-
-async function applyEventEdit(command: EventEditCommand): Promise<boolean> {
-  if (!eventsEqual(command.before, command.after)) {
-    await engine.setEvent(
-      command.patternNo,
-      command.patternIndex,
-      command.track,
-      command.after,
-    );
-    return true;
-  }
-  return false;
-}
-
-async function applySequenceEdit(
-  command: SequenceEditCommand,
-): Promise<boolean> {
-  if (!sequencesEqual(command.before, command.after)) {
-    await engine.setSequence(command.after);
-    useStore.getState().setSequence(command.after);
-    return true;
-  }
-  return false;
-}
-
-async function applyCompoundEventEdit(
-  command: CompoundEventEditCommand,
-): Promise<boolean> {
-  let revised = false;
-  for (const edit of command.eventEdits) {
-    if (!eventsEqual(edit.before, edit.after)) {
-      await engine.setEvent(
-        edit.patternNo,
-        edit.patternIndex,
-        edit.track,
-        edit.after,
-      );
-      revised = true;
-    }
-  }
-  return revised;
-}
-
-function markRevision(editType: EditType) {
-  switch (editType) {
-    case EditType.EventEdit: /* fall through */
-    case EditType.CompoundEventEdit:
-      useStore.getState().patternRevised();
-      break;
-    case EditType.SequenceEdit:
-      useStore.getState().sequenceRevised();
-      break;
-  }
-}
 
 export const editor = {
   editing: () => {
@@ -156,18 +70,8 @@ export const editor = {
 
   applyEdit: async (command: EditCommand) => {
     try {
-      let revised = false;
-      if (command.type === EditType.EventEdit) {
-        revised = await applyEventEdit(command);
-      }
-      if (command.type === EditType.SequenceEdit) {
-        revised = await applySequenceEdit(command);
-      }
-      if (command.type === EditType.CompoundEventEdit) {
-        revised = await applyCompoundEventEdit(command);
-      }
+      const revised = await command.apply(false);
       if (revised) {
-        markRevision(command.type);
         undoStack.push(command);
         redoStack.length = 0;
       }
@@ -176,55 +80,22 @@ export const editor = {
     }
   },
 
-  undo: async () => {
+  undoEdit: async () => {
     const command = undoStack.pop();
     if (!command) return;
     try {
-      if (command.type === EditType.EventEdit) {
-        await applyEventEdit({
-          ...command,
-          before: command.after,
-          after: command.before,
-        });
-      }
-      if (command.type === EditType.SequenceEdit) {
-        await applySequenceEdit({
-          ...command,
-          before: command.after,
-          after: command.before,
-        });
-      }
-      if (command.type === EditType.CompoundEventEdit) {
-        await applyCompoundEventEdit({
-          ...command,
-          eventEdits: command.eventEdits.map((edit) => ({
-            ...edit,
-            before: edit.after,
-            after: edit.before,
-          })),
-        });
-      }
-      markRevision(command.type);
+      await command.undo();
       redoStack.push(command);
     } catch (err) {
       throw err;
     }
   },
 
-  redo: async () => {
+  redoEdit: async () => {
     const command = redoStack.pop();
     if (!command) return;
     try {
-      if (command.type === EditType.EventEdit) {
-        await applyEventEdit(command);
-      }
-      if (command.type === EditType.SequenceEdit) {
-        await applySequenceEdit(command);
-      }
-      if (command.type === EditType.CompoundEventEdit) {
-        await applyCompoundEventEdit(command);
-      }
-      markRevision(command.type);
+      await command.apply(true);
       undoStack.push(command);
     } catch (err) {
       throw err;

@@ -5,6 +5,19 @@ import { message } from "@tauri-apps/plugin-dialog";
 
 const { setExportState, setExportMonitoring } = useStore.getState();
 
+function handleExportError(errorMessage: string) {
+  message(
+    `Export audio encountered an error: ${errorMessage}`,
+    {
+      title: "Arctracker",
+      kind: "error",
+    },
+  ).then(() => {
+    setExportMonitoring(false);
+  });
+}
+
+
 export const audioExport = {
   start: async () => {
     const defaultExportPath = await getDefaultExportPath();
@@ -30,6 +43,15 @@ export const audioExport = {
 
   poller: () => {
     engine.getExportState().then((state) => setExportState(state));
+    engine.pollExportEvents().then((events) => {
+      for (const event of events) {
+        switch (event.eventType) {
+          case "playerError":
+            handleExportError(event.errorMessage);
+            return; // No point trying to handle any other events.
+        }
+      }
+    })
   },
 }
 

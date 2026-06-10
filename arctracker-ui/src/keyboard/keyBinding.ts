@@ -15,7 +15,7 @@ type ModifierRequirement =
   | "primary+secondary"
   | "secondary+tertiary";
 
-interface KeyBinding {
+type KeyBinding = {
   modifiers: ModifierRequirement;
   execute: () => void;
 }

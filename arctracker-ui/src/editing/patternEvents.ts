@@ -1,9 +1,17 @@
 import { useStore } from "../store/useStore.ts";
-import { engine, Effect, PatternEvent } from "../engine/engine.ts";
-import { editor, EditCommand, EditType, EventEditCommand } from "./editor.ts";
+import { engine, Effect, PatternEvent, eventsEqual } from "../engine/engine.ts";
+import { editor, EditCommand } from "./editor.ts";
 import { Cursor, CursorField } from "./cursor.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { patternGrid } from "./patternGrid.ts";
+
+export type EventEdit = {
+  patternNo: number;
+  patternIndex: number;
+  track: number;
+  before: PatternEvent;
+  after: PatternEvent;
+};
 
 export type EventLocation = {
   patternNo: number;
@@ -14,10 +22,12 @@ export type EventLocation = {
 async function buildEventEditCommand({
   eventLocation,
   buildEvent,
+  postApply,
 }: {
   eventLocation: EventLocation | null;
   buildEvent: (before: PatternEvent) => PatternEvent;
-}): Promise<EventEditCommand> {
+  postApply?: () => void;
+}): Promise<EditCommand> {
   const { sequence } = useStore.getState();
   const { sequencePosition } = useStore.getState().editorState;
   try {
@@ -34,16 +44,65 @@ async function buildEventEditCommand({
     );
     const updatedEvent = buildEvent(currentEvent);
     return {
-      type: EditType.EventEdit,
-      patternNo: location.patternNo,
-      patternIndex: location.patternIndex,
-      track: location.track,
-      before: currentEvent,
-      after: updatedEvent,
+      apply: async (redoing: boolean) => {
+        if (!eventsEqual(currentEvent, updatedEvent)) {
+          await engine.setEvent(
+            location.patternNo,
+            location.patternIndex,
+            location.track,
+            updatedEvent,
+          );
+          useStore.getState().patternRevised();
+          if (postApply && !redoing) postApply();
+          return true;
+        }
+        return false;
+      },
+      undo: async () => {
+        await engine.setEvent(
+          location.patternNo,
+          location.patternIndex,
+          location.track,
+          currentEvent,
+        );
+        useStore.getState().patternRevised();
+      },
     };
   } catch (err) {
     throw err;
   }
+}
+
+function buildMultipleEventEditCommand(eventEdits: EventEdit[]): EditCommand {
+  return {
+    apply: async () => {
+      let revised = false;
+      for (const edit of eventEdits) {
+        if (!eventsEqual(edit.before, edit.after)) {
+          await engine.setEvent(
+            edit.patternNo,
+            edit.patternIndex,
+            edit.track,
+            edit.after,
+          );
+          revised = true;
+        }
+      }
+      if (revised) useStore.getState().patternRevised();
+      return revised;
+    },
+    undo: async () => {
+      for (const edit of eventEdits) {
+        await engine.setEvent(
+          edit.patternNo,
+          edit.patternIndex,
+          edit.track,
+          edit.before,
+        );
+      }
+      useStore.getState().patternRevised();
+    },
+  };
 }
 
 function copyEffects(effects: Effect[]) {
@@ -82,9 +141,9 @@ export const patternEvents = {
           sampleNo: selectedSample + 1,
         };
       },
+      postApply: () => patternGrid.moveDown(true),
     });
     await editor.applyEdit(command);
-    patternGrid.moveDown(true);
   },
 
   setEventSample: async (field: CursorField, value: string) => {
@@ -197,53 +256,47 @@ export const patternEvents = {
 
   clearEvents: async (locations: EventLocation[]) => {
     if (!editor.editing()) return;
-    const compoundEventEdit: EditCommand = {
-      type: EditType.CompoundEventEdit,
-      eventEdits: [],
-    };
+    const eventEdits: EventEdit[] = [];
     for (const location of locations) {
       const before = await engine.getEvent(
         location.patternNo,
         location.patternIndex,
         location.track,
       );
-      const eventEdit: EventEditCommand = {
-        type: EditType.EventEdit,
+      const eventEdit: EventEdit = {
         patternNo: location.patternNo,
         patternIndex: location.patternIndex,
         track: location.track,
         before,
         after: emptyEvent(),
       };
-      compoundEventEdit.eventEdits.push(eventEdit);
+      eventEdits.push(eventEdit);
     }
-    await editor.applyEdit(compoundEventEdit);
+    const eventEditCommand = buildMultipleEventEditCommand(eventEdits);
+    await editor.applyEdit(eventEditCommand);
   },
 
   setEvents: async (
     events: { location: EventLocation; event: PatternEvent }[],
   ) => {
     if (!editor.editing()) return;
-    const compoundEventEdit: EditCommand = {
-      type: EditType.CompoundEventEdit,
-      eventEdits: [],
-    };
+    const eventEdits: EventEdit[] = [];
     for (const { location, event } of events) {
       const before = await engine.getEvent(
         location.patternNo,
         location.patternIndex,
         location.track,
       );
-      const eventEdit: EventEditCommand = {
-        type: EditType.EventEdit,
+      const eventEdit: EventEdit = {
         patternNo: location.patternNo,
         patternIndex: location.patternIndex,
         track: location.track,
         before,
         after: event,
       };
-      compoundEventEdit.eventEdits.push(eventEdit);
+      eventEdits.push(eventEdit);
     }
-    await editor.applyEdit(compoundEventEdit);
+    const eventEditCommand = buildMultipleEventEditCommand(eventEdits);
+    await editor.applyEdit(eventEditCommand);
   },
 };

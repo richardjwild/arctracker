@@ -4,6 +4,8 @@
 #include "memory/bits.h"
 #include "pcm/mu_law.h"
 
+static const uint8_t PAN_CENTRE = 0x80;
+
 static void volume_slide_up(voice_t *, uint8_t);
 static void volume_slide_down(voice_t *, uint8_t);
 static void portamento_up(voice_t *, uint8_t);
@@ -47,6 +49,10 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             start_tone_portamento(voice, effect_no, effect.data);
         else if (effect.command == SET_VOLUME)
             set_volume(voice, effect.data);
+        else if (effect.command == FINE_CRESCENDO)
+            volume_slide_up(voice, effect.data);
+        else if (effect.command == FINE_DECRESCENDO)
+            volume_slide_down(voice, effect.data);
         else if (effect.command == SET_TICKS_PER_EVENT)
             set_tempo(&player->tick_scheduler, effect.data);
         else if (effect.command == SET_PANNING)
@@ -174,8 +180,7 @@ static void portamento_fine(voice_t *voice, const uint8_t data)
 
 static void set_voice_panning(voice_t *voice, const uint8_t data)
 {
-    if (data > 0)
-        voice->panning = data;
+    voice->panning = (data == 0) ? PAN_CENTRE : data;
 }
 
 static void set_tempo(tick_scheduler_t *tick_scheduler, const uint8_t data)

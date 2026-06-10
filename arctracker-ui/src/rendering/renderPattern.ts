@@ -114,7 +114,7 @@ function cssColour(name: string): string {
     .trim();
 }
 
-interface Colours {
+type Colours = {
   trackLaneSeparator: string;
   playheadBackground: string;
   text: string,
