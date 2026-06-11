@@ -39,7 +39,9 @@ bool module_init(module_t *module)
 {
     module->initial_speed = 6;
     for (int i = 0; i < module->num_channels; i++)
-        module->initial_panning[i] = 3; // Centre
+        module->initial_panning[i] = 0x80; // Centre
+    for (int i = 0; i < NUM_INSTRUMENT_SLOTS; i++)
+        module->instrument_slots[i].assigned = false;
     module->patterns[0] = (pattern_t) {
         .num_lines = 64,
         .events = allocate_array(MODULE, 64 * module->num_channels, sizeof(event_t)),
@@ -95,7 +97,6 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     snprintf(module_info->author, sizeof module_info->author, "%s", module->author);
     module_info->num_channels = module->num_channels;
     module_info->tune_length = module->tune_length;
-    module_info->num_samples = module->num_samples;
     module_info->num_patterns = module->num_patterns;
 }
 

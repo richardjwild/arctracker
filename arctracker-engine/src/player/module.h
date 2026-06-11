@@ -11,6 +11,7 @@
 #define MAX_CHANNELS 16
 #define NUM_PATTERNS 256
 #define MAX_EFFECTS 4
+#define NUM_INSTRUMENT_SLOTS 256
 
 static const int EVENT_SIZE_SINGLE_EFFECT = 4;
 static const int EVENT_SIZE_MULTIPLE_EFFECT = 8;
@@ -47,7 +48,7 @@ typedef struct
 typedef struct
 {
     int note;
-    int sample_no;
+    int instrument_no;
     effect_t effects[4];
 } event_t;
 
@@ -56,6 +57,12 @@ typedef struct
     int num_lines;
     event_t *events;
 } pattern_t;
+
+typedef struct {
+    // TODO: Add instrument_type here when the time comes.
+    bool assigned;
+    int sample_index;
+} instrument_slot_t;
 
 typedef struct
 {
@@ -83,6 +90,7 @@ typedef struct
     pattern_t *patterns;
     int pattern_capacity;
     int num_samples;
+    instrument_slot_t instrument_slots[NUM_INSTRUMENT_SLOTS];
     sample_t *samples;
     int initial_speed;
     float master_gain;

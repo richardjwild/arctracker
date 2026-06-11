@@ -12,7 +12,7 @@ fn main() {
     let app_state = Arc::new(AppState {
         tracker: Arc::new(Mutex::new(tracker)),
         editor: Mutex::new(EditorState {
-            selected_sample: 0,
+            selected_instrument: 0,
             selected_channel: 0,
         }),
     });

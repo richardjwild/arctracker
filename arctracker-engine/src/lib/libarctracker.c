@@ -79,15 +79,26 @@ api_result_t arctracker_module_load(arctracker_t *arctracker, char *mod_filename
     return SUCCESS;
 }
 
-api_result_t arctracker_get_sample_info(arctracker_t *arctracker, int sample_no, ui_sample_info_t *sample_info)
+api_result_t arctracker_get_instrument_info(arctracker_t *arctracker, uint8_t slot, ui_instrument_info_t *instrument_info)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (sample_no < 0 || sample_no >= arctracker->module->num_samples)
-        return failure(BAD_SAMPLE_NUMBER);
-    module_get_sample_info(arctracker->module, sample_no, sample_info);
+    if (instrument_info == NULL)
+        return failure(BAD_BUFFER);
+    const bool assigned = arctracker->module->instrument_slots[slot].assigned;
+    if (!assigned)
+    {
+        instrument_info->assigned = false;
+        return SUCCESS;
+    }
+    ui_sample_info_t sample_info;
+    const int sample_index = arctracker->module->instrument_slots[slot].sample_index;
+    module_get_sample_info(arctracker->module, sample_index, &sample_info);
+    instrument_info->assigned = true;
+    instrument_info->sample_index = sample_index;
+    instrument_info->sample_info = sample_info;
     return SUCCESS;
 }
 
@@ -256,7 +267,7 @@ static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, 
 static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event)
 {
     event_buffer->note = event->note;
-    event_buffer->sample_no = event->sample_no;
+    event_buffer->sample_no = event->instrument_no;
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
@@ -270,7 +281,7 @@ static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event)
 {
     memset(event_buffer, 0, sizeof(event_t));
     event_buffer->note = event->note;
-    event_buffer->sample_no = event->sample_no;
+    event_buffer->instrument_no = event->sample_no;
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
         const ui_effect_t effect = event->effects[effect_no];

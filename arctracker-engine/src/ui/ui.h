@@ -18,12 +18,17 @@ typedef struct ui_sample_info {
     int transpose;
 } ui_sample_info_t;
 
+typedef struct ui_instrument_info {
+    bool assigned;
+    int sample_index;
+    ui_sample_info_t sample_info;
+} ui_instrument_info_t;
+
 typedef struct ui_module_info {
     char name[TUNE_NAME_MAX_LEN];
     char author[AUTHOR_NAME_MAX_LEN];
     int num_channels;
     int tune_length;
-    int num_samples;
     int num_patterns;
 } ui_module_info_t;
 

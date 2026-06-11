@@ -3,12 +3,12 @@ import { useStore } from "../store/useStore.ts";
 import { midi } from "../midi/midi.ts";
 
 export default function useMidiPlayback() {
-  const selectedSample = useStore((state) => state.selectedSample);
+  const selectedInstrument = useStore((state) => state.selectedInstrument);
   const track = useStore((state) => state.editorState.cursorPosition.track);
   useEffect(() => {
-    if (selectedSample !== null)
-      midi.useSample(selectedSample);
-  }, [selectedSample])
+    if (selectedInstrument !== null)
+      midi.useInstrument(selectedInstrument);
+  }, [selectedInstrument])
   useEffect(() => {
     midi.useChannel(track);
   }, [track])

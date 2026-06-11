@@ -55,7 +55,7 @@ static uint8_t *search_tff(uint8_t *, long, const char *);
 static bool decode_patterns(uint8_t *, long, module_t *, const int *);
 static size_t decode_tracker_event(const uint8_t *, event_t *);
 static effect_t effect(uint8_t code, uint8_t);
-static int get_samples(void *, long, sample_t *);
+static int get_samples(void *, long, sample_t *, instrument_slot_t *);
 static bool get_sample_info(void *, long, sample_t *);
 static void copy_int_array(uint8_t *, int *, int);
 
@@ -153,7 +153,9 @@ static module_t *read_tracker_module(mapped_file_t file)
     copy_int_array(chunk_address + 8, module->sequence, module->tune_length);
     if (!decode_patterns(file.addr, array_end, module, pattern_lengths))
         goto fail;
-    module->num_samples = get_samples(file.addr, array_end, module->samples);
+    module->num_samples = get_samples(file.addr, array_end, module->samples, module->instrument_slots);
+    if (module->num_samples == 0)
+        goto fail;
     destroy_encoding_buffer();
     deallocate(MODULE, pattern_lengths);
     return module;
@@ -228,7 +230,7 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
 static size_t decode_tracker_event(const uint8_t *event_p, event_t *decoded)
 {
     const uint32_t *raw = (uint32_t *) event_p;
-    decoded->sample_no = MASK_8_SHIFT_RIGHT(*raw, 16);
+    decoded->instrument_no = MASK_8_SHIFT_RIGHT(*raw, 16);
     decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
     decoded->effects[0] = effect(MASK_8_SHIFT_RIGHT(*raw, 8), MASK_8_SHIFT_RIGHT(*raw, 0));
     for (int i = 1; i <= 3; i++)
@@ -253,24 +255,34 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     };
 }
 
-static int get_samples(void *array_start, long array_end, sample_t *samples)
+static int get_samples(void *array_start, long array_end, sample_t *samples, instrument_slot_t *instrument_slots)
 {
-    int chunks_found = 0;
-    int samples_found = 0;
+    int sample_index = 0;
+    int slot = 0;
+    char error_message[256];
     uint8_t *chunk_address = search_tff(array_start, array_end, SAMP_CHUNK);
-    while (chunk_address != CHUNK_NOT_FOUND && chunks_found < NUM_SAMPLES)
+    while (chunk_address != CHUNK_NOT_FOUND && sample_index < NUM_SAMPLES)
     {
-        chunks_found++;
-        if (get_sample_info(chunk_address, array_end, samples))
+        if (!get_sample_info(chunk_address, array_end, &samples[sample_index]))
         {
-            samples++;
-            samples_found++;
+            snprintf(error_message, 256, "Modfile corrupt - sample %d invalid", sample_index);
+            error(error_message);
+            return 0;
         }
+        if (samples[sample_index].sample_length > 0)
+        {
+            instrument_slots[slot].assigned = true;
+            instrument_slots[slot].sample_index = sample_index;
+        }
+        else
+        {
+            instrument_slots[slot].assigned = false;
+        }
+        slot++;
+        sample_index++;
         chunk_address = search_tff(chunk_address + CHUNK_ID_LENGTH, array_end, SAMP_CHUNK);
     }
-    if (chunks_found == 0)
-        error("Modfile corrupt - no samples in module");
-    return samples_found;
+    return sample_index;
 }
 
 static bool get_sample_info(void *array_start, long array_end, sample_t *sample)

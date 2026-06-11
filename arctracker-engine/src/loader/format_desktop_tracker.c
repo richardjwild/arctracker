@@ -189,7 +189,7 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
 static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *decoded)
 {
     const uint32_t *raw = (uint32_t *) event_p;
-    decoded->sample_no = MASK_6_SHIFT_RIGHT(*raw, 0);
+    decoded->instrument_no = MASK_6_SHIFT_RIGHT(*raw, 0);
     decoded->note = MASK_6_SHIFT_RIGHT(*raw, 6);
     if (IS_MULTIPLE_EFFECT(*raw))
     {
@@ -273,6 +273,15 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
         sample->sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
         if (!convert_vidc_encoded_sample(sample->sample_data, sample_data_mu_law, sample->sample_length))
             return false;
+        if (sample->sample_length > 0)
+        {
+            module->instrument_slots[i].assigned = true;
+            module->instrument_slots[i].sample_index = i;
+        }
+        else
+        {
+            module->instrument_slots[i].assigned = false;
+        }
     }
     return true;
 }

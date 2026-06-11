@@ -28,6 +28,13 @@ int main(const int argc, char *argv[])
     }
     ui_module_info_t module_info = load_module(arctracker_handle, config.mod_filename);
     printf("Module name: %s\n", module_info.name);
+    for (int slot = 0; slot < 256; slot++)
+    {
+        ui_instrument_info_t instrument_info;
+        arctracker_get_instrument_info(arctracker_handle, slot, &instrument_info);
+        if (instrument_info.assigned)
+            printf("Slot %d -> Sample %d -> %s\n", slot, instrument_info.sample_index, instrument_info.sample_info.name);
+    }
     if (config.bounce)
     {
         start_export(arctracker_handle, config.output_filename);

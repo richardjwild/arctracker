@@ -130,7 +130,7 @@ function emptyEvent(): PatternEvent {
 export const patternEvents = {
   setEventNote: async (note: number) => {
     if (!editor.editing()) return;
-    const selectedSample = useStore.getState().selectedSample;
+    const selectedSample = useStore.getState().selectedInstrument;
     if (selectedSample === null) return;
     const command = await buildEventEditCommand({
       eventLocation: null,

@@ -43,7 +43,7 @@ fn handle_midi_message(message: &[u8], state: &AppState) {
             let tracker_note = (midi_note as i32) - 47;
             tracker.midi_note_on(
                 tracker_note,
-                editor.selected_sample,
+                editor.selected_instrument,
                 editor.selected_channel,
             );
         // TODO: Implement note-off only when sample repeats.

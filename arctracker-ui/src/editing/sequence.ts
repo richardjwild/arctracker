@@ -24,7 +24,6 @@ function basicEditCommand(before: number[], after: number[]): EditCommand {
       useStore.getState().setSequence(before);
       ensureSequencePosition();
     },
-    postApply: ensureSequencePosition,
   };
 }
 

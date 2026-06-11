@@ -1,6 +1,7 @@
 #ifndef ARCTRACKER_LIBARCTRACKER_H
 #define ARCTRACKER_LIBARCTRACKER_H
 
+#include <stdint.h>
 #include "ui/ui.h"
 #include "player/player_command.h"
 #include "ui/player_event.h"
@@ -19,7 +20,7 @@ api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_
 
 api_result_t arctracker_module_load(arctracker_t *handle, char *mod_filename, ui_module_info_t *module_info);
 
-api_result_t arctracker_get_sample_info(arctracker_t *handle, int sample_no, ui_sample_info_t *sample_info);
+api_result_t arctracker_get_instrument_info(arctracker_t *handle, uint8_t slot, ui_instrument_info_t *instrument_info);
 
 api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_lengths, int num_patterns);
 

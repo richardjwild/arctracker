@@ -83,15 +83,22 @@ pub struct Sample {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Instrument {
+    pub assigned: bool,
+    pub sample_index: i32,
+    pub sample: Sample,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Module {
     pub(crate) name: String,
     pub(crate) author: String,
     pub num_channels: i32,
     pub tune_length: i32,
-    pub num_samples: i32,
     pub num_patterns: i32,
     pub pattern_lengths: Vec<i32>,
-    pub samples: Vec<Sample>,
+    pub instruments: Vec<Instrument>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -231,10 +238,19 @@ impl Arctracker {
             return Err(c_string_to_rust(&result.error_message));
         }
         let module = unsafe { module.assume_init() };
-        let mut samples = Vec::with_capacity(module.num_samples as usize);
-        for sample_no in 0..module.num_samples {
-            let sample = self.get_sample_info(sample_no).map_err(|e| format!("Failed to get sample info: {}", e.message))?;
-            samples.push(sample);
+        let mut instruments = Vec::with_capacity(256);
+        let mut last_assigned_slot: Option<u8> = None;
+        for slot in 0..=u8::MAX {
+            let instrument = self.get_instrument(slot).map_err(|e| format!("Failed to get instrument: {}", e.message))?;
+            if instrument.assigned {
+                last_assigned_slot = Some(slot);
+            }
+            instruments.push(instrument);
+        }
+        if let Some(slot) = last_assigned_slot {
+            instruments.truncate(slot as usize + 1);
+        } else {
+            instruments.clear();
         }
         let pattern_lengths = self.get_pattern_lengths(module.num_patterns)
             .map_err(|e| format!("Failed to get pattern lengths: {}", e.message))?;
@@ -243,10 +259,9 @@ impl Arctracker {
             author: c_string_to_rust(&module.author),
             num_channels: module.num_channels,
             tune_length: module.tune_length,
-            num_samples: module.num_samples,
             num_patterns: module.num_patterns,
             pattern_lengths,
-            samples,
+            instruments,
         })
     }
 
@@ -282,10 +297,19 @@ impl Arctracker {
             return Err(c_string_to_rust(&result.error_message));
         }
         let module = unsafe { module.assume_init() };
-        let mut samples = Vec::with_capacity(module.num_samples as usize);
-        for sample_no in 0..module.num_samples {
-            let sample = self.get_sample_info(sample_no).map_err(|e| format!("Failed to get sample info: {}", e.message))?;
-            samples.push(sample);
+        let mut instruments = Vec::with_capacity(256);
+        let mut last_assigned_slot: Option<u8> = None;
+        for slot in 0..=u8::MAX {
+            let instrument = self.get_instrument(slot).map_err(|e| format!("Failed to get instrument: {}", e.message))?;
+            if instrument.assigned {
+                last_assigned_slot = Some(slot);
+            }
+            instruments.push(instrument);
+        }
+        if let Some(slot) = last_assigned_slot {
+            instruments.truncate(slot as usize + 1);
+        } else {
+            instruments.clear();
         }
         let pattern_lengths = self.get_pattern_lengths(module.num_patterns)
             .map_err(|e| format!("Failed to get pattern lengths: {}", e.message))?;
@@ -294,10 +318,9 @@ impl Arctracker {
             author: c_string_to_rust(&module.author),
             num_channels: module.num_channels,
             tune_length: module.tune_length,
-            num_samples: module.num_samples,
             num_patterns: module.num_patterns,
             pattern_lengths,
-            samples,
+            instruments,
         })
     }
 
@@ -349,32 +372,35 @@ impl Arctracker {
             author: c_string_to_rust(&module_info.author),
             num_channels: module_info.num_channels,
             tune_length: module_info.tune_length,
-            num_samples: module_info.num_samples,
             num_patterns: module_info.num_patterns,
             pattern_lengths,
-            samples: Vec::new(),
+            instruments: Vec::new(),
         })
     }
 
-    fn get_sample_info(&mut self, sample_no: i32) -> Result<Sample, ArctrackerError> {
-        let mut sample_info = std::mem::MaybeUninit::<ffi::UiSampleInfo>::uninit();
+    fn get_instrument(&mut self, instrument_no: u8) -> Result<Instrument, ArctrackerError> {
+        let mut instrument = std::mem::MaybeUninit::<ffi::UiInstrumentInfo>::uninit();
         let result = unsafe {
-            ffi::arctracker_get_sample_info(self.handle, sample_no, sample_info.as_mut_ptr())
+            ffi::arctracker_get_instrument_info(self.handle, instrument_no, instrument.as_mut_ptr())
         };
         if !result.success {
             return Err(ArctrackerError {
                 message: c_string_to_rust(&result.error_message),
             });
         }
-        let sample_info = unsafe { sample_info.assume_init() };
-        Ok(Sample {
-            name: c_string_to_rust(&sample_info.name),
-            default_gain: sample_info.default_gain,
-            sample_length: sample_info.sample_length,
-            repeats: sample_info.repeats,
-            repeat_offset: sample_info.repeat_offset,
-            repeat_length: sample_info.repeat_length,
-            transpose: sample_info.transpose,
+        let instrument = unsafe { instrument.assume_init() };
+        Ok(Instrument {
+            assigned: instrument.assigned,
+            sample_index: instrument.sample_index,
+            sample: Sample {
+                name: c_string_to_rust(&instrument.sample_info.name),
+                default_gain: instrument.sample_info.default_gain,
+                sample_length: instrument.sample_info.sample_length,
+                repeats: instrument.sample_info.repeats,
+                repeat_offset: instrument.sample_info.repeat_offset,
+                repeat_length: instrument.sample_info.repeat_length,
+                transpose: instrument.sample_info.transpose,
+            },
         })
     }
 
@@ -467,7 +493,7 @@ impl Arctracker {
             new_pattern_pos: 0,
             channel_no: 0,
             note: 0,
-            sample_no: 0,
+            instrument_no: 0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -481,7 +507,7 @@ impl Arctracker {
             new_pattern_pos: 0,
             channel_no: 0,
             note: 0,
-            sample_no: 0,
+            instrument_no: 0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -495,14 +521,14 @@ impl Arctracker {
             new_pattern_pos,
             channel_no: 0,
             note: 0,
-            sample_no: 0,
+            instrument_no: 0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
         }
     }
 
-    pub fn midi_note_on(&mut self, note: i32, sample_no: i32, channel_no: i32)
+    pub fn midi_note_on(&mut self, note: i32, instrument_no: u8, channel_no: i32)
     {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::MIDI_NOTE_ON,
@@ -510,14 +536,14 @@ impl Arctracker {
             new_pattern_pos: 0,
             channel_no,
             note,
-            sample_no,
+            instrument_no,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
         }
     }
 
-    pub fn keyboard_note_on(&mut self, note: i32, sample_no: i32, channel_no: i32)
+    pub fn keyboard_note_on(&mut self, note: i32, instrument_no: u8, channel_no: i32)
     {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::KEYBOARD_NOTE_ON,
@@ -525,7 +551,7 @@ impl Arctracker {
             new_pattern_pos: 0,
             channel_no,
             note,
-            sample_no,
+            instrument_no,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);

@@ -1,6 +1,8 @@
 #ifndef ARCTRACKER_PLAYER_COMMAND_H
 #define ARCTRACKER_PLAYER_COMMAND_H
 
+#include <stdint.h>
+
 typedef enum cmd_type {
     TOGGLE_PLAY = 0,
     SEEK = 1,
@@ -17,7 +19,7 @@ typedef struct player_command {
     int new_pattern_pos;
     int channel_no;
     int note;
-    int sample_no;
+    uint8_t instrument_no;
 } player_command_t;
 
 #endif //ARCTRACKER_PLAYER_COMMAND_H

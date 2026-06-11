@@ -1,8 +1,8 @@
 import { engine } from "../engine/engine.ts";
 
 export const midi = {
-  useSample: (sampleNumber: number) => {
-    engine.setSelectedSample(sampleNumber);
+  useInstrument: (instrument: number) => {
+    engine.setSelectedInstrument(instrument);
   },
 
   useChannel: (channel: number) => {

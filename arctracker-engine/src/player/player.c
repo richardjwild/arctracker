@@ -9,11 +9,17 @@
 
 static bool player_tick(player_t *);
 static void process_commands(player_t *player);
+static void process_command(player_t *player, player_command_t command);
+static void process_toggle_play_command(player_t *player);
+static void process_seek_command(player_t *player, player_command_t command);
+static void process_note_on_command(player_t *player, player_command_t command, bool from_midi);
+static void process_toggle_loop_command(player_t *player);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(player_t *);
 static event_t *get_events(const player_t *);
 static void note_on(int, const sample_t *, voice_t *);
+static void note_off(voice_t *voice);
 static bool audio_consume(player_t *);
 static void update_voices(player_t *player);
 static void on_new_event(player_t *, const event_t *, voice_t *);
@@ -129,41 +135,69 @@ static void process_commands(player_t *player)
 {
     player_command_t command;
     while (command_queue_read(player->command_queue, &command))
+        process_command(player, command);
+}
+
+static void process_command(player_t *player, const player_command_t command)
+{
+    switch (command.cmd_type)
     {
-        switch (command.cmd_type)
-        {
-            case TOGGLE_PLAY:
-                if (player->playing)
-                    player_stop(player);
-                else
-                    player_start(player);
-                break;
-            case SEEK:
-                player_seek(player, command.new_sequence_pos, command.new_pattern_pos);
-                break;
-            case MIDI_NOTE_ON:
-                // We only want to emit the player event for MIDI_NOTE_ON not KEYBOARD_NOTE_ON.
-                event_queue_add(player->player_event_queue, create_user_midi_event(command.note));
-                /* fall through */
-            case KEYBOARD_NOTE_ON:
-            {
-                const sample_t *sample = player->module->samples + command.sample_no;
-                voice_t *voice = player->voices + command.channel_no;
-                note_on(command.note, sample, voice);
-                break;
-            }
-            case TOGGLE_LOOP:
-            {
-                if (player->sequence.looping_state.looping)
-                    clear_pattern_loop(&player->sequence);
-                else
-                    set_pattern_loop(&player->sequence);
-                break;
-            }
-            default:
-                break;
-        }
+        case TOGGLE_PLAY:
+            process_toggle_play_command(player);
+            break;
+        case SEEK:
+            process_seek_command(player, command);
+            break;
+        case MIDI_NOTE_ON:
+            process_note_on_command(player, command, true);
+            break;
+        case KEYBOARD_NOTE_ON:
+            process_note_on_command(player, command, false);
+            break;
+        case TOGGLE_LOOP:
+            process_toggle_loop_command(player);
+            break;
+        default:
+            break;
     }
+}
+
+static void process_toggle_play_command(player_t *player)
+{
+    if (player->playing)
+        player_stop(player);
+    else
+        player_start(player);
+}
+
+static void process_seek_command(player_t *player, const player_command_t command)
+{
+    player_seek(player, command.new_sequence_pos, command.new_pattern_pos);
+}
+
+static void process_note_on_command(player_t *player, const player_command_t command, const bool from_midi)
+{
+    if (from_midi)
+    {
+        event_queue_add(player->player_event_queue, create_user_midi_event(command.note));
+    }
+    voice_t *voice = player->voices + command.channel_no;
+    const instrument_slot_t slot = player->module->instrument_slots[command.instrument_no];
+    if (!slot.assigned)
+    {
+        note_off(voice);
+        return;
+    }
+    const sample_t *sample = player->module->samples + slot.sample_index;
+    note_on(command.note, sample, voice);
+}
+
+static void process_toggle_loop_command(player_t *player)
+{
+    if (player->sequence.looping_state.looping)
+        clear_pattern_loop(&player->sequence);
+    else
+        set_pattern_loop(&player->sequence);
 }
 
 static voice_t *initialise_voices(player_t *player)
@@ -242,20 +276,23 @@ static void update_voices(player_t *player)
 
 static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
 {
-    const sample_t *sample = player->module->samples + (event->sample_no - 1);
-    if (event->note)
+    const instrument_slot_t slot = player->module->instrument_slots[event->instrument_no - 1];
+    if (event->note && slot.assigned)
     {
+        const sample_t *sample = player->module->samples + slot.sample_index;
         if (portamento(event))
             voice->tone_portamento_target_period = period_for_note(event->note + sample->transpose);
-        else if (sample->sample_length == 0)
-            voice->channel_playing = false;
         else
             note_on(event->note, sample, voice);
     }
-    else
+    else if (event->note && !slot.assigned)
     {
-        if (event->sample_no)
-            voice->volume = sample->default_volume;
+        voice->channel_playing = false;
+    }
+    else if (event->instrument_no && slot.assigned)
+    {
+        const sample_t *sample = player->module->samples + slot.sample_index;
+        voice->volume = sample->default_volume;
     }
     reset_arpeggiator(voice);
     handle_effects_on_event(event, voice, player);
@@ -276,6 +313,11 @@ static void note_on(int note, const sample_t *sample, voice_t *voice)
     voice->sample_end = voice->sample_repeats
             ? sample->repeat_offset + sample->repeat_length
             : sample->sample_length;
+}
+
+static void note_off(voice_t *voice)
+{
+    voice->channel_playing = false;
 }
 
 static void player_stop(player_t *player)

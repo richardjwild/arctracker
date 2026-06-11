@@ -40,7 +40,7 @@ pub struct PlayerCommand {
     pub new_pattern_pos: c_int,
     pub channel_no: c_int,
     pub note: c_int,
-    pub sample_no: c_int,
+    pub instrument_no: u8,
 }
 
 #[repr(C)]
@@ -55,12 +55,18 @@ pub struct UiSampleInfo {
 }
 
 #[repr(C)]
+pub struct UiInstrumentInfo {
+    pub assigned: bool,
+    pub sample_index: c_int,
+    pub sample_info: UiSampleInfo,
+}
+
+#[repr(C)]
 pub struct UiModuleInfo {
     pub name: [c_char; 65],
     pub author: [c_char; 65],
     pub num_channels: c_int,
     pub tune_length: c_int,
-    pub num_samples: c_int,
     pub num_patterns: c_int,
 }
 
@@ -118,10 +124,10 @@ extern "C" {
         num_channels: c_int,
         module_info: *mut UiModuleInfo,
     ) -> ApiResult;
-    pub fn arctracker_get_sample_info(
+    pub fn arctracker_get_instrument_info(
         handle: *mut ArctrackerHandle,
-        sample_no: c_int,
-        sample_info: *mut UiSampleInfo,
+        slot: u8,
+        instrument_info: *mut UiInstrumentInfo,
     ) -> ApiResult;
     pub fn arctracker_get_pattern_lengths(
         handle: *mut ArctrackerHandle,

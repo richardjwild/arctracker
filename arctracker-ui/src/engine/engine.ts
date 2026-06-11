@@ -10,8 +10,13 @@ export type Module = {
   numPatterns: number;
   patternLengths: number[];
   tuneLength: number;
-  numSamples: number;
-  samples: Sample[];
+  instruments: Instrument[];
+}
+
+export type Instrument = {
+  assigned: boolean;
+  sampleIndex: number;
+  sample: Sample;
 }
 
 export type Sample = {
@@ -108,9 +113,9 @@ export const engine = {
     });
   },
 
-  setSelectedSample: (sampleNo: number) => {
-    void invoke("set_selected_sample", {
-      sampleNo,
+  setSelectedInstrument: (instrumentNo: number) => {
+    void invoke("set_selected_instrument", {
+      instrumentNo,
     });
   },
 

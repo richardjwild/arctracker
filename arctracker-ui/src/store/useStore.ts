@@ -19,7 +19,7 @@ interface AppStore {
   exportMonitoring: boolean;
   exportState: ExportState | null;
   currentPattern: CurrentPattern;
-  selectedSample: number | null;
+  selectedInstrument: number | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
@@ -34,7 +34,7 @@ interface AppStore {
   setExportMonitoring: (monitoring: boolean) => void;
   setExportState: (state: ExportState) => void;
   setCurrentPattern: (currentPattern: CurrentPattern) => void;
-  setSelectedSample: (sampleNo: number) => void;
+  setSelectedInstrument: (instrument: number) => void;
   setLoadingModule: (loading: boolean) => void;
 }
 
@@ -46,8 +46,7 @@ const initialModule: Module = {
   numPatterns: 0,
   patternLengths: [],
   tuneLength: 1,
-  numSamples: 0,
-  samples: [],
+  instruments: [],
 };
 
 const initialTransportState: TransportState = {
@@ -108,7 +107,7 @@ export const useStore = create<AppStore>((set) => ({
   exportMonitoring: false,
   exportState: null,
   currentPattern: initialPattern,
-  selectedSample: null,
+  selectedInstrument: null,
   isLoadingModule: false,
 
   setModule: (result) =>
@@ -118,8 +117,8 @@ export const useStore = create<AppStore>((set) => ({
       sequenceRevision: 0,
       module: result,
       sequence: [],
-      selectedSample: result.samples.some((sample) => sample.sampleLength > 0)
-        ? 0
+      selectedInstrument: result.instruments.findIndex((i) => i.assigned) >= 0
+        ? result.instruments.findIndex((i) => i.assigned)
         : null,
       selectedChannel: 0,
       isLoadingModule: false,
@@ -195,9 +194,9 @@ export const useStore = create<AppStore>((set) => ({
       currentPattern,
     }),
 
-  setSelectedSample: (selectedSample) =>
+  setSelectedInstrument: (selectedInstrument) =>
     set({
-      selectedSample,
+      selectedInstrument,
     }),
 
   setLoadingModule: (isLoadingModule) =>

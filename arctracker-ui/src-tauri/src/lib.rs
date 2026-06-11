@@ -17,9 +17,9 @@ fn current_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> 
 #[tauri::command]
 fn load_module(path: String, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let info = tracker.load_module_with_info(&path);
+    let info = tracker.load_module_with_info(&path).map_err(|e| e)?;
     tracker.start().map_err(|e| e.message)?;
-    info
+    Ok(info)
 }
 
 #[tauri::command]
@@ -89,12 +89,12 @@ fn get_pattern(
 }
 
 #[tauri::command]
-fn set_selected_sample(
-    sample_no: i32,
+fn set_selected_instrument(
+    instrument_no: u8,
     state: tauri::State<Arc<AppState>>,
 ) {
     let mut editor = state.editor.lock().unwrap();
-    editor.selected_sample = sample_no;
+    editor.selected_instrument = instrument_no;
 }
 
 #[tauri::command]
@@ -138,7 +138,7 @@ fn export_cleanup(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     let editor = state.editor.lock().unwrap();
-    tracker.keyboard_note_on(note, editor.selected_sample, editor.selected_channel);
+    tracker.keyboard_note_on(note, editor.selected_instrument, editor.selected_channel);
     Ok(())
 }
 
@@ -205,7 +205,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             seek,
             get_transport_state,
             get_pattern,
-            set_selected_sample,
+            set_selected_instrument,
             set_selected_channel,
             shutdown_app,
             default_export_path,
