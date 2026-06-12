@@ -10,7 +10,7 @@ export const editorKeyHandlers: {
 } = {
   handleSampleFieldInput: (e) => {
     const { editorState } = useStore.getState();
-    if (!editorState.editing) return false;
+    if (!editorState.patternEditing) return false;
     const cursorField = new Cursor().currentField();
     if (cursorField.field !== "sampleHigh" && cursorField.field !== "sampleLow")
       return false;
@@ -22,7 +22,7 @@ export const editorKeyHandlers: {
 
   handleEffectFieldInput: (e) => {
     const { editorState } = useStore.getState();
-    if (!editorState.editing) return false;
+    if (!editorState.patternEditing) return false;
     const cursorField = new Cursor().currentField();
     if (cursorField.field === "effectCode") {
       if (e.metaKey || e.ctrlKey || !/^[0-9A-Za-z]$/i.test(e.key)) return false;

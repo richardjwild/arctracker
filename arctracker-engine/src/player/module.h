@@ -61,18 +61,18 @@ typedef struct
 typedef struct {
     // TODO: Add instrument_type here when the time comes.
     bool assigned;
-    int sample_index;
-} instrument_slot_t;
-
-typedef struct
-{
     char name[MAX_LEN_SAMPLENAME];
     uint8_t default_volume;
-    int sample_length;
+    int transpose;
     bool repeats;
     int repeat_offset;
     int repeat_length;
-    int transpose;
+    int sample_index;
+} instrument_t;
+
+typedef struct
+{
+    int sample_length;
     float *sample_data;
 } sample_t;
 
@@ -90,7 +90,7 @@ typedef struct
     pattern_t *patterns;
     int pattern_capacity;
     int num_samples;
-    instrument_slot_t instrument_slots[NUM_INSTRUMENT_SLOTS];
+    instrument_t instruments[NUM_INSTRUMENT_SLOTS];
     sample_t *samples;
     int initial_speed;
     float master_gain;
@@ -108,6 +108,6 @@ void module_destroy(module_t *module);
 
 void module_get_info(module_t *module, ui_module_info_t *module_info);
 
-void module_get_sample_info(module_t *module, int sample_no, ui_sample_info_t *sample_info);
+void module_get_instrument_info(const module_t *module, int instrument_index, ui_instrument_info_t *instrument_info);
 
 #endif //ARCTRACKER_MODULE_H

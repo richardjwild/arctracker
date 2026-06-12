@@ -2,7 +2,9 @@ import { useStore } from "../store/useStore.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 
 export type EditorState = {
-  editing: boolean;
+  patternEditing: boolean;
+  instrumentEditing: boolean;
+  inputtingText: boolean;
   cursorPosition: CursorPosition;
   sequencePosition: number;
   effectsDisplayed: number[];
@@ -17,9 +19,29 @@ const undoStack: EditCommand[] = [];
 const redoStack: EditCommand[] = [];
 
 export const editor = {
-  editing: () => {
+  patternEditing: () => {
     const { editorState } = useStore.getState();
-    return editorState.editing;
+    return editorState.patternEditing;
+  },
+
+  inputtingText: () => {
+    return useStore.getState().editorState.inputtingText;
+  },
+
+  startTextInput: () => {
+    const { editorState, setEditorState } = useStore.getState();
+    setEditorState({
+      ...editorState,
+      inputtingText: true,
+    });
+  },
+
+  stopTextInput: () => {
+    const { editorState, setEditorState } = useStore.getState();
+    setEditorState({
+      ...editorState,
+      inputtingText: false,
+    });
   },
 
   togglePatternEdit: () => {
@@ -28,7 +50,7 @@ export const editor = {
       useStore.getState();
     setEditorState({
       ...editorState,
-      editing: !editorState.editing,
+      patternEditing: !editorState.patternEditing,
     });
     setPatternSelection(null);
   },
@@ -37,7 +59,7 @@ export const editor = {
     const { editorState, setEditorState } = useStore.getState();
     setEditorState({
       ...editorState,
-      editing: false,
+      patternEditing: false,
     });
   },
 

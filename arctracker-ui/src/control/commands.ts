@@ -56,6 +56,9 @@ export enum CommandType {
   INSERT_SEQUENCE_POSITION_BEFORE,
   INSERT_SEQUENCE_POSITION_AFTER,
   DELETE_SEQUENCE_POSITION,
+  OPEN_INSTRUMENT_EDITOR,
+  SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
+  RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
 }
 
 export type Command =
@@ -123,7 +126,10 @@ export type Command =
       type: CommandType.INSERT_SEQUENCE_POSITION_AFTER;
       createNewPattern: boolean;
     }
-  | { type: CommandType.DELETE_SEQUENCE_POSITION };
+  | { type: CommandType.DELETE_SEQUENCE_POSITION }
+  | { type: CommandType.OPEN_INSTRUMENT_EDITOR }
+  | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
+  | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR };
 
 const queue: Command[] = [];
 
@@ -240,4 +246,12 @@ export const commands = {
     }),
   deleteSequencePosition: () =>
     commandQueue.push({ type: CommandType.DELETE_SEQUENCE_POSITION }),
+  openInstrumentEditor: () =>
+    commandQueue.push({ type: CommandType.OPEN_INSTRUMENT_EDITOR }),
+  saveAndCloseInstrumentEditor: () =>
+    commandQueue.push({ type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }),
+  restoreAndCloseInstrumentEditor: () =>
+    commandQueue.push({
+      type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
+    }),
 };

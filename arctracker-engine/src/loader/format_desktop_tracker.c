@@ -258,29 +258,30 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
     for (int i = 0; i < module->num_samples; i++)
     {
         sample_t *sample = &module->samples[i];
-        dtt_sample_format_t file_sample = file_samples[i];
-        strncpy(sample->name, file_sample.name, MAX_LEN_SAMPLENAME_DSKT);
-        sample->transpose = 26 - file_sample.note;
-        sample->default_volume = file_sample.volume * 2;
-        sample->repeat_offset = file_sample.repeat_offset;
-        sample->repeat_length = file_sample.repeat_length;
+        instrument_t *instrument = &module->instruments[i];
+        const dtt_sample_format_t file_sample = file_samples[i];
+        instrument->repeat_offset = file_sample.repeat_offset;
+        instrument->repeat_length = file_sample.repeat_length;
         if (file_sample.repeat_offset + file_sample.repeat_length > file_sample.sample_length)
-            sample->sample_length = sample->repeat_offset + sample->repeat_length;
+            sample->sample_length = instrument->repeat_offset + instrument->repeat_length;
         else
             sample->sample_length = file_sample.sample_length;
-        sample->repeats = (sample->repeat_length != 0);
-        uint8_t *sample_data_mu_law = base_address + file_sample.sample_data_offset;
+        instrument->repeats = (instrument->repeat_length != 0);
+        const uint8_t *sample_data_mu_law = base_address + file_sample.sample_data_offset;
         sample->sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
         if (!convert_vidc_encoded_sample(sample->sample_data, sample_data_mu_law, sample->sample_length))
             return false;
         if (sample->sample_length > 0)
         {
-            module->instrument_slots[i].assigned = true;
-            module->instrument_slots[i].sample_index = i;
+            instrument->assigned = true;
+            strncpy(instrument->name, file_sample.name, MAX_LEN_SAMPLENAME_DSKT);
+            instrument->sample_index = i;
+            instrument->transpose = 26 - file_sample.note;
+            instrument->default_volume = file_sample.volume * 2;
         }
         else
         {
-            module->instrument_slots[i].assigned = false;
+            instrument->assigned = false;
         }
     }
     return true;

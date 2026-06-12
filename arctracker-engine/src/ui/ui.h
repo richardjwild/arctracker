@@ -9,18 +9,18 @@
 #define MAX_SAMPLES 36
 
 typedef struct ui_sample_info {
-    char name[MAX_LEN_SAMPLENAME];
-    int default_gain;
     int sample_length;
-    bool repeats;
-    int repeat_offset;
-    int repeat_length;
-    int transpose;
 } ui_sample_info_t;
 
 typedef struct ui_instrument_info {
     bool assigned;
+    char name[MAX_LEN_SAMPLENAME];
+    int default_volume;
+    int transpose;
     int sample_index;
+    bool repeats;
+    int repeat_offset;
+    int repeat_length;
     ui_sample_info_t sample_info;
 } ui_instrument_info_t;
 

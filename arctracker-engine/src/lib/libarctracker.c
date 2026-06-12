@@ -87,18 +87,7 @@ api_result_t arctracker_get_instrument_info(arctracker_t *arctracker, uint8_t sl
         return failure(NO_MODULE_LOADED);
     if (instrument_info == NULL)
         return failure(BAD_BUFFER);
-    const bool assigned = arctracker->module->instrument_slots[slot].assigned;
-    if (!assigned)
-    {
-        instrument_info->assigned = false;
-        return SUCCESS;
-    }
-    ui_sample_info_t sample_info;
-    const int sample_index = arctracker->module->instrument_slots[slot].sample_index;
-    module_get_sample_info(arctracker->module, sample_index, &sample_info);
-    instrument_info->assigned = true;
-    instrument_info->sample_index = sample_index;
-    instrument_info->sample_info = sample_info;
+    module_get_instrument_info(arctracker->module, slot, instrument_info);
     return SUCCESS;
 }
 
@@ -144,6 +133,10 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     if (arctracker->playback.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
     audio_api_t audio_api = create_audio_api(false, NULL);
+    if (has_error())
+    {
+        return failure(AUDIO_INIT_FAILED);
+    }
     arctracker->playback.player = player_create(arctracker->module, audio_api, arctracker->playback.event_queue);
     if (arctracker->playback.player == NULL)
         return failure(PLAYER_INIT_FAILED);

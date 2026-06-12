@@ -1,0 +1,124 @@
+.sampleEdit {
+    width: 500px;
+    height: 465px;
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px;
+    gap: 10px;
+    grid-template-areas:
+        "instrumentEditTitle instrumentEditTitle"
+        "sampleNameLabel sampleNameEdit"
+        "defaultVolumeLabel defaultVolumeEdit"
+        "transposeLabel transposeEdit"
+        "sampleLengthLabel sampleLengthEdit"
+        "repeatStartLabel repeatStartEdit"
+        "repeatEndLabel repeatEndEdit"
+        "saveCloseButtons saveCloseButtons"
+}
+
+.instrumentEditTitle {
+    grid-area: instrumentEditTitle;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-input-text);
+    font-size: 20px;
+    margin: 0;
+}
+
+.sampleNameLabel {
+    grid-area: sampleNameLabel;
+}
+
+.sampleNameEdit {
+    grid-area: sampleNameEdit;
+}
+
+.defaultVolumeLabel {
+    grid-area: defaultVolumeLabel;
+}
+
+.defaultVolumeEdit {
+    grid-area: defaultVolumeEdit;
+}
+
+.transposeLabel {
+    grid-area: transposeLabel;
+}
+
+.transposeEdit {
+    grid-area: transposeEdit;
+}
+
+.sampleLengthLabel {
+    grid-area: sampleLengthLabel;
+}
+
+.sampleLengthEdit {
+    grid-area: sampleLengthEdit;
+}
+
+.repeatStartLabel {
+    grid-area: repeatStartLabel;
+}
+
+.repeatStartEdit {
+    grid-area: repeatStartEdit;
+}
+
+.repeatEndLabel {
+    grid-area: repeatEndLabel;
+}
+
+.repeatEndEdit {
+    grid-area: repeatEndEdit;
+}
+
+.sampleEditLabel {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-label);
+    padding-top: 13px;
+}
+
+.sampleEditField input {
+    width: 100%;
+    height: 28px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    color: var(--colour-sample-edit-input-text);
+    font-family: FiraCode, monospace;
+    font-size: 16px;
+    caret-shape: block;
+    caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.sampleEditField input:focus {
+    outline: none;
+}
+
+.saveCloseButtons {
+    grid-area: saveCloseButtons;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.saveCloseButtons button {
+    height: 30px;
+    width: 100px;
+    border-radius: 5px;
+    padding: 0;
+    background: var(--colour-button-save-sample-bg);
+    color: var(--colour-button-fg);
+    border: solid 1px var(--colour-button-fg);
+}
+
+.saveCloseButtons button:hover {
+    background: var(--colour-button-fg);
+    color: var(--colour-button-save-sample-bg);
+    border: solid 1px var(--colour-button-save-sample-bg);
+}

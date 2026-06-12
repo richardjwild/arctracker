@@ -15,18 +15,18 @@ export type Module = {
 
 export type Instrument = {
   assigned: boolean;
+  name: string;
+  defaultVolume: number;
+  transpose: number;
+  repeats: boolean;
+  repeatOffset: number;
+  repeatLength: number;
   sampleIndex: number;
   sample: Sample;
 }
 
 export type Sample = {
-  name: string;
-  defaultGain: number;
   sampleLength: number;
-  repeats: boolean;
-  repeatOffset: number;
-  repeatLength: number;
-  transpose: number;
 }
 
 export type TransportState = {

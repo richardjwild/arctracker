@@ -1,5 +1,6 @@
 import { useStore } from "../store/useStore.ts";
 import Modal from "./Modal.tsx";
+import "./ExportDialog.css";
 
 export default function ExportDialog() {
   const exportMonitoring = useStore((s) => s.exportMonitoring);
@@ -10,7 +11,7 @@ export default function ExportDialog() {
   }
 
   return (
-    <Modal>
+    <Modal className="audioExportState">
       {exportState.completed ? (
         <div>Export complete</div>
       ) : (

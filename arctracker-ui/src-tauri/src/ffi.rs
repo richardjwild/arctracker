@@ -45,19 +45,19 @@ pub struct PlayerCommand {
 
 #[repr(C)]
 pub struct UiSampleInfo {
-    pub name: [c_char; 33],
-    pub default_gain: c_int,
     pub sample_length: c_int,
-    pub repeats: bool,
-    pub repeat_offset: c_int,
-    pub repeat_length: c_int,
-    pub transpose: c_int,
 }
 
 #[repr(C)]
 pub struct UiInstrumentInfo {
     pub assigned: bool,
+    pub name: [c_char; 33],
+    pub default_volume: c_int,
+    pub transpose: c_int,
     pub sample_index: c_int,
+    pub repeats: bool,
+    pub repeat_offset: c_int,
+    pub repeat_length: c_int,
     pub sample_info: UiSampleInfo,
 }
 

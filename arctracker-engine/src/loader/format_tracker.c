@@ -55,8 +55,8 @@ static uint8_t *search_tff(uint8_t *, long, const char *);
 static bool decode_patterns(uint8_t *, long, module_t *, const int *);
 static size_t decode_tracker_event(const uint8_t *, event_t *);
 static effect_t effect(uint8_t code, uint8_t);
-static int get_samples(void *, long, sample_t *, instrument_slot_t *);
-static bool get_sample_info(void *, long, sample_t *);
+static int get_samples(void *, long, sample_t *, instrument_t *);
+static bool get_sample_info(void *, long, sample_t *, instrument_t *);
 static void copy_int_array(uint8_t *, int *, int);
 
 format_t tracker_format(void)
@@ -153,7 +153,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     copy_int_array(chunk_address + 8, module->sequence, module->tune_length);
     if (!decode_patterns(file.addr, array_end, module, pattern_lengths))
         goto fail;
-    module->num_samples = get_samples(file.addr, array_end, module->samples, module->instrument_slots);
+    module->num_samples = get_samples(file.addr, array_end, module->samples, module->instruments);
     if (module->num_samples == 0)
         goto fail;
     destroy_encoding_buffer();
@@ -255,7 +255,7 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     };
 }
 
-static int get_samples(void *array_start, long array_end, sample_t *samples, instrument_slot_t *instrument_slots)
+static int get_samples(void *array_start, long array_end, sample_t *samples, instrument_t *instrument_slots)
 {
     int sample_index = 0;
     int slot = 0;
@@ -263,20 +263,22 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, ins
     uint8_t *chunk_address = search_tff(array_start, array_end, SAMP_CHUNK);
     while (chunk_address != CHUNK_NOT_FOUND && sample_index < NUM_SAMPLES)
     {
-        if (!get_sample_info(chunk_address, array_end, &samples[sample_index]))
+        sample_t *sample = &samples[sample_index];
+        instrument_t *instrument = &instrument_slots[slot];
+        if (!get_sample_info(chunk_address, array_end, sample, instrument))
         {
             snprintf(error_message, 256, "Modfile corrupt - sample %d invalid", sample_index);
             error(error_message);
             return 0;
         }
-        if (samples[sample_index].sample_length > 0)
+        if (sample->sample_length > 0)
         {
-            instrument_slots[slot].assigned = true;
-            instrument_slots[slot].sample_index = sample_index;
+            instrument->assigned = true;
+            instrument->sample_index = sample_index;
         }
         else
         {
-            instrument_slots[slot].assigned = false;
+            instrument->assigned = false;
         }
         slot++;
         sample_index++;
@@ -285,19 +287,19 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, ins
     return sample_index;
 }
 
-static bool get_sample_info(void *array_start, long array_end, sample_t *sample)
+static bool get_sample_info(void *array_start, long array_end, sample_t *sample, instrument_t *instrument)
 {
     uint8_t *chunk_address;
 
     // Sample name.
     if ((chunk_address = search_tff(array_start, array_end, SNAM_CHUNK)) == CHUNK_NOT_FOUND)
         goto get_sample_info_failed;
-    strncpy(sample->name, (char *) chunk_address + CHUNK_HEADER_LENGTH, MAX_LEN_SAMPLENAME_TRK);
+    strncpy(instrument->name, (char *) chunk_address + CHUNK_HEADER_LENGTH, MAX_LEN_SAMPLENAME_TRK);
 
     // Sample volume.
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
         goto get_sample_info_failed;
-    sample->default_volume = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
+    instrument->default_volume = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
 
     // Sample length.
     if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)
@@ -307,18 +309,18 @@ static bool get_sample_info(void *array_start, long array_end, sample_t *sample)
     // Repeat offset.
     if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK)) == CHUNK_NOT_FOUND)
         goto get_sample_info_failed;
-    sample->repeat_offset = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
+    instrument->repeat_offset = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
 
     // Repeat length.
     if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
         goto get_sample_info_failed;
     int repeat_length = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
-    if (repeat_length == 2 && sample->repeat_offset != 0)
-        sample->repeat_length = sample->sample_length - sample->repeat_offset;
-    else if (repeat_length + sample->repeat_offset > sample->sample_length)
-        sample->repeat_length = sample->sample_length - sample->repeat_offset;
+    if (repeat_length == 2 && instrument->repeat_offset != 0)
+        instrument->repeat_length = sample->sample_length - instrument->repeat_offset;
+    else if (repeat_length + instrument->repeat_offset > sample->sample_length)
+        instrument->repeat_length = sample->sample_length - instrument->repeat_offset;
     else
-        sample->repeat_length = repeat_length;
+        instrument->repeat_length = repeat_length;
 
     // Sample data.
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
@@ -327,23 +329,23 @@ static bool get_sample_info(void *array_start, long array_end, sample_t *sample)
     if (sample->sample_length == 0)
     {
         sample->sample_data = NULL;
-        sample->repeats = false;
+        instrument->repeats = false;
     }
     else
     {
         sample->sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
         if (!convert_vidc_encoded_sample(sample->sample_data, sample_data_mu_law, sample->sample_length))
             goto get_sample_info_failed;
-        sample->repeats = (sample->repeat_offset != 0 || sample->repeat_length != 2);
-        if (sample->repeats) {
-            sample->sample_data[sample->sample_length] = sample->sample_data[sample->repeat_offset];
-            sample->sample_data[sample->sample_length + 1] = sample->sample_data[sample->repeat_offset + 1];
+        instrument->repeats = (instrument->repeat_offset != 0 || instrument->repeat_length != 2);
+        if (instrument->repeats) {
+            sample->sample_data[sample->sample_length] = sample->sample_data[instrument->repeat_offset];
+            sample->sample_data[sample->sample_length + 1] = sample->sample_data[instrument->repeat_offset + 1];
         }
     }
 
     // Transpose all notes up an octave when playing a Tracker module
     // because Desktop Tracker has 5 octaves compared to Tracker's 3.
-    sample->transpose = 12;
+    instrument->transpose = 12;
 
     return true;
 

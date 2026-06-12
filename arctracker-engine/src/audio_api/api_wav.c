@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "api_wav.h"
-
 #include <errno.h>
-
 #include "io/error.h"
 
 static const char *CHUNK_ID = "RIFF";
@@ -18,6 +16,7 @@ static const uint16_t BITS_PER_SAMPLE = 16;
 static const uint16_t NUM_CHANNELS = 2;
 
 #define FRAME_SIZE (NUM_CHANNELS * sizeof(int16_t))
+#define MAX_FILE_PATH_LENGTH 4096
 
 typedef struct {
     uint32_t ChunkID;
@@ -51,17 +50,17 @@ typedef struct {
 static wav_file_t *wav_file = NULL;
 static int frames_written = 0;
 static int data_capacity = 0;
-static char *file_name;
+static char file_name[MAX_FILE_PATH_LENGTH];
 
 static audio_api_result_t init_wav(void)
 {
     return AUDIO_API_SUCCESS;
 }
 
-static void ensure_capacity(int required_frames)
+static bool ensure_capacity(int required_frames)
 {
     if (required_frames <= data_capacity)
-        return;
+        return true;
     int new_capacity = data_capacity == 0
         ? AUDIO_BUFFER_SIZE_FRAMES
         : data_capacity;
@@ -71,11 +70,12 @@ static void ensure_capacity(int required_frames)
     wav_file_t *new_file = realloc(wav_file, sizeof(wav_file_t) + data_size);
     if (new_file == NULL)
     {
-        fprintf(stderr, "Failed to allocate memory");
-        exit(EXIT_FAILURE);
+        error("Failed to allocate memory");
+        return false;
     }
     wav_file = new_file;
     data_capacity = new_capacity;
+    return true;
 }
 
 static int16_t clamp_to_pcm16(const float sample)
@@ -87,7 +87,10 @@ static int16_t clamp_to_pcm16(const float sample)
 
 static audio_api_result_t collect_audio(stereo_frame_t *audio_buffer, int frames_in_buffer)
 {
-    ensure_capacity(frames_written + frames_in_buffer);
+    if (!ensure_capacity(frames_written + frames_in_buffer))
+    {
+        return audio_api_failure(get_error_message());
+    }
     int16_t *data_ptr = wav_file->Data + (frames_written * NUM_CHANNELS);
     while (frames_in_buffer > 0)
     {
@@ -156,24 +159,26 @@ static void create_structure_and_write(bool healthy)
         write_file(data_size);
         free(wav_file);
         wav_file = NULL;
-        free(file_name);
-        file_name = NULL;
+        file_name[0] = '\0';
     }
 }
 
 audio_api_t initialise_wav(char *file_name_in)
 {
-    file_name = malloc((strlen(file_name_in) + 1) * sizeof(char));
-    strcpy(file_name, file_name_in);
+    audio_api_t audio_api = {0};
+    if (strlen(file_name_in) > MAX_FILE_PATH_LENGTH)
+    {
+        error("File path is too long");
+        return audio_api;
+    }
+    snprintf(file_name, MAX_FILE_PATH_LENGTH, "%s", file_name_in);
     frames_written = 0;
     data_capacity = 0;
-    audio_api_t audio_api = {
-            .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
-            .sample_rate = SAMPLE_RATE,
-            .bouncing = true,
-            .init = init_wav,
-            .write = collect_audio,
-            .finish = create_structure_and_write
-    };
+    audio_api.buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES;
+    audio_api.sample_rate = SAMPLE_RATE;
+    audio_api.bouncing = true;
+    audio_api.init = init_wav;
+    audio_api.write = collect_audio;
+    audio_api.finish = create_structure_and_write;
     return audio_api;
 }

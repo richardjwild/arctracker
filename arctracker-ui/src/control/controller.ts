@@ -10,6 +10,7 @@ import { patternGrid } from "../editing/patternGrid.ts";
 import { selection } from "../editing/selection.ts";
 import { copyPaste } from "../editing/copyPaste.ts";
 import {sequence} from "../editing/sequence.ts";
+import { editInstrument } from "../editing/editInstrument.ts";
 
 function processCommands() {
   const commands = commandQueue.consume();
@@ -193,6 +194,11 @@ function processCommands() {
         selection.clearPatternSelection();
         void sequence.delete();
         break;
+      case CommandType.OPEN_INSTRUMENT_EDITOR:
+        editInstrument.showDialog();
+        break;
+      case CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR:
+        editInstrument.closeDialog();
     }
   }
 }

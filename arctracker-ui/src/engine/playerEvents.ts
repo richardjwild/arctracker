@@ -1,23 +1,21 @@
 import { engine } from "./engine.ts";
-import { message } from "@tauri-apps/plugin-dialog";
 import { AppPoller } from "../polling/poller.ts";
 import { commands } from "../control/commands.ts";
+import { alerting } from "../alerting/alert.ts";
 
 export type PlayerEvent =
-  { eventType: "playerError"; errorMessage: string } |
-  { eventType: "userMidiNoteOn"; midiNote: number } |
-  { eventType: "audioOverflowed" };
+  | { eventType: "playerError"; errorMessage: string }
+  | { eventType: "userMidiNoteOn"; midiNote: number }
+  | { eventType: "audioOverflowed" };
 
 function handlePlayerError(errorMessage: string) {
-  message(
-    `Audio subsystem encountered error and will attempt restart. Error details: ${errorMessage}`,
-    {
-      title: "Arctracker",
-      kind: "error",
-    },
-  ).then(() => {
-    engine.startPlayer();
-  });
+  alerting
+    .showError(
+      `Audio subsystem encountered error and will attempt restart. Error details: ${errorMessage}`,
+    )
+    .then(() => {
+      engine.startPlayer();
+    });
 }
 
 function processPlayerEvents() {
@@ -40,4 +38,4 @@ function processPlayerEvents() {
 
 export const playerEvents = {
   poller: (() => processPlayerEvents()) as AppPoller,
-}
+};

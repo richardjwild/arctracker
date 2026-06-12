@@ -81,7 +81,9 @@ const initialPattern: CurrentPattern = {
 
 function initialEditorState(numChannels: number = 0): EditorState {
   return {
-    editing: false,
+    patternEditing: false,
+    instrumentEditing: false,
+    inputtingText: false,
     cursorPosition: {
       track: 0,
       field: 0,

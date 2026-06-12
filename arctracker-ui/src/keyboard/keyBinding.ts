@@ -225,7 +225,7 @@ function modifiersMatch(e: KeyboardEvent, modifier: ModifierRequirement) {
 
 export const keyBinding: { handleKey: KeyHandler } = {
   handleKey: (e) => {
-    console.log("handleKey", e.code);
+    // console.log("handleKey", e.code);
     const keyBinding = getKeyBindings(e.code).find((binding) =>
       modifiersMatch(e, binding.modifiers),
     );

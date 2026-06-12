@@ -33,7 +33,7 @@ int main(const int argc, char *argv[])
         ui_instrument_info_t instrument_info;
         arctracker_get_instrument_info(arctracker_handle, slot, &instrument_info);
         if (instrument_info.assigned)
-            printf("Slot %d -> Sample %d -> %s\n", slot, instrument_info.sample_index, instrument_info.sample_info.name);
+            printf("Slot %d -> Sample %d -> %s\n", slot, instrument_info.sample_index, instrument_info.name);
     }
     if (config.bounce)
     {

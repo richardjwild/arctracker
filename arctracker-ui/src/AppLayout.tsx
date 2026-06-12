@@ -6,6 +6,7 @@ import PatternView from "./view/PatternView.tsx";
 import InstrumentList from "./view/InstrumentList.tsx";
 import ExportDialog from "./view/ExportDialog.tsx";
 import Sequence from "./view/Sequence.tsx";
+import SampleEditDialog from "./view/SampleEditDialog.tsx";
 
 export default function AppLayout() {
   return (
@@ -15,6 +16,7 @@ export default function AppLayout() {
       <Sequence />
       <PatternView />
       <InstrumentList />
+      <SampleEditDialog />
       <ExportDialog />
     </main>
   );

@@ -72,20 +72,20 @@ pub struct PlayerCommand {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sample {
-    pub(crate) name: String,
-    pub default_gain: i32,
     pub sample_length: i32,
-    pub repeats: bool,
-    pub repeat_offset: i32,
-    pub repeat_length: i32,
-    pub transpose: i32,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Instrument {
     pub assigned: bool,
+    pub(crate) name: String,
+    pub default_volume: i32,
+    pub transpose: i32,
     pub sample_index: i32,
+    pub repeats: bool,
+    pub repeat_offset: i32,
+    pub repeat_length: i32,
     pub sample: Sample,
 }
 
@@ -391,15 +391,15 @@ impl Arctracker {
         let instrument = unsafe { instrument.assume_init() };
         Ok(Instrument {
             assigned: instrument.assigned,
+            name: c_string_to_rust(&instrument.name),
+            default_volume: instrument.default_volume,
+            transpose: instrument.transpose,
+            repeats: instrument.repeats,
+            repeat_offset: instrument.repeat_offset,
+            repeat_length: instrument.repeat_length,
             sample_index: instrument.sample_index,
             sample: Sample {
-                name: c_string_to_rust(&instrument.sample_info.name),
-                default_gain: instrument.sample_info.default_gain,
                 sample_length: instrument.sample_info.sample_length,
-                repeats: instrument.sample_info.repeats,
-                repeat_offset: instrument.sample_info.repeat_offset,
-                repeat_length: instrument.sample_info.repeat_length,
-                transpose: instrument.sample_info.transpose,
             },
         })
     }

@@ -189,7 +189,7 @@ export class PatternRenderer {
     this.renderTrackLanes();
     this.renderPlayhead(gridViewportFit);
     if (this.patternSelection) this.renderSelection(gridViewportFit, playheadIndex);
-    if (this.editorState.editing) this.renderCursor(gridViewportFit);
+    if (this.editorState.patternEditing) this.renderCursor(gridViewportFit);
     this.renderPatternLines(gridViewportFit, playheadIndex);
   }
 
@@ -314,7 +314,7 @@ export class PatternRenderer {
   }
 
   private renderEvent(track: number, event: PatternEvent, x: number, y: number, atPlayhead: boolean): number {
-    const cursorOnEvent = (atPlayhead && this.editorState.editing && track === this.editorState.cursorPosition.track);
+    const cursorOnEvent = (atPlayhead && this.editorState.patternEditing && track === this.editorState.cursorPosition.track);
     x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent);
     x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent);
     for (let effectIndex = 0; effectIndex < this.editorState.effectsDisplayed[track]; effectIndex++) {

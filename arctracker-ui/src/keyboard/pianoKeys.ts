@@ -43,7 +43,7 @@ export const pianoKeys: { handleRealtimePianoInput: KeyHandler } = {
   handleRealtimePianoInput: (e) => {
     const { editorState } = useStore.getState();
     const cursorField = new Cursor().currentField();
-    if (!editorState.editing || cursorField.field === "note") {
+    if (!editorState.patternEditing || cursorField.field === "note") {
       const pianoKey = noteFromKeyboard(e);
       if (pianoKey !== null) {
         engine.noteOn(pianoKey);

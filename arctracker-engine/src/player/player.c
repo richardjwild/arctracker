@@ -18,7 +18,7 @@ static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(player_t *);
 static event_t *get_events(const player_t *);
-static void note_on(int, const sample_t *, voice_t *);
+static void note_on(int, const instrument_t *, const sample_t *, voice_t *);
 static void note_off(voice_t *voice);
 static bool audio_consume(player_t *);
 static void update_voices(player_t *player);
@@ -182,14 +182,14 @@ static void process_note_on_command(player_t *player, const player_command_t com
         event_queue_add(player->player_event_queue, create_user_midi_event(command.note));
     }
     voice_t *voice = player->voices + command.channel_no;
-    const instrument_slot_t slot = player->module->instrument_slots[command.instrument_no];
-    if (!slot.assigned)
+    const instrument_t instrument = player->module->instruments[command.instrument_no];
+    if (!instrument.assigned)
     {
         note_off(voice);
         return;
     }
-    const sample_t *sample = player->module->samples + slot.sample_index;
-    note_on(command.note, sample, voice);
+    const sample_t *sample = player->module->samples + instrument.sample_index;
+    note_on(command.note, &instrument, sample, voice);
 }
 
 static void process_toggle_loop_command(player_t *player)
@@ -276,42 +276,41 @@ static void update_voices(player_t *player)
 
 static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
 {
-    const instrument_slot_t slot = player->module->instrument_slots[event->instrument_no - 1];
-    if (event->note && slot.assigned)
+    const instrument_t instrument = player->module->instruments[event->instrument_no - 1];
+    if (event->note && instrument.assigned)
     {
-        const sample_t *sample = player->module->samples + slot.sample_index;
+        const sample_t *sample = player->module->samples + instrument.sample_index;
         if (portamento(event))
-            voice->tone_portamento_target_period = period_for_note(event->note + sample->transpose);
+            voice->tone_portamento_target_period = period_for_note(event->note + instrument.transpose);
         else
-            note_on(event->note, sample, voice);
+            note_on(event->note, &instrument, sample, voice);
     }
-    else if (event->note && !slot.assigned)
+    else if (event->note && !instrument.assigned)
     {
         voice->channel_playing = false;
     }
-    else if (event->instrument_no && slot.assigned)
+    else if (event->instrument_no && instrument.assigned)
     {
-        const sample_t *sample = player->module->samples + slot.sample_index;
-        voice->volume = sample->default_volume;
+        voice->volume = instrument.default_volume;
     }
     reset_arpeggiator(voice);
     handle_effects_on_event(event, voice, player);
 }
 
-static void note_on(int note, const sample_t *sample, voice_t *voice)
+static void note_on(int note, const instrument_t *instrument, const sample_t *sample, voice_t *voice)
 {
     voice->channel_playing = true;
     voice->sample_pointer = sample->sample_data;
     voice->phase_accumulator = 0.0f;
     voice->arpeggiator_on = false;
-    voice->current_note = note + sample->transpose;
+    voice->current_note = note + instrument->transpose;
     voice->period = period_for_note(voice->current_note);
     voice->tone_portamento_target_period = voice->period;
-    voice->volume = sample->default_volume;
-    voice->sample_repeats = sample->repeats;
-    voice->repeat_length = sample->repeat_length;
+    voice->volume = instrument->default_volume;
+    voice->sample_repeats = instrument->repeats;
+    voice->repeat_length = instrument->repeat_length;
     voice->sample_end = voice->sample_repeats
-            ? sample->repeat_offset + sample->repeat_length
+            ? instrument->repeat_offset + instrument->repeat_length
             : sample->sample_length;
 }
 

@@ -141,7 +141,7 @@ export class Cursor {
 function moveCursor(moveOperation: (cursor: Cursor) => void): CursorPosition {
   let cursor = new Cursor();
   const { editorState, setEditorState } = useStore.getState();
-  if (!editorState.editing) return cursor.currentPosition();
+  if (!editorState.patternEditing) return cursor.currentPosition();
   moveOperation(cursor);
   setEditorState({
     ...editorState,

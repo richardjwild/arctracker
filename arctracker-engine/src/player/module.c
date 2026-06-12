@@ -41,7 +41,7 @@ bool module_init(module_t *module)
     for (int i = 0; i < module->num_channels; i++)
         module->initial_panning[i] = 0x80; // Centre
     for (int i = 0; i < NUM_INSTRUMENT_SLOTS; i++)
-        module->instrument_slots[i].assigned = false;
+        module->instruments[i].assigned = false;
     module->patterns[0] = (pattern_t) {
         .num_lines = 64,
         .events = allocate_array(MODULE, 64 * module->num_channels, sizeof(event_t)),
@@ -100,14 +100,20 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->num_patterns = module->num_patterns;
 }
 
-void module_get_sample_info(module_t *module, int sample_no, ui_sample_info_t *sample_info)
+void module_get_instrument_info(const module_t *module, const int instrument_index, ui_instrument_info_t *instrument_info)
 {
-    sample_t sample = module->samples[sample_no];
-    snprintf(sample_info->name, sizeof sample_info->name, "%s", sample.name);
-    sample_info->default_gain = sample.default_volume;
-    sample_info->sample_length = sample.sample_length;
-    sample_info->repeats = sample.repeats;
-    sample_info->repeat_offset = sample.repeat_offset;
-    sample_info->repeat_length = sample.repeat_length;
-    sample_info->transpose = sample.transpose;
+    instrument_t instrument = module->instruments[instrument_index];
+    const sample_t sample = module->samples[instrument.sample_index];
+    snprintf(instrument_info->name, sizeof instrument_info->name, "%s", instrument.name);
+    instrument_info->assigned = instrument.assigned;
+    instrument_info->default_volume = instrument.default_volume;
+    instrument_info->transpose = instrument.transpose;
+    if (instrument.assigned)
+    {
+        instrument_info->sample_index = instrument.sample_index;
+        instrument_info->sample_info.sample_length = sample.sample_length;
+        instrument_info->repeats = instrument.repeats;
+        instrument_info->repeat_offset = instrument.repeat_offset;
+        instrument_info->repeat_length = instrument.repeat_length;
+    }
 }
