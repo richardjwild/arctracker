@@ -1,14 +1,15 @@
 import "./Modal.css";
-import React from "react";
+import React, { RefObject } from "react";
 
 interface ModalProps {
   className?: string;
+  ref?:  RefObject<HTMLDivElement | null>
   children: React.ReactNode;
 }
 
-export default function Modal({ className, children }: ModalProps) {
+export default function Modal({ className, ref, children }: ModalProps) {
   return (
-    <div className="modalOverlay">
+    <div ref={ref} tabIndex={-1} className="modalOverlay">
       <div className={`modalDialog ${className ?? ""}`}>
         {children}
       </div>

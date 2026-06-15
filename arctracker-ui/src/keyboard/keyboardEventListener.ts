@@ -12,7 +12,13 @@ const handlers: KeyHandler[] = [
 ];
 
 export const keyboardEventListener = (e: KeyboardEvent) => {
-  if (editor.inputtingText()) return;
+  if (editor.inputtingText()) {
+    if (e.code === "Enter") {
+      e.preventDefault();
+      (document.activeElement as HTMLElement)?.blur()
+    }
+    return;
+  }
   for (const handler of handlers) {
     if (handler(e)) {
       e.preventDefault();
