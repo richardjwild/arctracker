@@ -4,7 +4,7 @@ pub mod state;
 
 use std::sync::Arc;
 use tauri::{AppHandle};
-use crate::arctracker::{PatternLine, PlayerEvent, Module, UiExportState, PatternEvent};
+use crate::arctracker::{PatternLine, PlayerEvent, Module, UiExportState, PatternEvent, InstrumentUpdate};
 use crate::arctracker::UiTransportState;
 pub use crate::state::AppState;
 
@@ -185,6 +185,13 @@ fn edit_delete_pattern(state: tauri::State<Arc<AppState>>, pattern_no: i32) -> R
 }
 
 #[tauri::command]
+fn edit_update_instrument(state: tauri::State<Arc<AppState>>, instrument_index: u8, instrument_update: InstrumentUpdate) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.edit_update_instrument(instrument_index, instrument_update).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn shutdown_app(app: AppHandle) {
     app.exit(1);
 }
@@ -219,5 +226,6 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_set_sequence,
             edit_create_pattern,
             edit_delete_pattern,
+            edit_update_instrument,
         ])
 }

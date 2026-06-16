@@ -48,7 +48,7 @@ static audio_api_result_t open_stream(void)
         NULL);
     if (err == paNoError)
     {
-        PaStreamInfo *stream_info = Pa_GetStreamInfo(stream);
+        const PaStreamInfo *stream_info = Pa_GetStreamInfo(stream);
         printf("Actual latency: %f\n", stream_info->outputLatency);
         return AUDIO_API_SUCCESS;
     }
@@ -58,7 +58,7 @@ static audio_api_result_t open_stream(void)
     };
 }
 
-static void destroy_output_buffer()
+static void destroy_output_buffer(void)
 {
     deallocate(AUDIO, output_buffer);
     output_buffer = NULL;
@@ -122,7 +122,7 @@ static void copy_frames(const stereo_frame_t *input_buffer, int frames_to_copy)
     }
 }
 
-static audio_api_result_t write_audio(stereo_frame_t *audio_buffer, int frames_in_buffer)
+static audio_api_result_t write_audio(const stereo_frame_t *audio_buffer, int frames_in_buffer)
 {
     copy_frames(audio_buffer, frames_in_buffer);
     const PaError err = Pa_WriteStream(stream, output_buffer, (unsigned) frames_in_buffer);

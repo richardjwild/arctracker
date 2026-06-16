@@ -25,6 +25,17 @@ export type Instrument = {
   sample: Sample;
 }
 
+export type InstrumentUpdate = {
+  assigned: boolean;
+  name: string;
+  defaultVolume: number;
+  transpose: number;
+  repeats: boolean;
+  repeatOffset: number;
+  repeatLength: number;
+  sampleIndex: number;
+}
+
 export type Sample = {
   sampleLength: number;
 }
@@ -240,5 +251,12 @@ export const engine = {
     await invoke("edit_delete_pattern", {
       patternNo
     });
-  }
+  },
+
+  updateInstrument: async (instrumentIndex: number, instrumentUpdate: InstrumentUpdate) => {
+    await invoke("edit_update_instrument", {
+      instrumentIndex,
+      instrumentUpdate
+    });
+  },
 };

@@ -9,13 +9,13 @@
 #include "memory/heap.h"
 
 #define NUM_FORMATS 2
-#define FAILED_TO_READ_FILE (load_module_result_t) {\
+#define FAILED_TO_READ_MODULE_FILE (load_module_result_t) {\
     .file_read = false,\
     .recognised_format = false,\
     .module_loaded = false,\
     .module = NULL\
 }
-#define UNRECOGNISED_FORMAT (load_module_result_t) {\
+#define UNRECOGNISED_MODULE_FORMAT (load_module_result_t) {\
     .file_read = true,\
     .recognised_format = false,\
     .module_loaded = false,\
@@ -27,32 +27,44 @@
     .module_loaded = false,\
     .module = NULL\
 }
-#define SUCCESSFULLY_LOADED(module_p) (load_module_result_t) {\
+#define SUCCESSFULLY_LOADED_MODULE(module_p) (load_module_result_t) {\
     .file_read = true,\
     .recognised_format = true,\
     .module_loaded = true,\
     .module = module_p\
 }
+#define FAILED_TO_READ_SAMPLE_FILE (load_sample_result_t) {\
+    .file_read = false,\
+    .file_valid = false,\
+    .sample_length = 0,\
+    .sample_data = NULL,\
+}
+#define SUCCESSFULLY_LOADED_SAMPLE(length, data) (load_sample_result_t) {\
+    .file_read = true,\
+    .file_valid = true,\
+    .sample_length = length,\
+    .sample_data = data,\
+}
 
 static const char *READONLY = "r";
 static const int OFFSET = 0;
 
-mapped_file_t load_file(FILE *);
-size_t file_size(int);
-format_t *known_formats(void);
+static mapped_file_t load_file(FILE *);
+static size_t file_size(int);
+static format_t *known_formats(void);
 
-load_module_result_t load_module(const char *mod_filename)
+load_module_result_t load_module(const char *filename)
 {
-    FILE *file_pointer = fopen(mod_filename, READONLY);
+    FILE *file_pointer = fopen(filename, READONLY);
     if (file_pointer == NULL)
     {
-        return FAILED_TO_READ_FILE;
+        return FAILED_TO_READ_MODULE_FILE;
     }
     const mapped_file_t file = load_file(file_pointer);
     fclose(file_pointer);
     if (has_error())
     {
-        return FAILED_TO_READ_FILE;
+        return FAILED_TO_READ_MODULE_FILE;
     }
     const format_t *formats = known_formats();
     for (int i = 0; i < NUM_FORMATS; i++)
@@ -66,13 +78,30 @@ load_module_result_t load_module(const char *mod_filename)
                 module_destroy(module);
                 return FAILED_TO_LOAD_MODULE;
             }
-            return SUCCESSFULLY_LOADED(module);
+            return SUCCESSFULLY_LOADED_MODULE(module);
         }
     }
-    return UNRECOGNISED_FORMAT;
+    return UNRECOGNISED_MODULE_FORMAT;
 }
 
-mapped_file_t load_file(FILE *file_pointer)
+load_sample_result_t load_sample(const char *filename)
+{
+    FILE *file_pointer = fopen(filename, READONLY);
+    if (file_pointer == NULL)
+    {
+        return FAILED_TO_READ_SAMPLE_FILE;
+    }
+    const mapped_file_t file = load_file(file_pointer);
+    fclose(file_pointer);
+    if (has_error())
+    {
+        return FAILED_TO_READ_SAMPLE_FILE;
+    }
+    munmap(file.addr, file.size);
+    return SUCCESSFULLY_LOADED_SAMPLE(0, NULL);
+}
+
+static mapped_file_t load_file(FILE *file_pointer)
 {
     mapped_file_t mapped_file = {
         .addr = NULL,
@@ -97,7 +126,7 @@ mapped_file_t load_file(FILE *file_pointer)
     return mapped_file;
 }
 
-size_t file_size(const int file_descriptor)
+static size_t file_size(const int file_descriptor)
 {
     struct stat statbuf;
     if (fstat(file_descriptor, &statbuf) != 0)
@@ -108,7 +137,7 @@ size_t file_size(const int file_descriptor)
     return statbuf.st_size;
 }
 
-format_t *known_formats(void)
+static format_t *known_formats(void)
 {
     static format_t formats[NUM_FORMATS];
     formats[0] = tracker_format();

@@ -63,6 +63,8 @@ export default function SampleEditDialog() {
     syncInputStateWithDraft();
   }, [draft]);
 
+  if (instrumentIndex === null || !instrumentEditing) return null;
+
   const validateTranspose = () => {
     const transpose = Number(inputState.transpose);
     if (Number.isInteger(transpose) && transpose >= -12 && transpose <= 12) {
@@ -72,6 +74,24 @@ export default function SampleEditDialog() {
       void alerting.showInfo("Transpose must be between -12 and 12.");
     }
     loseFocus();
+  };
+
+  const setSampleRepeats = () => {
+    setDraft({
+      ...draft,
+      repeats: true,
+      repeatOffset: 0,
+      repeatLength: draft.sample.sampleLength,
+    });
+  };
+
+  const setSampleNoRepeat = () => {
+    setDraft({
+      ...draft,
+      repeats: false,
+      repeatOffset: 0,
+      repeatLength: 0,
+    })
   };
 
   const setRepeatOffsetAndLength = (repeatStart: number) => {
@@ -121,17 +141,10 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
-  const saveAndClose = () => {
-    // TODO: Construct edit command and issue it to editor.applyEdit().
-    console.log("save instrument", draft);
-    commands.saveAndCloseInstrumentEditor();
-  };
-
-  if (!instrumentEditing) return null;
   return (
     <Modal ref={modalRef} className="sampleEdit">
       <h1 className="instrumentEditTitle padded">
-        Instrument {hexadecimal.toHex((instrumentIndex || 0) + 1, 2)}
+        Instrument {hexadecimal.toHex(instrumentIndex + 1, 2)}
       </h1>
       <div className="sampleNameLabel padded sampleEditLabel">
         <label>Name:</label>
@@ -192,8 +205,29 @@ export default function SampleEditDialog() {
       <div className="sampleLengthEdit padded sampleEditField">
         <input type="text" readOnly defaultValue={draft.sample.sampleLength} />
       </div>
+      <div className="sampleRepeatsLabel padded sampleEditLabel">
+        <label>Sample Loops:</label>
+      </div>
+      <div className="sampleRepeatsEdit padded sampleEditField">
+        <input
+          type="radio"
+          id="sampleRepeatsYes"
+          name="sampleRepeats"
+          checked={draft.repeats}
+          onChange={setSampleRepeats}
+        />
+        <label htmlFor="sampleRepeatsYes">Yes</label>
+        <input
+          type="radio"
+          id="sampleRepeatsNo"
+          name="sampleRepeats"
+          checked={!draft.repeats}
+          onChange={setSampleNoRepeat}
+        />
+        <label htmlFor="sampleRepeatsNo">No</label>
+      </div>
       <div className="repeatStartLabel padded sampleEditLabel">
-        <label>Repeat Start:</label>
+        <label>Loop Start:</label>
       </div>
       <div className="repeatStartEdit uiArea padded sampleEditField">
         <input
@@ -212,7 +246,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="repeatEndLabel padded sampleEditLabel">
-        <label>Repeat End:</label>
+        <label>Loop End:</label>
       </div>
       <div className="repeatEndEdit uiArea padded sampleEditField">
         <input
@@ -233,12 +267,15 @@ export default function SampleEditDialog() {
       <div className="saveCloseButtons uiArea padded">
         <button type="button">Load Sample</button>
         <button type="button">Delete Sample</button>
-        <button type="button" onClick={saveAndClose}>
+        <button
+          type="button"
+          onClick={() => commands.saveAndCloseInstrumentEditor(instrumentIndex, draft)}
+        >
           Save Changes
         </button>
         <button
           type="button"
-          onClick={commands.restoreAndCloseInstrumentEditor}
+          onClick={() => commands.restoreAndCloseInstrumentEditor(instrumentIndex)}
         >
           Close
         </button>

@@ -22,4 +22,17 @@ edit_result_t editor_create_pattern(module_t *module, int pattern_length, int *n
 
 edit_result_t editor_delete_pattern(module_t *module, int pattern_no);
 
+edit_result_t editor_update_instrument(
+    module_t *module,
+    uint8_t instrument_index,
+    bool assigned,
+    const char *name,
+    uint8_t default_volume,
+    int transpose,
+    bool repeats,
+    int repeat_offset,
+    int repeat_length,
+    int sample_index
+);
+
 #endif //ARCTRACKER_ENGINE_EDITOR_H

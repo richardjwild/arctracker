@@ -197,8 +197,14 @@ function processCommands() {
       case CommandType.OPEN_INSTRUMENT_EDITOR:
         editInstrument.showDialog();
         break;
-      case CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR:
+      case CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR:
+        void editInstrument.updateInstrument(command.instrumentIndex, command.draft);
         editInstrument.closeDialog();
+        break;
+      case CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR:
+        void editInstrument.restoreInstrument(command.instrumentIndex);
+        editInstrument.closeDialog();
+        break;
     }
   }
 }

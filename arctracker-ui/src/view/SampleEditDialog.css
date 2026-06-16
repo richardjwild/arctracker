@@ -1,9 +1,9 @@
 .sampleEdit {
     width: 500px;
-    height: 465px;
+    height: 525px;
     display: grid;
     grid-template-columns: 150px 1fr;
-    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px;
+    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 50px;
     gap: 10px;
     grid-template-areas:
         "instrumentEditTitle instrumentEditTitle"
@@ -11,6 +11,7 @@
         "defaultVolumeLabel defaultVolumeEdit"
         "transposeLabel transposeEdit"
         "sampleLengthLabel sampleLengthEdit"
+        "sampleRepeatsLabel sampleRepeatsEdit"
         "repeatStartLabel repeatStartEdit"
         "repeatEndLabel repeatEndEdit"
         "saveCloseButtons saveCloseButtons"
@@ -57,6 +58,14 @@
     grid-area: sampleLengthEdit;
 }
 
+.sampleRepeatsLabel {
+    grid-area: sampleRepeatsLabel;
+}
+
+.sampleRepeatsEdit {
+    grid-area: sampleRepeatsEdit;
+}
+
 .repeatStartLabel {
     grid-area: repeatStartLabel;
 }
@@ -80,7 +89,15 @@
     padding-top: 13px;
 }
 
-.sampleEditField input {
+.sampleEditField {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.sampleEditField input[type='text'], .sampleEditField input[type='range'] {
     width: 100%;
     height: 28px;
     border-radius: 0;
@@ -91,6 +108,10 @@
     font-size: 16px;
     caret-shape: block;
     caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.sampleEditField input[type='radio'] {
     accent-color: var(--colour-sample-edit-input-text);
 }
 

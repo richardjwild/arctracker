@@ -35,14 +35,14 @@ typedef struct player {
     frame_t current_frame;
     player_command_queue_t *command_queue;
     player_event_queue_t *player_event_queue;
-    char *error_message;
+    const char *error_message;
 } player_t;
 
 player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue);
 
 bool player_run(player_t *);
 
-bool player_queue_command(player_t *, player_command_t);
+bool player_queue_command(const player_t *, player_command_t);
 
 void player_shutdown(player_t *);
 

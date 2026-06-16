@@ -372,6 +372,8 @@ api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no,
         return failure(NO_MODULE_LOADED);
     if (event == NULL)
         return failure(BAD_EVENT_BUFFER);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
     event_t internal_event;
     to_internal_event(&internal_event, event);
     edit_result_t result = editor_set_event(arctracker->module, pattern_no, pattern_index, channel_no, &internal_event);
@@ -424,6 +426,8 @@ api_result_t arctracker_edit_create_pattern(arctracker_t *arctracker, const int 
         return failure(INVALID_PATTERN_LENGTH);
     if (new_pattern_no == NULL)
         return failure(BAD_BUFFER);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
     edit_result_t result = editor_create_pattern(arctracker->module, pattern_length, new_pattern_no);
     if (!result.success)
         return failure(result.error_message);
@@ -438,9 +442,63 @@ api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, const int 
         return failure(NO_MODULE_LOADED);
     if (pattern_no != arctracker->module->num_patterns - 1)
         return failure(INVALID_PATTERN_NUMBER);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
     edit_result_t result = editor_delete_pattern(arctracker->module, pattern_no);
     if (!result.success)
         return failure(result.error_message);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint8_t slot, const ui_instrument_update_t instrument_update)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
+    if (instrument_update.assigned && instrument_update.sample_index >= arctracker->module->num_samples)
+        return failure(INVALID_SAMPLE_INDEX);
+    const sample_t sample = arctracker->module->samples[instrument_update.sample_index];
+    if (instrument_update.repeat_offset < 0 || instrument_update.repeat_offset >= sample.sample_length - 1)
+        return failure(INVALID_REPEAT_OFFSET);
+    if (instrument_update.repeat_offset + instrument_update.repeat_length >= sample.sample_length)
+        return failure(INVALID_REPEAT_LENGTH);
+    const edit_result_t result = editor_update_instrument(
+        arctracker->module,
+        slot,
+        instrument_update.assigned,
+        instrument_update.name,
+        instrument_update.default_volume,
+        instrument_update.transpose,
+        instrument_update.repeats,
+        instrument_update.repeat_offset,
+        instrument_update.repeat_length,
+        instrument_update.sample_index);
+    if (!result.success)
+        return failure(result.error_message);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *filename, ui_sample_info_t *sample_info)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
+    if (sample_info == NULL)
+        return failure(BAD_BUFFER);
+    const load_sample_result_t result = load_sample(filename);
+    if (!result.file_read)
+        return failure(FILE_OPEN_FAILED);
+    if (!result.file_valid)
+        return failure(SAMPLE_LOAD_FAILED);
+    // TODO: Hook result.sample_data into the module.
+    // Set sample_info->sample_index to whatever index the new sample was loaded at.
+    sample_info->sample_length = result.sample_length;
     return SUCCESS;
 }
 

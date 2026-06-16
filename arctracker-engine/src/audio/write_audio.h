@@ -22,7 +22,7 @@ typedef struct
 typedef struct {
     bool success;
     bool overflowed;
-    char *error_message;
+    const char *error_message;
 } audio_out_result_t;
 
 audio_out_result_t initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain);

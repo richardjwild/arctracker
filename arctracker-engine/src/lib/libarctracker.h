@@ -58,6 +58,10 @@ api_result_t arctracker_edit_create_pattern(arctracker_t *handle, int pattern_le
 
 api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, int pattern_no);
 
+api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, uint8_t slot, ui_instrument_update_t instrument_update);
+
+api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *filename, ui_sample_info_t *sample_info);
+
 api_result_t arctracker_destroy(arctracker_t *handle);
 
 #endif //ARCTRACKER_LIBARCTRACKER_H

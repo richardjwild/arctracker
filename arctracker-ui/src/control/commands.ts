@@ -1,4 +1,5 @@
 import { CursorField } from "../editing/cursor.ts";
+import { Instrument } from "../engine/engine.ts";
 
 type SampleCursorField = Extract<
   CursorField,
@@ -128,8 +129,15 @@ export type Command =
     }
   | { type: CommandType.DELETE_SEQUENCE_POSITION }
   | { type: CommandType.OPEN_INSTRUMENT_EDITOR }
-  | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
-  | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR };
+  | {
+      type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR;
+      instrumentIndex: number;
+      draft: Instrument;
+    }
+  | {
+      type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR;
+      instrumentIndex: number;
+    };
 
 const queue: Command[] = [];
 
@@ -248,10 +256,15 @@ export const commands = {
     commandQueue.push({ type: CommandType.DELETE_SEQUENCE_POSITION }),
   openInstrumentEditor: () =>
     commandQueue.push({ type: CommandType.OPEN_INSTRUMENT_EDITOR }),
-  saveAndCloseInstrumentEditor: () =>
-    commandQueue.push({ type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }),
-  restoreAndCloseInstrumentEditor: () =>
+  saveAndCloseInstrumentEditor: (instrumentIndex: number, draft: Instrument) =>
+    commandQueue.push({
+      type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
+      instrumentIndex,
+      draft,
+    }),
+  restoreAndCloseInstrumentEditor: (instrumentIndex: number) =>
     commandQueue.push({
       type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
+      instrumentIndex,
     }),
 };

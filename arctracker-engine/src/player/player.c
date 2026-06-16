@@ -12,11 +12,11 @@ static void process_commands(player_t *player);
 static void process_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
 static void process_seek_command(player_t *player, player_command_t command);
-static void process_note_on_command(player_t *player, player_command_t command, bool from_midi);
+static void process_note_on_command(const player_t *player, player_command_t command, bool from_midi);
 static void process_toggle_loop_command(player_t *player);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
-static voice_t *initialise_voices(player_t *);
+static voice_t *initialise_voices(const player_t *);
 static event_t *get_events(const player_t *);
 static void note_on(int, const instrument_t *, const sample_t *, voice_t *);
 static void note_off(voice_t *voice);
@@ -28,9 +28,9 @@ static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
 static player_event_t create_user_midi_event(int note);
 static player_event_t create_audio_overflowed_event(void);
-static player_event_t create_error_event(char *error_message);
+static player_event_t create_error_event(const char *);
 
-player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue)
+player_t *player_create(module_t *module, const audio_api_t audio_api, player_event_queue_t *player_event_queue)
 {
     player_t *player = allocate_array(PLAYER, 1, sizeof(player_t));
     if (player == NULL)
@@ -49,7 +49,7 @@ player_t *player_create(module_t *module, audio_api_t audio_api, player_event_qu
     player->voices = initialise_voices(player);
     if (player->voices == NULL)
         goto init_failed;
-    audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_channels, player->master_gain);
+    const audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_channels, player->master_gain);
     if (!audio_init_result.success)
     {
         error_with_detail(AUDIO_INIT_FAILED, audio_init_result.error_message);
@@ -90,7 +90,7 @@ bool player_run(player_t *player)
     return healthy;
 }
 
-bool player_queue_command(player_t *player, player_command_t command)
+bool player_queue_command(const player_t *player, const player_command_t command)
 {
     return command_queue_add(player->command_queue, command);
 }
@@ -121,7 +121,7 @@ static bool player_tick(player_t *player)
     }
     tick_scheduler_t *tick_scheduler = &player->tick_scheduler;
     tick_scheduler_accumulate(&tick_scheduler->audio_accumulator);
-    bool healthy = audio_consume(player);
+    const bool healthy = audio_consume(player);
     if (healthy && player->playing)
     {
         update_voices(player);
@@ -175,7 +175,7 @@ static void process_seek_command(player_t *player, const player_command_t comman
     player_seek(player, command.new_sequence_pos, command.new_pattern_pos);
 }
 
-static void process_note_on_command(player_t *player, const player_command_t command, const bool from_midi)
+static void process_note_on_command(const player_t *player, const player_command_t command, const bool from_midi)
 {
     if (from_midi)
     {
@@ -200,7 +200,7 @@ static void process_toggle_loop_command(player_t *player)
         set_pattern_loop(&player->sequence);
 }
 
-static voice_t *initialise_voices(player_t *player)
+static voice_t *initialise_voices(const player_t *player)
 {
     voice_t *voices = allocate_array(PLAYER, player->module->num_channels, sizeof(voice_t));
     if (voices == NULL)
@@ -215,7 +215,7 @@ static voice_t *initialise_voices(player_t *player)
     return voices;
 }
 
-static void set_current_frame(player_t *player, bool row_advanced)
+static void set_current_frame(player_t *player, const bool row_advanced)
 {
     player->current_frame.events = get_events(player);
     player->current_frame.row_advanced = row_advanced;
@@ -241,7 +241,7 @@ static event_t *get_events(const player_t *player)
     const sequence_t *sequence = &player->sequence;
     const int pattern_no = sequence->sequence[sequence->sequence_pos];
     const pattern_t pattern = player->module->patterns[pattern_no];
-    return pattern.events + (sequence->pattern_index * num_channels);
+    return pattern.events + sequence->pattern_index * num_channels;
 }
 
 static bool audio_consume(player_t *player)
@@ -257,7 +257,7 @@ static bool audio_consume(player_t *player)
     }
     else
         player->error_message = result.error_message;
-    return result.success;;
+    return result.success;
 }
 
 static void update_voices(player_t *player)
@@ -297,7 +297,7 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
     handle_effects_on_event(event, voice, player);
 }
 
-static void note_on(int note, const instrument_t *instrument, const sample_t *sample, voice_t *voice)
+static void note_on(const int note, const instrument_t *instrument, const sample_t *sample, voice_t *voice)
 {
     voice->channel_playing = true;
     voice->sample_pointer = sample->sample_data;
@@ -339,7 +339,7 @@ static void player_seek(player_t *player, const int new_sequence_pos, const int 
     set_current_frame(player, true);
 }
 
-static player_event_t create_user_midi_event(int note)
+static player_event_t create_user_midi_event(const int note)
 {
     player_event_t event = {0};
     event.type = USER_MIDI_NOTE_ON;
@@ -354,7 +354,7 @@ static player_event_t create_audio_overflowed_event(void)
     };
 }
 
-static player_event_t create_error_event(char *error_message)
+static player_event_t create_error_event(const char *error_message)
 {
     player_event_t event = {0};
     event.type = PLAYER_ERROR;

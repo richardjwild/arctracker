@@ -9,7 +9,7 @@ audio_api_t create_audio_api(bool bounce, char *output_filename)
             : create_portaudio_api();
 }
 
-audio_api_result_t audio_api_failure(char *error_message)
+audio_api_result_t audio_api_failure(const char *error_message)
 {
     return (audio_api_result_t) {
         .success = false,

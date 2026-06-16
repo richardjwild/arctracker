@@ -5,12 +5,13 @@
 #define FILE_OPEN_FAILED "Could not open file"
 #define MODULE_TYPE_UNRECOGNISED "Not a recognised module type"
 #define MODULE_LOAD_FAILED "Failed to load module, either file corrupted or ran out of memory"
+#define SAMPLE_LOAD_FAILED "Failed to load sample, either file corrupted or ran out of memory"
 #define MODULE_CREATE_FAILED "Failed to create module"
 #define NEW_MODULE_TITLE "(New module)"
 #define MEMORY_ALLOCATION_FAILED "Could not allocate memory"
 #define NO_MODULE_LOADED "No module loaded"
 #define NO_PATTERN_DATA "No pattern data in module"
-#define BAD_SAMPLE_NUMBER "Invalid sample number or slot not filled"
+#define BAD_INSTRUMENT_INDEX "Instrument slot not filled"
 #define PLAYER_ALREADY_RUNNING "Player is already running"
 #define PLAYER_PLAYING "Player is currently playing"
 #define PLAYER_NOT_RUNNING "Player is not running"
@@ -36,4 +37,8 @@
 #define INVALID_PATTERN_COUNT "Invalid number of patterns"
 #define INVALID_PATTERN_LENGTH "Invalid pattern length"
 #define BAD_BUFFER "Invalid buffer pointer"
+#define INVALID_SAMPLE_INDEX "Invalid sample index"
+#define INVALID_REPEAT_OFFSET "Invalid sample repeat offset"
+#define INVALID_REPEAT_LENGTH "Invalid sample repeat length"
+
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

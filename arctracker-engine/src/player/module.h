@@ -110,4 +110,6 @@ void module_get_info(module_t *module, ui_module_info_t *module_info);
 
 void module_get_instrument_info(const module_t *module, int instrument_index, ui_instrument_info_t *instrument_info);
 
+void module_set_instrument(module_t *module, int instrument_index, instrument_t instrument_update);
+
 #endif //ARCTRACKER_MODULE_H

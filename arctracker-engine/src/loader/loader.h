@@ -21,8 +21,17 @@ typedef struct {
     module_t *module;
 } load_module_result_t;
 
+typedef struct {
+    bool file_read;
+    bool file_valid;
+    int sample_length;
+    float *sample_data;
+} load_sample_result_t;
+
 static const char *UNKNOWN_FORMAT = "UNKNOWN";
 
-load_module_result_t load_module(const char *mod_filename);
+load_module_result_t load_module(const char *filename);
+
+load_sample_result_t load_sample(const char *filename);
 
 #endif //ARCTRACKER_READ_MOD_H

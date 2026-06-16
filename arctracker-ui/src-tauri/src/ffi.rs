@@ -45,6 +45,7 @@ pub struct PlayerCommand {
 
 #[repr(C)]
 pub struct UiSampleInfo {
+    pub sample_index: c_int,
     pub sample_length: c_int,
 }
 
@@ -54,11 +55,22 @@ pub struct UiInstrumentInfo {
     pub name: [c_char; 33],
     pub default_volume: c_int,
     pub transpose: c_int,
-    pub sample_index: c_int,
     pub repeats: bool,
     pub repeat_offset: c_int,
     pub repeat_length: c_int,
     pub sample_info: UiSampleInfo,
+}
+
+#[repr(C)]
+pub struct UiInstrumentUpdate {
+    pub assigned: bool,
+    pub name: [c_char; 33],
+    pub default_volume: c_int,
+    pub transpose: c_int,
+    pub sample_index: c_int,
+    pub repeats: bool,
+    pub repeat_offset: c_int,
+    pub repeat_length: c_int,
 }
 
 #[repr(C)]
@@ -164,6 +176,7 @@ extern "C" {
     pub fn arctracker_edit_set_sequence(handle: *mut ArctrackerHandle, new_sequence: *const c_int, new_sequence_len: c_int) -> ApiResult;
     pub fn arctracker_edit_create_pattern(handle: *mut ArctrackerHandle, pattern_length: c_int, new_pattern_no: *mut c_int) -> ApiResult;
     pub fn arctracker_edit_delete_pattern(handle: *mut ArctrackerHandle, pattern_no: c_int) -> ApiResult;
+    pub fn arctracker_edit_set_instrument(handle: *mut ArctrackerHandle, slot: u8, new_instrument: UiInstrumentUpdate) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

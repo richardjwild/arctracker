@@ -1,4 +1,6 @@
 #include "editor.h"
+
+#include <stdio.h>
 #include <string.h>
 #include "messages.h"
 #include "io/error.h"
@@ -72,6 +74,37 @@ edit_result_t editor_create_pattern(module_t *module, const int pattern_length, 
 edit_result_t editor_delete_pattern(module_t *module, int pattern_no)
 {
     module_delete_pattern(module, pattern_no);
+    return EDIT_SUCCESS;
+}
+
+edit_result_t editor_update_instrument(
+    module_t *module,
+    const uint8_t instrument_index,
+    const bool assigned,
+    const char *name,
+    const uint8_t default_volume,
+    const int transpose,
+    const bool repeats,
+    const int repeat_offset,
+    const int repeat_length,
+    const int sample_index
+) {
+    instrument_t instrument = {0};
+    snprintf(instrument.name, sizeof instrument.name, "%s", name);
+    instrument.default_volume = default_volume;
+    instrument.transpose = transpose;
+    instrument.repeats = repeats;
+    if (repeats)
+    {
+        instrument.repeat_offset = repeat_offset;
+        instrument.repeat_length = repeat_length;
+    }
+    instrument.assigned = assigned;
+    if (instrument.assigned)
+    {
+        instrument.sample_index = sample_index;
+    }
+    module_set_instrument(module, instrument_index, instrument);
     return EDIT_SUCCESS;
 }
 

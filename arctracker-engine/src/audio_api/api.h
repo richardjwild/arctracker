@@ -20,7 +20,7 @@ typedef struct
 typedef struct {
     bool success;
     bool overflowed;
-    char *error_message;
+    const char *error_message;
 } audio_api_result_t;
 
 typedef struct {
@@ -28,12 +28,12 @@ typedef struct {
     int sample_rate;
     bool bouncing;
     audio_api_result_t (*init)(void);
-    audio_api_result_t (*write)(stereo_frame_t *audio_buffer, int frames_in_buffer);
+    audio_api_result_t (*write)(const stereo_frame_t *audio_buffer, int frames_in_buffer);
     void (*finish)(bool);
 } audio_api_t;
 
 audio_api_t create_audio_api(bool bounce, char *output_filename);
 
-audio_api_result_t audio_api_failure(char *error_message);
+audio_api_result_t audio_api_failure(const char *error_message);
 
 #endif //ARCTRACKER_AUDIO_API_H

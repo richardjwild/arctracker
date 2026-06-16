@@ -1,5 +1,6 @@
 use crate::ffi;
 use std::ffi::{c_char, c_int, CStr, CString};
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 pub struct Arctracker {
@@ -72,6 +73,7 @@ pub struct PlayerCommand {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sample {
+    pub sample_index: i32,
     pub sample_length: i32,
 }
 
@@ -82,11 +84,23 @@ pub struct Instrument {
     pub(crate) name: String,
     pub default_volume: i32,
     pub transpose: i32,
-    pub sample_index: i32,
     pub repeats: bool,
     pub repeat_offset: i32,
     pub repeat_length: i32,
     pub sample: Sample,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstrumentUpdate {
+    pub assigned: bool,
+    pub(crate) name: String,
+    pub default_volume: i32,
+    pub transpose: i32,
+    pub sample_index: i32,
+    pub repeats: bool,
+    pub repeat_offset: i32,
+    pub repeat_length: i32,
 }
 
 #[derive(Serialize)]
@@ -214,6 +228,13 @@ fn c_string_to_rust(buffer: &[c_char]) -> String {
         CStr::from_ptr(buffer.as_ptr())
             .to_string_lossy()
             .into_owned()
+    }
+}
+
+fn rust_string_to_c_buffer(s: &str, buffer: &mut [c_char]) {
+    buffer.fill(0);
+    for (dst, src) in buffer.iter_mut().zip(s.bytes()) {
+        *dst = src as c_char;
     }
 }
 
@@ -397,8 +418,8 @@ impl Arctracker {
             repeats: instrument.repeats,
             repeat_offset: instrument.repeat_offset,
             repeat_length: instrument.repeat_length,
-            sample_index: instrument.sample_index,
             sample: Sample {
+                sample_index: instrument.sample_info.sample_index,
                 sample_length: instrument.sample_info.sample_length,
             },
         })
@@ -672,6 +693,30 @@ impl Arctracker {
     pub fn edit_delete_pattern(&mut self, pattern_no: i32) -> Result<(), ArctrackerError> {
         let result = unsafe {
             ffi::arctracker_edit_delete_pattern(self.handle, pattern_no)
+        };
+        if (result.success) {
+            Ok(())
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
+    }
+
+    pub fn edit_update_instrument(&mut self, slot: u8, instrument: InstrumentUpdate) -> Result<(), ArctrackerError> {
+        let mut instrument_update = ffi::UiInstrumentUpdate {
+            assigned: instrument.assigned,
+            name: [0; 33],
+            default_volume: instrument.default_volume,
+            transpose: instrument.transpose,
+            repeats: instrument.repeats,
+            repeat_offset: instrument.repeat_offset,
+            repeat_length: instrument.repeat_length,
+            sample_index: instrument.sample_index,
+        };
+        rust_string_to_c_buffer(&instrument.name, &mut instrument_update.name);
+        let result = unsafe {
+            ffi::arctracker_edit_set_instrument(self.handle, slot, instrument_update)
         };
         if (result.success) {
             Ok(())
