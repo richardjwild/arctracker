@@ -5,8 +5,9 @@ import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
-import { Instrument } from "../engine/engine.ts";
+import { engine, Instrument, InstrumentUpdate } from "../engine/engine.ts";
 import { alerting } from "../alerting/alert.ts";
+import { filePicker } from "../filesystem/filePicker.ts";
 
 type InputState = {
   transpose: string;
@@ -28,8 +29,10 @@ const emptyInstrument: Instrument = {
   repeats: false,
   repeatOffset: 0,
   repeatLength: 0,
-  sampleIndex: 0,
-  sample: { sampleLength: 0 }
+  sample: {
+    sampleIndex: 0,
+    sampleLength: 0,
+  }
 };
 
 const SampleNameMaxLength = 33;
@@ -61,9 +64,43 @@ export default function SampleEditDialog() {
 
   useEffect(() => {
     syncInputStateWithDraft();
+    if (instrumentIndex === null) return;
+    const update: InstrumentUpdate = {
+      assigned: draft.assigned,
+      name: draft.name,
+      defaultVolume: draft.defaultVolume,
+      transpose: draft.transpose,
+      repeats: draft.repeats,
+      repeatOffset: draft.repeatOffset,
+      repeatLength: draft.repeatLength,
+      sampleIndex: draft.sample.sampleIndex,
+    };
+    void engine.updateInstrument(instrumentIndex, update);
   }, [draft]);
 
   if (instrumentIndex === null || !instrumentEditing) return null;
+
+  const loadSample = async () => {
+    const path = await filePicker.chooseFileToOpen(['wav']);
+    if (!path) return;
+    try {
+      const sample = await engine.loadSample(path);
+      const updatedDraft = {
+        ...draft,
+        name: filePicker.leafName(path).substring(0, SampleNameMaxLength),
+        assigned: true,
+        defaultVolume: 255,
+        transpose: 12,
+        repeats: false,
+        repeatOffset: 0,
+        repeatLength: 0,
+        sample,
+      };
+      setDraft(updatedDraft);
+    } catch (e) {
+      void alerting.showError(`Failed to load sample: ${e}`);
+    }
+  };
 
   const validateTranspose = () => {
     const transpose = Number(inputState.transpose);
@@ -203,7 +240,7 @@ export default function SampleEditDialog() {
         <label>Sample Length:</label>
       </div>
       <div className="sampleLengthEdit padded sampleEditField">
-        <input type="text" readOnly defaultValue={draft.sample.sampleLength} />
+        <input type="text" readOnly value={draft.sample.sampleLength} />
       </div>
       <div className="sampleRepeatsLabel padded sampleEditLabel">
         <label>Sample Loops:</label>
@@ -265,7 +302,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded">
-        <button type="button">Load Sample</button>
+        <button type="button" onClick={loadSample}>Load Sample</button>
         <button type="button">Delete Sample</button>
         <button
           type="button"

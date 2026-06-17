@@ -1,5 +1,4 @@
 use std::os::raw::{c_char, c_int};
-use std::sync::Arc;
 
 #[repr(C)]
 pub struct ArctrackerHandle {
@@ -177,6 +176,7 @@ extern "C" {
     pub fn arctracker_edit_create_pattern(handle: *mut ArctrackerHandle, pattern_length: c_int, new_pattern_no: *mut c_int) -> ApiResult;
     pub fn arctracker_edit_delete_pattern(handle: *mut ArctrackerHandle, pattern_no: c_int) -> ApiResult;
     pub fn arctracker_edit_set_instrument(handle: *mut ArctrackerHandle, slot: u8, new_instrument: UiInstrumentUpdate) -> ApiResult;
+    pub fn arctracker_edit_load_sample(handle: *mut ArctrackerHandle, filename: *const c_char, sample_info: *mut UiSampleInfo) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

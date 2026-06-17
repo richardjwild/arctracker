@@ -100,19 +100,19 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "ArrowRight",
     [
       { modifiers: "none", execute: commands.cursorFieldRight },
-      { modifiers: "primary", execute: commands.sequenceSeekForwards },
       {
         modifiers: "secondary",
         execute: () => commands.patternGridRight(true),
       },
+      { modifiers: "tertiary", execute: commands.sequenceSeekForwards },
     ],
   ],
   [
     "ArrowLeft",
     [
       { modifiers: "none", execute: commands.cursorFieldLeft },
-      { modifiers: "primary", execute: commands.sequenceSeekBackwards },
       { modifiers: "secondary", execute: () => commands.patternGridLeft(true) },
+      { modifiers: "tertiary", execute: commands.sequenceSeekBackwards },
     ],
   ],
   [

@@ -12,7 +12,6 @@ export const editInstrument = {
   },
 
   updateInstrument: async (instrumentIndex: number, draft: Instrument) => {
-    console.log('Updating instrument', instrumentIndex, draft)
     const instrument = useStore.getState().module.instruments[instrumentIndex];
     const before: InstrumentUpdate = {
       assigned: instrument.assigned,
@@ -22,7 +21,7 @@ export const editInstrument = {
       repeats: instrument.repeats,
       repeatOffset: instrument.repeatOffset,
       repeatLength: instrument.repeatLength,
-      sampleIndex: instrument.sampleIndex,
+      sampleIndex: instrument.sample.sampleIndex,
     };
     const after: InstrumentUpdate = {
       assigned: draft.assigned,
@@ -32,24 +31,23 @@ export const editInstrument = {
       repeats: draft.repeats,
       repeatOffset: draft.repeatOffset,
       repeatLength: draft.repeatLength,
-      sampleIndex: draft.sampleIndex,
+      sampleIndex: draft.sample.sampleIndex,
     };
     const editCommand: EditCommand = {
       apply: async () => {
         await engine.updateInstrument(instrumentIndex, after);
-        useStore.getState().updateInstrument(instrumentIndex, after);
+        useStore.getState().setInstrument(instrumentIndex, draft);
         return true;
       },
       undo: async () => {
         await engine.updateInstrument(instrumentIndex, before);
-        useStore.getState().updateInstrument(instrumentIndex, before);
+        useStore.getState().setInstrument(instrumentIndex, instrument);
       },
     }
     await editor.applyEdit(editCommand);
   },
 
   restoreInstrument: async (instrumentIndex: number) => {
-    console.log('Restoring instrument', instrumentIndex);
     const instrument = useStore.getState().module.instruments[instrumentIndex];
     const update: InstrumentUpdate = {
       assigned: instrument.assigned,
@@ -59,7 +57,7 @@ export const editInstrument = {
       repeats: instrument.repeats,
       repeatOffset: instrument.repeatOffset,
       repeatLength: instrument.repeatLength,
-      sampleIndex: instrument.sampleIndex,
+      sampleIndex: instrument.sample.sampleIndex,
     };
     await engine.updateInstrument(instrumentIndex, update);
   },

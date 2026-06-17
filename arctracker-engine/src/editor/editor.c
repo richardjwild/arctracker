@@ -10,29 +10,29 @@
 #define MIN_PATTERN_CAPACITY 1024
 #define MAX_PATTERN_LENGTH 1000
 
-static edit_result_t get_event(module_t *, int, int, int, event_t **);
+static edit_result_t get_event(const module_t *, int, int, int, event_t **);
 static edit_result_t ensure_sequence_capacity(module_t *, int);
 static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns);
 static edit_result_t failure(char *);
 
-edit_result_t editor_get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t *event_buffer)
+edit_result_t editor_get_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, event_t *event_buffer)
 {
     if (event_buffer == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t *event = NULL;
-    edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &event);
+    const edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &event);
     if (!result.success)
         return result;
     *event_buffer = *event;
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_set_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t *new_event)
+edit_result_t editor_set_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, const event_t *new_event)
 {
     if (new_event == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t *existing_event = NULL;
-    edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &existing_event);
+    const edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &existing_event);
     if (!result.success)
         return result;
     *existing_event = *new_event;
@@ -49,7 +49,7 @@ edit_result_t editor_set_sequence(module_t *module, const int *new_sequence, con
         if (new_sequence[i] < 0 || new_sequence[i] >= module->num_patterns)
             return failure(INVALID_PATTERN_NUMBER);
     }
-    edit_result_t result = ensure_sequence_capacity(module, new_sequence_len);
+    const edit_result_t result = ensure_sequence_capacity(module, new_sequence_len);
     if (!result.success)
         return result;
     memcpy(module->sequence, new_sequence, new_sequence_len * sizeof(int));
@@ -61,7 +61,7 @@ edit_result_t editor_create_pattern(module_t *module, const int pattern_length, 
 {
     if (pattern_length < 1 || pattern_length > MAX_PATTERN_LENGTH)
         return failure(INVALID_PATTERN_LENGTH);
-    edit_result_t result = ensure_pattern_capacity(module, module->num_patterns + 1);
+    const edit_result_t result = ensure_pattern_capacity(module, module->num_patterns + 1);
     if (!result.success)
         return result;
     *new_pattern_no = module->num_patterns;
@@ -71,7 +71,7 @@ edit_result_t editor_create_pattern(module_t *module, const int pattern_length, 
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_delete_pattern(module_t *module, int pattern_no)
+edit_result_t editor_delete_pattern(module_t *module, const int pattern_no)
 {
     module_delete_pattern(module, pattern_no);
     return EDIT_SUCCESS;
@@ -108,7 +108,7 @@ edit_result_t editor_update_instrument(
     return EDIT_SUCCESS;
 }
 
-static edit_result_t get_event(module_t *module, int pattern_no, int pattern_index, int channel_no, event_t **event)
+static edit_result_t get_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, event_t **event)
 {
     *event = NULL;
     if (module == NULL)
@@ -119,14 +119,14 @@ static edit_result_t get_event(module_t *module, int pattern_no, int pattern_ind
         return failure(INVALID_CHANNEL_NUMBER);
     if (module->patterns == NULL)
         return failure(NO_PATTERN_DATA);
-    pattern_t pattern = module->patterns[pattern_no];
+    const pattern_t pattern = module->patterns[pattern_no];
     if (pattern_index < 0 || pattern_index >= pattern.num_lines)
         return failure(INVALID_PATTERN_INDEX);
-    *event = pattern.events + (pattern_index * module->num_channels) + channel_no;
+    *event = pattern.events + pattern_index * module->num_channels + channel_no;
     return EDIT_SUCCESS;
 }
 
-static edit_result_t ensure_sequence_capacity(module_t *module, int sequence_len)
+static edit_result_t ensure_sequence_capacity(module_t *module, const int sequence_len)
 {
     if (module->sequence_capacity >= sequence_len)
         return EDIT_SUCCESS;
@@ -141,7 +141,7 @@ static edit_result_t ensure_sequence_capacity(module_t *module, int sequence_len
     return EDIT_SUCCESS;
 }
 
-static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns)
+static edit_result_t ensure_pattern_capacity(module_t *module, const int num_patterns)
 {
     if (module->pattern_capacity >= num_patterns)
         return EDIT_SUCCESS;

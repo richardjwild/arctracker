@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ExportState, InstrumentUpdate, Module, TransportState } from "../engine/engine.ts";
+import type { ExportState, Instrument, Module, TransportState } from "../engine/engine.ts";
 import { CurrentPattern } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
@@ -24,7 +24,7 @@ interface AppStore {
   setModule: (result: Module) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
   setSequence: (sequence: number[]) => void;
-  updateInstrument: (instrumentIndex: number, instrument: InstrumentUpdate) => void;
+  setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
@@ -141,7 +141,7 @@ export const useStore = create<AppStore>((set) => ({
 
   setSequence: (sequence) => set({ sequence }),
 
-  updateInstrument: (instrumentIndex: number, instrument: InstrumentUpdate) =>
+  setInstrument: (instrumentIndex: number, instrument: Instrument) =>
     set((state) => {
       let instruments = [ ...state.module.instruments ];
       instruments[instrumentIndex] = {
@@ -153,7 +153,10 @@ export const useStore = create<AppStore>((set) => ({
         repeats: instrument.repeats,
         repeatOffset: instrument.repeatOffset,
         repeatLength: instrument.repeatLength,
-        sampleIndex: instrument.sampleIndex,
+        sample: {
+          sampleIndex: instrument.sample.sampleIndex,
+          sampleLength: instrument.sample.sampleLength,
+        },
       };
       return {
         module: {

@@ -21,8 +21,12 @@ export type Instrument = {
   repeats: boolean;
   repeatOffset: number;
   repeatLength: number;
-  sampleIndex: number;
   sample: Sample;
+}
+
+export type Sample = {
+  sampleIndex: number;
+  sampleLength: number;
 }
 
 export type InstrumentUpdate = {
@@ -34,10 +38,6 @@ export type InstrumentUpdate = {
   repeatOffset: number;
   repeatLength: number;
   sampleIndex: number;
-}
-
-export type Sample = {
-  sampleLength: number;
 }
 
 export type TransportState = {
@@ -257,6 +257,12 @@ export const engine = {
     await invoke("edit_update_instrument", {
       instrumentIndex,
       instrumentUpdate
+    });
+  },
+
+  loadSample: async (path: String): Promise<Sample> => {
+    return await invoke("edit_load_sample", {
+      path,
     });
   },
 };

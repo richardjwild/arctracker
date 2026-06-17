@@ -5,6 +5,7 @@
 #include "loader.h"
 #include "format_desktop_tracker.h"
 #include "format_tracker.h"
+#include "audio_file/wav.h"
 #include "io/error.h"
 #include "memory/heap.h"
 
@@ -92,13 +93,14 @@ load_sample_result_t load_sample(const char *filename)
         return FAILED_TO_READ_SAMPLE_FILE;
     }
     const mapped_file_t file = load_file(file_pointer);
+    const audio_t audio_data = wav_read_audio(file.addr, file.size);
     fclose(file_pointer);
+    munmap(file.addr, file.size);
     if (has_error())
     {
         return FAILED_TO_READ_SAMPLE_FILE;
     }
-    munmap(file.addr, file.size);
-    return SUCCESSFULLY_LOADED_SAMPLE(0, NULL);
+    return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, audio_data.audio_data);
 }
 
 static mapped_file_t load_file(FILE *file_pointer)

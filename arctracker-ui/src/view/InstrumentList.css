@@ -1,7 +1,11 @@
 .sampleList {
     grid-area: sampleList;
     min-height: 0;
-    overflow-y: auto;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px 10px 0 10px;
 }
 
 .sampleList button {
@@ -11,17 +15,18 @@
     font-size: 12px;
     width: 100%;
     height: 21px;
-    border: solid 1px var(--colour-samplelist-button-bg);
+    border: none;
     text-align: left;
     padding-left: 10px;
     border-radius: 5px;
-    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sampleList button.selected {
     background-color: var(--colour-samplelist-button-selected-bg);
     color: var(--colour-button-fg);
-    border: solid 1px var(--colour-samplelist-button-selected-bg);
+    border: none;
     border-radius: 5px;
-    margin-bottom: 4px;
 }

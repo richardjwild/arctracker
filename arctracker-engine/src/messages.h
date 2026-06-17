@@ -6,6 +6,7 @@
 #define MODULE_TYPE_UNRECOGNISED "Not a recognised module type"
 #define MODULE_LOAD_FAILED "Failed to load module, either file corrupted or ran out of memory"
 #define SAMPLE_LOAD_FAILED "Failed to load sample, either file corrupted or ran out of memory"
+#define SAMPLE_LINK_FAILED "Failed to link sample to module"
 #define MODULE_CREATE_FAILED "Failed to create module"
 #define NEW_MODULE_TITLE "(New module)"
 #define MEMORY_ALLOCATION_FAILED "Could not allocate memory"
@@ -40,5 +41,13 @@
 #define INVALID_SAMPLE_INDEX "Invalid sample index"
 #define INVALID_REPEAT_OFFSET "Invalid sample repeat offset"
 #define INVALID_REPEAT_LENGTH "Invalid sample repeat length"
+#define RIFF_HEADER_NOT_FOUND "RIFF header chunk not found"
+#define SIZE_MISMATCH "Reported size of file does not match actual size"
+#define NOT_WAVE_FORMAT "RIFF file is not WAVE format"
+#define FORMAT_SUBCHUNK_NOT_FOUND "Format subchunk not found"
+#define UNKNOWN_AUDIO_FORMAT "Unknown audio format"
+#define INVALID_BITS_PER_SAMPLE "Invalid bits per sample"
+#define DATA_SUBCHUNK_NOT_FOUND "Data subchunk not found"
+#define INCONSISTENT_AUDIO_DATA_SIZE "Audio data size not a whole number of frames"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

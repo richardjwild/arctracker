@@ -726,6 +726,26 @@ impl Arctracker {
             })
         }
     }
+
+    pub fn edit_load_sample(&mut self, path: &str) -> Result<Sample, ArctrackerError> {
+        let c_filename = CString::new(path).map_err(|_| ArctrackerError {
+            message: "Invalid filename".parse().unwrap(),
+        })?;
+        let mut sample_info = std::mem::MaybeUninit::<ffi::UiSampleInfo>::uninit();
+        let result = unsafe {
+            ffi::arctracker_edit_load_sample(self.handle, c_filename.as_ptr(), sample_info.as_mut_ptr())
+        };
+        if !result.success {
+            return Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            });
+        }
+        let sample_info = unsafe { sample_info.assume_init() };
+        Ok(Sample {
+            sample_index: sample_info.sample_index,
+            sample_length: sample_info.sample_length,
+        })
+    }
 }
 
 impl Drop for Arctracker {

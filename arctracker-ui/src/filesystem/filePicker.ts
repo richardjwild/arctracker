@@ -37,4 +37,13 @@ export const filePicker = {
       ],
     });
   },
+
+  leafName: (path: string): string => {
+    return (
+      path
+        .split(/[\\/]/)
+        .pop()
+        ?.replace(/\.[^.]+$/, "") ?? ""
+    );
+  },
 };

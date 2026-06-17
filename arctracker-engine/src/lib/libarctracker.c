@@ -496,8 +496,10 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
         return failure(FILE_OPEN_FAILED);
     if (!result.file_valid)
         return failure(SAMPLE_LOAD_FAILED);
-    // TODO: Hook result.sample_data into the module.
-    // Set sample_info->sample_index to whatever index the new sample was loaded at.
+    int sample_index;
+    if (!module_link_sample(arctracker->module, result.sample_data, result.sample_length, &sample_index))
+        return failure(SAMPLE_LINK_FAILED);
+    sample_info->sample_index = sample_index;
     sample_info->sample_length = result.sample_length;
     return SUCCESS;
 }

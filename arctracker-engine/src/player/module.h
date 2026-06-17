@@ -90,8 +90,9 @@ typedef struct
     pattern_t *patterns;
     int pattern_capacity;
     int num_samples;
-    instrument_t instruments[NUM_INSTRUMENT_SLOTS];
     sample_t *samples;
+    int sample_capacity;
+    instrument_t instruments[NUM_INSTRUMENT_SLOTS];
     int initial_speed;
     float master_gain;
 } module_t;
@@ -111,5 +112,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info);
 void module_get_instrument_info(const module_t *module, int instrument_index, ui_instrument_info_t *instrument_info);
 
 void module_set_instrument(module_t *module, int instrument_index, instrument_t instrument_update);
+
+bool module_link_sample(module_t *module, float *sample_data, int sample_length, int *sample_index);
 
 #endif //ARCTRACKER_MODULE_H

@@ -5,6 +5,7 @@
 
 #define INITIAL_SEQUENCE_CAPACITY 1024
 #define INITIAL_PATTERN_CAPACITY 1024
+#define INITIAL_SAMPLE_CAPACITY 1024
 
 module_t *module_create(int num_channels, int sequence_len, int num_patterns, int num_samples)
 {
@@ -17,6 +18,7 @@ module_t *module_create(int num_channels, int sequence_len, int num_patterns, in
     module->num_patterns = num_patterns;
     module->pattern_capacity = num_patterns > INITIAL_PATTERN_CAPACITY ? num_patterns : INITIAL_PATTERN_CAPACITY;
     module->num_samples = num_samples;
+    module->sample_capacity = num_samples > INITIAL_SAMPLE_CAPACITY ? num_samples : INITIAL_SAMPLE_CAPACITY;
     module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
         goto fail;
@@ -26,7 +28,7 @@ module_t *module_create(int num_channels, int sequence_len, int num_patterns, in
     module->patterns = allocate_array(MODULE, module->pattern_capacity, sizeof(pattern_t));
     if (module->patterns == NULL)
         goto fail;
-    module->samples = allocate_array(MODULE, num_samples, sizeof(sample_t));
+    module->samples = allocate_array(MODULE, module->sample_capacity, sizeof(sample_t));
     if (module->samples == NULL)
         goto fail;
     return module;
@@ -121,4 +123,15 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
 void module_set_instrument(module_t *module, const int instrument_index, const instrument_t instrument_update)
 {
     module->instruments[instrument_index] = instrument_update;
+}
+
+bool module_link_sample(module_t *module, float *sample_data, const int sample_length, int *sample_index)
+{
+    *sample_index = module->num_samples;
+    module->samples[*sample_index] = (sample_t) {
+        .sample_data = sample_data,
+        .sample_length = sample_length,
+    };
+    module->num_samples++;
+    return true;
 }
