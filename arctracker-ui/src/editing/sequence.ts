@@ -44,6 +44,15 @@ export const sequence = {
     return useStore.getState().editorState.sequencePosition;
   },
 
+  goToStart: () => {
+    sequence.updatePosition(0);
+  },
+
+  goToEnd: () => {
+    const moduleSequence = useStore.getState().sequence;
+    sequence.updatePosition(moduleSequence.length - 1);
+  },
+
   advance: () => {
     sequence.updatePosition(sequence.currentPosition() + 1);
   },
@@ -110,8 +119,8 @@ export const sequence = {
         if (createNewPattern) {
           const createdPattern = moduleSequence[sequencePosition];
           await pattern.deletePattern(createdPattern);
-          ensureSequencePosition();
         }
+        ensureSequencePosition();
       },
     }
     await editor.applyEdit(command);
@@ -142,8 +151,8 @@ export const sequence = {
         if (createNewPattern) {
           const createdPattern = moduleSequence[sequencePosition + 1];
           await pattern.deletePattern(createdPattern);
-          ensureSequencePosition();
         }
+        ensureSequencePosition();
       },
     }
     await editor.applyEdit(command);

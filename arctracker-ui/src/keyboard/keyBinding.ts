@@ -1,7 +1,7 @@
 import { commands } from "../control/commands.ts";
 import { KeyHandler } from "./keyHandler.ts";
 
-function primaryModifier(e: KeyboardEvent) {
+export function primaryModifier(e: KeyboardEvent) {
   return navigator.userAgent.includes("Mac")
     ? e.metaKey && !e.ctrlKey
     : e.ctrlKey && !e.metaKey;
@@ -13,6 +13,7 @@ type ModifierRequirement =
   | "secondary"
   | "tertiary"
   | "primary+secondary"
+  | "primary+tertiary"
   | "secondary+tertiary";
 
 type KeyBinding = {
@@ -22,22 +23,13 @@ type KeyBinding = {
 
 const keyBindings = new Map<string, KeyBinding[]>([
   ["Escape", [{ modifiers: "none", execute: commands.toggleEdit }]],
-  ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
-  ["KeyB", [{ modifiers: "primary", execute: commands.exportAudio }]],
-  ["Space", [{ modifiers: "none", execute: commands.togglePlay }]],
-  ["KeyL", [{ modifiers: "primary", execute: commands.toggleLoop }]],
-  [
-    "KeyZ",
-    [
-      { modifiers: "primary", execute: commands.undoEdit },
-      { modifiers: "primary+secondary", execute: commands.redoEdit },
-    ],
-  ],
   [
     "ArrowUp",
     [
       { modifiers: "none", execute: () => commands.patternGridUp(false) },
       { modifiers: "secondary", execute: () => commands.patternGridUp(true) },
+      { modifiers: "tertiary", execute: commands.previousInstrument },
+      { modifiers: "primary+tertiary", execute: commands.firstInstrument },
     ],
   ],
   [
@@ -45,6 +37,29 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [
       { modifiers: "none", execute: () => commands.patternGridDown(false) },
       { modifiers: "secondary", execute: () => commands.patternGridDown(true) },
+      { modifiers: "tertiary", execute: commands.nextInstrument },
+      { modifiers: "primary+tertiary", execute: commands.lastInstrument },
+    ],
+  ],
+  [
+    "ArrowLeft",
+    [
+      { modifiers: "none", execute: commands.cursorFieldLeft },
+      { modifiers: "secondary", execute: () => commands.patternGridLeft(true) },
+      { modifiers: "tertiary", execute: commands.sequenceSeekBackwards },
+      { modifiers: "primary+tertiary", execute: commands.sequenceSeekToStart },
+    ],
+  ],
+  [
+    "ArrowRight",
+    [
+      { modifiers: "none", execute: commands.cursorFieldRight },
+      {
+        modifiers: "secondary",
+        execute: () => commands.patternGridRight(true),
+      },
+      { modifiers: "tertiary", execute: commands.sequenceSeekForwards },
+      { modifiers: "primary+tertiary", execute: commands.sequenceSeekToEnd },
     ],
   ],
   [
@@ -97,25 +112,6 @@ const keyBindings = new Map<string, KeyBinding[]>([
     ],
   ],
   [
-    "ArrowRight",
-    [
-      { modifiers: "none", execute: commands.cursorFieldRight },
-      {
-        modifiers: "secondary",
-        execute: () => commands.patternGridRight(true),
-      },
-      { modifiers: "tertiary", execute: commands.sequenceSeekForwards },
-    ],
-  ],
-  [
-    "ArrowLeft",
-    [
-      { modifiers: "none", execute: commands.cursorFieldLeft },
-      { modifiers: "secondary", execute: () => commands.patternGridLeft(true) },
-      { modifiers: "tertiary", execute: commands.sequenceSeekBackwards },
-    ],
-  ],
-  [
     "Tab",
     [
       { modifiers: "none", execute: () => commands.patternGridRight(false) },
@@ -138,9 +134,41 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "Backspace",
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
   ],
-  ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],
+  ["Space", [{ modifiers: "none", execute: commands.togglePlay }]],
+  ["KeyB", [{ modifiers: "primary", execute: commands.exportAudio }]],
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
+  ["KeyI", [{ modifiers: "primary", execute: commands.openInstrumentEditor }]],
+  ["KeyL", [{ modifiers: "primary", execute: commands.toggleLoop }]],
+  ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
   ["KeyV", [{ modifiers: "primary", execute: commands.pastePatternEvents }]],
+  ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],
+  [
+    "KeyZ",
+    [
+      { modifiers: "primary", execute: commands.undoEdit },
+      { modifiers: "primary+secondary", execute: commands.redoEdit },
+    ],
+  ],
+  [
+    "F1",
+    [
+      { modifiers: "none", execute: commands.insertSequencePositionBefore },
+      {
+        modifiers: "secondary",
+        execute: () => commands.insertSequencePositionBefore(true),
+      },
+    ],
+  ],
+  [
+    "F2",
+    [
+      { modifiers: "none", execute: commands.insertSequencePositionAfter },
+      {
+        modifiers: "secondary",
+        execute: () => commands.insertSequencePositionAfter(true),
+      },
+    ],
+  ],
   [
     "F3",
     [
@@ -180,26 +208,6 @@ const keyBindings = new Map<string, KeyBinding[]>([
       },
     ],
   ],
-  [
-    "KeyI",
-    [
-      { modifiers: "primary", execute: commands.insertSequencePositionBefore },
-      {
-        modifiers: "primary+secondary",
-        execute: () => commands.insertSequencePositionBefore(true),
-      },
-    ],
-  ],
-  [
-    "KeyA",
-    [
-      { modifiers: "primary", execute: commands.insertSequencePositionAfter },
-      {
-        modifiers: "primary+secondary",
-        execute: () => commands.insertSequencePositionAfter(true),
-      },
-    ],
-  ],
 ]);
 
 function getKeyBindings(key: string): KeyBinding[] {
@@ -218,6 +226,8 @@ function modifiersMatch(e: KeyboardEvent, modifier: ModifierRequirement) {
       return !primaryModifier(e) && !e.shiftKey && e.altKey;
     case "primary+secondary":
       return primaryModifier(e) && e.shiftKey && !e.altKey;
+    case "primary+tertiary":
+      return primaryModifier(e) && !e.shiftKey && e.altKey;
     case "secondary+tertiary":
       return !primaryModifier(e) && e.shiftKey && e.altKey;
   }

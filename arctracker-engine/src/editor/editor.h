@@ -35,4 +35,6 @@ edit_result_t editor_update_instrument(
     int sample_index
 );
 
+edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length);
+
 #endif //ARCTRACKER_ENGINE_EDITOR_H

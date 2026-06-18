@@ -38,6 +38,12 @@
     padding: 0;
 }
 
+.sequence .sequencePos:hover {
+    color: var(--colour-sequence-position-bg);
+    background-color: var(--colour-sequence-position-fg);
+    border: solid 1px var(--colour-sequence-position-bg);
+}
+
 .sequence .sequencePos.current {
     background-color: var(--colour-sequence-position-current-bg);
     border: solid 1px var(--colour-sequence-position-current-bg);

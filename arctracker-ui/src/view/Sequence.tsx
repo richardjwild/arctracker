@@ -52,12 +52,11 @@ export default function Sequence() {
   }, [digits, moduleSequence.length]);
 
   useEffect(() => {
-    setFirstVisiblePos((current) => {
-      if (sequencePos < current) return sequencePos;
-      if (sequencePos >= current + visibleCount) {
-        return sequencePos - visibleCount + 1;
-      }
-      return current;
+    setFirstVisiblePos(() => {
+      if (sequencePos >= visibleCount)
+        return 1 + sequencePos - visibleCount;
+      else
+        return 0;
     });
   }, [sequencePos, visibleCount]);
 

@@ -38,13 +38,12 @@ export default function InstrumentList() {
   }, [instruments.length]);
 
   useEffect(() => {
-    setFirstVisiblePos((current) => {
+    setFirstVisiblePos(() => {
       if (selectedInstrument === null) return 0;
-      if (selectedInstrument < current) return selectedInstrument;
-      if (selectedInstrument >= current + visibleCount) {
-        return selectedInstrument - visibleCount + 1;
-      }
-      return current;
+      if (selectedInstrument >= visibleCount)
+        return 1 + selectedInstrument - visibleCount;
+      else
+        return 0;
     });
   }, [selectedInstrument, visibleCount])
 
@@ -61,15 +60,19 @@ export default function InstrumentList() {
           <button
             key={index}
             type="button"
-            className={index === selectedInstrument ? "selected" : ""}
+            className={selectedInstrument === index + firstVisiblePos ? "selected" : ""}
             ref={cellRef}
             onClick={(e) => {
               e.preventDefault();
-              setSelectedInstrument(index);
-              if (e.shiftKey) commands.openInstrumentEditor();
+              if (selectedInstrument === index + firstVisiblePos)
+                commands.openInstrumentEditor();
+              else {
+                setSelectedInstrument(index + firstVisiblePos);
+                if (e.shiftKey) commands.openInstrumentEditor();
+              }
             }}
           >
-            {hexadecimal.toHex(index + 1, 2)}
+            {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
             {": "}
             {instrument.assigned ? instrument.name : "(empty)"}
           </button>

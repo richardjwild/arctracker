@@ -1,16 +1,18 @@
-import { useStore } from "../store/useStore.ts";
 import { Cursor } from "./cursor.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { commands } from "../control/commands.ts";
 import { KeyHandler } from "../keyboard/keyHandler.ts";
+import { editInstrument } from "./editInstrument.ts";
+import { editor } from "./editor.ts";
+import { primaryModifier } from "../keyboard/keyBinding.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
   handleEffectFieldInput: KeyHandler,
+  handleInstrumentEditorInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
-    const { editorState } = useStore.getState();
-    if (!editorState.patternEditing) return false;
+    if (!editor.patternEditing()) return false;
     const cursorField = new Cursor().currentField();
     if (cursorField.field !== "sampleHigh" && cursorField.field !== "sampleLow")
       return false;
@@ -21,8 +23,7 @@ export const editorKeyHandlers: {
   },
 
   handleEffectFieldInput: (e) => {
-    const { editorState } = useStore.getState();
-    if (!editorState.patternEditing) return false;
+    if (!editor.patternEditing()) return false;
     const cursorField = new Cursor().currentField();
     if (cursorField.field === "effectCode") {
       if (e.metaKey || e.ctrlKey || !/^[0-9A-Za-z]$/i.test(e.key)) return false;
@@ -39,4 +40,20 @@ export const editorKeyHandlers: {
     }
     return false;
   },
+
+  handleInstrumentEditorInput: (e) => {
+    if (!editInstrument.instrumentEditing())
+      return false;
+    if (e.code === 'Escape') {
+      void commands.restoreAndCloseInstrumentEditor();
+      return true;
+    } else if (e.code === 'KeyL' && primaryModifier(e)) {
+      void commands.loadSample();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      void commands.saveAndCloseInstrumentEditor();
+      return true;
+    }
+    return false;
+  }
 };

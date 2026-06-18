@@ -4,15 +4,18 @@
 #include <string.h>
 #include "messages.h"
 #include "io/error.h"
+#include "loader/loader.h"
 #include "memory/heap.h"
 
 #define MIN_SEQUENCE_CAPACITY 1024
 #define MIN_PATTERN_CAPACITY 1024
+#define MIN_SAMPLE_CAPACITY 1024
 #define MAX_PATTERN_LENGTH 1000
 
 static edit_result_t get_event(const module_t *, int, int, int, event_t **);
 static edit_result_t ensure_sequence_capacity(module_t *, int);
 static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns);
+static edit_result_t ensure_sample_capacity(module_t *module, const int num_samples);
 static edit_result_t failure(char *);
 
 edit_result_t editor_get_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, event_t *event_buffer)
@@ -108,6 +111,28 @@ edit_result_t editor_update_instrument(
     return EDIT_SUCCESS;
 }
 
+edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length)
+{
+    const load_sample_result_t load_result = load_sample(filename);
+    if (!load_result.file_read)
+        return failure(FILE_OPEN_FAILED);
+    if (!load_result.file_valid)
+        return failure(SAMPLE_LOAD_FAILED);
+    const edit_result_t capacity_result = ensure_sample_capacity(module, module->num_patterns + 1);
+    if (!capacity_result.success)
+    {
+        deallocate(MODULE, load_result.sample_data);
+        return capacity_result;
+    }
+    if (!module_link_sample(module, load_result.sample_data, load_result.sample_length, sample_index))
+    {
+        deallocate(MODULE, load_result.sample_data);
+        return failure(SAMPLE_LINK_FAILED);
+    }
+    *sample_length = load_result.sample_length;
+    return EDIT_SUCCESS;
+}
+
 static edit_result_t get_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, event_t **event)
 {
     *event = NULL;
@@ -153,6 +178,21 @@ static edit_result_t ensure_pattern_capacity(module_t *module, const int num_pat
         return failure(MEMORY_ALLOCATION_FAILED);
     module->patterns = new_patterns;
     module->pattern_capacity = required_capacity;
+    return EDIT_SUCCESS;
+}
+
+static edit_result_t ensure_sample_capacity(module_t *module, const int num_samples)
+{
+    if (module->sample_capacity >= num_samples)
+        return EDIT_SUCCESS;
+    int required_capacity = module->sample_capacity;
+    while (required_capacity < num_samples)
+        required_capacity += MIN_SAMPLE_CAPACITY;
+    sample_t *new_samples = reallocate_array(MODULE, module->samples, required_capacity, sizeof(sample_t));
+    if (new_samples == NULL)
+        return failure(MEMORY_ALLOCATION_FAILED);
+    module->samples = new_samples;
+    module->sample_capacity = required_capacity;
     return EDIT_SUCCESS;
 }
 

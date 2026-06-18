@@ -20,11 +20,13 @@ interface AppStore {
   exportState: ExportState | null;
   currentPattern: CurrentPattern;
   selectedInstrument: number | null;
+  draftInstrument: Instrument;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
   setSequence: (sequence: number[]) => void;
   setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
+  setDraftInstrument: (instrument: Instrument) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
@@ -80,6 +82,21 @@ const initialPattern: CurrentPattern = {
   ],
 };
 
+const initialInstrument: Instrument = {
+  name: "",
+  assigned: false,
+  defaultVolume: 255,
+  transpose: 13,
+  repeats: false,
+  repeatOffset: 0,
+  repeatLength: 0,
+  sample: {
+    sampleIndex: 0,
+    sampleLength: 0,
+  }
+};
+
+
 function initialEditorState(numChannels: number = 0): EditorState {
   return {
     patternEditing: false,
@@ -111,6 +128,7 @@ export const useStore = create<AppStore>((set) => ({
   exportState: null,
   currentPattern: initialPattern,
   selectedInstrument: null,
+  draftInstrument: initialInstrument,
   isLoadingModule: false,
 
   setModule: (result) =>
@@ -165,6 +183,8 @@ export const useStore = create<AppStore>((set) => ({
         }
       }
     }),
+
+  setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
 
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
     set({ pianoKeyboardTranspose }),

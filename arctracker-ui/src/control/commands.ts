@@ -1,5 +1,4 @@
 import { CursorField } from "../editing/cursor.ts";
-import { Instrument } from "../engine/engine.ts";
 
 type SampleCursorField = Extract<
   CursorField,
@@ -31,6 +30,12 @@ export enum CommandType {
   SEQUENCE_SEEK,
   SEQUENCE_SEEK_FORWARDS,
   SEQUENCE_SEEK_BACKWARDS,
+  SEQUENCE_SEEK_TO_START,
+  SEQUENCE_SEEK_TO_END,
+  NEXT_INSTRUMENT,
+  PREVIOUS_INSTRUMENT,
+  FIRST_INSTRUMENT,
+  LAST_INSTRUMENT,
   PATTERN_GRID_STRIDE_DOWN,
   PATTERN_GRID_STRIDE_UP,
   PATTERN_GRID_JUMP_TO_TOP,
@@ -60,6 +65,7 @@ export enum CommandType {
   OPEN_INSTRUMENT_EDITOR,
   SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
   RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
+  LOAD_SAMPLE,
 }
 
 export type Command =
@@ -72,6 +78,12 @@ export type Command =
   | { type: CommandType.SEQUENCE_SEEK; position: number }
   | { type: CommandType.SEQUENCE_SEEK_FORWARDS }
   | { type: CommandType.SEQUENCE_SEEK_BACKWARDS }
+  | { type: CommandType.SEQUENCE_SEEK_TO_START }
+  | { type: CommandType.SEQUENCE_SEEK_TO_END }
+  | { type: CommandType.NEXT_INSTRUMENT }
+  | { type: CommandType.PREVIOUS_INSTRUMENT }
+  | { type: CommandType.FIRST_INSTRUMENT }
+  | { type: CommandType.LAST_INSTRUMENT }
   | { type: CommandType.PATTERN_GRID_LEFT; extendSelection: boolean }
   | { type: CommandType.PATTERN_GRID_RIGHT; extendSelection: boolean }
   | {
@@ -129,15 +141,9 @@ export type Command =
     }
   | { type: CommandType.DELETE_SEQUENCE_POSITION }
   | { type: CommandType.OPEN_INSTRUMENT_EDITOR }
-  | {
-      type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR;
-      instrumentIndex: number;
-      draft: Instrument;
-    }
-  | {
-      type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR;
-      instrumentIndex: number;
-    };
+  | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
+  | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR }
+  | { type: CommandType.LOAD_SAMPLE };
 
 const queue: Command[] = [];
 
@@ -165,6 +171,18 @@ export const commands = {
     commandQueue.push({ type: CommandType.SEQUENCE_SEEK_FORWARDS }),
   sequenceSeekBackwards: () =>
     commandQueue.push({ type: CommandType.SEQUENCE_SEEK_BACKWARDS }),
+  sequenceSeekToStart: () =>
+    commandQueue.push({ type: CommandType.SEQUENCE_SEEK_TO_START }),
+  sequenceSeekToEnd: () =>
+    commandQueue.push({ type: CommandType.SEQUENCE_SEEK_TO_END }),
+  nextInstrument: () =>
+    commandQueue.push({ type: CommandType.NEXT_INSTRUMENT }),
+  previousInstrument: () =>
+    commandQueue.push({ type: CommandType.PREVIOUS_INSTRUMENT }),
+  firstInstrument: () =>
+    commandQueue.push({ type: CommandType.FIRST_INSTRUMENT }),
+  lastInstrument: () =>
+    commandQueue.push({ type: CommandType.LAST_INSTRUMENT }),
   patternGridLeft: (extendSelection: boolean) =>
     commandQueue.push({ type: CommandType.PATTERN_GRID_LEFT, extendSelection }),
   patternGridRight: (extendSelection: boolean) =>
@@ -256,15 +274,11 @@ export const commands = {
     commandQueue.push({ type: CommandType.DELETE_SEQUENCE_POSITION }),
   openInstrumentEditor: () =>
     commandQueue.push({ type: CommandType.OPEN_INSTRUMENT_EDITOR }),
-  saveAndCloseInstrumentEditor: (instrumentIndex: number, draft: Instrument) =>
-    commandQueue.push({
-      type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
-      instrumentIndex,
-      draft,
-    }),
-  restoreAndCloseInstrumentEditor: (instrumentIndex: number) =>
+  saveAndCloseInstrumentEditor: () =>
+    commandQueue.push({ type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }),
+  restoreAndCloseInstrumentEditor: () =>
     commandQueue.push({
       type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
-      instrumentIndex,
     }),
+  loadSample: () => commandQueue.push({ type: CommandType.LOAD_SAMPLE }),
 };

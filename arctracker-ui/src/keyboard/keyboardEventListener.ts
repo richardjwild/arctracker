@@ -5,6 +5,7 @@ import { keyBinding } from "./keyBinding.ts";
 import { editor } from "../editing/editor.ts";
 
 const handlers: KeyHandler[] = [
+  editorKeyHandlers.handleInstrumentEditorInput,
   pianoKeys.handleRealtimePianoInput,
   editorKeyHandlers.handleSampleFieldInput,
   editorKeyHandlers.handleEffectFieldInput,

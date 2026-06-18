@@ -7,7 +7,7 @@ import { commands } from "../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
 import { engine, Instrument, InstrumentUpdate } from "../engine/engine.ts";
 import { alerting } from "../alerting/alert.ts";
-import { filePicker } from "../filesystem/filePicker.ts";
+import { SampleNameMaxLength } from "../editing/editInstrument.ts";
 
 type InputState = {
   transpose: string;
@@ -35,77 +35,54 @@ const emptyInstrument: Instrument = {
   }
 };
 
-const SampleNameMaxLength = 33;
-
 export default function SampleEditDialog() {
   const instrumentIndex = useStore((state) => state.selectedInstrument);
   const instruments = useStore((state) => state.module.instruments);
   const instrumentEditing = useStore((state) => state.editorState.instrumentEditing);
+  const { draftInstrument, setDraftInstrument } = useStore((state) => state);
+  const [ inputState, setInputState ] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
-  const [draft, setDraft] = useState(emptyInstrument);
-  const [inputState, setInputState] = useState(emptyInputState);
   const loseFocus = () => modalRef.current?.focus();
 
   const syncInputStateWithDraft = () => {
     setInputState({
-      transpose: (draft.transpose - 13).toString(),
-      repeatStart: draft.repeatOffset.toString(),
-      repeatEnd: (draft.repeatOffset + draft.repeatLength).toString()
+      transpose: (draftInstrument.transpose - 13).toString(),
+      repeatStart: draftInstrument.repeatOffset.toString(),
+      repeatEnd: (draftInstrument.repeatOffset + draftInstrument.repeatLength).toString()
     });
   };
 
   useEffect(() => {
+    if (!instrumentEditing) return;
     const instrument =
       instrumentIndex === null || instrumentIndex >= instruments.length
         ? emptyInstrument
         : instruments[instrumentIndex];
-    setDraft({ ...instrument, sample: { ...instrument.sample } });
-  }, [instruments, instrumentIndex]);
+    setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
+  }, [instruments, instrumentIndex, instrumentEditing]);
 
   useEffect(() => {
     syncInputStateWithDraft();
     if (instrumentIndex === null) return;
     const update: InstrumentUpdate = {
-      assigned: draft.assigned,
-      name: draft.name,
-      defaultVolume: draft.defaultVolume,
-      transpose: draft.transpose,
-      repeats: draft.repeats,
-      repeatOffset: draft.repeatOffset,
-      repeatLength: draft.repeatLength,
-      sampleIndex: draft.sample.sampleIndex,
+      assigned: draftInstrument.assigned,
+      name: draftInstrument.name,
+      defaultVolume: draftInstrument.defaultVolume,
+      transpose: draftInstrument.transpose,
+      repeats: draftInstrument.repeats,
+      repeatOffset: draftInstrument.repeatOffset,
+      repeatLength: draftInstrument.repeatLength,
+      sampleIndex: draftInstrument.sample.sampleIndex,
     };
     void engine.updateInstrument(instrumentIndex, update);
-  }, [draft]);
+  }, [draftInstrument]);
 
   if (instrumentIndex === null || !instrumentEditing) return null;
-
-  const loadSample = async () => {
-    const path = await filePicker.chooseFileToOpen(['wav']);
-    if (!path) return;
-    try {
-      const sample = await engine.loadSample(path);
-      const updatedDraft = {
-        ...draft,
-        name: filePicker.leafName(path).substring(0, SampleNameMaxLength),
-        assigned: true,
-        defaultVolume: 255,
-        transpose: 12,
-        repeats: false,
-        repeatOffset: 0,
-        repeatLength: 0,
-        sample,
-      };
-      setDraft(updatedDraft);
-    } catch (e) {
-      void alerting.showError(`Failed to load sample: ${e}`);
-    }
-  };
 
   const validateTranspose = () => {
     const transpose = Number(inputState.transpose);
     if (Number.isInteger(transpose) && transpose >= -12 && transpose <= 12) {
-      setDraft({ ...draft, transpose: transpose + 13 });
+      setDraftInstrument({ ...draftInstrument, transpose: transpose + 13 });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo("Transpose must be between -12 and 12.");
@@ -114,17 +91,17 @@ export default function SampleEditDialog() {
   };
 
   const setSampleRepeats = () => {
-    setDraft({
-      ...draft,
+    setDraftInstrument({
+      ...draftInstrument,
       repeats: true,
       repeatOffset: 0,
-      repeatLength: draft.sample.sampleLength,
+      repeatLength: draftInstrument.sample.sampleLength,
     });
   };
 
   const setSampleNoRepeat = () => {
-    setDraft({
-      ...draft,
+    setDraftInstrument({
+      ...draftInstrument,
       repeats: false,
       repeatOffset: 0,
       repeatLength: 0,
@@ -132,18 +109,18 @@ export default function SampleEditDialog() {
   };
 
   const setRepeatOffsetAndLength = (repeatStart: number) => {
-    if (draft.repeatLength === 0) {
-      setDraft({
-        ...draft,
+    if (draftInstrument.repeatLength === 0) {
+      setDraftInstrument({
+        ...draftInstrument,
         repeatOffset: repeatStart,
-        repeatLength: draft.sample.sampleLength - (repeatStart + 1)
+        repeatLength: draftInstrument.sample.sampleLength - (repeatStart + 1)
       });
     } else {
-      const delta = repeatStart - draft.repeatOffset;
-      setDraft({
-        ...draft,
+      const delta = repeatStart - draftInstrument.repeatOffset;
+      setDraftInstrument({
+        ...draftInstrument,
         repeatOffset: repeatStart,
-        repeatLength: draft.repeatLength - delta
+        repeatLength: draftInstrument.repeatLength - delta
       });
     }
   };
@@ -151,15 +128,15 @@ export default function SampleEditDialog() {
   const updateRepeatStart = () => {
     const repeatStart = Number(inputState.repeatStart);
     const maxValue =
-      draft.repeatLength === 0
-        ? draft.sample.sampleLength - 2
-        : draft.repeatOffset + draft.repeatLength - 1;
+      draftInstrument.repeatLength === 0
+        ? draftInstrument.sample.sampleLength - 2
+        : draftInstrument.repeatOffset + draftInstrument.repeatLength - 1;
     if (Number.isInteger(repeatStart) && repeatStart >= 0 && repeatStart <= maxValue) {
       setRepeatOffsetAndLength(repeatStart);
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(
-        `Repeat start must be between 0 and ${draft.repeatLength === 0 ? "sample length" : "repeat end"}.`
+        `Repeat start must be between 0 and ${draftInstrument.repeatLength === 0 ? "sample length" : "repeat end"}.`
       );
     }
     loseFocus();
@@ -167,8 +144,8 @@ export default function SampleEditDialog() {
 
   const updateRepeatEnd = () => {
     const repeatEnd = Number(inputState.repeatEnd);
-    if (Number.isInteger(repeatEnd) && repeatEnd > draft.repeatOffset && repeatEnd < draft.sample.sampleLength) {
-      setDraft({ ...draft, repeatLength: repeatEnd - draft.repeatOffset });
+    if (Number.isInteger(repeatEnd) && repeatEnd > draftInstrument.repeatOffset && repeatEnd < draftInstrument.sample.sampleLength) {
+      setDraftInstrument({ ...draftInstrument, repeatLength: repeatEnd - draftInstrument.repeatOffset });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(
@@ -190,11 +167,11 @@ export default function SampleEditDialog() {
         <input
           type="text"
           maxLength={SampleNameMaxLength}
-          value={draft.name}
+          value={draftInstrument.name}
           onFocus={editor.startTextInput}
           onBlur={editor.stopTextInput}
           onChange={(e) => {
-            setDraft({ ...draft, name: e.target.value });
+            setDraftInstrument({ ...draftInstrument, name: e.target.value });
           }}
         />
       </div>
@@ -206,10 +183,10 @@ export default function SampleEditDialog() {
           type="range"
           min={0}
           max={255}
-          value={draft.defaultVolume}
+          value={draftInstrument.defaultVolume}
           onChange={(e) => {
-            setDraft({
-              ...draft,
+            setDraftInstrument({
+              ...draftInstrument,
               defaultVolume: e.target.valueAsNumber
             });
           }}
@@ -240,7 +217,7 @@ export default function SampleEditDialog() {
         <label>Sample Length:</label>
       </div>
       <div className="sampleLengthEdit padded sampleEditField">
-        <input type="text" readOnly value={draft.sample.sampleLength} />
+        <input type="text" readOnly value={draftInstrument.sample.sampleLength} />
       </div>
       <div className="sampleRepeatsLabel padded sampleEditLabel">
         <label>Sample Loops:</label>
@@ -250,7 +227,7 @@ export default function SampleEditDialog() {
           type="radio"
           id="sampleRepeatsYes"
           name="sampleRepeats"
-          checked={draft.repeats}
+          checked={draftInstrument.repeats}
           onChange={setSampleRepeats}
         />
         <label htmlFor="sampleRepeatsYes">Yes</label>
@@ -258,7 +235,7 @@ export default function SampleEditDialog() {
           type="radio"
           id="sampleRepeatsNo"
           name="sampleRepeats"
-          checked={!draft.repeats}
+          checked={!draftInstrument.repeats}
           onChange={setSampleNoRepeat}
         />
         <label htmlFor="sampleRepeatsNo">No</label>
@@ -302,17 +279,22 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded">
-        <button type="button" onClick={loadSample}>Load Sample</button>
+        <button
+          type="button"
+          onClick={commands.loadSample}
+        >
+          Load Sample
+        </button>
         <button type="button">Delete Sample</button>
         <button
           type="button"
-          onClick={() => commands.saveAndCloseInstrumentEditor(instrumentIndex, draft)}
+          onClick={commands.saveAndCloseInstrumentEditor}
         >
           Save Changes
         </button>
         <button
           type="button"
-          onClick={() => commands.restoreAndCloseInstrumentEditor(instrumentIndex)}
+          onClick={commands.restoreAndCloseInstrumentEditor}
         >
           Close
         </button>

@@ -1,8 +1,43 @@
 import { useStore } from "../store/useStore";
-import { engine, Instrument, InstrumentUpdate } from "../engine/engine.ts";
+import { engine, InstrumentUpdate } from "../engine/engine.ts";
 import { EditCommand, editor } from "./editor.ts";
+import { filePicker } from "../filesystem/filePicker.ts";
+import { alerting } from "../alerting/alert.ts";
+
+export const SampleNameMaxLength = 33;
 
 export const editInstrument = {
+  instrumentEditing: () => {
+    return useStore.getState().editorState.instrumentEditing;
+  },
+
+  firstInstrument: () => {
+    const instruments = useStore.getState().module.instruments;
+    const { setSelectedInstrument } = useStore.getState();
+    if (instruments.length > 0)
+      setSelectedInstrument(0);
+  },
+
+  lastInstrument: () => {
+    const instruments = useStore.getState().module.instruments;
+    const { setSelectedInstrument } = useStore.getState();
+    if (instruments.length > 0)
+      setSelectedInstrument(instruments.length - 1);
+  },
+
+  nextInstrument: () => {
+    const instruments = useStore.getState().module.instruments;
+    const { selectedInstrument, setSelectedInstrument } = useStore.getState();
+    if (selectedInstrument !== null && selectedInstrument < instruments.length - 1)
+      setSelectedInstrument(selectedInstrument + 1);
+  },
+
+  previousInstrument: () => {
+    const { selectedInstrument, setSelectedInstrument } = useStore.getState();
+    if (selectedInstrument !== null && selectedInstrument > 0)
+      setSelectedInstrument(selectedInstrument - 1);
+  },
+
   showDialog: () => {
     const editorState = useStore.getState().editorState;
     useStore.getState().setEditorState({
@@ -11,8 +46,10 @@ export const editInstrument = {
     });
   },
 
-  updateInstrument: async (instrumentIndex: number, draft: Instrument) => {
-    const instrument = useStore.getState().module.instruments[instrumentIndex];
+  updateInstrument: async () => {
+    const { selectedInstrument, draftInstrument } = useStore.getState();
+    if (selectedInstrument === null) return;
+    const instrument = useStore.getState().module.instruments[selectedInstrument];
     const before: InstrumentUpdate = {
       assigned: instrument.assigned,
       name: instrument.name,
@@ -24,31 +61,33 @@ export const editInstrument = {
       sampleIndex: instrument.sample.sampleIndex,
     };
     const after: InstrumentUpdate = {
-      assigned: draft.assigned,
-      name: draft.name,
-      defaultVolume: draft.defaultVolume,
-      transpose: draft.transpose,
-      repeats: draft.repeats,
-      repeatOffset: draft.repeatOffset,
-      repeatLength: draft.repeatLength,
-      sampleIndex: draft.sample.sampleIndex,
+      assigned: draftInstrument.assigned,
+      name: draftInstrument.name,
+      defaultVolume: draftInstrument.defaultVolume,
+      transpose: draftInstrument.transpose,
+      repeats: draftInstrument.repeats,
+      repeatOffset: draftInstrument.repeatOffset,
+      repeatLength: draftInstrument.repeatLength,
+      sampleIndex: draftInstrument.sample.sampleIndex,
     };
     const editCommand: EditCommand = {
       apply: async () => {
-        await engine.updateInstrument(instrumentIndex, after);
-        useStore.getState().setInstrument(instrumentIndex, draft);
+        await engine.updateInstrument(selectedInstrument, after);
+        useStore.getState().setInstrument(selectedInstrument, draftInstrument);
         return true;
       },
       undo: async () => {
-        await engine.updateInstrument(instrumentIndex, before);
-        useStore.getState().setInstrument(instrumentIndex, instrument);
+        await engine.updateInstrument(selectedInstrument, before);
+        useStore.getState().setInstrument(selectedInstrument, instrument);
       },
     }
     await editor.applyEdit(editCommand);
   },
 
-  restoreInstrument: async (instrumentIndex: number) => {
-    const instrument = useStore.getState().module.instruments[instrumentIndex];
+  restoreInstrument: async () => {
+    const selectedInstrument = useStore.getState().selectedInstrument;
+    if (selectedInstrument === null) return;
+    const instrument = useStore.getState().module.instruments[selectedInstrument];
     const update: InstrumentUpdate = {
       assigned: instrument.assigned,
       name: instrument.name,
@@ -59,7 +98,31 @@ export const editInstrument = {
       repeatLength: instrument.repeatLength,
       sampleIndex: instrument.sample.sampleIndex,
     };
-    await engine.updateInstrument(instrumentIndex, update);
+    await engine.updateInstrument(selectedInstrument, update);
+  },
+
+  loadSample: async () => {
+    if (!editInstrument.instrumentEditing()) return;
+    const { draftInstrument, setDraftInstrument } = useStore.getState();
+    const path = await filePicker.chooseFileToOpen(['wav']);
+    if (!path) return;
+    try {
+      const sample = await engine.loadSample(path);
+      const updatedDraft = {
+        ...draftInstrument,
+        name: filePicker.leafName(path).substring(0, SampleNameMaxLength),
+        assigned: true,
+        defaultVolume: 255,
+        transpose: 12,
+        repeats: false,
+        repeatOffset: 0,
+        repeatLength: 0,
+        sample,
+      };
+      setDraftInstrument(updatedDraft);
+    } catch (e) {
+      void alerting.showError(`Failed to load sample: ${e}`);
+    }
   },
 
   closeDialog: () => {

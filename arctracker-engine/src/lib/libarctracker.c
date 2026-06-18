@@ -491,16 +491,13 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
         return failure(PLAYER_PLAYING);
     if (sample_info == NULL)
         return failure(BAD_BUFFER);
-    const load_sample_result_t result = load_sample(filename);
-    if (!result.file_read)
-        return failure(FILE_OPEN_FAILED);
-    if (!result.file_valid)
-        return failure(SAMPLE_LOAD_FAILED);
     int sample_index;
-    if (!module_link_sample(arctracker->module, result.sample_data, result.sample_length, &sample_index))
-        return failure(SAMPLE_LINK_FAILED);
+    int sample_length;
+    const edit_result_t result = editor_load_sample(arctracker->module, filename, &sample_index, &sample_length);
+    if (!result.success)
+        return failure(result.error_message);
     sample_info->sample_index = sample_index;
-    sample_info->sample_length = result.sample_length;
+    sample_info->sample_length = sample_length;
     return SUCCESS;
 }
 

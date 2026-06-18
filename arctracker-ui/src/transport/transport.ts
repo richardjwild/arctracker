@@ -31,6 +31,15 @@ export const transport = {
       engine.seek(toSequencePos, 0);
   },
 
+  sequenceSeekToStart: () => {
+    transport.sequenceSeek(0);
+  },
+
+  sequenceSeekToEnd: () => {
+    const { sequence } = useStore.getState();
+    transport.sequenceSeek(sequence.length - 1);
+  },
+
   sequenceSeekForwards: () => {
     const sequencePos = useStore.getState().transportState.sequencePos;
     transport.sequenceSeek(sequencePos + 1);

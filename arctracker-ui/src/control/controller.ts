@@ -9,7 +9,7 @@ import { audioExport } from "../audioExport/audioExport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
 import { selection } from "../editing/selection.ts";
 import { copyPaste } from "../editing/copyPaste.ts";
-import {sequence} from "../editing/sequence.ts";
+import { sequence } from "../editing/sequence.ts";
 import { editInstrument } from "../editing/editInstrument.ts";
 
 function processCommands() {
@@ -38,6 +38,7 @@ function processCommands() {
         void audioExport.start();
         break;
       case CommandType.TOGGLE_PLAY:
+        if (editInstrument.instrumentEditing()) break;
         selection.clearPatternSelection();
         editor.cancelPatternEdit();
         transport.togglePlay();
@@ -50,18 +51,40 @@ function processCommands() {
         break;
       case CommandType.SEQUENCE_SEEK:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeek(command.position)
+        if (transport.playing()) transport.sequenceSeek(command.position);
         else sequence.updatePosition(command.position);
         break;
       case CommandType.SEQUENCE_SEEK_FORWARDS:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeekForwards()
+        if (transport.playing()) transport.sequenceSeekForwards();
         else sequence.advance();
         break;
       case CommandType.SEQUENCE_SEEK_BACKWARDS:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeekBackwards()
+        if (transport.playing()) transport.sequenceSeekBackwards();
         else sequence.reverse();
+        break;
+      case CommandType.SEQUENCE_SEEK_TO_START:
+        selection.clearPatternSelection();
+        if (transport.playing()) transport.sequenceSeekToStart();
+        else sequence.goToStart();
+        break;
+      case CommandType.SEQUENCE_SEEK_TO_END:
+        selection.clearPatternSelection();
+        if (transport.playing()) transport.sequenceSeekToEnd();
+        else sequence.goToEnd();
+        break;
+      case CommandType.NEXT_INSTRUMENT:
+        editInstrument.nextInstrument();
+        break;
+      case CommandType.PREVIOUS_INSTRUMENT:
+        editInstrument.previousInstrument();
+        break;
+      case CommandType.FIRST_INSTRUMENT:
+        editInstrument.firstInstrument();
+        break;
+      case CommandType.LAST_INSTRUMENT:
+        editInstrument.lastInstrument();
         break;
       case CommandType.PATTERN_GRID_DOWN:
         selection.navigateGrid(
@@ -195,15 +218,19 @@ function processCommands() {
         void sequence.delete();
         break;
       case CommandType.OPEN_INSTRUMENT_EDITOR:
+        if (transport.playing()) transport.togglePlay();
         editInstrument.showDialog();
         break;
       case CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR:
-        void editInstrument.updateInstrument(command.instrumentIndex, command.draft);
+        void editInstrument.updateInstrument();
         editInstrument.closeDialog();
         break;
       case CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR:
-        void editInstrument.restoreInstrument(command.instrumentIndex);
+        void editInstrument.restoreInstrument();
         editInstrument.closeDialog();
+        break;
+      case CommandType.LOAD_SAMPLE:
+        void editInstrument.loadSample();
         break;
     }
   }
