@@ -18,7 +18,7 @@ export default function InstrumentList() {
   const gap = 5;
   const visibleCount =
       cellHeight > 0
-          ? Math.max(1, Math.floor((viewportHeight) / (cellHeight + gap)))
+          ? Math.max(1, Math.floor((viewportHeight) / (cellHeight + gap)) - 1)
           : 1;
 
   useEffect(() => {
@@ -60,7 +60,9 @@ export default function InstrumentList() {
           <button
             key={index}
             type="button"
-            className={selectedInstrument === index + firstVisiblePos ? "selected" : ""}
+            className={
+              selectedInstrument === index + firstVisiblePos ? "selected" : ""
+            }
             ref={cellRef}
             onClick={(e) => {
               e.preventDefault();
@@ -77,6 +79,17 @@ export default function InstrumentList() {
             {instrument.assigned ? instrument.name : "(empty)"}
           </button>
         ))}
+      <button
+        type="button"
+        ref={cellRef}
+        onClick={(e) => {
+          e.preventDefault();
+          setSelectedInstrument(instruments.length);
+          commands.openInstrumentEditor();
+        }}
+      >
+        Add instrument
+      </button>
     </div>
   );
 }

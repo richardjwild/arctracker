@@ -94,6 +94,7 @@ fn set_selected_instrument(
     state: tauri::State<Arc<AppState>>,
 ) {
     let mut editor = state.editor.lock().unwrap();
+    println!("Setting selected instrument: {}", instrument_no);
     editor.selected_instrument = instrument_no;
 }
 

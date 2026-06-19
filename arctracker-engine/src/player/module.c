@@ -40,6 +40,7 @@ fail:
 bool module_init(module_t *module)
 {
     module->initial_speed = 6;
+    module->master_gain = 0.25f;
     for (int i = 0; i < module->num_channels; i++)
         module->initial_panning[i] = 0x80; // Centre
     for (int i = 0; i < NUM_INSTRUMENT_SLOTS; i++)

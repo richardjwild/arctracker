@@ -82,8 +82,17 @@ export function eventsEqual(a: PatternEvent, b: PatternEvent): boolean {
   );
 }
 
-export function sequencesEqual(a: number[], b: number[]): boolean {
-  return a.length === b.length && a.every((value, i) => value === b[i]);
+export function instrumentsEqual(a: Instrument, b: Instrument): boolean {
+  return (
+    a.assigned === b.assigned &&
+    a.name === b.name &&
+    a.defaultVolume === b.defaultVolume &&
+    a.transpose === b.transpose &&
+    a.repeats === b.repeats &&
+    a.repeatOffset === b.repeatOffset &&
+    a.repeatLength === b.repeatLength &&
+    a.sample.sampleIndex === b.sample.sampleIndex
+  );
 }
 
 export type PatternLine = {

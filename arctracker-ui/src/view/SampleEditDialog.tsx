@@ -5,9 +5,8 @@ import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
-import { engine, Instrument, InstrumentUpdate } from "../engine/engine.ts";
 import { alerting } from "../alerting/alert.ts";
-import { SampleNameMaxLength } from "../editing/editInstrument.ts";
+import { editInstrument, emptyInstrument, SampleNameMaxLength } from "../editing/editInstrument.ts";
 
 type InputState = {
   transpose: string;
@@ -19,20 +18,6 @@ const emptyInputState: InputState = {
   transpose: "0",
   repeatStart: "0",
   repeatEnd: "0"
-};
-
-const emptyInstrument: Instrument = {
-  name: "",
-  assigned: false,
-  defaultVolume: 255,
-  transpose: 13,
-  repeats: false,
-  repeatOffset: 0,
-  repeatLength: 0,
-  sample: {
-    sampleIndex: 0,
-    sampleLength: 0,
-  }
 };
 
 export default function SampleEditDialog() {
@@ -56,25 +41,14 @@ export default function SampleEditDialog() {
     if (!instrumentEditing) return;
     const instrument =
       instrumentIndex === null || instrumentIndex >= instruments.length
-        ? emptyInstrument
+        ? emptyInstrument()
         : instruments[instrumentIndex];
     setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
   }, [instruments, instrumentIndex, instrumentEditing]);
 
   useEffect(() => {
     syncInputStateWithDraft();
-    if (instrumentIndex === null) return;
-    const update: InstrumentUpdate = {
-      assigned: draftInstrument.assigned,
-      name: draftInstrument.name,
-      defaultVolume: draftInstrument.defaultVolume,
-      transpose: draftInstrument.transpose,
-      repeats: draftInstrument.repeats,
-      repeatOffset: draftInstrument.repeatOffset,
-      repeatLength: draftInstrument.repeatLength,
-      sampleIndex: draftInstrument.sample.sampleIndex,
-    };
-    void engine.updateInstrument(instrumentIndex, update);
+    void editInstrument.auditionInstrument();
   }, [draftInstrument]);
 
   if (instrumentIndex === null || !instrumentEditing) return null;
