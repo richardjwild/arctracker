@@ -119,6 +119,17 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
         instrument_info->repeat_offset = instrument.repeat_offset;
         instrument_info->repeat_length = instrument.repeat_length;
     }
+    else
+    {
+        instrument_info->name[0] = '\0';
+        instrument_info->default_volume = 255;
+        instrument_info->transpose = 13;
+        instrument_info->sample_info.sample_index = 0;
+        instrument_info->sample_info.sample_length = 0;
+        instrument_info->repeats = false;
+        instrument_info->repeat_offset = 0;
+        instrument_info->repeat_length = 0;
+    }
 }
 
 void module_set_instrument(module_t *module, const int instrument_index, const instrument_t instrument_update)

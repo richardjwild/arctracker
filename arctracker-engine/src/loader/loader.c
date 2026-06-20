@@ -95,11 +95,11 @@ load_sample_result_t load_sample(const char *filename)
     const mapped_file_t file = load_file(file_pointer);
     const audio_t audio_data = wav_read_audio(file.addr, file.size);
     fclose(file_pointer);
-    munmap(file.addr, file.size);
     if (has_error())
     {
         return FAILED_TO_READ_SAMPLE_FILE;
     }
+    munmap(file.addr, file.size);
     return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, audio_data.audio_data);
 }
 
