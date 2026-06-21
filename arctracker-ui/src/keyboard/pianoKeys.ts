@@ -3,6 +3,7 @@ import { Cursor } from "../editing/cursor.ts";
 import { engine } from "../engine/engine.ts";
 import { commands } from "../control/commands.ts";
 import { KeyHandler } from "./keyHandler.ts";
+import { patternEvents } from "../editing/patternEvents.ts";
 
 const pianoLayout = [
   "KeyZ",
@@ -41,9 +42,8 @@ function noteFromKeyboard(e: KeyboardEvent): number | null {
 
 export const pianoKeys: { handleRealtimePianoInput: KeyHandler } = {
   handleRealtimePianoInput: (e) => {
-    const { editorState } = useStore.getState();
     const cursorField = new Cursor().currentField();
-    if (!editorState.patternEditing || cursorField.field === "note") {
+    if (!patternEvents.editing() || cursorField.field === "note") {
       const pianoKey = noteFromKeyboard(e);
       if (pianoKey !== null) {
         engine.noteOn(pianoKey);

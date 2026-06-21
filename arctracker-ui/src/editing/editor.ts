@@ -1,9 +1,10 @@
 import { useStore } from "../store/useStore.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 
+export type EditMode = "none" | "patternEvents" | "instrument" | "patternLength";
+
 export type EditorState = {
-  patternEditing: boolean;
-  instrumentEditing: boolean;
+  editMode: EditMode;
   inputtingText: boolean;
   cursorPosition: CursorPosition;
   sequencePosition: number;
@@ -19,9 +20,12 @@ const undoStack: EditCommand[] = [];
 const redoStack: EditCommand[] = [];
 
 export const editor = {
-  patternEditing: () => {
-    const { editorState } = useStore.getState();
-    return editorState.patternEditing;
+  setEditMode: (editMode: EditMode) => {
+    const editorState = useStore.getState().editorState;
+    useStore.getState().setEditorState({
+      ...editorState,
+      editMode,
+    });
   },
 
   inputtingText: () => {
@@ -50,7 +54,7 @@ export const editor = {
       useStore.getState();
     setEditorState({
       ...editorState,
-      patternEditing: !editorState.patternEditing,
+      editMode: editorState.editMode === "patternEvents" ? "none" : "patternEvents",
     });
     setPatternSelection(null);
   },
@@ -59,7 +63,7 @@ export const editor = {
     const { editorState, setEditorState } = useStore.getState();
     setEditorState({
       ...editorState,
-      patternEditing: false,
+      editMode: "none",
     });
   },
 

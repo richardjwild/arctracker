@@ -99,8 +99,7 @@ const initialInstrument: Instrument = {
 
 function initialEditorState(numTracks: number = 0): EditorState {
   return {
-    patternEditing: false,
-    instrumentEditing: false,
+    editMode: "none",
     inputtingText: false,
     cursorPosition: {
       track: 0,

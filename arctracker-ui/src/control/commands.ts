@@ -67,6 +67,7 @@ export enum CommandType {
   RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
   LOAD_SAMPLE,
   DELETE_SAMPLE,
+  EDIT_CURRENT_PATTERN_LENGTH,
   SET_CURRENT_PATTERN_LENGTH,
 }
 
@@ -147,6 +148,7 @@ export type Command =
   | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR }
   | { type: CommandType.LOAD_SAMPLE }
   | { type: CommandType.DELETE_SAMPLE }
+  | { type: CommandType.EDIT_CURRENT_PATTERN_LENGTH }
   | {
       type: CommandType.SET_CURRENT_PATTERN_LENGTH;
       newLength: number;
@@ -292,6 +294,8 @@ export const commands = {
     }),
   loadSample: () => commandQueue.push({ type: CommandType.LOAD_SAMPLE }),
   deleteSample: () => commandQueue.push({ type: CommandType.DELETE_SAMPLE }),
+  editCurrentPatternLength: () =>
+    commandQueue.push({ type: CommandType.EDIT_CURRENT_PATTERN_LENGTH }),
   setCurrentPatternLength: (newLength: number) =>
     commandQueue.push({
       type: CommandType.SET_CURRENT_PATTERN_LENGTH,

@@ -1,5 +1,6 @@
 import { useStore } from "../store/useStore.ts";
 import { EditorState } from "./editor.ts";
+import { patternEvents } from "./patternEvents.ts";
 
 export type CursorPosition = {
   track: number;
@@ -141,7 +142,7 @@ export class Cursor {
 function moveCursor(moveOperation: (cursor: Cursor) => void): CursorPosition {
   let cursor = new Cursor();
   const { editorState, setEditorState } = useStore.getState();
-  if (!editorState.patternEditing) return cursor.currentPosition();
+  if (!patternEvents.editing()) return cursor.currentPosition();
   moveOperation(cursor);
   setEditorState({
     ...editorState,

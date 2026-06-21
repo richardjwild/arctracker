@@ -12,6 +12,7 @@ import {
 } from "../editing/cursor.ts";
 import { hexadecimal } from "./hexadecimal.ts";
 import { PatternSelection, selection } from "../editing/selection.ts";
+import { patternEvents } from "../editing/patternEvents.ts";
 
 type ViewportSize = { width: number; height: number };
 
@@ -189,7 +190,7 @@ export class PatternRenderer {
     this.renderTrackLanes();
     this.renderPlayhead(gridViewportFit);
     if (this.patternSelection) this.renderSelection(gridViewportFit, playheadIndex);
-    if (this.editorState.patternEditing) this.renderCursor(gridViewportFit);
+    if (patternEvents.editing()) this.renderCursor(gridViewportFit);
     this.renderPatternLines(gridViewportFit, playheadIndex);
   }
 
@@ -314,7 +315,7 @@ export class PatternRenderer {
   }
 
   private renderEvent(track: number, event: PatternEvent, x: number, y: number, atPlayhead: boolean): number {
-    const cursorOnEvent = (atPlayhead && this.editorState.patternEditing && track === this.editorState.cursorPosition.track);
+    const cursorOnEvent = (atPlayhead && patternEvents.editing() && track === this.editorState.cursorPosition.track);
     x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent);
     x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent);
     for (let effectIndex = 0; effectIndex < this.editorState.effectsDisplayed[track]; effectIndex++) {

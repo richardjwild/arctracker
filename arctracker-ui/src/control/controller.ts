@@ -236,6 +236,9 @@ function processCommands() {
       case CommandType.DELETE_SAMPLE:
         editInstrument.deleteSample();
         break;
+      case CommandType.EDIT_CURRENT_PATTERN_LENGTH:
+        pattern.editCurrentPatternLength();
+        break;
       case CommandType.SET_CURRENT_PATTERN_LENGTH:
         void pattern.setCurrentPatternLength(command.newLength);
         break;

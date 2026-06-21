@@ -19,7 +19,7 @@ type ModifierRequirement =
 type KeyBinding = {
   modifiers: ModifierRequirement;
   execute: () => void;
-}
+};
 
 const keyBindings = new Map<string, KeyBinding[]>([
   ["Escape", [{ modifiers: "none", execute: commands.toggleEdit }]],
@@ -139,12 +139,15 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [
       { modifiers: "none", execute: commands.togglePlay },
       { modifiers: "primary", execute: commands.toggleLoop },
-    ]
+    ],
   ],
   ["KeyB", [{ modifiers: "primary", execute: commands.exportAudio }]],
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
   ["KeyI", [{ modifiers: "primary", execute: commands.openInstrumentEditor }]],
-  ["KeyL", [{ modifiers: "primary", execute: () => commands.setCurrentPatternLength(128) }]],
+  [
+    "KeyL",
+    [{ modifiers: "primary", execute: commands.editCurrentPatternLength }],
+  ],
   ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
   ["KeyV", [{ modifiers: "primary", execute: commands.pastePatternEvents }]],
   ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],

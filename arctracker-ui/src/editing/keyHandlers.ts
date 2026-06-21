@@ -3,8 +3,8 @@ import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { commands } from "../control/commands.ts";
 import { KeyHandler } from "../keyboard/keyHandler.ts";
 import { editInstrument } from "./editInstrument.ts";
-import { editor } from "./editor.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
+import { patternEvents } from "./patternEvents.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
@@ -12,7 +12,7 @@ export const editorKeyHandlers: {
   handleInstrumentEditorInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
-    if (!editor.patternEditing()) return false;
+    if (!patternEvents.editing()) return false;
     const cursorField = new Cursor().currentField();
     if (cursorField.field !== "sampleHigh" && cursorField.field !== "sampleLow")
       return false;
@@ -23,7 +23,7 @@ export const editorKeyHandlers: {
   },
 
   handleEffectFieldInput: (e) => {
-    if (!editor.patternEditing()) return false;
+    if (!patternEvents.editing()) return false;
     const cursorField = new Cursor().currentField();
     if (cursorField.field === "effectCode") {
       if (e.metaKey || e.ctrlKey || !/^[0-9A-Za-z]$/i.test(e.key)) return false;

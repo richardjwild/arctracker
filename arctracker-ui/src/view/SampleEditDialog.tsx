@@ -27,9 +27,7 @@ const emptyInputState: InputState = {
 export default function SampleEditDialog() {
   const instrumentIndex = useStore((state) => state.selectedInstrument);
   const instruments = useStore((state) => state.module.instruments);
-  const instrumentEditing = useStore(
-    (state) => state.editorState.instrumentEditing,
-  );
+  const instrumentEditing = useStore((state) => state.editorState.editMode) === "instrument";
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);

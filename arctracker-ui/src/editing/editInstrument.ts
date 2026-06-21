@@ -29,7 +29,7 @@ export function emptyInstrument(): Instrument {
 
 export const editInstrument = {
   instrumentEditing: () => {
-    return useStore.getState().editorState.instrumentEditing;
+    return useStore.getState().editorState.editMode === "instrument";
   },
 
   firstInstrument: () => {
@@ -61,11 +61,7 @@ export const editInstrument = {
   },
 
   showDialog: () => {
-    const editorState = useStore.getState().editorState;
-    useStore.getState().setEditorState({
-      ...editorState,
-      instrumentEditing: true,
-    });
+    editor.setEditMode("instrument");
   },
 
   auditionInstrument: async () => {
@@ -178,10 +174,6 @@ export const editInstrument = {
   },
 
   closeDialog: () => {
-    const editorState = useStore.getState().editorState;
-    useStore.getState().setEditorState({
-      ...editorState,
-      instrumentEditing: false,
-    });
+    editor.setEditMode("none");
   },
 };

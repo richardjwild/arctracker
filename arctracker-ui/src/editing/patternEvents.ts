@@ -128,8 +128,12 @@ function emptyEvent(): PatternEvent {
 }
 
 export const patternEvents = {
+  editing: () => {
+    return useStore.getState().editorState.editMode === "patternEvents";
+  },
+
   setEventNote: async (note: number) => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     const selectedSample = useStore.getState().selectedInstrument;
     if (selectedSample === null) return;
     const command = await buildEventEditCommand({
@@ -147,7 +151,7 @@ export const patternEvents = {
   },
 
   setEventSample: async (field: CursorField, value: string) => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     const numberValue = hexadecimal.fromHexDigit(value);
     if (numberValue === null) return;
     const command = await buildEventEditCommand({
@@ -167,7 +171,7 @@ export const patternEvents = {
   },
 
   setEventEffectCode: async (field: CursorField, value: string) => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     if (field.field !== "effectCode") return false;
     const effectIndex = field.effectIndex;
     const command = await buildEventEditCommand({
@@ -188,7 +192,7 @@ export const patternEvents = {
   },
 
   setEventEffectData: async (field: CursorField, value: string) => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     if (field.field !== "effectData1" && field.field !== "effectData2")
       return false;
     const numberValue = hexadecimal.fromHexDigit(value);
@@ -215,7 +219,7 @@ export const patternEvents = {
   },
 
   clearEventField: async () => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: (currentEvent) => {
@@ -245,7 +249,7 @@ export const patternEvents = {
   },
 
   clearEvent: async () => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     const command = await buildEventEditCommand({
       eventLocation: null,
       buildEvent: emptyEvent,
@@ -255,7 +259,7 @@ export const patternEvents = {
   },
 
   clearEvents: async (locations: EventLocation[]) => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     const eventEdits: EventEdit[] = [];
     for (const location of locations) {
       const before = await engine.getEvent(
@@ -279,7 +283,7 @@ export const patternEvents = {
   setEvents: async (
     events: { location: EventLocation; event: PatternEvent }[],
   ) => {
-    if (!editor.patternEditing()) return;
+    if (!patternEvents.editing()) return;
     const eventEdits: EventEdit[] = [];
     for (const { location, event } of events) {
       const before = await engine.getEvent(

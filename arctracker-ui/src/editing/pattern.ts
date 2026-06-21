@@ -13,6 +13,10 @@ function ensurePatternIndex() {
 }
 
 export const pattern = {
+  editCurrentPatternLength: () => {
+    editor.setEditMode("patternLength");
+  },
+
   createPattern: async (length: number): Promise<number> => {
     const patternNo = await engine.createPattern(length);
     const module = useStore.getState().module;
@@ -52,5 +56,6 @@ export const pattern = {
         ensurePatternIndex();
       },
     });
+    editor.setEditMode("none");
   }
 };
