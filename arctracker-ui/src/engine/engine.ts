@@ -262,6 +262,14 @@ export const engine = {
     });
   },
 
+  setPatternLength: async (patternNo: number, newLength: number) => {
+    console.log('set_pattern_length', patternNo, newLength);
+    await invoke("edit_set_pattern_length", {
+      patternNo,
+      newLength,
+    });
+  },
+
   updateInstrument: async (instrumentIndex: number, instrumentUpdate: InstrumentUpdate) => {
     await invoke("edit_update_instrument", {
       instrumentIndex,

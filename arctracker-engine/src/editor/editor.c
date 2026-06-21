@@ -15,7 +15,7 @@
 static edit_result_t get_event(const module_t *, int, int, int, event_t **);
 static edit_result_t ensure_sequence_capacity(module_t *, int);
 static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns);
-static edit_result_t ensure_sample_capacity(module_t *module, const int num_samples);
+static edit_result_t ensure_sample_capacity(module_t *module, int num_samples);
 static edit_result_t failure(char *);
 
 edit_result_t editor_get_event(const module_t *module, const int pattern_no, const int pattern_index, const int track, event_t *event_buffer)
@@ -77,6 +77,15 @@ edit_result_t editor_create_pattern(module_t *module, const int pattern_length, 
 edit_result_t editor_delete_pattern(module_t *module, const int pattern_no)
 {
     module_delete_pattern(module, pattern_no);
+    return EDIT_SUCCESS;
+}
+
+edit_result_t editor_set_pattern_length(const module_t *module, const int pattern_no, const int pattern_length)
+{
+    if (pattern_length < 1 || pattern_length > MAX_PATTERN_LENGTH)
+        return failure(INVALID_PATTERN_LENGTH);
+    if (!module_set_pattern_length(module, pattern_no, pattern_length))
+        return failure(MEMORY_ALLOCATION_FAILED);
     return EDIT_SUCCESS;
 }
 

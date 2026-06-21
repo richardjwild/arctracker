@@ -22,6 +22,8 @@ edit_result_t editor_create_pattern(module_t *module, int pattern_length, int *n
 
 edit_result_t editor_delete_pattern(module_t *module, int pattern_no);
 
+edit_result_t editor_set_pattern_length(const module_t *module, int pattern_no, int pattern_length);
+
 edit_result_t editor_update_instrument(
     module_t *module,
     uint8_t instrument_index,

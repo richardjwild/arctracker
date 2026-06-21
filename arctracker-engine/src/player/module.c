@@ -6,8 +6,11 @@
 #define INITIAL_SEQUENCE_CAPACITY 1024
 #define INITIAL_PATTERN_CAPACITY 1024
 #define INITIAL_SAMPLE_CAPACITY 1024
+#define INITIAL_PATTERN_LINE_CAPACITY 64
 
-module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples)
+static bool ensure_pattern_line_capacity(pattern_t *pattern, int num_tracks, int required_lines);
+
+module_t *module_create(const int num_tracks, const int sequence_len, const int num_patterns, const int num_samples)
 {
     module_t *module = allocate_array(MODULE, 1, sizeof(module_t));
     if (module == NULL)
@@ -54,10 +57,12 @@ bool module_init(module_t *module)
     return true;
 }
 
-bool module_create_pattern(module_t *module, int pattern_no, int num_lines)
+bool module_create_pattern(const module_t *module, const int pattern_no, const int num_lines)
 {
-    pattern_t pattern = (pattern_t) {
+    const int line_capacity = num_lines > INITIAL_PATTERN_LINE_CAPACITY ? num_lines : INITIAL_PATTERN_LINE_CAPACITY;
+    const pattern_t pattern = (pattern_t) {
         .num_lines = num_lines,
+        .line_capacity = line_capacity,
         .events = allocate_array(MODULE, num_lines * module->num_tracks, sizeof(event_t)),
     };
     if (pattern.events == NULL)
@@ -81,10 +86,30 @@ void module_delete_pattern(module_t *module, int pattern_no)
     module->num_patterns--;
 }
 
+bool module_set_pattern_length(const module_t *module, const int pattern_no, const int new_length)
+{
+    pattern_t pattern = module->patterns[pattern_no];
+    if (!ensure_pattern_line_capacity(&pattern, module->num_tracks, new_length)) return false;
+    pattern.num_lines = new_length;
+    module->patterns[pattern_no] = pattern;
+    return true;
+}
+
+static bool ensure_pattern_line_capacity(pattern_t *pattern, const int num_tracks, const int required_lines)
+{
+    if (pattern->line_capacity >= required_lines)
+        return true;
+    event_t *new_events = reallocate_array(MODULE, pattern->events, required_lines * num_tracks, sizeof(event_t));
+    if (new_events == NULL) return false;
+    pattern->events = new_events;
+    pattern->line_capacity = required_lines;
+    return true;
+}
+
 void module_destroy(module_t *module)
 {
     for (int i = 0; i < module->num_samples; i++)
-        deallocate(MODULE, module->samples[i].sample_data);
+        deallocate(MODULE, (void *) module->samples[i].sample_data);
     for (int i = 0; i < module->num_patterns; i++)
         deallocate(MODULE, module->patterns[i].events);
     deallocate(MODULE, module->patterns);
@@ -137,7 +162,7 @@ void module_set_instrument(module_t *module, const int instrument_index, const i
     module->instruments[instrument_index] = instrument_update;
 }
 
-bool module_link_sample(module_t *module, float *sample_data, const int sample_length, int *sample_index)
+bool module_link_sample(module_t *module, const float *sample_data, const int sample_length, int *sample_index)
 {
     *sample_index = module->num_samples;
     module->samples[*sample_index] = (sample_t) {

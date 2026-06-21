@@ -17,6 +17,7 @@
     .success = true,\
     .error_message = {0}\
 }
+#define MAX_PATTERN_LENGTH 1000
 
 static void *run_player(void *);
 static void get_transport_state(player_t *player, module_t *module, ui_transport_state_t *transport_state);
@@ -422,7 +423,7 @@ api_result_t arctracker_edit_create_pattern(arctracker_t *arctracker, const int 
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (pattern_length < 1)
+    if (pattern_length < 1 || pattern_length > MAX_PATTERN_LENGTH)
         return failure(INVALID_PATTERN_LENGTH);
     if (new_pattern_no == NULL)
         return failure(BAD_BUFFER);
@@ -445,6 +446,24 @@ api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, const int 
     if (arctracker->playback.player->playing)
         return failure(PLAYER_PLAYING);
     edit_result_t result = editor_delete_pattern(arctracker->module, pattern_no);
+    if (!result.success)
+        return failure(result.error_message);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_set_pattern_length(arctracker_t *arctracker, const int pattern_no, const int new_length)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (pattern_no < 0 || pattern_no >= arctracker->module->num_patterns)
+        return failure(INVALID_PATTERN_NUMBER);
+    if (new_length < 1 || new_length > MAX_PATTERN_LENGTH)
+        return failure(INVALID_PATTERN_LENGTH);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
+    const edit_result_t result = editor_set_pattern_length(arctracker->module, pattern_no, new_length);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;

@@ -55,6 +55,7 @@ typedef struct
 typedef struct
 {
     int num_lines;
+    int line_capacity;
     event_t *events;
 } pattern_t;
 
@@ -73,7 +74,7 @@ typedef struct {
 typedef struct
 {
     int sample_length;
-    float *sample_data;
+    const float *sample_data;
 } sample_t;
 
 typedef struct
@@ -101,9 +102,11 @@ module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int 
 
 bool module_init(module_t *module);
 
-bool module_create_pattern(module_t *module, int pattern_no, int num_lines);
+bool module_create_pattern(const module_t *module, int pattern_no, int num_lines);
 
 void module_delete_pattern(module_t *module, int pattern_no);
+
+bool module_set_pattern_length(const module_t *module, int pattern_no, int new_length);
 
 void module_destroy(module_t *module);
 
@@ -113,6 +116,6 @@ void module_get_instrument_info(const module_t *module, int instrument_index, ui
 
 void module_set_instrument(module_t *module, int instrument_index, instrument_t instrument_update);
 
-bool module_link_sample(module_t *module, float *sample_data, int sample_length, int *sample_index);
+bool module_link_sample(module_t *module, const float *sample_data, int sample_length, int *sample_index);
 
 #endif //ARCTRACKER_MODULE_H

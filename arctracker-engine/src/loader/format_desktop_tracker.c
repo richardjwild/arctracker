@@ -268,9 +268,10 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
             sample->sample_length = file_sample.sample_length;
         instrument->repeats = (instrument->repeat_length != 0);
         const uint8_t *sample_data_mu_law = base_address + file_sample.sample_data_offset;
-        sample->sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
-        if (!convert_vidc_encoded_sample(sample->sample_data, sample_data_mu_law, sample->sample_length))
+        float *sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
+        if (!convert_vidc_encoded_sample(sample_data, sample_data_mu_law, sample->sample_length))
             return false;
+        sample->sample_data = sample_data;
         if (sample->sample_length > 0)
         {
             instrument->assigned = true;

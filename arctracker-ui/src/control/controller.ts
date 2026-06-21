@@ -1,4 +1,4 @@
-import { CommandType, commandQueue } from "./commands.ts";
+import { commandQueue, CommandType } from "./commands.ts";
 import { transport } from "../transport/transport.ts";
 import { module } from "../module/module.ts";
 import { editor } from "../editing/editor.ts";
@@ -11,6 +11,7 @@ import { selection } from "../editing/selection.ts";
 import { copyPaste } from "../editing/copyPaste.ts";
 import { sequence } from "../editing/sequence.ts";
 import { editInstrument } from "../editing/editInstrument.ts";
+import { pattern } from "../editing/pattern.ts";
 
 function processCommands() {
   const commands = commandQueue.consume();
@@ -234,6 +235,9 @@ function processCommands() {
         break;
       case CommandType.DELETE_SAMPLE:
         editInstrument.deleteSample();
+        break;
+      case CommandType.SET_CURRENT_PATTERN_LENGTH:
+        void pattern.setCurrentPatternLength(command.newLength);
         break;
     }
   }

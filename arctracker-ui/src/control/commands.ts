@@ -67,6 +67,7 @@ export enum CommandType {
   RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
   LOAD_SAMPLE,
   DELETE_SAMPLE,
+  SET_CURRENT_PATTERN_LENGTH,
 }
 
 export type Command =
@@ -145,7 +146,11 @@ export type Command =
   | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
   | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR }
   | { type: CommandType.LOAD_SAMPLE }
-  | { type: CommandType.DELETE_SAMPLE };
+  | { type: CommandType.DELETE_SAMPLE }
+  | {
+      type: CommandType.SET_CURRENT_PATTERN_LENGTH;
+      newLength: number;
+    };
 
 const queue: Command[] = [];
 
@@ -163,7 +168,10 @@ export const commands = {
   loadFile: () => commandQueue.push({ type: CommandType.LOAD_FILE }),
   exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
   createModule: (numTracks: number) =>
-    commandQueue.push({ type: CommandType.CREATE_MODULE, numTracks: numTracks }),
+    commandQueue.push({
+      type: CommandType.CREATE_MODULE,
+      numTracks: numTracks,
+    }),
   togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
   toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
   toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),
@@ -284,4 +292,9 @@ export const commands = {
     }),
   loadSample: () => commandQueue.push({ type: CommandType.LOAD_SAMPLE }),
   deleteSample: () => commandQueue.push({ type: CommandType.DELETE_SAMPLE }),
+  setCurrentPatternLength: (newLength: number) =>
+    commandQueue.push({
+      type: CommandType.SET_CURRENT_PATTERN_LENGTH,
+      newLength,
+    }),
 };

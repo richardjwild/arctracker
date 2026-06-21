@@ -697,6 +697,19 @@ impl Arctracker {
         }
     }
 
+    pub fn edit_set_pattern_length(&mut self, pattern_no: i32, new_length: i32) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_set_pattern_length(self.handle, pattern_no, new_length)
+        };
+        if result.success {
+            Ok(())
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
+    }
+
     pub fn edit_update_instrument(&mut self, slot: u8, instrument: InstrumentUpdate) -> Result<(), ArctrackerError> {
         let mut instrument_update = ffi::UiInstrumentUpdate {
             assigned: instrument.assigned,

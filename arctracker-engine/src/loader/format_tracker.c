@@ -333,14 +333,15 @@ static bool get_sample_info(void *array_start, long array_end, sample_t *sample,
     }
     else
     {
-        sample->sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
-        if (!convert_vidc_encoded_sample(sample->sample_data, sample_data_mu_law, sample->sample_length))
+        float *sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
+        if (!convert_vidc_encoded_sample(sample_data, sample_data_mu_law, sample->sample_length))
             goto get_sample_info_failed;
         instrument->repeats = (instrument->repeat_offset != 0 || instrument->repeat_length != 2);
         if (instrument->repeats) {
-            sample->sample_data[sample->sample_length] = sample->sample_data[instrument->repeat_offset];
-            sample->sample_data[sample->sample_length + 1] = sample->sample_data[instrument->repeat_offset + 1];
+            sample_data[sample->sample_length] = sample->sample_data[instrument->repeat_offset];
+            sample_data[sample->sample_length + 1] = sample->sample_data[instrument->repeat_offset + 1];
         }
+        sample->sample_data = sample_data;
     }
 
     // Transpose all notes up an octave when playing a Tracker module

@@ -175,6 +175,7 @@ extern "C" {
     pub fn arctracker_edit_set_sequence(handle: *mut ArctrackerHandle, new_sequence: *const c_int, new_sequence_len: c_int) -> ApiResult;
     pub fn arctracker_edit_create_pattern(handle: *mut ArctrackerHandle, pattern_length: c_int, new_pattern_no: *mut c_int) -> ApiResult;
     pub fn arctracker_edit_delete_pattern(handle: *mut ArctrackerHandle, pattern_no: c_int) -> ApiResult;
+    pub fn arctracker_edit_set_pattern_length(handle: *mut ArctrackerHandle, pattern_no: c_int, new_length: c_int) -> ApiResult;
     pub fn arctracker_edit_set_instrument(handle: *mut ArctrackerHandle, slot: u8, new_instrument: UiInstrumentUpdate) -> ApiResult;
     pub fn arctracker_edit_load_sample(handle: *mut ArctrackerHandle, filename: *const c_char, sample_info: *mut UiSampleInfo) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;

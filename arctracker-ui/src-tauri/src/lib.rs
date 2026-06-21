@@ -185,6 +185,13 @@ fn edit_delete_pattern(state: tauri::State<Arc<AppState>>, pattern_no: i32) -> R
 }
 
 #[tauri::command]
+fn edit_set_pattern_length(state: tauri::State<Arc<AppState>>, pattern_no: i32, new_length: i32) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.edit_set_pattern_length(pattern_no, new_length).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn edit_update_instrument(state: tauri::State<Arc<AppState>>, instrument_index: u8, instrument_update: InstrumentUpdate) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.edit_update_instrument(instrument_index, instrument_update).map_err(|e| e.message)?;
@@ -233,6 +240,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_set_sequence,
             edit_create_pattern,
             edit_delete_pattern,
+            edit_set_pattern_length,
             edit_update_instrument,
             edit_load_sample,
         ])

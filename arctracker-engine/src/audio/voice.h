@@ -11,7 +11,7 @@ typedef struct {
     bool sample_repeats;
     int sample_end;
     int repeat_length;
-    float *sample_pointer;
+    const float *sample_pointer;
     uint8_t volume;
     bool channel_playing;
     uint8_t panning;
