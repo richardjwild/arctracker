@@ -38,7 +38,7 @@ void ui_loop(arctracker_t *arctracker_handle, ui_module_info_t module_info)
     printf("Press space to start\n");
     ui_transport_state_t ui_state;
     arctracker_get_transport_state(arctracker_handle, &ui_state);
-    arctracker_get_pattern(arctracker_handle, ui_state.pattern_no, current_pattern, ui_state.pattern_length, module_info.num_channels);
+    arctracker_get_pattern(arctracker_handle, ui_state.pattern_no, current_pattern, ui_state.pattern_length, module_info.num_tracks);
     bool player_healthy = true;
     bool exit_requested = false;
     while (!exit_requested && player_healthy)
@@ -49,7 +49,7 @@ void ui_loop(arctracker_t *arctracker_handle, ui_module_info_t module_info)
         if (state_changed(ui_state))
         {
             if (pattern_changed(ui_state))
-                arctracker_get_pattern(arctracker_handle, ui_state.pattern_no, current_pattern, ui_state.pattern_length, module_info.num_channels);
+                arctracker_get_pattern(arctracker_handle, ui_state.pattern_no, current_pattern, ui_state.pattern_length, module_info.num_tracks);
             if (ui_state.playing)
                 render_ui(ui_state, module_info);
             old_state = ui_state;
@@ -102,8 +102,8 @@ static bool pattern_changed(ui_transport_state_t new_state)
 static void render_ui(ui_transport_state_t ui_state, ui_module_info_t module_info)
 {
     printf("%3d %3d | ", ui_state.sequence_pos, ui_state.pattern_index);
-    const ui_pattern_event_t *event_line = current_pattern + (ui_state.pattern_index * module_info.num_channels);
-    for (int track = 0; track < module_info.num_channels; track++)
+    const ui_pattern_event_t *event_line = current_pattern + (ui_state.pattern_index * module_info.num_tracks);
+    for (int track = 0; track < module_info.num_tracks; track++)
     {
         const ui_pattern_event_t event = event_line[track];
         printf(

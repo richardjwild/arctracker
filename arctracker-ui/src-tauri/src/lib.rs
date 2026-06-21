@@ -23,9 +23,9 @@ fn load_module(path: String, state: tauri::State<Arc<AppState>>) -> Result<Modul
 }
 
 #[tauri::command]
-fn create_module(num_channels: i32, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+fn create_module(num_tracks: i32, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let info = tracker.create_module(num_channels).map_err(|e| e.message)?;
+    let info = tracker.create_module(num_tracks).map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
     Ok(info)
 }
@@ -81,11 +81,11 @@ fn get_transport_state(state: tauri::State<Arc<AppState>>) -> UiTransportState {
 fn get_pattern(
     pattern_no: i32,
     num_lines: i32,
-    num_channels: i32,
+    num_tracks: i32,
     state: tauri::State<Arc<AppState>>,
 ) -> Vec<PatternLine> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.get_pattern(pattern_no, num_lines, num_channels)
+    tracker.get_pattern(pattern_no, num_lines, num_tracks)
 }
 
 #[tauri::command]
@@ -143,16 +143,16 @@ fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(),
 }
 
 #[tauri::command]
-fn edit_get_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, channel_no: i32) -> Result<PatternEvent, String> {
+fn edit_get_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, track: i32) -> Result<PatternEvent, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let result = tracker.edit_get_event(pattern_no, pattern_index, channel_no).map_err(|e| e.message)?;
+    let result = tracker.edit_get_event(pattern_no, pattern_index, track).map_err(|e| e.message)?;
     Ok(result)
 }
 
 #[tauri::command]
-fn edit_set_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, channel_no: i32, new_event: PatternEvent) -> Result<(), String> {
+fn edit_set_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, track: i32, new_event: PatternEvent) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_event(pattern_no, pattern_index, channel_no, new_event).map_err(|e| e.message)?;
+    tracker.edit_set_event(pattern_no, pattern_index, track, new_event).map_err(|e| e.message)?;
     Ok(())
 }
 

@@ -50,7 +50,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->voices = initialise_voices(player);
     if (player->voices == NULL)
         goto init_failed;
-    const audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_channels, player->master_gain);
+    const audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain);
     if (!audio_init_result.success)
     {
         error_with_detail(AUDIO_INIT_FAILED, audio_init_result.error_message);
@@ -187,7 +187,7 @@ static void process_note_on_command(const player_t *player, const player_command
     {
         event_queue_add(player->player_event_queue, create_user_midi_event(command.note));
     }
-    voice_t *voice = player->voices + command.channel_no;
+    voice_t *voice = player->voices + command.track;
     const instrument_t instrument = player->module->instruments[command.instrument_no];
     if (!instrument.assigned)
     {
@@ -200,7 +200,7 @@ static void process_note_on_command(const player_t *player, const player_command
 
 static void process_note_off_command(const player_t *player, const player_command_t command)
 {
-    voice_t *voice = player->voices + command.channel_no;
+    voice_t *voice = player->voices + command.track;
     const instrument_t instrument = player->module->instruments[command.instrument_no];
     if (instrument.assigned && instrument.repeats)
         note_off(voice);
@@ -216,10 +216,10 @@ static void process_toggle_loop_command(player_t *player)
 
 static voice_t *initialise_voices(const player_t *player)
 {
-    voice_t *voices = allocate_array(PLAYER, player->module->num_channels, sizeof(voice_t));
+    voice_t *voices = allocate_array(PLAYER, player->module->num_tracks, sizeof(voice_t));
     if (voices == NULL)
         return NULL;
-    for (int channel = 0; channel < player->module->num_channels; channel++)
+    for (int channel = 0; channel < player->module->num_tracks; channel++)
     {
         voices[channel].channel_playing = false;
         voices[channel].arpeggiator_on = false;
@@ -235,7 +235,7 @@ static void set_current_frame(player_t *player, const bool row_advanced)
     player->current_frame.row_advanced = row_advanced;
     player->current_frame.sequence_pos = player->sequence.sequence_pos;
     player->current_frame.pattern_pos = player->sequence.pattern_index;
-    player->current_frame.num_channels = player->module->num_channels;
+    player->current_frame.num_tracks = player->module->num_tracks;
 }
 
 static void player_step(player_t *player)
@@ -251,11 +251,11 @@ static void player_step(player_t *player)
 
 static event_t *get_events(const player_t *player)
 {
-    const int num_channels = player->module->num_channels;
+    const int num_tracks = player->module->num_tracks;
     const sequence_t *sequence = &player->sequence;
     const int pattern_no = sequence->sequence[sequence->sequence_pos];
     const pattern_t pattern = player->module->patterns[pattern_no];
-    return pattern.events + sequence->pattern_index * num_channels;
+    return pattern.events + sequence->pattern_index * num_tracks;
 }
 
 static bool audio_consume(player_t *player)
@@ -277,10 +277,10 @@ static bool audio_consume(player_t *player)
 static void update_voices(player_t *player)
 {
     const frame_t *current_frame = &player->current_frame;
-    for (int channel = 0; channel < player->module->num_channels; channel++)
+    for (int track = 0; track < player->module->num_tracks; track++)
     {
-        const event_t *event = current_frame->events + channel;
-        voice_t *voice = player->voices + channel;
+        const event_t *event = current_frame->events + track;
+        voice_t *voice = player->voices + track;
         if (current_frame->row_advanced)
             on_new_event(player, event, voice);
         else
@@ -336,7 +336,7 @@ static void note_off(voice_t *voice)
 static void player_stop(player_t *player)
 {
     player->playing = false;
-    for (int channel = 0; channel < player->module->num_channels; channel++)
+    for (int channel = 0; channel < player->module->num_tracks; channel++)
         player->voices[channel].channel_playing = false;
 }
 

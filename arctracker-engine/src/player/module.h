@@ -8,7 +8,7 @@
 #define MAX_LEN_TUNENAME 65
 #define MAX_LEN_AUTHOR 65
 #define MAX_LEN_SAMPLENAME 33
-#define MAX_CHANNELS 16
+#define MAX_TRACKS 16
 #define NUM_PATTERNS 256
 #define MAX_EFFECTS 4
 #define NUM_INSTRUMENT_SLOTS 256
@@ -84,7 +84,7 @@ typedef struct
     int tune_length;
     int *sequence;
     int sequence_capacity;
-    int num_channels;
+    int num_tracks;
     int *initial_panning;
     int num_patterns;
     pattern_t *patterns;
@@ -97,7 +97,7 @@ typedef struct
     float master_gain;
 } module_t;
 
-module_t *module_create(int num_channels, int sequence_len, int num_patterns, int num_samples);
+module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);
 
 bool module_init(module_t *module);
 

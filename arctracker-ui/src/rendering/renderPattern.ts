@@ -21,7 +21,7 @@ type PatternLayout = {
   rowHeight: number;
   playheadPadding: number;
   rowNumberWidth: number;
-  getEventWidth: (channelNo: number) => number;
+  getEventWidth: (track: number) => number;
   maxLines: number;
 };
 
@@ -37,12 +37,12 @@ export type PatternContentDimensions = {
 };
 
 export function getPatternContentDimensions(
-  numChannels: number,
+  numTracks: number,
 ): PatternContentDimensions {
   const patternLayout = getPatternLayout();
   let eventsWidth = 0;
-  for (let channel = 0; channel < numChannels; channel++)
-    eventsWidth += patternLayout.getEventWidth(channel);
+  for (let track = 0; track < numTracks; track++)
+    eventsWidth += patternLayout.getEventWidth(track);
   return {
     contentWidth:
       patternLayout.leftPadding +
@@ -103,7 +103,7 @@ function getPatternLayout(): PatternLayout {
     rowHeight: glyphHeight,
     playheadPadding: 2,
     rowNumberWidth: glyphWidth * 5,
-    getEventWidth: (channelNo: number) => ((glyphWidth * 8) + (effectsDisplayed[channelNo] * glyphWidth * 4)),
+    getEventWidth: (track: number) => ((glyphWidth * 8) + (effectsDisplayed[track] * glyphWidth * 4)),
     maxLines: 1000,
   };
 }
@@ -164,18 +164,18 @@ export class PatternRenderer {
   private readonly editorState: EditorState;
   private readonly patternSelection: PatternSelection | null;
   private patternLayout: PatternLayout;
-  private readonly numChannels: number;
+  private readonly numTracks: number;
 
   public constructor(
     pattern: CurrentPattern,
     ctx: CanvasRenderingContext2D,
     viewportSize: ViewportSize,
-    numChannels: number,
+    numTracks: number,
   ) {
     this.pattern = pattern;
     this.ctx = ctx;
     this.viewportSize = viewportSize;
-    this.numChannels = numChannels;
+    this.numTracks = numTracks;
     this.editorState = useStore.getState().editorState;
     this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = getPatternLayout();
@@ -205,8 +205,8 @@ export class PatternRenderer {
 
   private renderTrackLanes() {
     let x = this.renderRowNumberLane();
-    for (let channel = 0; channel <= this.numChannels; channel++) {
-      x += this.renderTrackLane(x, channel);
+    for (let track = 0; track <= this.numTracks; track++) {
+      x += this.renderTrackLane(x, track);
     }
   }
 
@@ -282,10 +282,10 @@ export class PatternRenderer {
     return laneWidth;
   }
 
-  private renderTrackLane(x: number, channel: number): number {
+  private renderTrackLane(x: number, track: number): number {
     this.withStrokeStyle(colours().trackLaneSeparator)
       .renderLine(x, 0, x, this.viewportSize.height);
-    return this.patternLayout.getEventWidth(channel);
+    return this.patternLayout.getEventWidth(track);
   }
 
   private renderPatternLine(line: PatternLine | null, y: number, atPlayhead: boolean): number {

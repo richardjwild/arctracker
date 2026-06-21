@@ -18,24 +18,24 @@ static edit_result_t ensure_pattern_capacity(module_t *module, int num_patterns)
 static edit_result_t ensure_sample_capacity(module_t *module, const int num_samples);
 static edit_result_t failure(char *);
 
-edit_result_t editor_get_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, event_t *event_buffer)
+edit_result_t editor_get_event(const module_t *module, const int pattern_no, const int pattern_index, const int track, event_t *event_buffer)
 {
     if (event_buffer == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t *event = NULL;
-    const edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &event);
+    const edit_result_t result = get_event(module, pattern_no, pattern_index, track, &event);
     if (!result.success)
         return result;
     *event_buffer = *event;
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_set_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, const event_t *new_event)
+edit_result_t editor_set_event(const module_t *module, const int pattern_no, const int pattern_index, const int track, const event_t *new_event)
 {
     if (new_event == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t *existing_event = NULL;
-    const edit_result_t result = get_event(module, pattern_no, pattern_index, channel_no, &existing_event);
+    const edit_result_t result = get_event(module, pattern_no, pattern_index, track, &existing_event);
     if (!result.success)
         return result;
     *existing_event = *new_event;
@@ -133,21 +133,21 @@ edit_result_t editor_load_sample(module_t *module, const char *filename, int *sa
     return EDIT_SUCCESS;
 }
 
-static edit_result_t get_event(const module_t *module, const int pattern_no, const int pattern_index, const int channel_no, event_t **event)
+static edit_result_t get_event(const module_t *module, const int pattern_no, const int pattern_index, const int track, event_t **event)
 {
     *event = NULL;
     if (module == NULL)
         return failure(NO_MODULE_LOADED);
     if (pattern_no < 0 || pattern_no >= module->num_patterns)
         return failure(INVALID_PATTERN_NUMBER);
-    if (channel_no < 0 || channel_no >= module->num_channels)
-        return failure(INVALID_CHANNEL_NUMBER);
+    if (track < 0 || track >= module->num_tracks)
+        return failure(INVALID_TRACK_NUMBER);
     if (module->patterns == NULL)
         return failure(NO_PATTERN_DATA);
     const pattern_t pattern = module->patterns[pattern_no];
     if (pattern_index < 0 || pattern_index >= pattern.num_lines)
         return failure(INVALID_PATTERN_INDEX);
-    *event = pattern.events + pattern_index * module->num_channels + channel_no;
+    *event = pattern.events + pattern_index * module->num_tracks + track;
     return EDIT_SUCCESS;
 }
 

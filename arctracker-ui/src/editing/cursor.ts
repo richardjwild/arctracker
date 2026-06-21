@@ -31,14 +31,14 @@ export class Cursor {
   constructor() {
     const {
       editorState,
-      module: { numChannels },
+      module: { numTracks },
     } = useStore.getState();
     this.editorState = {
       ...editorState,
       cursorPosition: { ...editorState.cursorPosition },
       effectsDisplayed: [...editorState.effectsDisplayed],
     };
-    this.numTracks = numChannels;
+    this.numTracks = numTracks;
   }
 
   public currentPosition(): CursorPosition {

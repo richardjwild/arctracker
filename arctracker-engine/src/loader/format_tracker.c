@@ -85,7 +85,7 @@ static module_t *read_tracker_module(mapped_file_t file)
         error("Modfile corrupt - MVOX chunk not found");
         goto fail;
     }
-    uint32_t num_channels = *(uint32_t *) (chunk_address + 8);
+    uint32_t num_tracks = *(uint32_t *) (chunk_address + 8);
     if ((chunk_address = search_tff(file.addr, array_end, MLEN_CHUNK)) == CHUNK_NOT_FOUND)
     {
         error("Modfile corrupt - MLEN chunk not found");
@@ -98,7 +98,7 @@ static module_t *read_tracker_module(mapped_file_t file)
         goto fail;
     }
     uint32_t num_patterns = *(uint32_t *) (chunk_address + 8);
-    module = module_create(num_channels, sequence_len, num_patterns, 36);
+    module = module_create(num_tracks, sequence_len, num_patterns, 36);
     if (module == NULL)
     {
         goto fail;
@@ -112,7 +112,7 @@ static module_t *read_tracker_module(mapped_file_t file)
         goto fail;
     }
     const uint8_t *initial_stereo = chunk_address + 8;
-    for (int track = 0; track < module->num_channels; track++)
+    for (int track = 0; track < module->num_tracks; track++)
     {
         const uint8_t track_panning = initial_stereo[track];
         if (track_panning == 0 || track_panning > 7)
@@ -210,9 +210,9 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
         const uint8_t *raw_pattern_data = chunk_address + CHUNK_HEADER_LENGTH;
         for (int line = 0; line < pattern_length; line++)
         {
-            for (int channel = 0; channel < module->num_channels; channel++)
+            for (int track = 0; track < module->num_tracks; track++)
             {
-                const int event_index = (line * module->num_channels) + channel;
+                const int event_index = (line * module->num_tracks) + track;
                 event_t *event = module->patterns[pno].events + event_index;
                 raw_pattern_data += decode_tracker_event(raw_pattern_data, event);
             }

@@ -45,7 +45,7 @@ const initialModule: Module = {
   fileName: "",
   name: "",
   author: "",
-  numChannels: 0,
+  numTracks: 0,
   numPatterns: 0,
   patternLengths: [],
   tuneLength: 1,
@@ -97,7 +97,7 @@ const initialInstrument: Instrument = {
 };
 
 
-function initialEditorState(numChannels: number = 0): EditorState {
+function initialEditorState(numTracks: number = 0): EditorState {
   return {
     patternEditing: false,
     instrumentEditing: false,
@@ -108,7 +108,7 @@ function initialEditorState(numChannels: number = 0): EditorState {
       patternIndex: 0,
     },
     sequencePosition: 0,
-    effectsDisplayed: Array.from({ length: numChannels }, () => 1),
+    effectsDisplayed: Array.from({ length: numTracks }, () => 1),
   };
 }
 
@@ -143,7 +143,7 @@ export const useStore = create<AppStore>((set) => ({
         : null,
       selectedChannel: 0,
       isLoadingModule: false,
-      editorState: initialEditorState(result.numChannels),
+      editorState: initialEditorState(result.numTracks),
       patternSelection: null,
       pasteBuffer: null,
     })),

@@ -24,7 +24,7 @@ api_result_t arctracker_get_instrument_info(arctracker_t *handle, uint8_t slot, 
 
 api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_lengths, int num_patterns);
 
-api_result_t arctracker_module_create(arctracker_t *handle, int num_channels, ui_module_info_t *module_info);
+api_result_t arctracker_module_create(arctracker_t *handle, int num_tracks, ui_module_info_t *module_info);
 
 api_result_t arctracker_player_start(arctracker_t *handle);
 
@@ -38,7 +38,7 @@ void arctracker_get_transport_state(arctracker_t *handle, ui_transport_state_t *
 
 void arctracker_get_export_state(arctracker_t *handle, ui_export_state_t *export_state);
 
-void arctracker_get_pattern(arctracker_t *handle, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_channels);
+void arctracker_get_pattern(arctracker_t *handle, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_tracks);
 
 api_result_t arctracker_export_audio(arctracker_t *handle, char *output_filename);
 
@@ -46,9 +46,9 @@ api_result_t arctracker_player_shutdown(arctracker_t *handle);
 
 api_result_t arctracker_export_cleanup(arctracker_t *handle);
 
-api_result_t arctracker_edit_get_event(arctracker_t *handle, int pattern_no, int pattern_index, int channel_no, ui_pattern_event_t *event);
+api_result_t arctracker_edit_get_event(arctracker_t *handle, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event);
 
-api_result_t arctracker_edit_set_event(arctracker_t *handle, int pattern_no, int pattern_index, int channel_no, ui_pattern_event_t *event);
+api_result_t arctracker_edit_set_event(arctracker_t *handle, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event);
 
 api_result_t arctracker_edit_get_sequence(arctracker_t *handle, int *sequence, int expected_sequence_len);
 

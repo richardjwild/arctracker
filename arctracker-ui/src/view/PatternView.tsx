@@ -14,7 +14,7 @@ import useSequencePosition from "../hooks/useSequencePosition.ts";
 export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
   const moduleVersion = useStore((state) => state.patternRevision);
-  const numChannels = useStore((state) => state.module.numChannels);
+  const numChannels = useStore((state) => state.module.numTracks);
   const setCurrentPattern = useStore((state) => state.setCurrentPattern);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);

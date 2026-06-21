@@ -60,7 +60,7 @@ typedef struct
     char name[MAX_LEN_TUNENAME_DSKT];
     char author[MAX_LEN_AUTHOR_DSKT];
     uint32_t flags;
-    uint32_t num_channels;
+    uint32_t num_tracks;
     uint32_t tune_length;
     uint8_t initial_stereo[8];
     uint32_t initial_speed;
@@ -114,12 +114,12 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module_t *module = NULL;
     int *pattern_lengths = NULL;
     dtt_file_format_t *file_format = (dtt_file_format_t *) file.addr;
-    if (file_format->num_channels < 1 || file_format->num_channels > 16)
+    if (file_format->num_tracks < 1 || file_format->num_tracks > 16)
     {
-        error("Modfile corrupt: invalid number of channels");
+        error("Modfile corrupt: invalid number of tracks");
         goto fail;
     }
-    module = module_create(file_format->num_channels, file_format->tune_length, file_format->num_patterns, file_format->num_samples);
+    module = module_create(file_format->num_tracks, file_format->tune_length, file_format->num_patterns, file_format->num_samples);
     if (module == NULL)
         goto fail;
     module->format = DESKTOP_TRACKER_FORMAT;
@@ -127,7 +127,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module->master_gain = 0.25f;
     strncpy(module->name, file_format->name, MAX_LEN_TUNENAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
-    for (int track = 0; track < module->num_channels; track++)
+    for (int track = 0; track < module->num_tracks; track++)
     {
         const uint8_t track_panning = file_format->initial_stereo[track];
         if (track_panning == 0 || track_panning > 7)
@@ -175,9 +175,9 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
         uint8_t *raw_pattern_data = base_address + pattern_offsets[pno];
         for (int line = 0; line < pattern_length; line++)
         {
-            for (int channel = 0; channel < module->num_channels; channel++)
+            for (int track = 0; track < module->num_tracks; track++)
             {
-                const int event_index = (line * module->num_channels) + channel;
+                const int event_index = (line * module->num_tracks) + track;
                 event_t *event = module->patterns[pno].events + event_index;
                 raw_pattern_data += decode_desktop_tracker_event(raw_pattern_data, event);
             }

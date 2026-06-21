@@ -42,9 +42,9 @@ export const module = {
     }
   },
 
-  create: async (numChannels: number): Promise<boolean> => {
+  create: async (numTracks: number): Promise<boolean> => {
     try {
-      const newModule = await engine.createModule(numChannels);
+      const newModule = await engine.createModule(numTracks);
       if (newModule) useStore.getState().setModule(newModule);
       return true;
     } catch (err) {

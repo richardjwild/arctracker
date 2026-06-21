@@ -20,7 +20,7 @@
 
 static void *run_player(void *);
 static void get_transport_state(player_t *player, module_t *module, ui_transport_state_t *transport_state);
-static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_channels, int module_channels);
+static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks);
 static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event);
 static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event);
 static void *run_export(void *);
@@ -91,11 +91,11 @@ api_result_t arctracker_get_instrument_info(arctracker_t *arctracker, uint8_t sl
     return SUCCESS;
 }
 
-api_result_t arctracker_module_create(arctracker_t *arctracker, int num_channels, ui_module_info_t *module_info)
+api_result_t arctracker_module_create(arctracker_t *arctracker, int num_tracks, ui_module_info_t *module_info)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    module_t *module = module_create(num_channels, 1, 1, 0);
+    module_t *module = module_create(num_tracks, 1, 1, 0);
     if (module == NULL || !module_init(module))
         return failure(MODULE_CREATE_FAILED);
     strcpy(module->name, NEW_MODULE_TITLE);
@@ -219,11 +219,11 @@ static void get_transport_state(player_t *player, module_t *module, ui_transport
     transport_state->pattern_length = module->patterns[pattern_no].num_lines;
 }
 
-void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_channels)
+void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_tracks)
 {
-    if (pattern_buffer == NULL || requested_lines <= 0 || requested_channels <= 0)
+    if (pattern_buffer == NULL || requested_lines <= 0 || requested_tracks <= 0)
         return;
-    const size_t requested_events = (size_t) requested_lines * (size_t) requested_channels;
+    const size_t requested_events = (size_t) requested_lines * (size_t) requested_tracks;
     memset(pattern_buffer, 0, sizeof(ui_pattern_event_t) * requested_events);
     if (arctracker == NULL || arctracker->module == NULL)
         return;
@@ -238,19 +238,19 @@ void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern
     for (int line = 0; line < requested_lines; line++)
     {
         if (line < pattern.num_lines)
-            copy_pattern_line(line_buffer, events, requested_channels, module->num_channels);
-        line_buffer += requested_channels;
-        events += module->num_channels;
+            copy_pattern_line(line_buffer, events, requested_tracks, module->num_tracks);
+        line_buffer += requested_tracks;
+        events += module->num_tracks;
     }
 }
 
-static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_channels, int module_channels)
+static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks)
 {
     ui_pattern_event_t *event_buffer = line_buffer;
     event_t *event = events;
-    for (int channel_no = 0; channel_no < requested_channels; channel_no++)
+    for (int track = 0; track < requested_tracks; track++)
     {
-        if (channel_no < module_channels)
+        if (track < module_tracks)
             to_ui_event(event_buffer, event);
         event_buffer++;
         event++;
@@ -348,7 +348,7 @@ api_result_t arctracker_export_cleanup(arctracker_t *arctracker)
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_get_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int channel_no, ui_pattern_event_t *event_buffer)
+api_result_t arctracker_edit_get_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event_buffer)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -357,14 +357,14 @@ api_result_t arctracker_edit_get_event(arctracker_t *arctracker, int pattern_no,
     if (event_buffer == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t event = {0};
-    edit_result_t result = editor_get_event(arctracker->module, pattern_no, pattern_index, channel_no, &event);
+    edit_result_t result = editor_get_event(arctracker->module, pattern_no, pattern_index, track, &event);
     if (!result.success)
         return failure(result.error_message);
     to_ui_event(event_buffer, &event);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int channel_no, ui_pattern_event_t *event)
+api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -376,7 +376,7 @@ api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no,
         return failure(PLAYER_PLAYING);
     event_t internal_event;
     to_internal_event(&internal_event, event);
-    edit_result_t result = editor_set_event(arctracker->module, pattern_no, pattern_index, channel_no, &internal_event);
+    edit_result_t result = editor_set_event(arctracker->module, pattern_no, pattern_index, track, &internal_event);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;

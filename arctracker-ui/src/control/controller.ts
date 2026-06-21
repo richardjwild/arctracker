@@ -18,7 +18,7 @@ function processCommands() {
     switch (command.type) {
       case CommandType.CREATE_MODULE:
         let moduleCreated = false;
-        module.create(command.numChannels).then((success) => {
+        module.create(command.numTracks).then((success) => {
           editor.clearUndoBuffer();
           moduleCreated = success;
         });

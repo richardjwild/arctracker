@@ -34,14 +34,14 @@ export const copyPaste = {
     const selectionBounds = getSelectionBounds(providedBounds);
     const patternNo = getFocusPatternNo();
     const currentPattern = useStore.getState().currentPattern;
-    const numChannels = useStore.getState().module.numChannels;
+    const numTracks = useStore.getState().module.numTracks;
     const blockHeight = Math.min(
       selectionBounds.bottom - selectionBounds.top + 1,
       currentPattern.lines.length - selectionBounds.top,
     );
     const blockWidth = Math.min(
       selectionBounds.right - selectionBounds.left + 1,
-      numChannels - selectionBounds.left,
+      numTracks - selectionBounds.left,
     );
     if (blockHeight === 0 || blockWidth === 0) return []; // Shouldn't really be possible, but belt & braces.
     let pasteBuffer: PasteBufferObjectType = {
@@ -63,7 +63,7 @@ export const copyPaste = {
       pasteBuffer.block.events[bufferLine] = [];
       for (
         let track = selectionBounds.left;
-        track <= selectionBounds.right && track < numChannels;
+        track <= selectionBounds.right && track < numTracks;
         track++
       ) {
         const bufferTrack = track - selectionBounds.left;
@@ -90,10 +90,10 @@ export const copyPaste = {
     if (!pasteBuffer || pasteBuffer.type !== "patternEvents") return;
     const currentPattern = useStore.getState().currentPattern;
     const cursorPosition = cursor.currentPosition();
-    const numChannels = useStore.getState().module.numChannels;
+    const numTracks = useStore.getState().module.numTracks;
     const blockWidth = Math.min(
       pasteBuffer.block.width,
-      numChannels - cursorPosition.track,
+      numTracks - cursorPosition.track,
     );
     const blockHeight = Math.min(
       pasteBuffer.block.height,
@@ -147,13 +147,13 @@ export const copyPaste = {
   },
 
   copyPattern: async (): Promise<EventLocation[]> => {
-    const numChannels = useStore.getState().module.numChannels;
+    const numTracks = useStore.getState().module.numTracks;
     const patternLength = useStore.getState().currentPattern.lines.length;
     return await copyPaste.copyPatternEvents({
       top: 0,
       bottom: patternLength - 1,
       left: 0,
-      right: numChannels - 1,
+      right: numTracks - 1,
     });
   },
 

@@ -12,9 +12,9 @@ typedef struct {
     char *error_message;
 } edit_result_t;
 
-edit_result_t editor_get_event(const module_t *module, int pattern_no, int pattern_index, int channel_no, event_t *event_buffer);
+edit_result_t editor_get_event(const module_t *module, int pattern_no, int pattern_index, int track, event_t *event_buffer);
 
-edit_result_t editor_set_event(const module_t *module, int pattern_no, int pattern_index, int channel_no, const event_t *new_event);
+edit_result_t editor_set_event(const module_t *module, int pattern_no, int pattern_index, int track, const event_t *new_event);
 
 edit_result_t editor_set_sequence(module_t *module, const int *new_sequence, int new_sequence_len);
 

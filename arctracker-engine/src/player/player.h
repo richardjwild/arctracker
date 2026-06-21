@@ -11,7 +11,7 @@
 
 typedef struct {
     const event_t *events;
-    int num_channels;
+    int num_tracks;
     int sequence_pos;
     int pattern_pos;
     bool row_advanced;

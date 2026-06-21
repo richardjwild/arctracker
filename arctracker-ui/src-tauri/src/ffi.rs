@@ -37,7 +37,7 @@ pub struct PlayerCommand {
     pub cmd_type: PlayerCommandType,
     pub new_sequence_pos: c_int,
     pub new_pattern_pos: c_int,
-    pub channel_no: c_int,
+    pub track: c_int,
     pub note: c_int,
     pub instrument_no: u8,
 }
@@ -76,7 +76,7 @@ pub struct UiInstrumentUpdate {
 pub struct UiModuleInfo {
     pub name: [c_char; 65],
     pub author: [c_char; 65],
-    pub num_channels: c_int,
+    pub num_tracks: c_int,
     pub tune_length: c_int,
     pub num_patterns: c_int,
 }
@@ -132,7 +132,7 @@ extern "C" {
     ) -> ApiResult;
     pub fn arctracker_module_create(
         handle: *mut ArctrackerHandle,
-        num_channels: c_int,
+        num_tracks: c_int,
         module_info: *mut UiModuleInfo,
     ) -> ApiResult;
     pub fn arctracker_get_instrument_info(
@@ -161,7 +161,7 @@ extern "C" {
         pattern_no: c_int,
         pattern_buffer: *mut UiPatternEvent,
         requested_lines: c_int,
-        requested_channels: c_int,
+        requested_tracks: c_int,
     );
     pub fn arctracker_export_audio(
         handle: *mut ArctrackerHandle,
@@ -169,8 +169,8 @@ extern "C" {
     ) -> ApiResult;
     pub fn arctracker_get_export_state(handle: *mut ArctrackerHandle, export_state: *mut UiExportState);
     pub fn arctracker_export_cleanup(handle: *mut ArctrackerHandle) -> ApiResult;
-    pub fn arctracker_edit_get_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
-    pub fn arctracker_edit_set_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, channel_no: c_int, event: *mut UiPatternEvent) -> ApiResult;
+    pub fn arctracker_edit_get_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, track: c_int, event: *mut UiPatternEvent) -> ApiResult;
+    pub fn arctracker_edit_set_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, track: c_int, event: *mut UiPatternEvent) -> ApiResult;
     pub fn arctracker_edit_get_sequence(handle: *mut ArctrackerHandle, sequence: *mut c_int, expected_sequence_len: c_int) -> ApiResult;
     pub fn arctracker_edit_set_sequence(handle: *mut ArctrackerHandle, new_sequence: *const c_int, new_sequence_len: c_int) -> ApiResult;
     pub fn arctracker_edit_create_pattern(handle: *mut ArctrackerHandle, pattern_length: c_int, new_pattern_no: *mut c_int) -> ApiResult;

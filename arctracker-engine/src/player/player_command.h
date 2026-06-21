@@ -17,7 +17,7 @@ typedef struct player_command {
     cmd_type_t cmd_type;
     int new_sequence_pos;
     int new_pattern_pos;
-    int channel_no;
+    int track;
     int note;
     uint8_t instrument_no;
 } player_command_t;

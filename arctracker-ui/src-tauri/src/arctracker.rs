@@ -64,7 +64,7 @@ pub struct PlayerCommand {
     pub cmd_type: PlayerCommandType,
     pub new_sequence_pos: i32,
     pub new_pattern_pos: i32,
-    pub channel_no: i32,
+    pub track: i32,
     pub note: i32,
     pub sample_no: i32,
 }
@@ -107,7 +107,7 @@ pub struct InstrumentUpdate {
 pub struct Module {
     pub(crate) name: String,
     pub(crate) author: String,
-    pub num_channels: i32,
+    pub num_tracks: i32,
     pub tune_length: i32,
     pub num_patterns: i32,
     pub pattern_lengths: Vec<i32>,
@@ -272,7 +272,7 @@ impl Arctracker {
         Ok(Module {
             name: c_string_to_rust(&module.name),
             author: c_string_to_rust(&module.author),
-            num_channels: module.num_channels,
+            num_tracks: module.num_tracks,
             tune_length: module.tune_length,
             num_patterns: module.num_patterns,
             pattern_lengths,
@@ -331,7 +331,7 @@ impl Arctracker {
         Ok(Module {
             name: c_string_to_rust(&module.name),
             author: c_string_to_rust(&module.author),
-            num_channels: module.num_channels,
+            num_tracks: module.num_tracks,
             tune_length: module.tune_length,
             num_patterns: module.num_patterns,
             pattern_lengths,
@@ -339,8 +339,8 @@ impl Arctracker {
         })
     }
 
-    pub fn get_pattern(&mut self, pattern_no: i32, num_rows: i32, num_channels: i32) -> Vec<PatternLine> {
-        let len = (num_rows * num_channels) as usize;
+    pub fn get_pattern(&mut self, pattern_no: i32, num_rows: i32, num_tracks: i32) -> Vec<PatternLine> {
+        let len = (num_rows * num_tracks) as usize;
         let empty_effect = ffi::UiEffect {
             effect_code: 0,
             effect_data: [0, 0],
@@ -357,11 +357,11 @@ impl Arctracker {
                 pattern_no,
                 ffi_events.as_mut_ptr(),
                 num_rows,
-                num_channels,
+                num_tracks,
             );
         }
         ffi_events
-            .chunks(num_channels as usize)
+            .chunks(num_tracks as usize)
             .enumerate()
             .map(|(row, line)| PatternLine {
                 row: row as i32,
@@ -370,10 +370,10 @@ impl Arctracker {
             .collect()
     }
 
-    pub fn create_module(&mut self, num_channels: i32) -> Result<Module, ArctrackerError> {
+    pub fn create_module(&mut self, num_tracks: i32) -> Result<Module, ArctrackerError> {
         let mut module_info = std::mem::MaybeUninit::<ffi::UiModuleInfo>::uninit();
         let result = unsafe {
-            ffi::arctracker_module_create(self.handle, num_channels, module_info.as_mut_ptr())
+            ffi::arctracker_module_create(self.handle, num_tracks, module_info.as_mut_ptr())
         };
         if !result.success {
             return Err(ArctrackerError {
@@ -385,7 +385,7 @@ impl Arctracker {
         Ok(Module {
             name: c_string_to_rust(&module_info.name),
             author: c_string_to_rust(&module_info.author),
-            num_channels: module_info.num_channels,
+            num_tracks: module_info.num_tracks,
             tune_length: module_info.tune_length,
             num_patterns: module_info.num_patterns,
             pattern_lengths,
@@ -506,7 +506,7 @@ impl Arctracker {
             cmd_type: ffi::PlayerCommandType::TogglePlay,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
-            channel_no: 0,
+            track: 0,
             note: 0,
             instrument_no: 0,
         };
@@ -520,7 +520,7 @@ impl Arctracker {
             cmd_type: ffi::PlayerCommandType::ToggleLoop,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
-            channel_no: 0,
+            track: 0,
             note: 0,
             instrument_no: 0,
         };
@@ -534,7 +534,7 @@ impl Arctracker {
             cmd_type: ffi::PlayerCommandType::Seek,
             new_sequence_pos,
             new_pattern_pos,
-            channel_no: 0,
+            track: 0,
             note: 0,
             instrument_no: 0,
         };
@@ -543,13 +543,13 @@ impl Arctracker {
         }
     }
 
-    pub fn midi_note_on(&mut self, note: i32, instrument_no: u8, channel_no: i32)
+    pub fn midi_note_on(&mut self, note: i32, instrument_no: u8, track: i32)
     {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::MidiNoteOn,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
-            channel_no,
+            track: track,
             note,
             instrument_no,
         };
@@ -558,13 +558,13 @@ impl Arctracker {
         }
     }
 
-    pub fn keyboard_note_on(&mut self, note: i32, instrument_no: u8, channel_no: i32)
+    pub fn keyboard_note_on(&mut self, note: i32, instrument_no: u8, track: i32)
     {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::KeyboardNoteOn,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
-            channel_no,
+            track: track,
             note,
             instrument_no,
         };
@@ -610,9 +610,9 @@ impl Arctracker {
         }
     }
 
-    pub fn edit_get_event(&mut self, pattern_no: i32, pattern_index: i32, channel_no: i32) -> Result<PatternEvent, ArctrackerError> {
+    pub fn edit_get_event(&mut self, pattern_no: i32, pattern_index: i32, track: i32) -> Result<PatternEvent, ArctrackerError> {
         let mut pattern_event = std::mem::MaybeUninit::<ffi::UiPatternEvent>::uninit();
-        let result = unsafe { ffi::arctracker_edit_get_event(self.handle, pattern_no, pattern_index, channel_no, pattern_event.as_mut_ptr()) };
+        let result = unsafe { ffi::arctracker_edit_get_event(self.handle, pattern_no, pattern_index, track, pattern_event.as_mut_ptr()) };
         if result.success {
             let pattern_event = unsafe { pattern_event.assume_init() };
             Ok(PatternEvent::from(pattern_event))
@@ -656,10 +656,10 @@ impl Arctracker {
         Ok(())
     }
 
-    pub fn edit_set_event(&mut self, pattern_no: i32, pattern_index: i32, channel_no: i32, new_event: PatternEvent) -> Result<(), ArctrackerError> {
+    pub fn edit_set_event(&mut self, pattern_no: i32, pattern_index: i32, track: i32, new_event: PatternEvent) -> Result<(), ArctrackerError> {
         let mut event = ffi::UiPatternEvent::try_from(new_event)
             .map_err(|message| ArctrackerError { message })?;
-        let result = unsafe { ffi::arctracker_edit_set_event(self.handle, pattern_no, pattern_index, channel_no, &mut event) };
+        let result = unsafe { ffi::arctracker_edit_set_event(self.handle, pattern_no, pattern_index, track, &mut event) };
         if result.success {
             Ok(())
         } else {

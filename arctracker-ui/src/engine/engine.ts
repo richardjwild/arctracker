@@ -6,7 +6,7 @@ export type Module = {
   fileName: string | null;
   name: string;
   author: string;
-  numChannels: number;
+  numTracks: number;
   numPatterns: number;
   patternLengths: number[];
   tuneLength: number;
@@ -115,9 +115,9 @@ export const engine = {
     });
   },
 
-  createModule: async (numChannels: number) => {
+  createModule: async (numTracks: number) => {
     return await invoke<Module>("create_module", {
-      numChannels,
+      numTracks,
     });
   },
 
@@ -167,12 +167,12 @@ export const engine = {
   getPattern: async (
     patternNo: number,
     numLines: number,
-    numChannels: number,
+    numTracks: number,
   ): Promise<PatternLine[]> => {
     return await invoke("get_pattern", {
       patternNo,
       numLines,
-      numChannels,
+      numTracks,
     });
   },
 
@@ -215,25 +215,25 @@ export const engine = {
   getEvent: async (
     patternNo: number,
     patternIndex: number,
-    channelNo: number,
+    track: number,
   ): Promise<PatternEvent> => {
     return await invoke("edit_get_event", {
       patternNo,
       patternIndex,
-      channelNo,
+      track,
     });
   },
 
   setEvent: async (
     patternNo: number,
     patternIndex: number,
-    channelNo: number,
+    track: number,
     newEvent: PatternEvent,
   ) => {
     return await invoke("edit_set_event", {
       patternNo,
       patternIndex,
-      channelNo,
+      track,
       newEvent,
     });
   },

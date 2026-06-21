@@ -30,7 +30,7 @@
 #define PLAYER_STILL_RUNNING "Player still running"
 #define INVALID_PATTERN_NUMBER "Invalid pattern number"
 #define INVALID_PATTERN_INDEX "Invalid pattern index"
-#define INVALID_CHANNEL_NUMBER "Invalid channel number"
+#define INVALID_TRACK_NUMBER "Invalid track number"
 #define BAD_EVENT_BUFFER "Invalid event buffer"
 #define BAD_SEQUENCE_BUFFER "Invalid sequence buffer"
 #define INVALID_SEQUENCE_LENGTH "Invalid sequence length"

@@ -72,7 +72,7 @@ export enum CommandType {
 export type Command =
   | { type: CommandType.LOAD_FILE }
   | { type: CommandType.EXPORT_AUDIO }
-  | { type: CommandType.CREATE_MODULE; numChannels: number }
+  | { type: CommandType.CREATE_MODULE; numTracks: number }
   | { type: CommandType.TOGGLE_PLAY }
   | { type: CommandType.TOGGLE_LOOP }
   | { type: CommandType.TOGGLE_EDIT }
@@ -162,8 +162,8 @@ export const commandQueue = {
 export const commands = {
   loadFile: () => commandQueue.push({ type: CommandType.LOAD_FILE }),
   exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
-  createModule: (numChannels: number) =>
-    commandQueue.push({ type: CommandType.CREATE_MODULE, numChannels }),
+  createModule: (numTracks: number) =>
+    commandQueue.push({ type: CommandType.CREATE_MODULE, numTracks: numTracks }),
   togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
   toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
   toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),
