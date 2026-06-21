@@ -1,4 +1,3 @@
-import { message } from "@tauri-apps/plugin-dialog";
 import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import {
@@ -7,6 +6,7 @@ import {
   DESKTOP_TRACKER_MODFILE_EXTENSION,
   TRACKER_MODFILE_EXTENSION,
 } from "../filesystem/filePicker.ts";
+import { alerting } from "../alerting/alert.ts";
 
 export type { Module, Sample } from "../engine/engine.ts";
 
@@ -35,7 +35,7 @@ export const module = {
       }
       return true;
     } catch (err) {
-      await message(err as string, { title: "Arctracker", kind: "error" });
+      await alerting.showError(err as string);
       return false;
     } finally {
       setLoadingModule(false);
@@ -48,7 +48,7 @@ export const module = {
       if (newModule) useStore.getState().setModule(newModule);
       return true;
     } catch (err) {
-      await message(err as string, { title: "Arctracker", kind: "error" });
+      await alerting.showError(err as string);
       return false;
     }
   },

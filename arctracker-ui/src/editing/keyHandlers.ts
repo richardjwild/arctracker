@@ -50,6 +50,9 @@ export const editorKeyHandlers: {
     } else if (e.code === 'KeyL' && primaryModifier(e)) {
       void commands.loadSample();
       return true;
+    } else if (e.code === 'KeyD' && primaryModifier(e)) {
+      void commands.deleteSample();
+      return true;
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
       void commands.saveAndCloseInstrumentEditor();
       return true;

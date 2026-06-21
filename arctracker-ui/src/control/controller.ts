@@ -232,6 +232,9 @@ function processCommands() {
       case CommandType.LOAD_SAMPLE:
         void editInstrument.loadSample();
         break;
+      case CommandType.DELETE_SAMPLE:
+        editInstrument.deleteSample();
+        break;
     }
   }
 }

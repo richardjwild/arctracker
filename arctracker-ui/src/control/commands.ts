@@ -66,6 +66,7 @@ export enum CommandType {
   SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
   RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
   LOAD_SAMPLE,
+  DELETE_SAMPLE,
 }
 
 export type Command =
@@ -143,7 +144,8 @@ export type Command =
   | { type: CommandType.OPEN_INSTRUMENT_EDITOR }
   | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
   | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR }
-  | { type: CommandType.LOAD_SAMPLE };
+  | { type: CommandType.LOAD_SAMPLE }
+  | { type: CommandType.DELETE_SAMPLE };
 
 const queue: Command[] = [];
 
@@ -281,4 +283,5 @@ export const commands = {
       type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
     }),
   loadSample: () => commandQueue.push({ type: CommandType.LOAD_SAMPLE }),
+  deleteSample: () => commandQueue.push({ type: CommandType.DELETE_SAMPLE }),
 };

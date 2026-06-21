@@ -6,7 +6,11 @@ import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
-import { editInstrument, emptyInstrument, SampleNameMaxLength } from "../editing/editInstrument.ts";
+import {
+  editInstrument,
+  emptyInstrument,
+  SampleNameMaxLength,
+} from "../editing/editInstrument.ts";
 
 type InputState = {
   transpose: string;
@@ -17,15 +21,17 @@ type InputState = {
 const emptyInputState: InputState = {
   transpose: "0",
   repeatStart: "0",
-  repeatEnd: "0"
+  repeatEnd: "0",
 };
 
 export default function SampleEditDialog() {
   const instrumentIndex = useStore((state) => state.selectedInstrument);
   const instruments = useStore((state) => state.module.instruments);
-  const instrumentEditing = useStore((state) => state.editorState.instrumentEditing);
+  const instrumentEditing = useStore(
+    (state) => state.editorState.instrumentEditing,
+  );
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
-  const [ inputState, setInputState ] = useState(emptyInputState);
+  const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
   const loseFocus = () => modalRef.current?.focus();
 
@@ -33,7 +39,9 @@ export default function SampleEditDialog() {
     setInputState({
       transpose: (draftInstrument.transpose - 13).toString(),
       repeatStart: draftInstrument.repeatOffset.toString(),
-      repeatEnd: (draftInstrument.repeatOffset + draftInstrument.repeatLength).toString()
+      repeatEnd: (
+        draftInstrument.repeatOffset + draftInstrument.repeatLength
+      ).toString(),
     });
   };
 
@@ -79,7 +87,7 @@ export default function SampleEditDialog() {
       repeats: false,
       repeatOffset: 0,
       repeatLength: 0,
-    })
+    });
   };
 
   const setRepeatOffsetAndLength = (repeatStart: number) => {
@@ -87,14 +95,14 @@ export default function SampleEditDialog() {
       setDraftInstrument({
         ...draftInstrument,
         repeatOffset: repeatStart,
-        repeatLength: draftInstrument.sample.sampleLength - (repeatStart + 1)
+        repeatLength: draftInstrument.sample.sampleLength - (repeatStart + 1),
       });
     } else {
       const delta = repeatStart - draftInstrument.repeatOffset;
       setDraftInstrument({
         ...draftInstrument,
         repeatOffset: repeatStart,
-        repeatLength: draftInstrument.repeatLength - delta
+        repeatLength: draftInstrument.repeatLength - delta,
       });
     }
   };
@@ -105,12 +113,16 @@ export default function SampleEditDialog() {
       draftInstrument.repeatLength === 0
         ? draftInstrument.sample.sampleLength - 2
         : draftInstrument.repeatOffset + draftInstrument.repeatLength - 1;
-    if (Number.isInteger(repeatStart) && repeatStart >= 0 && repeatStart <= maxValue) {
+    if (
+      Number.isInteger(repeatStart) &&
+      repeatStart >= 0 &&
+      repeatStart <= maxValue
+    ) {
       setRepeatOffsetAndLength(repeatStart);
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(
-        `Repeat start must be between 0 and ${draftInstrument.repeatLength === 0 ? "sample length" : "repeat end"}.`
+        `Repeat start must be between 0 and ${draftInstrument.repeatLength === 0 ? "sample length" : "repeat end"}.`,
       );
     }
     loseFocus();
@@ -118,12 +130,19 @@ export default function SampleEditDialog() {
 
   const updateRepeatEnd = () => {
     const repeatEnd = Number(inputState.repeatEnd);
-    if (Number.isInteger(repeatEnd) && repeatEnd > draftInstrument.repeatOffset && repeatEnd < draftInstrument.sample.sampleLength) {
-      setDraftInstrument({ ...draftInstrument, repeatLength: repeatEnd - draftInstrument.repeatOffset });
+    if (
+      Number.isInteger(repeatEnd) &&
+      repeatEnd > draftInstrument.repeatOffset &&
+      repeatEnd < draftInstrument.sample.sampleLength
+    ) {
+      setDraftInstrument({
+        ...draftInstrument,
+        repeatLength: repeatEnd - draftInstrument.repeatOffset,
+      });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(
-        "Repeat end must be between repeat start and sample length."
+        "Repeat end must be between repeat start and sample length.",
       );
     }
     loseFocus();
@@ -161,7 +180,7 @@ export default function SampleEditDialog() {
           onChange={(e) => {
             setDraftInstrument({
               ...draftInstrument,
-              defaultVolume: e.target.valueAsNumber
+              defaultVolume: e.target.valueAsNumber,
             });
           }}
         />
@@ -177,7 +196,7 @@ export default function SampleEditDialog() {
           onChange={(e) =>
             setInputState({
               ...inputState,
-              transpose: e.target.value
+              transpose: e.target.value,
             })
           }
           onBlur={(e) => {
@@ -191,7 +210,11 @@ export default function SampleEditDialog() {
         <label>Sample Length:</label>
       </div>
       <div className="sampleLengthEdit padded sampleEditField">
-        <input type="text" readOnly value={draftInstrument.sample.sampleLength} />
+        <input
+          type="text"
+          readOnly
+          value={draftInstrument.sample.sampleLength}
+        />
       </div>
       <div className="sampleRepeatsLabel padded sampleEditLabel">
         <label>Sample Loops:</label>
@@ -222,10 +245,12 @@ export default function SampleEditDialog() {
           type="text"
           value={inputState.repeatStart}
           onFocus={editor.startTextInput}
-          onChange={(e) => setInputState({
-            ...inputState,
-            repeatStart: e.target.value
-          })}
+          onChange={(e) =>
+            setInputState({
+              ...inputState,
+              repeatStart: e.target.value,
+            })
+          }
           onBlur={(e) => {
             e.preventDefault();
             editor.stopTextInput();
@@ -241,10 +266,12 @@ export default function SampleEditDialog() {
           type="text"
           value={inputState.repeatEnd}
           onFocus={editor.startTextInput}
-          onChange={(e) => setInputState({
-            ...inputState,
-            repeatEnd: e.target.value
-          })}
+          onChange={(e) =>
+            setInputState({
+              ...inputState,
+              repeatEnd: e.target.value,
+            })
+          }
           onBlur={(e) => {
             e.preventDefault();
             editor.stopTextInput();
@@ -253,17 +280,13 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded">
-        <button
-          type="button"
-          onClick={commands.loadSample}
-        >
+        <button type="button" onClick={commands.loadSample}>
           Load Sample
         </button>
-        <button type="button">Delete Sample</button>
-        <button
-          type="button"
-          onClick={commands.saveAndCloseInstrumentEditor}
-        >
+        <button type="button" onClick={commands.deleteSample}>
+          Delete Sample
+        </button>
+        <button type="button" onClick={commands.saveAndCloseInstrumentEditor}>
           Save Changes
         </button>
         <button

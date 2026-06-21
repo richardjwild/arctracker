@@ -74,7 +74,7 @@ export const editInstrument = {
       selectedInstrument,
       module: { instruments },
     } = useStore.getState();
-    if (selectedInstrument === null || !draftInstrument.assigned) return;
+    if (selectedInstrument === null) return;
     const instrument = instruments[selectedInstrument] || emptyInstrument();
     if (instrumentsEqual(instrument, draftInstrument)) return;
     const update: InstrumentUpdate = {
@@ -169,6 +169,12 @@ export const editInstrument = {
     } catch (e) {
       void alerting.showError(`Failed to load sample: ${e}`);
     }
+  },
+
+  deleteSample: () => {
+    if (!editInstrument.instrumentEditing()) return;
+    const { setDraftInstrument } = useStore.getState();
+    setDraftInstrument(emptyInstrument());
   },
 
   closeDialog: () => {
