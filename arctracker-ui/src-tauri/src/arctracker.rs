@@ -1,6 +1,5 @@
 use crate::ffi;
 use std::ffi::{c_char, c_int, CStr, CString};
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 pub struct Arctracker {
@@ -18,13 +17,13 @@ pub enum PlayerEventType {
 impl From<ffi::PlayerEventType> for PlayerEventType {
     fn from(event_type: ffi::PlayerEventType) -> Self {
         match event_type {
-            ffi::PlayerEventType::PLAYER_ERROR => {
+            ffi::PlayerEventType::PlayerError => {
                 PlayerEventType::PlayerError
             }
-            ffi::PlayerEventType::AUDIO_OVERFLOWED => {
+            ffi::PlayerEventType::AudioOverflowed => {
                 PlayerEventType::AudioOverflowed
             }
-            ffi::PlayerEventType::USER_MIDI_NOTE_ON => {
+            ffi::PlayerEventType::UserMidiNoteOn => {
                 PlayerEventType::UserMidiNoteOn
             }
         }
@@ -211,11 +210,6 @@ pub struct UiTransportState {
 pub struct UiExportState {
     pub completed: bool,
     pub percent_complete: i32,
-}
-
-pub struct ApiResult {
-    SUCCESS: bool,
-    ERROR_MESSAGE: String,
 }
 
 #[derive(Debug)]
@@ -509,7 +503,7 @@ impl Arctracker {
 
     pub fn toggle_play(&mut self) {
         let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::TOGGLE_PLAY,
+            cmd_type: ffi::PlayerCommandType::TogglePlay,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
             channel_no: 0,
@@ -523,7 +517,7 @@ impl Arctracker {
 
     pub fn toggle_loop(&mut self) {
         let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::TOGGLE_LOOP,
+            cmd_type: ffi::PlayerCommandType::ToggleLoop,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
             channel_no: 0,
@@ -537,7 +531,7 @@ impl Arctracker {
 
     pub fn seek(&mut self, new_sequence_pos: i32, new_pattern_pos: i32) {
         let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::SEEK,
+            cmd_type: ffi::PlayerCommandType::Seek,
             new_sequence_pos,
             new_pattern_pos,
             channel_no: 0,
@@ -552,7 +546,7 @@ impl Arctracker {
     pub fn midi_note_on(&mut self, note: i32, instrument_no: u8, channel_no: i32)
     {
         let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::MIDI_NOTE_ON,
+            cmd_type: ffi::PlayerCommandType::MidiNoteOn,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
             channel_no,
@@ -567,7 +561,7 @@ impl Arctracker {
     pub fn keyboard_note_on(&mut self, note: i32, instrument_no: u8, channel_no: i32)
     {
         let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::KEYBOARD_NOTE_ON,
+            cmd_type: ffi::PlayerCommandType::KeyboardNoteOn,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
             channel_no,
@@ -694,7 +688,7 @@ impl Arctracker {
         let result = unsafe {
             ffi::arctracker_edit_delete_pattern(self.handle, pattern_no)
         };
-        if (result.success) {
+        if result.success {
             Ok(())
         } else {
             Err(ArctrackerError {
@@ -718,7 +712,7 @@ impl Arctracker {
         let result = unsafe {
             ffi::arctracker_edit_set_instrument(self.handle, slot, instrument_update)
         };
-        if (result.success) {
+        if result.success {
             Ok(())
         } else {
             Err(ArctrackerError {

@@ -8,9 +8,9 @@ pub struct ArctrackerHandle {
 #[derive(Copy, Clone)]
 #[repr(i32)]
 pub enum PlayerEventType {
-    PLAYER_ERROR = 0,
-    USER_MIDI_NOTE_ON = 1,
-    AUDIO_OVERFLOWED = 2,
+    PlayerError = 0,
+    UserMidiNoteOn = 1,
+    AudioOverflowed = 2,
 }
 
 #[repr(C)]
@@ -23,13 +23,13 @@ pub struct PlayerEvent {
 #[derive(Copy, Clone)]
 #[repr(i32)]
 pub enum PlayerCommandType {
-    TOGGLE_PLAY = 0,
-    SEEK = 1,
-    MIDI_NOTE_ON = 2,
-    MIDI_NOTE_OFF = 3,
-    KEYBOARD_NOTE_ON = 4,
-    KEYBOARD_NOTE_OFF = 5,
-    TOGGLE_LOOP = 6,
+    TogglePlay = 0,
+    Seek = 1,
+    MidiNoteOn = 2,
+    MidiNoteOff = 3,
+    KeyboardNoteOn = 4,
+    KeyboardNoteOff = 5,
+    ToggleLoop = 6,
 }
 
 #[repr(C)]

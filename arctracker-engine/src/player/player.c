@@ -13,6 +13,7 @@ static void process_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
 static void process_seek_command(player_t *player, player_command_t command);
 static void process_note_on_command(const player_t *player, player_command_t command, bool from_midi);
+static void process_note_off_command(const player_t *player, player_command_t command);
 static void process_toggle_loop_command(player_t *player);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
@@ -154,6 +155,11 @@ static void process_command(player_t *player, const player_command_t command)
         case KEYBOARD_NOTE_ON:
             process_note_on_command(player, command, false);
             break;
+        case MIDI_NOTE_OFF:
+            /* fall through */
+        case KEYBOARD_NOTE_OFF:
+            process_note_off_command(player, command);
+            break;
         case TOGGLE_LOOP:
             process_toggle_loop_command(player);
             break;
@@ -190,6 +196,14 @@ static void process_note_on_command(const player_t *player, const player_command
     }
     const sample_t *sample = player->module->samples + instrument.sample_index;
     note_on(command.note, &instrument, sample, voice);
+}
+
+static void process_note_off_command(const player_t *player, const player_command_t command)
+{
+    voice_t *voice = player->voices + command.channel_no;
+    const instrument_t instrument = player->module->instruments[command.instrument_no];
+    if (instrument.assigned && instrument.repeats)
+        note_off(voice);
 }
 
 static void process_toggle_loop_command(player_t *player)
