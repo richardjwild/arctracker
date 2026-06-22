@@ -8,7 +8,8 @@
 #define INITIAL_SAMPLE_CAPACITY 1024
 #define INITIAL_PATTERN_LINE_CAPACITY 64
 
-static bool ensure_pattern_line_capacity(pattern_t *pattern, int num_tracks, int required_lines);
+static bool ensure_pattern_line_capacity(pattern_t *, int, int);
+static void clear_added_events(event_t *, int, int, int);
 
 module_t *module_create(const int num_tracks, const int sequence_len, const int num_patterns, const int num_samples)
 {
@@ -102,8 +103,17 @@ static bool ensure_pattern_line_capacity(pattern_t *pattern, const int num_track
     event_t *new_events = reallocate_array(MODULE, pattern->events, required_lines * num_tracks, sizeof(event_t));
     if (new_events == NULL) return false;
     pattern->events = new_events;
+    clear_added_events(pattern->events, pattern->line_capacity, required_lines, num_tracks);
     pattern->line_capacity = required_lines;
     return true;
+}
+
+static void clear_added_events(event_t *events, const int old_capacity, const int new_capacity, const int num_tracks)
+{
+    const int added_events_start = (old_capacity * num_tracks) + 1;
+    const int added_events_end = new_capacity * num_tracks;
+    for (int i = added_events_start; i < added_events_end; i++)
+        events[i] = (event_t) {0};
 }
 
 void module_destroy(module_t *module)
