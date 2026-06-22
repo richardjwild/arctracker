@@ -5,15 +5,11 @@ import { KeyHandler } from "../keyboard/keyHandler.ts";
 import { editInstrument } from "./editInstrument.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
-import { pattern } from "./pattern.ts";
-import { editor } from "./editor.ts";
-import { useStore } from "../store/useStore.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
   handleEffectFieldInput: KeyHandler,
   handleInstrumentEditorInput: KeyHandler,
-  handlePatternLengthInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -60,21 +56,6 @@ export const editorKeyHandlers: {
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
       void commands.saveAndCloseInstrumentEditor();
       return true;
-    }
-    return false;
-  },
-
-  handlePatternLengthInput: (e) => {
-    if (!pattern.editingLength())
-      return false;
-    if (e.code === 'Escape') {
-      editor.setEditMode('none');
-      return true;
-    } else if (e.code === 'Enter') {
-      const newPatternLength = useStore.getState().newPatternLength;
-      if (newPatternLength)
-        void commands.setCurrentPatternLength(newPatternLength)
-      editor.setEditMode('none');
     }
     return false;
   },

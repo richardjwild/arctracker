@@ -6,7 +6,6 @@ import { editor } from "../editing/editor.ts";
 
 const handlers: KeyHandler[] = [
   editorKeyHandlers.handleInstrumentEditorInput,
-  editorKeyHandlers.handlePatternLengthInput,
   pianoKeys.handleRealtimePianoInput,
   editorKeyHandlers.handleSampleFieldInput,
   editorKeyHandlers.handleEffectFieldInput,
