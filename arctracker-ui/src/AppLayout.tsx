@@ -7,6 +7,7 @@ import InstrumentList from "./view/InstrumentList.tsx";
 import ExportDialog from "./view/ExportDialog.tsx";
 import Sequence from "./view/Sequence.tsx";
 import SampleEditDialog from "./view/SampleEditDialog.tsx";
+import EditPatternLength from "./view/EditPatternLength.tsx";
 
 export default function AppLayout() {
   return (
@@ -18,6 +19,7 @@ export default function AppLayout() {
       <InstrumentList />
       <SampleEditDialog />
       <ExportDialog />
+      <EditPatternLength />
     </main>
   );
 }
