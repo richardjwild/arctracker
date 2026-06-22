@@ -237,6 +237,7 @@ function processCommands() {
         editInstrument.deleteSample();
         break;
       case CommandType.EDIT_CURRENT_PATTERN_LENGTH:
+        if (transport.playing()) transport.togglePlay();
         pattern.editCurrentPatternLength();
         break;
       case CommandType.SET_CURRENT_PATTERN_LENGTH:
