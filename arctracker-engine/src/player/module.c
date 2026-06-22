@@ -110,9 +110,9 @@ static bool ensure_pattern_line_capacity(pattern_t *pattern, const int num_track
 
 static void clear_added_events(event_t *events, const int old_capacity, const int new_capacity, const int num_tracks)
 {
-    const int added_events_start = (old_capacity * num_tracks) + 1;
-    const int added_events_end = new_capacity * num_tracks;
-    for (int i = added_events_start; i < added_events_end; i++)
+    const int added_events_start = old_capacity * num_tracks;
+    const int added_events_end = new_capacity * num_tracks - 1;
+    for (int i = added_events_start; i <= added_events_end; i++)
         events[i] = (event_t) {0};
 }
 
