@@ -338,8 +338,8 @@ static bool get_sample_info(void *array_start, long array_end, sample_t *sample,
             goto get_sample_info_failed;
         instrument->repeats = (instrument->repeat_offset != 0 || instrument->repeat_length != 2);
         if (instrument->repeats) {
-            sample_data[sample->sample_length] = sample->sample_data[instrument->repeat_offset];
-            sample_data[sample->sample_length + 1] = sample->sample_data[instrument->repeat_offset + 1];
+            sample_data[sample->sample_length] = sample_data[instrument->repeat_offset];
+            sample_data[sample->sample_length + 1] = sample_data[instrument->repeat_offset + 1];
         }
         sample->sample_data = sample_data;
     }
