@@ -17,10 +17,6 @@ export const pattern = {
     editor.setEditMode("patternLength");
   },
 
-  editingLength: (): boolean => {
-    return useStore.getState().editorState.editMode === "patternLength";
-  },
-
   createPattern: async (length: number): Promise<number> => {
     const patternNo = await engine.createPattern(length);
     const module = useStore.getState().module;
@@ -43,23 +39,25 @@ export const pattern = {
     const patternNo = useStore.getState().sequence[sequenceIndex];
     const module = useStore.getState().module;
     const currentLength = module.patternLengths[patternNo];
-    void editor.applyEdit({
-      apply: async () => {
-        await engine.setPatternLength(patternNo, newLength);
-        const patternLengths = [...module.patternLengths];
-        patternLengths[patternNo] = newLength;
-        useStore.getState().updatePatterns(module.numPatterns, patternLengths);
-        ensurePatternIndex();
-        return true;
-      },
-      undo: async () => {
-        await engine.setPatternLength(patternNo, currentLength);
-        const patternLengths = [...module.patternLengths];
-        patternLengths[patternNo] = currentLength;
-        useStore.getState().updatePatterns(module.numPatterns, patternLengths);
-        ensurePatternIndex();
-      },
-    });
+    if (currentLength !== newLength) {
+      void editor.applyEdit({
+        apply: async () => {
+          await engine.setPatternLength(patternNo, newLength);
+          const patternLengths = [...module.patternLengths];
+          patternLengths[patternNo] = newLength;
+          useStore.getState().updatePatterns(module.numPatterns, patternLengths);
+          ensurePatternIndex();
+          return true;
+        },
+        undo: async () => {
+          await engine.setPatternLength(patternNo, currentLength);
+          const patternLengths = [...module.patternLengths];
+          patternLengths[patternNo] = currentLength;
+          useStore.getState().updatePatterns(module.numPatterns, patternLengths);
+          ensurePatternIndex();
+        },
+      });
+    }
     editor.setEditMode("none");
   }
 };
