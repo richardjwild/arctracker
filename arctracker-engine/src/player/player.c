@@ -251,11 +251,11 @@ static void player_step(player_t *player)
 
 static event_t *get_events(const player_t *player)
 {
-    const int num_tracks = player->module->num_tracks;
+    const int track_capacity = player->module->track_capacity;
     const sequence_t *sequence = &player->sequence;
     const int pattern_no = sequence->sequence[sequence->sequence_pos];
     const pattern_t pattern = player->module->patterns[pattern_no];
-    return pattern.events + sequence->pattern_index * num_tracks;
+    return pattern.events + sequence->pattern_index * track_capacity;
 }
 
 static bool audio_consume(player_t *player)

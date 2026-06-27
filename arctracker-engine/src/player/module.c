@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdio.h>
 #include "module.h"
+
+#include "memory/bits.h"
 #include "memory/heap.h"
 
 #define INITIAL_SEQUENCE_CAPACITY 1024
@@ -17,6 +19,7 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     if (module == NULL)
         goto fail;
     module->num_tracks = num_tracks;
+    module->track_capacity = round_up_to_power_of_two(module->num_tracks);
     module->tune_length = sequence_len;
     module->sequence_capacity = sequence_len > INITIAL_SEQUENCE_CAPACITY ? sequence_len : INITIAL_SEQUENCE_CAPACITY;
     module->num_patterns = num_patterns;
@@ -64,7 +67,7 @@ bool module_create_pattern(const module_t *module, const int pattern_no, const i
     const pattern_t pattern = (pattern_t) {
         .num_lines = num_lines,
         .line_capacity = line_capacity,
-        .events = allocate_array(MODULE, num_lines * module->num_tracks, sizeof(event_t)),
+        .events = allocate_array(MODULE, line_capacity * module->track_capacity, sizeof(event_t)),
     };
     if (pattern.events == NULL)
         return false;

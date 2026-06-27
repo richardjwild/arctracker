@@ -247,7 +247,7 @@ void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern
         if (line < pattern.num_lines)
             copy_pattern_line(line_buffer, events, requested_tracks, module->num_tracks);
         line_buffer += requested_tracks;
-        events += module->num_tracks;
+        events += module->track_capacity;
     }
 }
 

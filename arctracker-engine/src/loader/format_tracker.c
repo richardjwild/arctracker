@@ -210,11 +210,14 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
         const uint8_t *raw_pattern_data = chunk_address + CHUNK_HEADER_LENGTH;
         for (int line = 0; line < pattern_length; line++)
         {
-            for (int track = 0; track < module->num_tracks; track++)
+            for (int track = 0; track < module->track_capacity; track++)
             {
-                const int event_index = (line * module->num_tracks) + track;
+                const int event_index = (line * module->track_capacity) + track;
                 event_t *event = module->patterns[pno].events + event_index;
-                raw_pattern_data += decode_tracker_event(raw_pattern_data, event);
+                if (track < module->num_tracks)
+                    raw_pattern_data += decode_tracker_event(raw_pattern_data, event);
+                else
+                    *event = (event_t) {0};
             }
         }
         chunk_address = search_tff(chunk_address + CHUNK_ID_LENGTH, array_end, PATT_CHUNK);

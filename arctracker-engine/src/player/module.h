@@ -86,6 +86,7 @@ typedef struct
     int *sequence;
     int sequence_capacity;
     int num_tracks;
+    uint8_t track_capacity;
     int *initial_panning;
     int num_patterns;
     pattern_t *patterns;

@@ -21,4 +21,16 @@
 
 #define ALIGN_TO_WORD(length) ((length % 4) ? (length) + (4 - ((length) % 4)) : (length))
 
+static inline uint32_t round_up_to_power_of_two(uint32_t n)
+{
+    if (n <= 1) return 1;
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    return n + 1;
+}
+
 #endif //ARCTRACKER_BITS_H

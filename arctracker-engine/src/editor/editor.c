@@ -163,7 +163,7 @@ static edit_result_t get_event(const module_t *module, const int pattern_no, con
     const pattern_t pattern = module->patterns[pattern_no];
     if (pattern_index < 0 || pattern_index >= pattern.num_lines)
         return failure(INVALID_PATTERN_INDEX);
-    *event = pattern.events + pattern_index * module->num_tracks + track;
+    *event = pattern.events + pattern_index * module->track_capacity + track;
     return EDIT_SUCCESS;
 }
 
