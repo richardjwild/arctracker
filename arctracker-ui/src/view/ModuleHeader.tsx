@@ -114,7 +114,7 @@ export default function ModuleHeader() {
       <button
         title="Edit module name and author"
         className="editNameAuthorButton"
-        onClick={commands.editNameAndAuthor}
+        onClick={commands.editModuleTitle}
       >
         <EditNameIcon />
       </button>

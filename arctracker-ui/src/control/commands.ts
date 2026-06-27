@@ -69,8 +69,8 @@ export enum CommandType {
   DELETE_SAMPLE,
   EDIT_CURRENT_PATTERN_LENGTH,
   SET_CURRENT_PATTERN_LENGTH,
-  EDIT_NAME_AND_AUTHOR,
-  SET_NAME_AND_AUTHOR,
+  EDIT_MODULE_TITLE,
+  SET_MODULE_TITLE,
 }
 
 export type Command =
@@ -155,8 +155,8 @@ export type Command =
       type: CommandType.SET_CURRENT_PATTERN_LENGTH;
       newLength: number;
     }
-  | { type: CommandType.EDIT_NAME_AND_AUTHOR }
-  | { type: CommandType.SET_NAME_AND_AUTHOR };
+  | { type: CommandType.EDIT_MODULE_TITLE }
+  | { type: CommandType.SET_MODULE_TITLE };
 
 const queue: Command[] = [];
 
@@ -305,8 +305,8 @@ export const commands = {
       type: CommandType.SET_CURRENT_PATTERN_LENGTH,
       newLength,
     }),
-  editNameAndAuthor: () =>
-    commandQueue.push({ type: CommandType.EDIT_NAME_AND_AUTHOR }),
-  setNameAndAuthor: () =>
-    commandQueue.push({ type: CommandType.SET_NAME_AND_AUTHOR })
+  editModuleTitle: () =>
+    commandQueue.push({ type: CommandType.EDIT_MODULE_TITLE }),
+  setModuleTitle: () =>
+    commandQueue.push({ type: CommandType.SET_MODULE_TITLE })
 };

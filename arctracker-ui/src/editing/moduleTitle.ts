@@ -7,7 +7,7 @@ export type ModuleTitle = {
   author: string;
 };
 
-export const nameAndAuthor = {
+export const moduleTitle = {
   editing: () => useStore.getState().editorState.editMode === "nameAndAuthor",
 
   showDialog: () => {

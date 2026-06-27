@@ -1,9 +1,9 @@
 import { useStore } from "../store/useStore.ts";
-import "./EditNameAndAuthor.css";
+import "./EditModuleTitle.css";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
 import { useEffect } from "react";
-import { ModuleTitle, nameAndAuthor } from "../editing/nameAndAuthor.ts";
+import { ModuleTitle, moduleTitle } from "../editing/moduleTitle.ts";
 import { commands } from "../control/commands.ts";
 
 const ModuleNameMaxLength = 65;
@@ -13,7 +13,7 @@ const emptyDraft: ModuleTitle = {
   author: "",
 };
 
-export default function EditNameAndAuthor() {
+export default function EditModuleTitle() {
   const editing =
     useStore((state) => state.editorState.editMode) === "nameAndAuthor";
   const module = useStore((state) => state.module);
@@ -46,7 +46,7 @@ export default function EditNameAndAuthor() {
   if (!editing) return null;
 
   return (
-    <Modal className="editNameAndAuthor">
+    <Modal className="editModuleTitle">
       <div className="moduleNameLabel">
         <label htmlFor="moduleNameInput">Module Name:</label>
       </div>
@@ -76,10 +76,10 @@ export default function EditNameAndAuthor() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded">
-        <button type="button" onClick={commands.setNameAndAuthor}>
+        <button type="button" onClick={commands.setModuleTitle}>
           Save
         </button>
-        <button type="button" onClick={nameAndAuthor.hideDialog}>
+        <button type="button" onClick={moduleTitle.hideDialog}>
           Cancel
         </button>
       </div>

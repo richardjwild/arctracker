@@ -4,7 +4,7 @@ import { CurrentPattern } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
-import { ModuleTitle } from "../editing/nameAndAuthor.ts";
+import { ModuleTitle } from "../editing/moduleTitle.ts";
 
 interface AppStore {
   moduleId: number;

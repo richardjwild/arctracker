@@ -5,7 +5,7 @@ import { KeyHandler } from "../keyboard/keyHandler.ts";
 import { editInstrument } from "./editInstrument.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
-import { nameAndAuthor } from "./nameAndAuthor.ts";
+import { moduleTitle } from "./moduleTitle.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
@@ -63,13 +63,13 @@ export const editorKeyHandlers: {
   },
 
   handleModuleTitleInput: (e) => {
-    if (!nameAndAuthor.editing())
+    if (!moduleTitle.editing())
       return false;
     if (e.code === 'Escape') {
-      nameAndAuthor.hideDialog();
+      moduleTitle.hideDialog();
       return true;
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
-      commands.setNameAndAuthor();
+      commands.setModuleTitle();
       return true;
     }
     return false;
