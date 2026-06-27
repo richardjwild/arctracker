@@ -1,10 +1,17 @@
 .editPatternLength {
-    width: 190px;
+    width: 200px;
     height: 50px;
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 15px;
+}
+
+.editPatternLength label {
+    display: block;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-label);
 }
 
 .editPatternLength input[type='text'] {
