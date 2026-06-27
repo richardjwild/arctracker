@@ -544,7 +544,6 @@ api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, co
     const edit_result_t result = editor_set_module_title(arctracker->module, name, author);
     if (!result.success)
         return failure(result.error_message);
-    printf("Changed module title to %s by %s\n", arctracker->module->name, arctracker->module->author);
     return SUCCESS;
 }
 
