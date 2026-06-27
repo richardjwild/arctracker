@@ -7,6 +7,7 @@ import {
   TRACKER_MODFILE_EXTENSION,
 } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
+import { editor } from "../editing/editor.ts";
 
 export type { Module, Sample } from "../engine/engine.ts";
 
@@ -52,4 +53,13 @@ export const module = {
       return false;
     }
   },
+
+  editTrackCount: () => editor.setEditMode("trackCount"),
+
+  setTrackCount: async (trackCount: number) => {
+    const module = useStore.getState().module;
+    if (module.numTracks !== trackCount)
+      console.log("setTrackCount", trackCount);
+    editor.setEditMode("none");
+  }
 };

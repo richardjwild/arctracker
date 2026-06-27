@@ -71,6 +71,8 @@ export enum CommandType {
   SET_CURRENT_PATTERN_LENGTH,
   EDIT_MODULE_TITLE,
   SET_MODULE_TITLE,
+  EDIT_TRACK_COUNT,
+  SET_TRACK_COUNT,
 }
 
 export type Command =
@@ -156,7 +158,9 @@ export type Command =
       newLength: number;
     }
   | { type: CommandType.EDIT_MODULE_TITLE }
-  | { type: CommandType.SET_MODULE_TITLE };
+  | { type: CommandType.SET_MODULE_TITLE }
+  | { type: CommandType.EDIT_TRACK_COUNT }
+  | { type: CommandType.SET_TRACK_COUNT; trackCount: number };
 
 const queue: Command[] = [];
 
@@ -308,5 +312,9 @@ export const commands = {
   editModuleTitle: () =>
     commandQueue.push({ type: CommandType.EDIT_MODULE_TITLE }),
   setModuleTitle: () =>
-    commandQueue.push({ type: CommandType.SET_MODULE_TITLE })
+    commandQueue.push({ type: CommandType.SET_MODULE_TITLE }),
+  editTrackCount: () =>
+    commandQueue.push({ type: CommandType.EDIT_TRACK_COUNT }),
+  setTrackCount: (trackCount: number) =>
+    commandQueue.push({ type: CommandType.SET_TRACK_COUNT, trackCount }),
 };

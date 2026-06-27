@@ -251,6 +251,12 @@ function processCommands() {
         void moduleTitle.setModuleTitle();
         moduleTitle.hideDialog();
         break;
+      case CommandType.EDIT_TRACK_COUNT:
+        module.editTrackCount();
+        break;
+      case CommandType.SET_TRACK_COUNT:
+        void module.setTrackCount(command.trackCount);
+        break;
     }
   }
 }

@@ -149,6 +149,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [{ modifiers: "primary", execute: commands.editCurrentPatternLength }],
   ],
   ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
+  ["KeyT", [{ modifiers: "primary", execute: commands.editTrackCount }]],
   ["KeyV", [{ modifiers: "primary", execute: commands.pastePatternEvents }]],
   ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],
   [

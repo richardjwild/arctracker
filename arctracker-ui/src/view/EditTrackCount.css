@@ -1,0 +1,33 @@
+.editTrackCount {
+    width: 210px;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+}
+
+.editTrackCount label {
+    display: block;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-label);
+}
+
+.editTrackCount input[type='text'] {
+    width: 30px;
+    height: 28px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    color: var(--colour-sample-edit-input-text);
+    font-family: FiraCode, monospace;
+    font-size: 16px;
+    caret-shape: block;
+    caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.editTrackCount input:focus {
+    outline: none;
+}

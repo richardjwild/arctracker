@@ -9,6 +9,7 @@ import Sequence from "./view/Sequence.tsx";
 import SampleEditDialog from "./view/SampleEditDialog.tsx";
 import EditPatternLength from "./view/EditPatternLength.tsx";
 import EditModuleTitle from "./view/EditModuleTitle.tsx";
+import EditTrackCount from "./view/EditTrackCount.tsx";
 
 export default function AppLayout() {
   return (
@@ -22,6 +23,7 @@ export default function AppLayout() {
       <ExportDialog />
       <EditPatternLength />
       <EditModuleTitle />
+      <EditTrackCount />
     </main>
   );
 }
