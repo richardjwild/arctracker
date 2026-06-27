@@ -4,6 +4,7 @@ import { CurrentPattern } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
+import { ModuleTitle } from "../editing/nameAndAuthor.ts";
 
 interface AppStore {
   moduleId: number;
@@ -21,6 +22,7 @@ interface AppStore {
   currentPattern: CurrentPattern;
   selectedInstrument: number | null;
   draftInstrument: Instrument;
+  draftModuleTitle: ModuleTitle | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
   setModuleTitle: (name: string, author: string) => void;
@@ -28,6 +30,7 @@ interface AppStore {
   setSequence: (sequence: number[]) => void;
   setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
   setDraftInstrument: (instrument: Instrument) => void;
+  setDraftModuleTitle: (moduleTitle: ModuleTitle) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
@@ -129,6 +132,7 @@ export const useStore = create<AppStore>((set) => ({
   currentPattern: initialPattern,
   selectedInstrument: null,
   draftInstrument: initialInstrument,
+  draftModuleTitle: null,
   isLoadingModule: false,
 
   setModule: (result) =>
@@ -194,6 +198,8 @@ export const useStore = create<AppStore>((set) => ({
     }),
 
   setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
+
+  setDraftModuleTitle: (draftModuleTitle) => set({ draftModuleTitle }),
 
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
     set({ pianoKeyboardTranspose }),

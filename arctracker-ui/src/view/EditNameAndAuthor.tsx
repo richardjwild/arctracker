@@ -2,37 +2,46 @@ import { useStore } from "../store/useStore.ts";
 import "./EditNameAndAuthor.css";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
-import { useEffect, useState } from "react";
-import { nameAndAuthor } from "../editing/nameAndAuthor.ts";
+import { useEffect } from "react";
+import { ModuleTitle, nameAndAuthor } from "../editing/nameAndAuthor.ts";
 import { commands } from "../control/commands.ts";
-
-type InputState = {
-  moduleName: string;
-  author: string;
-};
-
-const emptyInputState: InputState = {
-  moduleName: "",
-  author: "",
-};
 
 const ModuleNameMaxLength = 65;
 const AuthorMaxLength = 65;
+const emptyDraft: ModuleTitle = {
+  moduleName: "",
+  author: "",
+};
 
 export default function EditNameAndAuthor() {
   const editing =
     useStore((state) => state.editorState.editMode) === "nameAndAuthor";
   const module = useStore((state) => state.module);
-  const [inputState, setInputState] = useState(emptyInputState);
+  const draftModuleTitle = useStore((state) => state.draftModuleTitle);
+  const setDraftModuleTitle = useStore((state) => state.setDraftModuleTitle);
 
   useEffect(() => {
     if (!editing) return;
-    setInputState({
-      ...inputState,
+    setDraftModuleTitle({
+      ...draftModuleTitle,
       moduleName: module.name,
       author: module.author,
     });
   }, [module, editing]);
+
+  const updateDraftModuleName = (moduleName: string) => {
+    setDraftModuleTitle({
+      ...(draftModuleTitle || emptyDraft),
+      moduleName,
+    });
+  };
+
+  const updateDraftAuthor = (author: string) => {
+    setDraftModuleTitle({
+      ...(draftModuleTitle || emptyDraft),
+      author,
+    });
+  };
 
   if (!editing) return null;
 
@@ -46,12 +55,10 @@ export default function EditNameAndAuthor() {
           type="text"
           id="moduleNameInput"
           maxLength={ModuleNameMaxLength}
-          value={inputState.moduleName}
+          value={draftModuleTitle?.moduleName}
           onFocus={editor.startTextInput}
           onBlur={editor.stopTextInput}
-          onChange={(e) => {
-            setInputState({ ...inputState, moduleName: e.target.value });
-          }}
+          onChange={(e) => updateDraftModuleName(e.target.value)}
         />
       </div>
       <div className="authorLabel">
@@ -62,24 +69,17 @@ export default function EditNameAndAuthor() {
           type="text"
           id="authorInput"
           maxLength={AuthorMaxLength}
-          value={inputState.author}
+          value={draftModuleTitle?.author}
           onFocus={editor.startTextInput}
           onBlur={editor.stopTextInput}
-          onChange={(e) => {
-            setInputState({ ...inputState, author: e.target.value });
-          }}
+          onChange={(e) => updateDraftAuthor(e.target.value)}
         />
       </div>
       <div className="saveCloseButtons uiArea padded">
-        <button
-          type="button"
-          onClick={() => {
-            commands.setNameAndAuthor(inputState.moduleName, inputState.author);
-          }}
-        >
+        <button type="button" onClick={commands.setNameAndAuthor}>
           Save
         </button>
-        <button type="button" onClick={() => nameAndAuthor.hideDialog()}>
+        <button type="button" onClick={nameAndAuthor.hideDialog}>
           Cancel
         </button>
       </div>

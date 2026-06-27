@@ -5,11 +5,13 @@ import { KeyHandler } from "../keyboard/keyHandler.ts";
 import { editInstrument } from "./editInstrument.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
+import { nameAndAuthor } from "./nameAndAuthor.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
   handleEffectFieldInput: KeyHandler,
   handleInstrumentEditorInput: KeyHandler,
+  handleModuleTitleInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -55,6 +57,19 @@ export const editorKeyHandlers: {
       return true;
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
       void commands.saveAndCloseInstrumentEditor();
+      return true;
+    }
+    return false;
+  },
+
+  handleModuleTitleInput: (e) => {
+    if (!nameAndAuthor.editing())
+      return false;
+    if (e.code === 'Escape') {
+      nameAndAuthor.hideDialog();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      commands.setNameAndAuthor();
       return true;
     }
     return false;

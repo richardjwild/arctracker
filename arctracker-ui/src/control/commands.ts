@@ -156,7 +156,7 @@ export type Command =
       newLength: number;
     }
   | { type: CommandType.EDIT_NAME_AND_AUTHOR }
-  | { type: CommandType.SET_NAME_AND_AUTHOR; name: String; author: String };
+  | { type: CommandType.SET_NAME_AND_AUTHOR };
 
 const queue: Command[] = [];
 
@@ -307,6 +307,6 @@ export const commands = {
     }),
   editNameAndAuthor: () =>
     commandQueue.push({ type: CommandType.EDIT_NAME_AND_AUTHOR }),
-  setNameAndAuthor: (name: String, author: String) =>
-    commandQueue.push({ type: CommandType.SET_NAME_AND_AUTHOR, name, author })
+  setNameAndAuthor: () =>
+    commandQueue.push({ type: CommandType.SET_NAME_AND_AUTHOR })
 };

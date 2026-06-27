@@ -2,7 +2,14 @@ import { editor } from "./editor.ts";
 import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 
+export type ModuleTitle = {
+  moduleName: string;
+  author: string;
+};
+
 export const nameAndAuthor = {
+  editing: () => useStore.getState().editorState.editMode === "nameAndAuthor",
+
   showDialog: () => {
     editor.setEditMode("nameAndAuthor");
   },
@@ -11,13 +18,24 @@ export const nameAndAuthor = {
     editor.setEditMode("none");
   },
 
-  setModuleTitle(name: string, author: string) {
+  setModuleTitle() {
     const module = useStore.getState().module;
-    if (module.name === name && module.author === author) return;
+    const draftModuleTitle = useStore.getState().draftModuleTitle;
+    if (!draftModuleTitle) return;
+    if (
+      module.name === draftModuleTitle.moduleName &&
+      module.author === draftModuleTitle.author
+    )
+      return;
     void editor.applyEdit({
       apply: async () => {
-        await engine.setModuleTitle(name, author);
-        useStore.getState().setModuleTitle(name, author);
+        await engine.setModuleTitle(
+          draftModuleTitle.moduleName,
+          draftModuleTitle.author,
+        );
+        useStore
+          .getState()
+          .setModuleTitle(draftModuleTitle.moduleName, draftModuleTitle.author);
         return true;
       },
       undo: async () => {
@@ -25,5 +43,5 @@ export const nameAndAuthor = {
         useStore.getState().setModuleTitle(module.name, module.author);
       },
     });
-  }
-}
+  },
+};
