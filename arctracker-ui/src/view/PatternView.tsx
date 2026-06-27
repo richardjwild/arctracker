@@ -58,7 +58,7 @@ export default function PatternView() {
     return useStore.getState().transportState.playing
       ? useStore.getState().transportState.patternIndex
       : patternGrid.currentPosition().patternIndex;
-  }
+  };
 
   const getPatternViewRenderer = (
     ctx: CanvasRenderingContext2D,
@@ -89,8 +89,7 @@ export default function PatternView() {
     const viewportHeight = container.clientHeight;
     const { contentWidth } = getPatternContentDimensions(numTracks);
     const logicalWidth = Math.max(contentWidth, viewportWidth);
-    const logicalHeight = viewportHeight;
-    ensureCanvasSize(canvas, logicalWidth * 1.5, logicalHeight * 1.5);
+    ensureCanvasSize(canvas, logicalWidth * 1.5, viewportHeight * 1.5);
     const renderPatternView = getPatternViewRenderer(ctx, numTracks);
     return animation.registerRenderer(() => renderPatternView());
   }, [numTracks]);
