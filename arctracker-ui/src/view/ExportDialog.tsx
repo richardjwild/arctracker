@@ -12,17 +12,8 @@ export default function ExportDialog() {
 
   return (
     <Modal className="audioExportState">
-      {exportState.completed ? (
-        <div>Export complete</div>
-      ) : (
-        <>
-          <div>Exporting audio...</div>
-          <progress
-            value={exportState.percentComplete}
-            max={100}
-          />
-        </>
-      )}
+      <div>Exporting audio...</div>
+      <progress value={exportState.percentComplete} max={100} />
     </Modal>
   );
 }

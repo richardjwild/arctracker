@@ -4,14 +4,17 @@ import { poller } from "../polling/poller.ts";
 import { audioExport } from "../audioExport/audioExport.ts";
 
 export default function useExportMonitoring() {
-  const { exportMonitoring, exportState } = useStore((state) => state);
+  const { exportMonitoring, exportState } = useStore(
+    (state) => state,
+  );
 
   useEffect(() => {
     if (exportState) audioExport.handleStateChange(exportState);
   }, [exportState]);
 
   useEffect(() => {
-    if (!exportMonitoring) return;
-    return poller.registerPoller(audioExport.poller)
+    if (exportMonitoring) {
+      return poller.registerPoller(audioExport.poller);
+    }
   }, [exportMonitoring]);
 }

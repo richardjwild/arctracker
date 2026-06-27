@@ -115,7 +115,7 @@ void player_destroy(player_t *player)
 static bool player_tick(player_t *player)
 {
     process_commands(player);
-    if (player->bouncing && player->sequence.looped)
+    if (player->bouncing && player->sequence.song_ended)
     {
         player_shutdown(player);
         return true;
@@ -343,7 +343,7 @@ static void player_stop(player_t *player)
 static void player_start(player_t *player)
 {
     player->playing = true;
-    player->sequence.looped = false;
+    player->sequence.song_ended = false;
     tick_scheduler_restart(&player->tick_scheduler);
 }
 

@@ -152,11 +152,12 @@ export default function SampleEditDialog() {
         Instrument {hexadecimal.toHex(instrumentIndex + 1, 2)}
       </h1>
       <div className="sampleNameLabel padded sampleEditLabel">
-        <label>Name:</label>
+        <label htmlFor="sampleNameInput">Name:</label>
       </div>
       <div className="sampleNameEdit uiArea padded sampleEditField">
         <input
           type="text"
+          id="sampleNameInput"
           maxLength={SampleNameMaxLength}
           value={draftInstrument.name}
           onFocus={editor.startTextInput}
@@ -167,11 +168,12 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="defaultVolumeLabel padded sampleEditLabel">
-        <label>Default Volume:</label>
+        <label htmlFor="defaultVolumeInput">Default Volume:</label>
       </div>
       <div className="defaultVolumeEdit uiArea padded sampleEditField">
         <input
           type="range"
+          id="defaultVolumeInput"
           min={0}
           max={255}
           value={draftInstrument.defaultVolume}
@@ -184,11 +186,12 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="transposeLabel padded sampleEditLabel">
-        <label>Transpose:</label>
+        <label htmlFor="transposeInput">Transpose:</label>
       </div>
       <div className="transposeEdit uiArea padded sampleEditField">
         <input
           type="text"
+          id="transposeInput"
           value={inputState.transpose}
           onFocus={editor.startTextInput}
           onChange={(e) =>
@@ -236,11 +239,12 @@ export default function SampleEditDialog() {
         <label htmlFor="sampleRepeatsNo">No</label>
       </div>
       <div className="repeatStartLabel padded sampleEditLabel">
-        <label>Loop Start:</label>
+        <label htmlFor="repeatStartInput">Loop Start:</label>
       </div>
       <div className="repeatStartEdit uiArea padded sampleEditField">
         <input
           type="text"
+          id="repeatStartInput"
           value={inputState.repeatStart}
           onFocus={editor.startTextInput}
           onChange={(e) =>
@@ -257,11 +261,12 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="repeatEndLabel padded sampleEditLabel">
-        <label>Loop End:</label>
+        <label htmlFor="repeatEndInput">Loop End:</label>
       </div>
       <div className="repeatEndEdit uiArea padded sampleEditField">
         <input
           type="text"
+          id="repeatEndInput"
           value={inputState.repeatEnd}
           onFocus={editor.startTextInput}
           onChange={(e) =>

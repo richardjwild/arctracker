@@ -8,6 +8,7 @@ import ExportDialog from "./view/ExportDialog.tsx";
 import Sequence from "./view/Sequence.tsx";
 import SampleEditDialog from "./view/SampleEditDialog.tsx";
 import EditPatternLength from "./view/EditPatternLength.tsx";
+import EditNameAndAuthor from "./view/EditNameAndAuthor.tsx";
 
 export default function AppLayout() {
   return (
@@ -20,6 +21,7 @@ export default function AppLayout() {
       <SampleEditDialog />
       <ExportDialog />
       <EditPatternLength />
+      <EditNameAndAuthor />
     </main>
   );
 }

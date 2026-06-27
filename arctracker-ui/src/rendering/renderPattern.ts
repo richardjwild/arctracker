@@ -13,6 +13,7 @@ import {
 import { hexadecimal } from "./hexadecimal.ts";
 import { PatternSelection, selection } from "../editing/selection.ts";
 import { patternEvents } from "../editing/patternEvents.ts";
+import { notes } from "./notes.ts";
 
 type ViewportSize = { width: number; height: number };
 
@@ -53,46 +54,6 @@ export function getPatternContentDimensions(
   };
 }
 
-const notes = [
-  "---",
-  "C1",
-  "C#1",
-  "D1",
-  "D#1",
-  "E1",
-  "F1",
-  "F#1",
-  "G1",
-  "G#1",
-  "A1",
-  "A#1",
-  "B1",
-  "C2",
-  "C#2",
-  "D2",
-  "D#2",
-  "E2",
-  "F2",
-  "F#2",
-  "G2",
-  "G#2",
-  "A2",
-  "A#2",
-  "B2",
-  "C3",
-  "C#3",
-  "D3",
-  "D#3",
-  "E3",
-  "F3",
-  "F#3",
-  "G3",
-  "G#3",
-  "A3",
-  "A#3",
-  "B3",
-];
-
 function getPatternLayout(): PatternLayout {
   const leftPadding = 10;
   const glyphHeight = 20;
@@ -128,36 +89,6 @@ type Colours = {
   selectionBoxOutline: string,
 }
 
-const coloursAtPlayhead = {
-  trackLaneSeparator: cssColour("--colour-track-lane-separator"),
-  playheadBackground: cssColour("--colour-playhead"),
-  text: cssColour("--colour-pattern-text-bright"),
-  cursor: cssColour("--colour-cursor"),
-  cursorText: cssColour("--colour-cursor-text"),
-  note: cssColour("--colour-note-at-playhead"),
-  sample: cssColour("--colour-sample-at-playhead"),
-  effect: cssColour("--colour-effect-at-playhead"),
-  selectionBox: cssColour("--colour-selection-fill"),
-  selectionBoxOutline: cssColour("--colour-selection-outline"),
-};
-
-const coloursOffPlayhead = {
-  trackLaneSeparator: cssColour("--colour-track-lane-separator"),
-  playheadBackground: cssColour("--colour-playhead"),
-  text: cssColour("--colour-pattern-text-muted"),
-  cursor: cssColour("--colour-cursor"),
-  cursorText: cssColour("--colour-cursor-text"),
-  note: cssColour("--colour-note"),
-  sample: cssColour("--colour-sample"),
-  effect: cssColour("--colour-effect"),
-  selectionBox: cssColour("--colour-selection-fill"),
-  selectionBoxOutline: cssColour("--colour-selection-outline"),
-};
-
-function colours(atPlayhead: boolean = false): Colours {
-  return atPlayhead ? coloursAtPlayhead : coloursOffPlayhead;
-}
-
 export class PatternRenderer {
   private readonly pattern: CurrentPattern;
   private ctx: CanvasRenderingContext2D;
@@ -166,6 +97,8 @@ export class PatternRenderer {
   private readonly patternSelection: PatternSelection | null;
   private patternLayout: PatternLayout;
   private readonly numTracks: number;
+  private readonly coloursAtPlayhead: Colours;
+  private readonly coloursOffPlayhead: Colours;
 
   public constructor(
     pattern: CurrentPattern,
@@ -180,6 +113,30 @@ export class PatternRenderer {
     this.editorState = useStore.getState().editorState;
     this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = getPatternLayout();
+    this.coloursAtPlayhead = {
+      trackLaneSeparator: cssColour("--colour-track-lane-separator"),
+      playheadBackground: cssColour("--colour-playhead"),
+      text: cssColour("--colour-pattern-text-bright"),
+      cursor: cssColour("--colour-cursor"),
+      cursorText: cssColour("--colour-cursor-text"),
+      note: cssColour("--colour-note-at-playhead"),
+      sample: cssColour("--colour-sample-at-playhead"),
+      effect: cssColour("--colour-effect-at-playhead"),
+      selectionBox: cssColour("--colour-selection-fill"),
+      selectionBoxOutline: cssColour("--colour-selection-outline"),
+    };
+    this.coloursOffPlayhead = {
+      trackLaneSeparator: cssColour("--colour-track-lane-separator"),
+      playheadBackground: cssColour("--colour-playhead"),
+      text: cssColour("--colour-pattern-text-muted"),
+      cursor: cssColour("--colour-cursor"),
+      cursorText: cssColour("--colour-cursor-text"),
+      note: cssColour("--colour-note"),
+      sample: cssColour("--colour-sample"),
+      effect: cssColour("--colour-effect"),
+      selectionBox: cssColour("--colour-selection-fill"),
+      selectionBoxOutline: cssColour("--colour-selection-outline"),
+    };
   }
 
   public renderPattern(playheadIndex: number) {
@@ -213,7 +170,7 @@ export class PatternRenderer {
 
   private renderPlayhead(gridViewportFit: GridViewportFit) {
     const y = gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight;
-    this.withFillStyle(colours().playheadBackground)
+    this.withFillStyle(this.colours().playheadBackground)
       .fillRect(0, y + this.patternLayout.playheadPadding, this.viewportSize.width, this.patternLayout.rowHeight);
   }
 
@@ -231,8 +188,8 @@ export class PatternRenderer {
       this.patternLayout.rowHeight +
       this.patternLayout.playheadPadding;
     const boxHeight = (bounds.bottom - bounds.top + 1) * this.patternLayout.rowHeight;
-    this.withFillStyle(colours().selectionBox).fillRect(boxLeft, top, boxWidth - 1, boxHeight);
-    this.withStrokeStyle(colours().selectionBoxOutline).strokeRect(boxLeft, top, boxWidth - 1, boxHeight);
+    this.withFillStyle(this.colours().selectionBox).fillRect(boxLeft, top, boxWidth - 1, boxHeight);
+    this.withStrokeStyle(this.colours().selectionBoxOutline).strokeRect(boxLeft, top, boxWidth - 1, boxHeight);
   }
 
   private renderCursor(gridViewportFit: GridViewportFit) {
@@ -259,7 +216,7 @@ export class PatternRenderer {
     } else if (cursorField.field === "effectData2") {
       cursorX += this.patternLayout.glyphWidth * (9 + (cursorField.effectIndex * 4));
     }
-    this.withFillStyle(colours().cursor)
+    this.withFillStyle(this.colours().cursor)
       .fillRect(cursorX, y, cursorWidth, this.patternLayout.rowHeight);
   }
 
@@ -278,13 +235,13 @@ export class PatternRenderer {
 
   private renderRowNumberLane(): number {
     const laneWidth = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
-    this.withStrokeStyle(colours().trackLaneSeparator)
+    this.withStrokeStyle(this.colours().trackLaneSeparator)
       .renderLine(laneWidth, 0, laneWidth, this.viewportSize.height);
     return laneWidth;
   }
 
   private renderTrackLane(x: number, track: number): number {
-    this.withStrokeStyle(colours().trackLaneSeparator)
+    this.withStrokeStyle(this.colours().trackLaneSeparator)
       .renderLine(x, 0, x, this.viewportSize.height);
     return this.patternLayout.getEventWidth(track);
   }
@@ -307,7 +264,7 @@ export class PatternRenderer {
   }
 
   private renderRowNumber(rowNumber: string, x: number, y: number, atPlayhead: boolean): number {
-    this.withFillStyle(colours(atPlayhead).text)
+    this.withFillStyle(this.colours(atPlayhead).text)
       .renderGlyph(rowNumber.charAt(0), x, y)
       .renderGlyph(rowNumber.charAt(1), x + this.patternLayout.glyphWidth, y)
       .renderGlyph(rowNumber.charAt(2), x + this.patternLayout.glyphWidth * 2, y);
@@ -325,14 +282,14 @@ export class PatternRenderer {
   }
 
   private renderNote(x: number, y: number, note: number, atPlayhead: boolean, cursorOnEvent: boolean): number {
-    const noteStr = (note < 0 || note >= notes.length) ? "!!!" : notes[note];
+    const noteStr = notes.toString(note);
     let colour;
     if (cursorOnEvent && this.editorState.cursorPosition.field === NOTE_FIELD)
-      colour = colours().cursorText;
+      colour = this.colours().cursorText;
     else if (note === 0)
-      colour = colours(atPlayhead).text;
+      colour = this.colours(atPlayhead).text;
     else
-      colour = colours(atPlayhead).note;
+      colour = this.colours(atPlayhead).note;
     this.withFillStyle(colour)
       .renderGlyph(noteStr.charAt(0), x, y)
       .renderGlyph(noteStr.charAt(1), x + this.patternLayout.glyphWidth, y);
@@ -356,9 +313,9 @@ export class PatternRenderer {
   private renderSampleDigit(x: number, y: number, digit: string, field: number, atPlayhead: boolean, cursorOnEvent: boolean): number {
     let colour;
     if (cursorOnEvent && this.editorState.cursorPosition.field === field) {
-      colour = colours().cursorText;
+      colour = this.colours().cursorText;
     } else {
-      colour = (digit === "-") ? colours(atPlayhead).text : colours(atPlayhead).sample;
+      colour = (digit === "-") ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
     }
     this.withFillStyle(colour).renderGlyph(digit, x, y);
     return this.patternLayout.glyphWidth;
@@ -366,12 +323,12 @@ export class PatternRenderer {
 
   private renderEffect(x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean): number {
     if (effect.effectCode === "" && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
-      this.withFillStyle(colours(atPlayhead).text);
+      this.withFillStyle(this.colours(atPlayhead).text);
       x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 0);
       x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 1);
       this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 2);
     } else {
-      this.withFillStyle(colours(atPlayhead).effect);
+      this.withFillStyle(this.colours(atPlayhead).effect);
       x += this.renderEffectField(x, y, effectIndex, effect.effectCode, atPlayhead, cursorOnEvent, 0);
       x += this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 1);
       this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[1]), atPlayhead, cursorOnEvent, 2);
@@ -383,11 +340,15 @@ export class PatternRenderer {
     const cursorField = FIRST_EFFECT_FIELD + (effectIndex * 3) + effectField;
     let colour;
     if (cursorOnEvent && this.editorState.cursorPosition.field === cursorField)
-      colour = colours().cursorText;
+      colour = this.colours().cursorText;
     else
-      colour = (effectParam === "-") ? colours(atPlayhead).text : colours(atPlayhead).effect;
+      colour = (effectParam === "-") ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;
     this.withFillStyle(colour).renderGlyph(effectParam, x, y)
     return this.patternLayout.glyphWidth;
+  }
+
+  private colours(atPlayhead: boolean = false): Colours {
+    return atPlayhead ? this.coloursAtPlayhead : this.coloursOffPlayhead;
   }
 
   private withFillStyle(fillStyle: string): PatternRenderer {

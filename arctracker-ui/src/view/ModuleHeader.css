@@ -14,6 +14,7 @@
     background-color: transparent;
     color: var(--colour-text);
     font-size: 16px;
+    width: 100%;
 }
 
 .moduleHeader button {
@@ -65,4 +66,14 @@
     background: var(--colour-button-fg);
     color: var(--colour-button-bounce-module-bg);
     border: solid 1px var(--colour-button-bounce-module-bg);
+}
+
+.moduleHeader button.editNameAuthorButton {
+    background: var(--colour-button-edit-name-author-bg);
+}
+
+.moduleHeader button.editNameAuthorButton:hover {
+    background: var(--colour-button-fg);
+    color: var(--colour-button-edit-name-author-bg);
+    border: solid 1px var(--colour-button-edit-name-author-bg);
 }

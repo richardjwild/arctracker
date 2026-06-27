@@ -12,6 +12,7 @@ import { copyPaste } from "../editing/copyPaste.ts";
 import { sequence } from "../editing/sequence.ts";
 import { editInstrument } from "../editing/editInstrument.ts";
 import { pattern } from "../editing/pattern.ts";
+import { nameAndAuthor } from "../editing/nameAndAuthor.ts";
 
 function processCommands() {
   const commands = commandQueue.consume();
@@ -242,6 +243,9 @@ function processCommands() {
         break;
       case CommandType.SET_CURRENT_PATTERN_LENGTH:
         void pattern.setCurrentPatternLength(command.newLength);
+        break;
+      case CommandType.EDIT_NAME_AND_AUTHOR:
+        void nameAndAuthor.showDialog();
         break;
     }
   }

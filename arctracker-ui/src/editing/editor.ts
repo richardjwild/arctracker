@@ -1,7 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 
-export type EditMode = "none" | "patternEvents" | "instrument" | "patternLength";
+export type EditMode = "none" | "patternEvents" | "instrument" | "patternLength" | "nameAndAuthor";
 
 export type EditorState = {
   editMode: EditMode;

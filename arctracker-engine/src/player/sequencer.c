@@ -28,7 +28,7 @@ sequence_t initialise_sequence(module_t *module, bool bouncing)
         .sequence = module->sequence,
         .tune_length = module->tune_length,
         .patterns = module->patterns,
-        .allow_backwards_jump = !bouncing,
+        .continuous_play = !bouncing,
     };
     return sequence;
 }
@@ -43,7 +43,7 @@ sequence_t reinitialise_sequence(module_t *module, sequence_t *old_sequence, boo
         .sequence = module->sequence,
         .tune_length = module->tune_length,
         .patterns = module->patterns,
-        .allow_backwards_jump = !bouncing,
+        .continuous_play = !bouncing,
     };
     if (sequence.sequence_pos >= sequence.tune_length)
         sequence.sequence_pos = sequence.tune_length - 1;
@@ -100,8 +100,10 @@ static void advance_sequence_position(sequence_t *sequence)
     sequence->sequence_pos += 1;
     if (end_of_sequence(sequence))
     {
-        sequence->sequence_pos = 0;
-        sequence->looped = true;
+        if (sequence->continuous_play)
+            sequence->sequence_pos = 0;
+        else
+            sequence->song_ended = true;
     }
     begin_new_pattern(sequence);
 }
@@ -150,5 +152,5 @@ static void go_to_jump_target(sequence_t *sequence)
 static bool jump_permitted(int next_position, sequence_t *sequence)
 {
     return (next_position < sequence->tune_length)
-           && (sequence->allow_backwards_jump || (next_position > sequence->sequence_pos));
+           && (sequence->continuous_play || (next_position > sequence->sequence_pos));
 }

@@ -150,7 +150,6 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     }
     arctracker->playback.thread_active = true;
     arctracker->playback.audio_thread = audio_thread;
-    arctracker->export_state = RUNNING;
     return SUCCESS;
 }
 
@@ -202,10 +201,17 @@ void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *ex
     {
         export_state->completed = false;
         export_state->percent_complete = 0;
-        return;
     }
-    export_state->completed = (arctracker->export_state == COMPLETE);
-    export_state->percent_complete = (arctracker->export.player->sequence.sequence_pos * 100) / (arctracker->module->tune_length);
+    else if (arctracker->export_state == COMPLETE)
+    {
+        export_state->completed = true;
+        export_state->percent_complete = 100;
+    }
+    else
+    {
+        export_state->completed = false;
+        export_state->percent_complete = (arctracker->export.player->sequence.sequence_pos * 100) / (arctracker->module->tune_length);
+    }
 }
 
 static void get_transport_state(player_t *player, module_t *module, ui_transport_state_t *transport_state)
@@ -308,6 +314,7 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
     }
     arctracker->export.thread_active = true;
     arctracker->export.audio_thread = export_thread;
+    arctracker->export_state = RUNNING;
     return SUCCESS;
 }
 

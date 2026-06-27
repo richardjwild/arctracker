@@ -1,0 +1,38 @@
+.editNameAndAuthor {
+    width: 765px;
+    height: 165px;
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    grid-template-rows: 50px 50px 50px;
+    gap: 10px;
+    grid-template-areas:
+        "moduleNameLabel moduleNameEdit"
+        "authorLabel authorEdit"
+        "saveCloseButtons saveCloseButtons"
+}
+
+.editNameAndAuthor label {
+    display: block;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-label);
+    padding-top: 13px;
+}
+
+.editNameAndAuthor input[type='text'] {
+    width: 100%;
+    height: 28px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    color: var(--colour-sample-edit-input-text);
+    font-family: FiraCode, monospace;
+    font-size: 16px;
+    caret-shape: block;
+    caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.editNameAndAuthor input:focus {
+    outline: none;
+}

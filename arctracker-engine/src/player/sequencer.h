@@ -19,8 +19,8 @@ typedef struct {
     int sequence_pos;
     int pattern_index;
     int jump_target;
-    bool looped;
-    bool allow_backwards_jump;
+    bool song_ended;
+    bool continuous_play;
 } sequence_t;
 
 sequence_t initialise_sequence(module_t *module, bool bouncing);
