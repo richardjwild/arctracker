@@ -70,6 +70,7 @@ export enum CommandType {
   EDIT_CURRENT_PATTERN_LENGTH,
   SET_CURRENT_PATTERN_LENGTH,
   EDIT_NAME_AND_AUTHOR,
+  SET_NAME_AND_AUTHOR,
 }
 
 export type Command =
@@ -154,7 +155,8 @@ export type Command =
       type: CommandType.SET_CURRENT_PATTERN_LENGTH;
       newLength: number;
     }
-  | { type: CommandType.EDIT_NAME_AND_AUTHOR };
+  | { type: CommandType.EDIT_NAME_AND_AUTHOR }
+  | { type: CommandType.SET_NAME_AND_AUTHOR; name: String; author: String };
 
 const queue: Command[] = [];
 
@@ -305,4 +307,6 @@ export const commands = {
     }),
   editNameAndAuthor: () =>
     commandQueue.push({ type: CommandType.EDIT_NAME_AND_AUTHOR }),
+  setNameAndAuthor: (name: String, author: String) =>
+    commandQueue.push({ type: CommandType.SET_NAME_AND_AUTHOR, name, author })
 };

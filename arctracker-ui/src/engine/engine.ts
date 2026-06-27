@@ -282,4 +282,11 @@ export const engine = {
       path,
     });
   },
+
+  setModuleTitle: async (name: String, author: String) => {
+    return await invoke("edit_set_module_title", {
+      name,
+      author,
+    });
+  },
 };

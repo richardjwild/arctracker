@@ -753,6 +753,24 @@ impl Arctracker {
             sample_length: sample_info.sample_length,
         })
     }
+
+    pub fn edit_set_module_title(&mut self, name: String, author: String) -> Result<(), ArctrackerError> {
+        let c_name = CString::new(name).map_err(|_| ArctrackerError {
+            message: "Invalid module name".parse().unwrap(),
+        })?;
+        let c_author = CString::new(author).map_err(|_| ArctrackerError {
+            message: "Invalid author".parse().unwrap(),
+        })?;
+        let result = unsafe {
+            ffi::arctracker_edit_set_module_title(self.handle, c_name.as_ptr(), c_author.as_ptr())
+        };
+        if !result.success {
+            return Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            });
+        }
+        Ok(())
+    }
 }
 
 impl Drop for Arctracker {

@@ -142,6 +142,13 @@ edit_result_t editor_load_sample(module_t *module, const char *filename, int *sa
     return EDIT_SUCCESS;
 }
 
+edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author)
+{
+    module_set_name(module, name);
+    module_set_author(module, author);
+    return EDIT_SUCCESS;
+}
+
 static edit_result_t get_event(const module_t *module, const int pattern_no, const int pattern_index, const int track, event_t **event)
 {
     *event = NULL;

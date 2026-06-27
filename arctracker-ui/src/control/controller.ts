@@ -245,7 +245,11 @@ function processCommands() {
         void pattern.setCurrentPatternLength(command.newLength);
         break;
       case CommandType.EDIT_NAME_AND_AUTHOR:
-        void nameAndAuthor.showDialog();
+        nameAndAuthor.showDialog();
+        break;
+      case CommandType.SET_NAME_AND_AUTHOR:
+        void nameAndAuthor.setModuleTitle(command.name, command.author);
+        nameAndAuthor.hideDialog();
         break;
     }
   }

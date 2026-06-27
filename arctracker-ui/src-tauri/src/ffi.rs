@@ -178,6 +178,7 @@ extern "C" {
     pub fn arctracker_edit_set_pattern_length(handle: *mut ArctrackerHandle, pattern_no: c_int, new_length: c_int) -> ApiResult;
     pub fn arctracker_edit_set_instrument(handle: *mut ArctrackerHandle, slot: u8, new_instrument: UiInstrumentUpdate) -> ApiResult;
     pub fn arctracker_edit_load_sample(handle: *mut ArctrackerHandle, filename: *const c_char, sample_info: *mut UiSampleInfo) -> ApiResult;
+    pub fn arctracker_edit_set_module_title(handle: *mut ArctrackerHandle, name: *const c_char, author: *const c_char) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

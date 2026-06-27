@@ -527,6 +527,27 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
     return SUCCESS;
 }
 
+api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, const char *name, const char *author)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (name == NULL)
+        return failure(MODULE_NAME_MISSING);
+    if (strlen(name) > MAX_LEN_TUNENAME)
+        return failure(MODULE_NAME_TOO_LONG);
+    if (author == NULL)
+        return failure(AUTHOR_MISSING);
+    if (strlen(author) > MAX_LEN_AUTHOR)
+        return failure(AUTHOR_TOO_LONG);
+    const edit_result_t result = editor_set_module_title(arctracker->module, name, author);
+    if (!result.success)
+        return failure(result.error_message);
+    printf("Changed module title to %s by %s\n", arctracker->module->name, arctracker->module->author);
+    return SUCCESS;
+}
+
 api_result_t arctracker_destroy(arctracker_t *arctracker)
 {
     if (arctracker == NULL)

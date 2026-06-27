@@ -49,5 +49,9 @@
 #define INVALID_BITS_PER_SAMPLE "Invalid bits per sample"
 #define DATA_SUBCHUNK_NOT_FOUND "Data subchunk not found"
 #define INCONSISTENT_AUDIO_DATA_SIZE "Audio data size not a whole number of frames"
+#define MODULE_NAME_MISSING "Module name not specified"
+#define MODULE_NAME_TOO_LONG "Module name too long"
+#define AUTHOR_MISSING "Author name not specified"
+#define AUTHOR_TOO_LONG "Author name too long"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

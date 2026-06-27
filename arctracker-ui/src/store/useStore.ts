@@ -23,6 +23,7 @@ interface AppStore {
   draftInstrument: Instrument;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
+  setModuleTitle: (name: string, author: string) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
   setSequence: (sequence: number[]) => void;
   setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
@@ -145,6 +146,15 @@ export const useStore = create<AppStore>((set) => ({
       editorState: initialEditorState(result.numTracks),
       patternSelection: null,
       pasteBuffer: null,
+    })),
+
+  setModuleTitle: (name: string, author: string) =>
+    set((state) => ({
+      module: {
+        ...state.module,
+        name,
+        author,
+      },
     })),
 
   updatePatterns: (numPatterns: number, patternLengths: number[]) =>

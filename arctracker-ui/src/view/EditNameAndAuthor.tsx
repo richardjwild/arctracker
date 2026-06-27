@@ -3,6 +3,8 @@ import "./EditNameAndAuthor.css";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
 import { useEffect, useState } from "react";
+import { nameAndAuthor } from "../editing/nameAndAuthor.ts";
+import { commands } from "../control/commands.ts";
 
 type InputState = {
   moduleName: string;
@@ -69,8 +71,17 @@ export default function EditNameAndAuthor() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded">
-        <button type="button">Save</button>
-        <button type="button" onClick={() => editor.setEditMode("none")}>Cancel</button>
+        <button
+          type="button"
+          onClick={() => {
+            commands.setNameAndAuthor(inputState.moduleName, inputState.author);
+          }}
+        >
+          Save
+        </button>
+        <button type="button" onClick={() => nameAndAuthor.hideDialog()}>
+          Cancel
+        </button>
       </div>
     </Modal>
   );

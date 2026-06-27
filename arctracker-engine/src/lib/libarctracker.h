@@ -64,6 +64,8 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, uint8_t sl
 
 api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *filename, ui_sample_info_t *sample_info);
 
+api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, const char *name, const char *author);
+
 api_result_t arctracker_destroy(arctracker_t *handle);
 
 #endif //ARCTRACKER_LIBARCTRACKER_H

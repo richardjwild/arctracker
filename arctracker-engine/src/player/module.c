@@ -182,3 +182,13 @@ bool module_link_sample(module_t *module, const float *sample_data, const int sa
     module->num_samples++;
     return true;
 }
+
+void module_set_name(module_t *module, const char *name)
+{
+    snprintf(module->name, sizeof module->name, "%s", name);
+}
+
+void module_set_author(module_t *module, const char *author)
+{
+    snprintf(module->author, sizeof module->author, "%s", author);
+}
