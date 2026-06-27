@@ -14,7 +14,7 @@ import useSequencePosition from "../hooks/useSequencePosition.ts";
 export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
   const moduleVersion = useStore((state) => state.patternRevision);
-  const numChannels = useStore((state) => state.module.numTracks);
+  const numTracks = useStore((state) => state.module.numTracks);
   const setCurrentPattern = useStore((state) => state.setCurrentPattern);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -87,13 +87,13 @@ export default function PatternView() {
     if (!container) return;
     const viewportWidth = container.clientWidth;
     const viewportHeight = container.clientHeight;
-    const { contentWidth } = getPatternContentDimensions(numChannels);
+    const { contentWidth } = getPatternContentDimensions(numTracks);
     const logicalWidth = Math.max(contentWidth, viewportWidth);
     const logicalHeight = viewportHeight;
     ensureCanvasSize(canvas, logicalWidth * 1.5, logicalHeight * 1.5);
-    const renderPatternView = getPatternViewRenderer(ctx, numChannels);
+    const renderPatternView = getPatternViewRenderer(ctx, numTracks);
     return animation.registerRenderer(() => renderPatternView());
-  }, [numChannels]);
+  }, [numTracks]);
 
   useEffect(() => {
     // Keep updated with the current width/height of the viewport.
@@ -106,7 +106,7 @@ export default function PatternView() {
       };
       const canvas = canvasRef.current;
       if (canvas) {
-        const { contentWidth } = getPatternContentDimensions(numChannels);
+        const { contentWidth } = getPatternContentDimensions(numTracks);
         const width = Math.max(contentWidth, entry.contentRect.width);
         const height = entry.contentRect.height;
         ensureCanvasSize(canvas, width, height);
@@ -114,13 +114,13 @@ export default function PatternView() {
     });
     observer.observe(container);
     return () => observer.disconnect();
-  }, [numChannels]);
+  }, [numTracks]);
 
   useEffect(() => {
     // Get the current pattern whenever it changes.
-    if (patternLength > 0 && numChannels > 0)
+    if (patternLength > 0 && numTracks > 0)
       engine
-        .getPattern(patternNo, patternLength, numChannels)
+        .getPattern(patternNo, patternLength, numTracks)
         .then((patternLines) =>
           setCurrentPattern({ patternNo, lines: patternLines }),
         );
@@ -129,7 +129,7 @@ export default function PatternView() {
     moduleVersion,
     patternNo,
     patternLength,
-    numChannels,
+    numTracks,
     setCurrentPattern,
   ]);
 
