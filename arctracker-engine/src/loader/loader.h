@@ -12,6 +12,7 @@ typedef struct {
 typedef struct {
     bool (*is_this_format)(mapped_file_t);
     module_t *(*read_module)(mapped_file_t);
+    bool (*write_module)(const module_t *, const char *);
 } format_t;
 
 typedef struct {

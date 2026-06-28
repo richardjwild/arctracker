@@ -3,13 +3,14 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include "loader.h"
+#include "format_arctracker.h"
 #include "format_desktop_tracker.h"
 #include "format_tracker.h"
 #include "audio_file/wav.h"
 #include "io/error.h"
 #include "memory/heap.h"
 
-#define NUM_FORMATS 2
+#define NUM_FORMATS 3
 #define FAILED_TO_READ_MODULE_FILE (load_module_result_t) {\
     .file_read = false,\
     .recognised_format = false,\
@@ -142,7 +143,8 @@ static size_t file_size(const int file_descriptor)
 static format_t *known_formats(void)
 {
     static format_t formats[NUM_FORMATS];
-    formats[0] = tracker_format();
-    formats[1] = desktop_tracker_format();
+    formats[0] = arctracker_format();
+    formats[1] = tracker_format();
+    formats[2] = desktop_tracker_format();
     return formats;
 }

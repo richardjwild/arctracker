@@ -1,0 +1,8 @@
+#ifndef ARCTRACKER_ENGINE_FORMAT_ARCTRACKER_H
+#define ARCTRACKER_ENGINE_FORMAT_ARCTRACKER_H
+
+#include "loader.h"
+
+format_t arctracker_format(void);
+
+#endif //ARCTRACKER_ENGINE_FORMAT_ARCTRACKER_H
