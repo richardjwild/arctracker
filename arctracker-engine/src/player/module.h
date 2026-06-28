@@ -125,4 +125,6 @@ void module_set_author(module_t *module, const char *author);
 
 bool module_adjust_track_capacity(module_t *module, uint32_t new_track_capacity);
 
+void module_set_num_tracks(module_t *module, uint32_t num_tracks);
+
 #endif //ARCTRACKER_MODULE_H

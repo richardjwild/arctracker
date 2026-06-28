@@ -201,7 +201,7 @@ void module_set_author(module_t *module, const char *author)
 bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_capacity)
 {
     const uint32_t old_track_capacity = module->track_capacity;
-    int *initial_panning = NULL;
+    int *resized_panning = NULL;
     event_t **resized_patterns = NULL;
     resized_patterns = allocate_array(MODULE, module->num_patterns, sizeof(event_t *));
     if (resized_patterns == NULL) goto track_capacity_adjustment_failed;
@@ -213,8 +213,8 @@ bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_cap
             goto track_capacity_adjustment_failed;
         resized_patterns[pno] = resized_pattern_data;
     }
-    initial_panning = resize_track_panning(module->initial_panning, old_track_capacity, new_track_capacity);
-    if (initial_panning == NULL) goto track_capacity_adjustment_failed;
+    resized_panning = resize_track_panning(module->initial_panning, old_track_capacity, new_track_capacity);
+    if (resized_panning == NULL) goto track_capacity_adjustment_failed;
     //
     // If we reach here, we are good and can now commit the changes.
     //
@@ -226,13 +226,13 @@ bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_cap
         module->patterns[p] = pattern;
     }
     deallocate(MODULE, module->initial_panning);
-    module->initial_panning = initial_panning;
+    module->initial_panning = resized_panning;
     module->track_capacity = new_track_capacity;
     deallocate(MODULE, resized_patterns);
     return true;
 
 track_capacity_adjustment_failed:
-    deallocate(MODULE, initial_panning);
+    deallocate(MODULE, resized_panning);
     if (resized_patterns == NULL) return false;
     for (int p = 0; p < module->num_patterns; p++)
         deallocate(MODULE, resized_patterns[p]);
@@ -263,4 +263,20 @@ static int *resize_track_panning(const int *track_panning, const uint32_t old_tr
     for (uint32_t tno = 0; tno < old_track_capacity; tno++)
         resized_panning[tno] = track_panning[tno];
     return resized_panning;
+}
+
+void module_set_num_tracks(module_t *module, const uint32_t num_tracks)
+{
+    const uint32_t old_num_tracks = module->num_tracks;
+    module->num_tracks = (int) num_tracks;
+    if (num_tracks <= old_num_tracks) return;
+    for (int pno = 0; pno < module->num_patterns; pno++)
+    {
+        const pattern_t pattern = module->patterns[pno];
+        const int num_lines = pattern.num_lines;
+        event_t *events = pattern.events;
+        for (int line = 0; line < num_lines; line++)
+            for (uint32_t tno = old_num_tracks; tno < num_tracks; tno++)
+                events[line * module->track_capacity + tno] = (event_t) {0};
+    }
 }
