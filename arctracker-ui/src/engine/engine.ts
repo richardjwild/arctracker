@@ -289,4 +289,10 @@ export const engine = {
       author,
     });
   },
+
+  setNumTracks: async (numTracks: number) => {
+    return await invoke("edit_set_num_tracks", {
+      numTracks,
+    })
+  }
 };

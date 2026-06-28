@@ -547,6 +547,24 @@ api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, co
     return SUCCESS;
 }
 
+api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int num_tracks)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
+    if (num_tracks < 1 || num_tracks > MAX_TRACKS)
+        return failure(INVALID_TRACK_COUNT);
+    if (arctracker->playback.thread_active)
+        arctracker_player_shutdown(arctracker);
+    const edit_result_t result = editor_set_num_tracks(arctracker->module, num_tracks);
+    if (!result.success)
+        return failure(result.error_message);
+    return arctracker_player_start(arctracker);
+}
+
 api_result_t arctracker_destroy(arctracker_t *arctracker)
 {
     if (arctracker == NULL)

@@ -149,6 +149,17 @@ edit_result_t editor_set_module_title(module_t *module, const char *name, const 
     return EDIT_SUCCESS;
 }
 
+edit_result_t editor_set_num_tracks(module_t *module, const int num_tracks)
+{
+    if (num_tracks > module->track_capacity)
+    {
+        // TODO: Adjust track capacity.
+    }
+    if (!module_set_num_tracks(module, num_tracks))
+        return failure(ADJUST_TRACK_COUNT_FAILED);
+    return EDIT_SUCCESS;
+}
+
 static edit_result_t get_event(const module_t *module, const int pattern_no, const int pattern_index, const int track, event_t **event)
 {
     *event = NULL;

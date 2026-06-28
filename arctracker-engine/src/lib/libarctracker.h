@@ -56,15 +56,17 @@ api_result_t arctracker_edit_set_sequence(arctracker_t *handle, const int *new_s
 
 api_result_t arctracker_edit_create_pattern(arctracker_t *handle, int pattern_length, int *new_pattern_no);
 
-api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, int pattern_no);
+api_result_t arctracker_edit_delete_pattern(arctracker_t *handle, int pattern_no);
 
-api_result_t arctracker_edit_set_pattern_length(arctracker_t *arctracker, int pattern_no, int new_length);
+api_result_t arctracker_edit_set_pattern_length(arctracker_t *handle, int pattern_no, int new_length);
 
-api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, uint8_t slot, ui_instrument_update_t instrument_update);
+api_result_t arctracker_edit_set_instrument(arctracker_t *handle, uint8_t slot, ui_instrument_update_t instrument_update);
 
-api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *filename, ui_sample_info_t *sample_info);
+api_result_t arctracker_edit_load_sample(arctracker_t *handle, const char *filename, ui_sample_info_t *sample_info);
 
-api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, const char *name, const char *author);
+api_result_t arctracker_edit_set_module_title(const arctracker_t *handle, const char *name, const char *author);
+
+api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, int num_tracks);
 
 api_result_t arctracker_destroy(arctracker_t *handle);
 

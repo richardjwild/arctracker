@@ -213,6 +213,13 @@ fn edit_set_module_title(state: tauri::State<Arc<AppState>>, name: String, autho
 }
 
 #[tauri::command]
+fn edit_set_num_tracks(state: tauri::State<Arc<AppState>>, num_tracks: i32) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.edit_set_num_tracks(num_tracks).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn shutdown_app(app: AppHandle) {
     app.exit(1);
 }
@@ -251,5 +258,6 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_update_instrument,
             edit_load_sample,
             edit_set_module_title,
+            edit_set_num_tracks,
         ])
 }

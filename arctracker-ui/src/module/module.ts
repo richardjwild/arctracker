@@ -58,8 +58,38 @@ export const module = {
 
   setTrackCount: async (trackCount: number) => {
     const module = useStore.getState().module;
-    if (module.numTracks !== trackCount)
-      console.log("setTrackCount", trackCount);
+    const currentTracks = module.numTracks;
+    const currentEffectsDisplayed = useStore.getState().editorState.effectsDisplayed;
+    let newEffectsDisplayed = [...currentEffectsDisplayed];
+    if (trackCount < currentTracks) {
+      newEffectsDisplayed.splice(newEffectsDisplayed.length - 1, (currentTracks - trackCount));
+    } else {
+      for (let i = 0; i < (trackCount - currentTracks); i++)
+        newEffectsDisplayed.push(1);
+    }
+    if (currentTracks !== trackCount) {
+      void editor.applyEdit({
+        apply: async () => {
+          await engine.setNumTracks(trackCount);
+          useStore.getState().updateTracks(trackCount);
+          const editorState = useStore.getState().editorState;
+          useStore.getState().setEditorState({
+            ...editorState,
+            effectsDisplayed: newEffectsDisplayed,
+          });
+          return true;
+        },
+        undo: async () => {
+          await engine.setNumTracks(currentTracks);
+          useStore.getState().updateTracks(currentTracks);
+          const editorState = useStore.getState().editorState;
+          useStore.getState().setEditorState({
+            ...editorState,
+            effectsDisplayed: currentEffectsDisplayed,
+          });
+        },
+      });
+    }
     editor.setEditMode("none");
-  }
+  },
 };

@@ -53,5 +53,7 @@
 #define MODULE_NAME_TOO_LONG "Module name too long"
 #define AUTHOR_MISSING "Author name not specified"
 #define AUTHOR_TOO_LONG "Author name too long"
+#define ADJUST_TRACK_COUNT_FAILED "Failed to adjust track count"
+#define INVALID_TRACK_COUNT "Invalid track count"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

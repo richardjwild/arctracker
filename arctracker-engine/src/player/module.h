@@ -8,7 +8,7 @@
 #define MAX_LEN_TUNENAME 65
 #define MAX_LEN_AUTHOR 65
 #define MAX_LEN_SAMPLENAME 33
-#define MAX_TRACKS 16
+#define MAX_TRACKS 256
 #define NUM_PATTERNS 256
 #define MAX_EFFECTS 4
 #define NUM_INSTRUMENT_SLOTS 256
@@ -86,7 +86,7 @@ typedef struct
     int *sequence;
     int sequence_capacity;
     int num_tracks;
-    uint8_t track_capacity;
+    int track_capacity;
     int *initial_panning;
     int num_patterns;
     pattern_t *patterns;
@@ -122,5 +122,7 @@ bool module_link_sample(module_t *module, const float *sample_data, int sample_l
 void module_set_name(module_t *module, const char *name);
 
 void module_set_author(module_t *module, const char *author);
+
+bool module_set_num_tracks(module_t *module, int num_tracks);
 
 #endif //ARCTRACKER_MODULE_H

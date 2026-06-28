@@ -771,6 +771,18 @@ impl Arctracker {
         }
         Ok(())
     }
+
+    pub fn edit_set_num_tracks(&mut self, num_tracks: i32) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_set_num_tracks(self.handle, num_tracks)
+        };
+        if !result.success {
+            return Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            });
+        }
+        Ok(())
+    }
 }
 
 impl Drop for Arctracker {

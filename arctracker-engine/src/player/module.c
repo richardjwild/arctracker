@@ -29,7 +29,7 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
         goto fail;
-    module->initial_panning = allocate_array(MODULE, num_tracks, sizeof(int));
+    module->initial_panning = allocate_array(MODULE, module->track_capacity, sizeof(int));
     if (module->initial_panning == NULL)
         goto fail;
     module->patterns = allocate_array(MODULE, module->pattern_capacity, sizeof(pattern_t));
@@ -194,4 +194,14 @@ void module_set_name(module_t *module, const char *name)
 void module_set_author(module_t *module, const char *author)
 {
     snprintf(module->author, sizeof module->author, "%s", author);
+}
+
+bool module_set_num_tracks(module_t *module, const int num_tracks)
+{
+    if (num_tracks <= module->track_capacity)
+    {
+        module->num_tracks = num_tracks;
+        return true;
+    }
+    return false;
 }
