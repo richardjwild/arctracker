@@ -285,7 +285,7 @@ static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event)
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
         const ui_effect_t effect = event->effects[effect_no];
-        event_buffer->effects[effect_no].command = effect.effect_code;
+        event_buffer->effects[effect_no].command = (unsigned) effect.effect_code;
         // Reading left to right gives us most significant nybble first.
         event_buffer->effects[effect_no].data =
                 ((effect.effect_data[0] & 0xf) << 4)
