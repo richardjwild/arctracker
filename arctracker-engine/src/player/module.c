@@ -12,7 +12,8 @@
 
 static bool ensure_pattern_line_capacity(pattern_t *, int, int);
 static void clear_added_events(event_t *, int, int, int);
-static bool resize_pattern(pattern_t *, uint32_t, uint32_t);
+static bool resize_pattern(pattern_t, event_t **, uint32_t, uint32_t);
+static int *resize_track_panning(const int *, uint32_t, uint32_t);
 
 module_t *module_create(const int num_tracks, const int sequence_len, const int num_patterns, const int num_samples)
 {
@@ -200,36 +201,66 @@ void module_set_author(module_t *module, const char *author)
 bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_capacity)
 {
     const uint32_t old_track_capacity = module->track_capacity;
+    int *initial_panning = NULL;
+    event_t **resized_patterns = NULL;
+    resized_patterns = allocate_array(MODULE, module->num_patterns, sizeof(event_t *));
+    if (resized_patterns == NULL) goto track_capacity_adjustment_failed;
+    for (int pno = 0; pno < module->num_patterns; pno++)
+    {
+        const pattern_t pattern = module->patterns[pno];
+        event_t *resized_pattern_data;
+        if (!resize_pattern(pattern, &resized_pattern_data, old_track_capacity, new_track_capacity))
+            goto track_capacity_adjustment_failed;
+        resized_patterns[pno] = resized_pattern_data;
+    }
+    initial_panning = resize_track_panning(module->initial_panning, old_track_capacity, new_track_capacity);
+    if (initial_panning == NULL) goto track_capacity_adjustment_failed;
+    //
+    // If we reach here, we are good and can now commit the changes.
+    //
     for (int p = 0; p < module->num_patterns; p++)
     {
         pattern_t pattern = module->patterns[p];
-        if (!resize_pattern(&pattern, old_track_capacity, new_track_capacity))
-            return false;
+        deallocate(MODULE, pattern.events);
+        pattern.events = resized_patterns[p];
         module->patterns[p] = pattern;
     }
-    int *initial_panning = reallocate_array(MODULE, module->initial_panning, (int) new_track_capacity, sizeof(int));
-    if (initial_panning == NULL)
-        return false;
-    for (uint32_t t = old_track_capacity; t < new_track_capacity; t++)
-        initial_panning[t] = 0;
+    deallocate(MODULE, module->initial_panning);
     module->initial_panning = initial_panning;
     module->track_capacity = new_track_capacity;
+    deallocate(MODULE, resized_patterns);
+    return true;
+
+track_capacity_adjustment_failed:
+    deallocate(MODULE, initial_panning);
+    if (resized_patterns == NULL) return false;
+    for (int p = 0; p < module->num_patterns; p++)
+        deallocate(MODULE, resized_patterns[p]);
+    deallocate(MODULE, resized_patterns);
+    return false;
+}
+
+static bool resize_pattern(const pattern_t pattern, event_t **resized_pattern_data, const uint32_t old_track_capacity, const uint32_t new_track_capacity)
+{
+    const int new_pattern_event_capacity = pattern.line_capacity * (int) new_track_capacity;
+    event_t *resized_data = allocate_array(MODULE, new_pattern_event_capacity, sizeof(event_t));
+    if (resized_data == NULL)
+        return false;
+    for (int line = 0; line < pattern.num_lines; line++) {
+        const event_t *src = &pattern.events[line * old_track_capacity];
+        event_t *dest = &resized_data[line * new_track_capacity];
+        memcpy(dest, src, old_track_capacity * sizeof(event_t));
+    }
+    *resized_pattern_data = resized_data;
     return true;
 }
 
-static bool resize_pattern(pattern_t *pattern, const uint32_t old_track_capacity, const uint32_t new_track_capacity)
+static int *resize_track_panning(const int *track_panning, const uint32_t old_track_capacity, const uint32_t new_track_capacity)
 {
-    const uint32_t new_pattern_event_capacity = pattern->line_capacity * new_track_capacity;
-    event_t *new_events = reallocate_array(MODULE, pattern->events, (int) new_pattern_event_capacity, sizeof(event_t));
-    if (new_events == NULL)
-        return false;
-    pattern->events = new_events;
-    for (int l = pattern->num_lines; l-- > 0; ) {
-        const event_t *from = new_events + l * old_track_capacity;
-        event_t *to = new_events + l * new_track_capacity;
-        memmove(to, from, old_track_capacity * sizeof(event_t));
-        for (uint32_t e = old_track_capacity; e < new_track_capacity; e++)
-            to[e] = (event_t){0};
-    }
-    return true;
+    int *resized_panning = allocate_array(MODULE, (int) new_track_capacity, sizeof(int));
+    if (resized_panning == NULL)
+        return NULL;
+    for (uint32_t tno = 0; tno < old_track_capacity; tno++)
+        resized_panning[tno] = track_panning[tno];
+    return resized_panning;
 }
