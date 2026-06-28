@@ -106,6 +106,11 @@ void player_sequence_changed(player_t *player, module_t *module)
     player->sequence = reinitialise_sequence(module, &player->sequence, false);
 }
 
+void player_sequence_restore(player_t *player, const sequence_t sequence)
+{
+    player->sequence = sequence;
+}
+
 void player_destroy(player_t *player)
 {
     command_queue_destroy(player->command_queue);
