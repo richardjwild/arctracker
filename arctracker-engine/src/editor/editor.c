@@ -5,6 +5,7 @@
 #include "messages.h"
 #include "io/error.h"
 #include "loader/loader.h"
+#include "memory/bits.h"
 #include "memory/heap.h"
 
 #define MIN_SEQUENCE_CAPACITY 1024
@@ -149,14 +150,15 @@ edit_result_t editor_set_module_title(module_t *module, const char *name, const 
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_set_num_tracks(module_t *module, const int num_tracks)
+edit_result_t editor_set_num_tracks(module_t *module, const uint32_t num_tracks)
 {
     if (num_tracks > module->track_capacity)
     {
-        // TODO: Adjust track capacity.
+        const uint32_t new_track_capacity = round_up_to_power_of_two(num_tracks);
+        if (!module_adjust_track_capacity(module, new_track_capacity))
+            return failure(ADJUST_TRACK_COUNT_FAILED);
     }
-    if (!module_set_num_tracks(module, num_tracks))
-        return failure(ADJUST_TRACK_COUNT_FAILED);
+    module->num_tracks = (int) num_tracks;
     return EDIT_SUCCESS;
 }
 

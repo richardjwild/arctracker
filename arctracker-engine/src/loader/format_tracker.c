@@ -210,11 +210,11 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
         const uint8_t *raw_pattern_data = chunk_address + CHUNK_HEADER_LENGTH;
         for (int line = 0; line < pattern_length; line++)
         {
-            for (int track = 0; track < module->track_capacity; track++)
+            for (uint32_t track = 0; track < module->track_capacity; track++)
             {
-                const int event_index = (line * module->track_capacity) + track;
+                const uint32_t event_index = (line * module->track_capacity) + track;
                 event_t *event = module->patterns[pno].events + event_index;
-                if (track < module->num_tracks)
+                if (track < (uint32_t) module->num_tracks)
                     raw_pattern_data += decode_tracker_event(raw_pattern_data, event);
                 else
                     *event = (event_t) {0};

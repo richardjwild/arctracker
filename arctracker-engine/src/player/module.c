@@ -12,6 +12,7 @@
 
 static bool ensure_pattern_line_capacity(pattern_t *, int, int);
 static void clear_added_events(event_t *, int, int, int);
+static bool resize_pattern(pattern_t *, uint32_t, uint32_t);
 
 module_t *module_create(const int num_tracks, const int sequence_len, const int num_patterns, const int num_samples)
 {
@@ -29,7 +30,7 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
         goto fail;
-    module->initial_panning = allocate_array(MODULE, module->track_capacity, sizeof(int));
+    module->initial_panning = allocate_array(MODULE, (int) module->track_capacity, sizeof(int));
     if (module->initial_panning == NULL)
         goto fail;
     module->patterns = allocate_array(MODULE, module->pattern_capacity, sizeof(pattern_t));
@@ -67,7 +68,7 @@ bool module_create_pattern(const module_t *module, const int pattern_no, const i
     const pattern_t pattern = (pattern_t) {
         .num_lines = num_lines,
         .line_capacity = line_capacity,
-        .events = allocate_array(MODULE, line_capacity * module->track_capacity, sizeof(event_t)),
+        .events = allocate_array(MODULE, line_capacity * (int) module->track_capacity, sizeof(event_t)),
     };
     if (pattern.events == NULL)
         return false;
@@ -196,12 +197,39 @@ void module_set_author(module_t *module, const char *author)
     snprintf(module->author, sizeof module->author, "%s", author);
 }
 
-bool module_set_num_tracks(module_t *module, const int num_tracks)
+bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_capacity)
 {
-    if (num_tracks <= module->track_capacity)
+    const uint32_t old_track_capacity = module->track_capacity;
+    for (int p = 0; p < module->num_patterns; p++)
     {
-        module->num_tracks = num_tracks;
-        return true;
+        pattern_t pattern = module->patterns[p];
+        if (!resize_pattern(&pattern, old_track_capacity, new_track_capacity))
+            return false;
+        module->patterns[p] = pattern;
     }
-    return false;
+    int *initial_panning = reallocate_array(MODULE, module->initial_panning, (int) new_track_capacity, sizeof(int));
+    if (initial_panning == NULL)
+        return false;
+    for (uint32_t t = old_track_capacity; t < new_track_capacity; t++)
+        initial_panning[t] = 0;
+    module->initial_panning = initial_panning;
+    module->track_capacity = new_track_capacity;
+    return true;
+}
+
+static bool resize_pattern(pattern_t *pattern, const uint32_t old_track_capacity, const uint32_t new_track_capacity)
+{
+    const uint32_t new_pattern_event_capacity = pattern->line_capacity * new_track_capacity;
+    event_t *new_events = reallocate_array(MODULE, pattern->events, (int) new_pattern_event_capacity, sizeof(event_t));
+    if (new_events == NULL)
+        return false;
+    pattern->events = new_events;
+    for (int l = pattern->num_lines; l-- > 0; ) {
+        const event_t *from = new_events + l * old_track_capacity;
+        event_t *to = new_events + l * new_track_capacity;
+        memmove(to, from, old_track_capacity * sizeof(event_t));
+        for (uint32_t e = old_track_capacity; e < new_track_capacity; e++)
+            to[e] = (event_t){0};
+    }
+    return true;
 }

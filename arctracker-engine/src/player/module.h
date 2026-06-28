@@ -86,7 +86,7 @@ typedef struct
     int *sequence;
     int sequence_capacity;
     int num_tracks;
-    int track_capacity;
+    uint32_t track_capacity;
     int *initial_panning;
     int num_patterns;
     pattern_t *patterns;
@@ -123,6 +123,6 @@ void module_set_name(module_t *module, const char *name);
 
 void module_set_author(module_t *module, const char *author);
 
-bool module_set_num_tracks(module_t *module, int num_tracks);
+bool module_adjust_track_capacity(module_t *module, uint32_t new_track_capacity);
 
 #endif //ARCTRACKER_MODULE_H
