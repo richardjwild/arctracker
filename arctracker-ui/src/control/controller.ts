@@ -252,6 +252,7 @@ function processCommands() {
         moduleTitle.hideDialog();
         break;
       case CommandType.EDIT_TRACK_COUNT:
+        if (transport.playing()) transport.togglePlay();
         module.editTrackCount();
         break;
       case CommandType.SET_TRACK_COUNT:

@@ -1,5 +1,6 @@
 import { useStore } from "../store/useStore.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
+import { alerting } from "../alerting/alert.ts";
 
 export type EditMode =
   | "none"
@@ -108,6 +109,7 @@ export const editor = {
         redoStack.length = 0;
       }
     } catch (err) {
+      void alerting.showError(err as string);
       throw err;
     }
   },
@@ -119,6 +121,7 @@ export const editor = {
       await command.undo();
       redoStack.push(command);
     } catch (err) {
+      void alerting.showError(err as string);
       throw err;
     }
   },
@@ -130,6 +133,7 @@ export const editor = {
       await command.apply(true);
       undoStack.push(command);
     } catch (err) {
+      void alerting.showError(err as string);
       throw err;
     }
   },
