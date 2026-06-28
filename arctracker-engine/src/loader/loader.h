@@ -12,7 +12,7 @@ typedef struct {
 typedef struct {
     bool (*is_this_format)(mapped_file_t);
     module_t *(*read_module)(mapped_file_t);
-    bool (*write_module)(const module_t *, const char *);
+    bool (*write_module)(const module_t *, FILE *);
 } format_t;
 
 typedef struct {
@@ -32,6 +32,8 @@ typedef struct {
 static const char *UNKNOWN_FORMAT = "UNKNOWN";
 
 load_module_result_t load_module(const char *filename);
+
+bool save_module(const module_t *module, const char *filename, format_t format);
 
 load_sample_result_t load_sample(const char *filename);
 

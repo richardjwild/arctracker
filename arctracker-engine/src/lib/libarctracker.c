@@ -12,6 +12,7 @@
 #include "memory/heap.h"
 #include "memory/bits.h"
 #include "editor/editor.h"
+#include "loader/format_arctracker.h"
 
 #define SUCCESS (api_result_t) {\
     .success = true,\
@@ -77,6 +78,21 @@ api_result_t arctracker_module_load(arctracker_t *arctracker, char *mod_filename
         remove_module(arctracker);
     arctracker->module = load_result.module;
     module_get_info(arctracker->module, module_info);
+    return SUCCESS;
+}
+
+api_result_t arctracker_module_save(const arctracker_t *arctracker, const char *mod_filename, const int format)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (mod_filename == NULL || strlen(mod_filename) == 0)
+        return failure(BAD_FILENAME);
+    if (format != FORMAT_ARCTRACKER)
+        return failure(BAD_FORMAT);
+    if (!save_module(arctracker->module, mod_filename, arctracker_format()))
+        return failure(MODULE_SAVE_FAILED);
     return SUCCESS;
 }
 
@@ -602,6 +618,7 @@ static api_result_t failure(char *error_message)
         snprintf(result.error_message, sizeof result.error_message, "%s: (%s)", error_message, get_error_message());
     else
         snprintf(result.error_message, sizeof result.error_message, "%s", error_message);
+    clear_error_state();
     return result;
 }
 

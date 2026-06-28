@@ -25,6 +25,7 @@ interface AppStore {
   draftModuleTitle: ModuleTitle | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
+  setModuleFilename: (fileName: string) => void;
   setModuleTitle: (name: string, author: string) => void;
   updateTracks: (numTracks: number) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
@@ -151,6 +152,14 @@ export const useStore = create<AppStore>((set) => ({
       editorState: initialEditorState(result.numTracks),
       patternSelection: null,
       pasteBuffer: null,
+    })),
+
+  setModuleFilename: (fileName: string) =>
+    set((state) => ({
+      module: {
+        ...state.module,
+        fileName,
+      },
     })),
 
   setModuleTitle: (name: string, author: string) =>

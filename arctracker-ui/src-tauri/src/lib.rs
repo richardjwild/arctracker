@@ -31,6 +31,13 @@ fn create_module(num_tracks: i32, state: tauri::State<Arc<AppState>>) -> Result<
 }
 
 #[tauri::command]
+fn save_module(path: String, format: i32, state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.save_module(&path, format)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn restart_player(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.shutdown().map_err(|e| e.message)?;
@@ -104,6 +111,14 @@ fn set_selected_channel(
 ) {
     let mut editor = state.editor.lock().unwrap();
     editor.selected_channel = channel_no;
+}
+
+#[tauri::command]
+fn default_save_path(module_path: String) -> String {
+    std::path::Path::new(&module_path)
+        .with_extension("arctm")
+        .to_string_lossy()
+        .to_string()
 }
 
 #[tauri::command]
@@ -231,6 +246,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
         .invoke_handler(tauri::generate_handler![
             current_module,
             load_module,
+            save_module,
             create_module,
             restart_player,
             poll_playback_events,
@@ -243,6 +259,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             set_selected_instrument,
             set_selected_channel,
             shutdown_app,
+            default_save_path,
             default_export_path,
             export_audio,
             get_export_state,

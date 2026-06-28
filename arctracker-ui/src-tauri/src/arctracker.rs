@@ -339,6 +339,17 @@ impl Arctracker {
         })
     }
 
+    pub fn save_module(&mut self, path: &str, format: i32) -> Result<(), String> {
+        let c_filename = CString::new(path).map_err(|_| "Invalid filename")?;
+        let result = unsafe {
+            ffi::arctracker_module_save(self.handle, c_filename.as_ptr(), format)
+        };
+        if !result.success {
+            return Err(c_string_to_rust(&result.error_message));
+        }
+        Ok(())
+    }
+
     pub fn get_pattern(&mut self, pattern_no: i32, num_rows: i32, num_tracks: i32) -> Vec<PatternLine> {
         let len = (num_rows * num_tracks) as usize;
         let empty_effect = ffi::UiEffect {

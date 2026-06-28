@@ -2,9 +2,11 @@
 #define ARCTRACKER_ENGINE_MESSAGES_H
 
 #define BAD_ARCTRACKER_HANDLE "Invalid arctracker handle"
+#define BAD_FILENAME "Bad filename"
 #define FILE_OPEN_FAILED "Could not open file"
 #define MODULE_TYPE_UNRECOGNISED "Not a recognised module type"
 #define MODULE_LOAD_FAILED "Failed to load module, either file corrupted or ran out of memory"
+#define MODULE_SAVE_FAILED "Failed to save module"
 #define SAMPLE_LOAD_FAILED "Failed to load sample, either file corrupted or ran out of memory"
 #define SAMPLE_LINK_FAILED "Failed to link sample to module"
 #define MODULE_CREATE_FAILED "Failed to create module"
@@ -55,5 +57,6 @@
 #define AUTHOR_TOO_LONG "Author name too long"
 #define ADJUST_TRACK_COUNT_FAILED "Failed to adjust track count"
 #define INVALID_TRACK_COUNT "Invalid track count"
+#define BAD_FORMAT "Bad module format"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

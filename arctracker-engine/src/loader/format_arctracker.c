@@ -1,8 +1,10 @@
 #include "format_arctracker.h"
 
+#include "io/error.h"
+
 static bool is_arctracker_module(mapped_file_t);
 static module_t *read_arctracker_module(mapped_file_t);
-static bool write_arctracker_module(const module_t *, const char *);
+static bool write_arctracker_module(const module_t *, FILE *);
 
 format_t arctracker_format(void)
 {
@@ -25,8 +27,9 @@ static module_t *read_arctracker_module(mapped_file_t mapped_file)
     return NULL;
 }
 
-static bool write_arctracker_module(const module_t *module, const char *filename)
+static bool write_arctracker_module(const module_t *module, FILE *fp)
 {
     // TODO: Everything!
+    error("Saving native modules is not implemented yet");
     return false;
 }

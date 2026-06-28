@@ -1,29 +1,30 @@
 import { engine, ExportState } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
-import { filePicker, AUDIO_EXPORT_EXTENSION } from "../filesystem/filePicker.ts";
+import {
+  filePicker,
+  AUDIO_EXPORT_EXTENSION,
+} from "../filesystem/filePicker.ts";
 import { message } from "@tauri-apps/plugin-dialog";
 
 const { setExportState, setExportMonitoring } = useStore.getState();
 
 function handleExportError(errorMessage: string) {
-  message(
-    `Export audio encountered an error: ${errorMessage}`,
-    {
-      title: "Arctracker",
-      kind: "error",
-    },
-  ).then(() => {
+  message(`Export audio encountered an error: ${errorMessage}`, {
+    title: "Arctracker",
+    kind: "error",
+  }).then(() => {
     setExportMonitoring(false);
   });
 }
 
-
 export const audioExport = {
   start: async () => {
     const defaultExportPath = await getDefaultExportPath();
-    const filePath = await filePicker.chooseFileToSave(defaultExportPath, [
-      AUDIO_EXPORT_EXTENSION,
-    ]);
+    const filePath = await filePicker.chooseFileToSave(
+      "Export audio",
+      defaultExportPath,
+      [AUDIO_EXPORT_EXTENSION],
+    );
     if (!filePath) return;
     setExportMonitoring(true);
     try {
@@ -51,9 +52,9 @@ export const audioExport = {
             return; // No point trying to handle any other events.
         }
       }
-    })
+    });
   },
-}
+};
 
 async function getDefaultExportPath() {
   const moduleFileName = useStore.getState().module.fileName;

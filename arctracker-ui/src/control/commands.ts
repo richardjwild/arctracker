@@ -14,6 +14,8 @@ type EffectDataCursorField = Extract<
 
 export enum CommandType {
   LOAD_FILE,
+  SAVE_MODULE_AS,
+  SAVE_MODULE,
   EXPORT_AUDIO,
   CREATE_MODULE,
   TOGGLE_PLAY,
@@ -77,6 +79,8 @@ export enum CommandType {
 
 export type Command =
   | { type: CommandType.LOAD_FILE }
+  | { type: CommandType.SAVE_MODULE_AS }
+  | { type: CommandType.SAVE_MODULE }
   | { type: CommandType.EXPORT_AUDIO }
   | { type: CommandType.CREATE_MODULE; numTracks: number }
   | { type: CommandType.TOGGLE_PLAY }
@@ -176,6 +180,8 @@ export const commandQueue = {
 
 export const commands = {
   loadFile: () => commandQueue.push({ type: CommandType.LOAD_FILE }),
+  saveModuleAs: () => commandQueue.push({ type: CommandType.SAVE_MODULE_AS }),
+  saveModule: () => commandQueue.push({ type: CommandType.SAVE_MODULE }),
   exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
   createModule: (numTracks: number) =>
     commandQueue.push({

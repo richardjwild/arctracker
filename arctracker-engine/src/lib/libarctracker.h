@@ -14,11 +14,15 @@ typedef struct {
     char error_message[ERROR_MESSAGE_BUFFER_SIZE];
 } api_result_t;
 
+static const int FORMAT_ARCTRACKER = 0;
+
 arctracker_t *arctracker_create(void);
 
 api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_t *module_info);
 
 api_result_t arctracker_module_load(arctracker_t *handle, char *mod_filename, ui_module_info_t *module_info);
+
+api_result_t arctracker_module_save(const arctracker_t *handle, const char *mod_filename, int format);
 
 api_result_t arctracker_get_instrument_info(arctracker_t *handle, uint8_t slot, ui_instrument_info_t *instrument_info);
 

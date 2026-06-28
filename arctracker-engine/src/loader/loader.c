@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include "loader.h"
+#include <string.h>
 #include "format_arctracker.h"
 #include "format_desktop_tracker.h"
 #include "format_tracker.h"
@@ -10,6 +11,7 @@
 #include "io/error.h"
 #include "memory/heap.h"
 
+#define MAX_FILE_PATH_LENGTH 4096
 #define NUM_FORMATS 3
 #define FAILED_TO_READ_MODULE_FILE (load_module_result_t) {\
     .file_read = false,\
@@ -102,6 +104,33 @@ load_sample_result_t load_sample(const char *filename)
     }
     munmap(file.addr, file.size);
     return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, audio_data.audio_data);
+}
+
+bool save_module(const module_t *module, const char *filename, const format_t format)
+{
+    char tmp_filename[MAX_FILE_PATH_LENGTH];
+    snprintf(tmp_filename, sizeof tmp_filename, "%s.tmp", filename);
+    FILE *file_pointer = fopen(tmp_filename, "wb");
+    if (file_pointer == NULL)
+    {
+        system_error(errno);
+        return false;
+    }
+    bool ok = format.write_module(module, file_pointer);
+    if (fclose(file_pointer) != 0) {
+        system_error(errno);
+        ok = false;
+    }
+    if (!ok) {
+        remove(tmp_filename);
+        return false;
+    }
+    if (rename(tmp_filename, filename) != 0) {
+        system_error(errno);
+        remove(tmp_filename);
+        return false;
+    }
+    return ok;
 }
 
 static mapped_file_t load_file(FILE *file_pointer)

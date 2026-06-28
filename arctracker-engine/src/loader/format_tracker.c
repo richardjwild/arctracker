@@ -58,7 +58,7 @@ static effect_t effect(uint8_t code, uint8_t);
 static int get_samples(void *, long, sample_t *, instrument_t *);
 static bool get_sample_info(void *, long, sample_t *, instrument_t *);
 static void copy_int_array(uint8_t *, int *, int);
-static bool write_tracker_module(const module_t *, const char *);
+static bool write_tracker_module(const module_t *, FILE *);
 
 format_t tracker_format(void)
 {
@@ -365,7 +365,7 @@ static void copy_int_array(uint8_t *dest, int *source, int num_elements)
         source[i] = dest[i];
 }
 
-static bool write_tracker_module(const module_t *module, const char *filename)
+static bool write_tracker_module(const module_t *module, FILE *fp)
 {
     error("Export to Tracker format is not implemented yet");
     return false;

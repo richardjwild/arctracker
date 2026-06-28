@@ -115,6 +115,13 @@ export const engine = {
     });
   },
 
+  saveModule: async (fileName: string, format: number) => {
+    return await invoke("save_module", {
+      path: fileName,
+      format,
+    })
+  },
+
   createModule: async (numTracks: number) => {
     return await invoke<Module>("create_module", {
       numTracks,
@@ -182,6 +189,14 @@ export const engine = {
 
   pollExportEvents: async (): Promise<PlayerEvent[]> => {
     return await invoke("poll_export_events");
+  },
+
+  defaultSavePath: async (
+    modulePath: string,
+  ): Promise<string | undefined> => {
+    return await invoke("default_save_path", {
+      modulePath,
+    });
   },
 
   defaultExportPath: async (

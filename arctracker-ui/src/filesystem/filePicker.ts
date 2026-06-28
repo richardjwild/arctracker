@@ -23,11 +23,12 @@ export const filePicker = {
   },
 
   chooseFileToSave: async (
+    title: string,
     defaultPath: string | undefined,
     filteredExtensions: string[],
   ) => {
     return await save({
-      title: "Export audio",
+      title,
       defaultPath,
       filters: [
         {

@@ -130,6 +130,11 @@ extern "C" {
         mod_filename: *const c_char,
         module_info: *mut UiModuleInfo,
     ) -> ApiResult;
+    pub fn arctracker_module_save(
+        handle: *mut ArctrackerHandle,
+        mod_filename: *const c_char,
+        format: c_int
+    ) -> ApiResult;
     pub fn arctracker_module_create(
         handle: *mut ArctrackerHandle,
         num_tracks: c_int,

@@ -36,6 +36,12 @@ function processCommands() {
         // Don't execute any more commands if we have loaded a new module.
         if (moduleLoaded) return;
         break;
+      case CommandType.SAVE_MODULE_AS:
+        void module.saveAs();
+        break;
+      case CommandType.SAVE_MODULE:
+        void module.save();
+        break;
       case CommandType.EXPORT_AUDIO:
         void audioExport.start();
         break;
