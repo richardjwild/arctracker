@@ -3,10 +3,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include "loader.h"
-#include <string.h>
 #include "format_arctracker.h"
 #include "format_desktop_tracker.h"
 #include "format_tracker.h"
+#include "messages.h"
 #include "audio_file/wav.h"
 #include "io/error.h"
 #include "memory/heap.h"
@@ -108,6 +108,11 @@ load_sample_result_t load_sample(const char *filename)
 
 bool save_module(const module_t *module, const char *filename, const format_t format)
 {
+    if (format.write_module == NULL)
+    {
+        error(SAVE_MODULE_NOT_SUPPORTED);
+        return false;
+    }
     char tmp_filename[MAX_FILE_PATH_LENGTH];
     snprintf(tmp_filename, sizeof tmp_filename, "%s.tmp", filename);
     FILE *file_pointer = fopen(tmp_filename, "wb");

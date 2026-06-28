@@ -94,14 +94,13 @@ static effect_t effect(uint8_t, uint8_t);
 static command_t desktop_tracker_command(uint8_t, uint8_t);
 static void copy_int_array(const uint8_t *, int *, int);
 static bool get_samples(module_t *, dtt_sample_format_t *, uint8_t *);
-static bool write_desktop_tracker_module(const module_t *, FILE *);
 
 format_t desktop_tracker_format(void)
 {
     format_t format_reader = {
         .is_this_format = is_desktop_tracker_format,
         .read_module = read_desktop_tracker_module,
-        .write_module = write_desktop_tracker_module,
+        .write_module = NULL,
     };
     return format_reader;
 }
@@ -297,11 +296,5 @@ static void copy_int_array(const uint8_t *source, int *dest, int num_elements)
 {
     for (int i = 0; i < num_elements; i++)
         dest[i] = source[i];
-}
-
-static bool write_desktop_tracker_module(const module_t *module, FILE *fp)
-{
-    error("Export to Desktop Tracker format is not implemented yet");
-    return false;
 }
 

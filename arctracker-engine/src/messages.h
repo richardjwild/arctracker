@@ -6,6 +6,7 @@
 #define FILE_OPEN_FAILED "Could not open file"
 #define MODULE_TYPE_UNRECOGNISED "Not a recognised module type"
 #define MODULE_LOAD_FAILED "Failed to load module, either file corrupted or ran out of memory"
+#define SAVE_MODULE_NOT_SUPPORTED "Saving not supported for this module format"
 #define MODULE_SAVE_FAILED "Failed to save module"
 #define SAMPLE_LOAD_FAILED "Failed to load sample, either file corrupted or ran out of memory"
 #define SAMPLE_LINK_FAILED "Failed to link sample to module"
