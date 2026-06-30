@@ -4,6 +4,7 @@
     align-items: center;
     gap: 5px;
     overflow: hidden;
+    border-top-left-radius: 10px;
 }
 
 .moduleHeader .moduleInfo {

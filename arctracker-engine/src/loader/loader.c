@@ -77,11 +77,7 @@ load_module_result_t load_module(const char *filename)
         if (format.is_this_format(file)) {
             module_t *module = format.read_module(file);
             munmap(file.addr, file.size);
-            if (has_error())
-            {
-                module_destroy(module);
-                return FAILED_TO_LOAD_MODULE;
-            }
+            if (module == NULL) return FAILED_TO_LOAD_MODULE;
             return SUCCESSFULLY_LOADED_MODULE(module);
         }
     }

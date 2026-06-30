@@ -103,7 +103,9 @@ module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int 
 
 bool module_init(module_t *module);
 
-bool module_create_pattern(const module_t *module, int pattern_no, int num_lines);
+bool module_set_sequence(module_t *module, const int *new_sequence, int new_sequence_len);
+
+bool module_create_pattern(module_t *module, int pattern_no, int num_lines);
 
 void module_delete_pattern(module_t *module, int pattern_no);
 

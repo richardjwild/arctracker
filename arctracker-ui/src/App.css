@@ -24,7 +24,7 @@
   padding-top: 5px;
   height: calc(100vh - 25px); /* because margin: 10px */
   display: grid;
-  gap: 10px;
+  gap: 1px;
   grid-template-columns: 1fr 300px;
   grid-template-rows: 50px 50px minmax(0, 1fr);
   grid-template-areas:
@@ -35,7 +35,6 @@
 
 .uiArea {
   background: var(--colour-panel-bg);
-  border-radius: 10px;
 }
 
 .padded {

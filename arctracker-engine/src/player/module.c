@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "module.h"
-
 #include "memory/bits.h"
 #include "memory/heap.h"
 
@@ -10,8 +9,11 @@
 #define INITIAL_SAMPLE_CAPACITY 1024
 #define INITIAL_PATTERN_LINE_CAPACITY 64
 
+static bool ensure_sequence_capacity(module_t *, int);
+static bool ensure_pattern_capacity(module_t *, int);
 static bool ensure_pattern_line_capacity(pattern_t *, int, int);
 static void clear_added_events(event_t *, int, int, int);
+static bool ensure_sample_capacity(module_t *module, int required_samples);
 static bool resize_pattern(pattern_t, event_t **, uint32_t, uint32_t);
 static int *resize_track_panning(const int *, uint32_t, uint32_t);
 
@@ -63,8 +65,34 @@ bool module_init(module_t *module)
     return true;
 }
 
-bool module_create_pattern(const module_t *module, const int pattern_no, const int num_lines)
+bool module_set_sequence(module_t *module, const int *new_sequence, const int new_sequence_len)
 {
+    if (!ensure_sequence_capacity(module, new_sequence_len))
+        return false;
+    memcpy(module->sequence, new_sequence, new_sequence_len * sizeof(int));
+    module->tune_length = new_sequence_len;
+    return true;
+}
+
+static bool ensure_sequence_capacity(module_t *module, const int required_sequence_len)
+{
+    if (module->sequence_capacity >= required_sequence_len)
+        return true;
+    int required_capacity = module->sequence_capacity;
+    while (required_capacity < required_sequence_len)
+        required_capacity += INITIAL_SEQUENCE_CAPACITY;
+    int *new_sequence = reallocate_array(MODULE, module->sequence, required_capacity, sizeof(int));
+    if (new_sequence == NULL)
+        return false;
+    module->sequence = new_sequence;
+    module->sequence_capacity = required_capacity;
+    return true;
+}
+
+bool module_create_pattern(module_t *module, const int pattern_no, const int num_lines)
+{
+    if (!ensure_pattern_capacity(module, pattern_no + 1))
+        return false;
     const int line_capacity = num_lines > INITIAL_PATTERN_LINE_CAPACITY ? num_lines : INITIAL_PATTERN_LINE_CAPACITY;
     const pattern_t pattern = (pattern_t) {
         .num_lines = num_lines,
@@ -77,7 +105,7 @@ bool module_create_pattern(const module_t *module, const int pattern_no, const i
     return true;
 }
 
-void module_delete_pattern(module_t *module, int pattern_no)
+void module_delete_pattern(module_t *module, const int pattern_no)
 {
     if (pattern_no != module->num_patterns - 1)
     {
@@ -90,6 +118,21 @@ void module_delete_pattern(module_t *module, int pattern_no)
         .events = NULL,
     };
     module->num_patterns--;
+}
+
+static bool ensure_pattern_capacity(module_t *module, const int required_patterns)
+{
+    if (module->pattern_capacity >= required_patterns)
+        return true;
+    int required_capacity = module->pattern_capacity;
+    while (required_capacity < required_patterns)
+        required_capacity += INITIAL_PATTERN_CAPACITY;
+    pattern_t *new_patterns = reallocate_array(MODULE, module->patterns, required_capacity, sizeof(pattern_t));
+    if (new_patterns == NULL)
+        return false;
+    module->patterns = new_patterns;
+    module->pattern_capacity = required_capacity;
+    return true;
 }
 
 bool module_set_pattern_length(const module_t *module, const int pattern_no, const int new_length)
@@ -179,12 +222,30 @@ void module_set_instrument(module_t *module, const int instrument_index, const i
 
 bool module_link_sample(module_t *module, const float *sample_data, const int sample_length, int *sample_index)
 {
-    *sample_index = module->num_samples;
-    module->samples[*sample_index] = (sample_t) {
+    const int new_sample_index = module->num_samples;
+    if (!ensure_sample_capacity(module, new_sample_index + 1))
+        return false;
+    module->samples[new_sample_index] = (sample_t) {
         .sample_data = sample_data,
         .sample_length = sample_length,
     };
     module->num_samples++;
+    *sample_index = new_sample_index;
+    return true;
+}
+
+static bool ensure_sample_capacity(module_t *module, const int required_samples)
+{
+    if (module->sample_capacity >= required_samples)
+        return true;
+    int required_capacity = module->sample_capacity;
+    while (required_capacity < required_samples)
+        required_capacity += INITIAL_SAMPLE_CAPACITY;
+    sample_t *new_samples = reallocate_array(MODULE, module->samples, required_capacity, sizeof(sample_t));
+    if (new_samples == NULL)
+        return false;
+    module->samples = new_samples;
+    module->sample_capacity = required_capacity;
     return true;
 }
 

@@ -6,6 +6,7 @@
     flex-direction: column;
     gap: 5px;
     padding: 10px 10px 0 10px;
+    border-bottom-right-radius: 10px;
 }
 
 .sampleList button {

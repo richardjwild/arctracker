@@ -188,8 +188,8 @@ export class PatternRenderer {
       this.patternLayout.rowHeight +
       this.patternLayout.playheadPadding;
     const boxHeight = (bounds.bottom - bounds.top + 1) * this.patternLayout.rowHeight;
-    this.withFillStyle(this.colours().selectionBox).fillRect(boxLeft, top, boxWidth - 1, boxHeight);
-    this.withStrokeStyle(this.colours().selectionBoxOutline).strokeRect(boxLeft, top, boxWidth - 1, boxHeight);
+    this.withFillStyle(this.colours().selectionBox).fillRect(boxLeft, top, boxWidth, boxHeight);
+    this.withStrokeStyle(this.colours().selectionBoxOutline).strokeRect(boxLeft, top, boxWidth, boxHeight);
   }
 
   private renderCursor(gridViewportFit: GridViewportFit) {

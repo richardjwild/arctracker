@@ -291,45 +291,61 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, ins
     return sample_index;
 }
 
-static bool get_sample_info(void *array_start, long array_end, sample_t *sample, instrument_t *instrument)
+static bool get_sample_info(void *array_start, const long array_end, sample_t *sample, instrument_t *instrument)
 {
     uint8_t *chunk_address;
 
     // Sample name.
     if ((chunk_address = search_tff(array_start, array_end, SNAM_CHUNK)) == CHUNK_NOT_FOUND)
+    {
+        fprintf(stderr, "Failed to find SNAM\n");
         goto get_sample_info_failed;
+    }
     strncpy(instrument->name, (char *) chunk_address + CHUNK_HEADER_LENGTH, MAX_LEN_SAMPLENAME_TRK);
 
     // Sample volume.
     if ((chunk_address = search_tff(array_start, array_end, SVOL_CHUNK)) == CHUNK_NOT_FOUND)
+    {
+        fprintf(stderr, "Failed to find SVOL\n");
         goto get_sample_info_failed;
+    }
     instrument->default_volume = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
 
     // Sample length.
     if ((chunk_address = search_tff(array_start, array_end, SLEN_CHUNK)) == CHUNK_NOT_FOUND)
+    {
+        fprintf(stderr, "Failed to find SLEN\n");
         goto get_sample_info_failed;
+    }
     sample->sample_length = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
 
     // Repeat offset.
     if ((chunk_address = search_tff(array_start, array_end, ROFS_CHUNK)) == CHUNK_NOT_FOUND)
+    {
+        fprintf(stderr, "Failed to find ROFS\n");
         goto get_sample_info_failed;
+    }
     instrument->repeat_offset = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
 
     // Repeat length.
     if ((chunk_address = search_tff(array_start, array_end, RLEN_CHUNK)) == CHUNK_NOT_FOUND)
+    {
+        fprintf(stderr, "Failed to find RLEN\n");
         goto get_sample_info_failed;
-    int repeat_length = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
-    if (repeat_length == 2 && instrument->repeat_offset != 0)
-        instrument->repeat_length = sample->sample_length - instrument->repeat_offset;
-    else if (repeat_length + instrument->repeat_offset > sample->sample_length)
+    }
+    const int repeat_length = *(int32_t *) (chunk_address + CHUNK_HEADER_LENGTH);
+    if ((repeat_length == 2 && instrument->repeat_offset != 0)
+    || repeat_length + instrument->repeat_offset > sample->sample_length)
         instrument->repeat_length = sample->sample_length - instrument->repeat_offset;
     else
         instrument->repeat_length = repeat_length;
 
     // Sample data.
     if ((chunk_address = search_tff(array_start, array_end, SDAT_CHUNK)) == CHUNK_NOT_FOUND)
-        goto get_sample_info_failed;
-    uint8_t *sample_data_mu_law = chunk_address + CHUNK_HEADER_LENGTH;
+    {
+        sample->sample_length = 0;
+    }
+    const uint8_t *sample_data_mu_law = chunk_address + CHUNK_HEADER_LENGTH;
     if (sample->sample_length == 0)
     {
         sample->sample_data = NULL;
@@ -339,8 +355,11 @@ static bool get_sample_info(void *array_start, long array_end, sample_t *sample,
     {
         float *sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
         if (!convert_vidc_encoded_sample(sample_data, sample_data_mu_law, sample->sample_length))
+        {
+            fprintf(stderr, "Failed to convert sample data\n");
             goto get_sample_info_failed;
-        instrument->repeats = (instrument->repeat_offset != 0 || instrument->repeat_length != 2);
+        }
+        instrument->repeats = instrument->repeat_offset != 0 || instrument->repeat_length != 2;
         if (instrument->repeats) {
             sample_data[sample->sample_length] = sample_data[instrument->repeat_offset];
             sample_data[sample->sample_length + 1] = sample_data[instrument->repeat_offset + 1];
