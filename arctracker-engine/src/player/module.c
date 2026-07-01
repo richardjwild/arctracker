@@ -102,6 +102,8 @@ bool module_create_pattern(module_t *module, const int pattern_no, const int num
     if (pattern.events == NULL)
         return false;
     module->patterns[pattern_no] = pattern;
+    if (pattern_no >= module->num_patterns)
+        module->num_patterns = pattern_no + 1;
     return true;
 }
 
