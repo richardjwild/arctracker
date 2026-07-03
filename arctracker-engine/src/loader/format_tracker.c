@@ -154,8 +154,8 @@ static module_t *read_tracker_module(mapped_file_t file)
     copy_int_array(chunk_address + 8, module->sequence, module->tune_length);
     if (!decode_patterns(file.addr, array_end, module, pattern_lengths))
         goto fail;
-    module->num_samples = get_samples(file.addr, array_end, module->samples, module->instruments);
-    if (module->num_samples == 0)
+    module->sample_slots = get_samples(file.addr, array_end, module->samples, module->instruments);
+    if (module->sample_slots == 0)
         goto fail;
     destroy_encoding_buffer();
     deallocate(MODULE, pattern_lengths);

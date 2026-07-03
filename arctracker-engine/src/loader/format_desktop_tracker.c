@@ -259,7 +259,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
 
 static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uint8_t *base_address)
 {
-    for (int i = 0; i < module->num_samples; i++)
+    for (int i = 0; i < module->sample_slots; i++)
     {
         sample_t *sample = &module->samples[i];
         instrument_t *instrument = &module->instruments[i];

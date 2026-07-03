@@ -500,8 +500,14 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         return failure(NO_MODULE_LOADED);
     if (arctracker->playback.player->playing)
         return failure(PLAYER_PLAYING);
-    if (instrument_update.assigned && instrument_update.sample_index >= arctracker->module->num_samples)
-        return failure(INVALID_SAMPLE_INDEX);
+    if (instrument_update.assigned)
+    {
+        if (instrument_update.sample_index >= arctracker->module->sample_slots)
+            return failure(INVALID_SAMPLE_INDEX);
+        const sample_t sample = arctracker->module->samples[instrument_update.sample_index];
+        if (sample.sample_length == 0)
+            return failure(INVALID_SAMPLE_INDEX);
+    }
     const sample_t sample = arctracker->module->samples[instrument_update.sample_index];
     if (instrument_update.repeat_offset < 0 || instrument_update.repeat_offset >= sample.sample_length - 1)
         return failure(INVALID_REPEAT_OFFSET);

@@ -16,6 +16,8 @@ static void clear_added_events(event_t *, int, int, int);
 static bool ensure_sample_capacity(module_t *module, int required_samples);
 static bool resize_pattern(pattern_t, event_t **, uint32_t, uint32_t);
 static int *resize_track_panning(const int *, uint32_t, uint32_t);
+static void destroy_sample(sample_t *);
+static void destroy_pattern(pattern_t *);
 
 module_t *module_create(const int num_tracks, const int sequence_len, const int num_patterns, const int num_samples)
 {
@@ -28,7 +30,7 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     module->sequence_capacity = sequence_len > INITIAL_SEQUENCE_CAPACITY ? sequence_len : INITIAL_SEQUENCE_CAPACITY;
     module->num_patterns = num_patterns;
     module->pattern_capacity = num_patterns > INITIAL_PATTERN_CAPACITY ? num_patterns : INITIAL_PATTERN_CAPACITY;
-    module->num_samples = num_samples;
+    module->sample_slots = num_samples;
     module->sample_capacity = num_samples > INITIAL_SAMPLE_CAPACITY ? num_samples : INITIAL_SAMPLE_CAPACITY;
     module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
@@ -166,19 +168,6 @@ static void clear_added_events(event_t *events, const int old_capacity, const in
         events[i] = (event_t) {0};
 }
 
-void module_destroy(module_t *module)
-{
-    for (int i = 0; i < module->num_samples; i++)
-        deallocate(MODULE, (void *) module->samples[i].sample_data);
-    for (int i = 0; i < module->num_patterns; i++)
-        deallocate(MODULE, module->patterns[i].events);
-    deallocate(MODULE, module->patterns);
-    deallocate(MODULE, module->initial_panning);
-    deallocate(MODULE, module->sequence);
-    deallocate(MODULE, module->samples);
-    deallocate(MODULE, module);
-}
-
 void module_get_info(module_t *module, ui_module_info_t *module_info)
 {
     snprintf(module_info->name, sizeof module_info->name, "%s", module->name);
@@ -224,15 +213,42 @@ void module_set_instrument(module_t *module, const int instrument_index, const i
 
 bool module_link_sample(module_t *module, const float *sample_data, const int sample_length, int *sample_index)
 {
-    const int new_sample_index = module->num_samples;
-    if (!ensure_sample_capacity(module, new_sample_index + 1))
-        return false;
+    bool found_empty_slot = false;
+    int new_sample_index = 0;
+    for (int i = 0; i < module->sample_slots; i++)
+    {
+        if (module->samples[i].sample_length == 0)
+        {
+            new_sample_index = i;
+            found_empty_slot = true;
+            break;
+        }
+    }
+    if (!found_empty_slot)
+    {
+        new_sample_index = module->sample_slots;
+        if (!ensure_sample_capacity(module, new_sample_index + 1))
+            return false;
+        module->sample_slots++;
+    }
     module->samples[new_sample_index] = (sample_t) {
         .sample_data = sample_data,
         .sample_length = sample_length,
     };
-    module->num_samples++;
     *sample_index = new_sample_index;
+    return true;
+}
+
+bool module_set_sample(module_t *module, const float *sample_data, const int sample_length, const int sample_index)
+{
+    if (!ensure_sample_capacity(module, sample_index))
+        return false;
+    module->samples[sample_index] = (sample_t) {
+        .sample_data = sample_data,
+        .sample_length = sample_length,
+    };
+    if (sample_index >= module->sample_slots)
+        module->sample_slots = sample_index + 1;
     return true;
 }
 
@@ -246,6 +262,8 @@ static bool ensure_sample_capacity(module_t *module, const int required_samples)
     sample_t *new_samples = reallocate_array(MODULE, module->samples, required_capacity, sizeof(sample_t));
     if (new_samples == NULL)
         return false;
+    for (int sample = module->sample_slots; sample < required_capacity; sample++)
+        module->samples[sample] = (sample_t) {0};
     module->samples = new_samples;
     module->sample_capacity = required_capacity;
     return true;
@@ -342,4 +360,32 @@ void module_set_num_tracks(module_t *module, const uint32_t num_tracks)
             for (uint32_t tno = old_num_tracks; tno < num_tracks; tno++)
                 events[line * module->track_capacity + tno] = (event_t) {0};
     }
+}
+
+void module_destroy(module_t *module)
+{
+    for (int i = 0; i < module->sample_slots; i++)
+        destroy_sample(&module->samples[i]);
+    for (int i = 0; i < module->num_patterns; i++)
+        destroy_pattern(&module->patterns[i]);
+    deallocate(MODULE, module->patterns);
+    deallocate(MODULE, module->initial_panning);
+    deallocate(MODULE, module->sequence);
+    deallocate(MODULE, module->samples);
+    deallocate(MODULE, module);
+}
+
+static void destroy_sample(sample_t *sample)
+{
+    deallocate(MODULE, (void *) sample->sample_data);
+    sample->sample_data = NULL;
+    sample->sample_length = 0;
+}
+
+static void destroy_pattern(pattern_t *pattern)
+{
+    deallocate(MODULE, pattern->events);
+    pattern->events = NULL;
+    pattern->num_lines = 0;
+    pattern->line_capacity = 0;
 }

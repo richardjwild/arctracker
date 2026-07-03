@@ -91,7 +91,7 @@ typedef struct
     int num_patterns;
     pattern_t *patterns;
     int pattern_capacity;
-    int num_samples;
+    int sample_slots;
     sample_t *samples;
     int sample_capacity;
     instrument_t instruments[NUM_INSTRUMENT_SLOTS];
@@ -111,8 +111,6 @@ void module_delete_pattern(module_t *module, int pattern_no);
 
 bool module_set_pattern_length(const module_t *module, int pattern_no, int new_length);
 
-void module_destroy(module_t *module);
-
 void module_get_info(module_t *module, ui_module_info_t *module_info);
 
 void module_get_instrument_info(const module_t *module, int instrument_index, ui_instrument_info_t *instrument_info);
@@ -121,6 +119,8 @@ void module_set_instrument(module_t *module, int instrument_index, instrument_t 
 
 bool module_link_sample(module_t *module, const float *sample_data, int sample_length, int *sample_index);
 
+bool module_set_sample(module_t *module, const float *sample_data, int sample_length, int sample_index);
+
 void module_set_name(module_t *module, const char *name);
 
 void module_set_author(module_t *module, const char *author);
@@ -128,5 +128,7 @@ void module_set_author(module_t *module, const char *author);
 bool module_adjust_track_capacity(module_t *module, uint32_t new_track_capacity);
 
 void module_set_num_tracks(module_t *module, uint32_t num_tracks);
+
+void module_destroy(module_t *module);
 
 #endif //ARCTRACKER_MODULE_H
