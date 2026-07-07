@@ -11,6 +11,7 @@ export type Module = {
   patternLengths: number[];
   tuneLength: number;
   instruments: Instrument[];
+  masterGain: number;
 }
 
 export type Instrument = {

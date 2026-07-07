@@ -175,6 +175,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->num_tracks = module->num_tracks;
     module_info->tune_length = module->tune_length;
     module_info->num_patterns = module->num_patterns;
+    module_info->master_gain = module->master_gain;
 }
 
 void module_get_instrument_info(const module_t *module, const int instrument_index, ui_instrument_info_t *instrument_info)

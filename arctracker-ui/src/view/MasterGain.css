@@ -17,6 +17,8 @@
     font-size: 12px;
     color: var(--colour-master-gain-value);
     padding-right: 5px;
+    width: 29px;
+    text-align: right;
 }
 
 .masterGain canvas.vuMeter {

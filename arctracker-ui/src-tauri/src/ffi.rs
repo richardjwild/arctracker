@@ -79,6 +79,7 @@ pub struct UiModuleInfo {
     pub num_tracks: c_int,
     pub tune_length: c_int,
     pub num_patterns: c_int,
+    pub master_gain: f32,
 }
 
 #[repr(C)]

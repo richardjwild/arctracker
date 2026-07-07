@@ -25,6 +25,7 @@ interface AppStore {
   draftModuleTitle: ModuleTitle | null;
   isLoadingModule: boolean;
   setModule: (result: Module) => void;
+  setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
   setModuleTitle: (name: string, author: string) => void;
   updateTracks: (numTracks: number) => void;
@@ -56,6 +57,7 @@ const initialModule: Module = {
   patternLengths: [],
   tuneLength: 1,
   instruments: [],
+  masterGain: 1.0,
 };
 
 const initialTransportState: TransportState = {
@@ -152,6 +154,14 @@ export const useStore = create<AppStore>((set) => ({
       editorState: initialEditorState(result.numTracks),
       patternSelection: null,
       pasteBuffer: null,
+    })),
+
+  setMasterGain: (gain: number) =>
+    set((state) => ({
+      module: {
+        ...state.module,
+        masterGain: gain,
+      },
     })),
 
   setModuleFilename: (fileName: string) =>

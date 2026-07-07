@@ -41,6 +41,7 @@ typedef struct ui_module_info {
     int num_tracks;
     int tune_length;
     int num_patterns;
+    float master_gain;
 } ui_module_info_t;
 
 typedef struct ui_effect {
