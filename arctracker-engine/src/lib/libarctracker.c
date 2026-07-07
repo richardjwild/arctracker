@@ -211,6 +211,17 @@ void arctracker_get_transport_state(arctracker_t *arctracker, ui_transport_state
     get_transport_state(arctracker->playback.player, arctracker->module, transport_state);
 }
 
+void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t *peak_levels)
+{
+    if (handle == NULL || !handle->playback.thread_active)
+    {
+        peak_levels->left = 0.0f;
+        peak_levels->right = 0.0f;
+        return;
+    }
+    player_get_and_reset_peaks(handle->playback.player, &peak_levels->left, &peak_levels->right);
+}
+
 void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *export_state)
 {
     if (arctracker == NULL || !arctracker->export.thread_active)

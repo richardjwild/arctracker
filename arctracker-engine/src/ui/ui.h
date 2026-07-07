@@ -62,11 +62,16 @@ typedef struct ui_transport_state {
     int pattern_index;
     int pattern_no;
     int pattern_length;
-} ui_transport_state_t ;
+} ui_transport_state_t;
 
 typedef struct ui_export_state {
     bool completed;
     int percent_complete;
 } ui_export_state_t;
+
+typedef struct ui_peak_level {
+    float left;
+    float right;
+} ui_peak_level_t;
 
 #endif //ARCTRACKER_UI_H

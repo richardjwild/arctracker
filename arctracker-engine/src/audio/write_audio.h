@@ -1,6 +1,8 @@
 #ifndef ARCTRACKER_WRITE_AUDIO_H
 #define ARCTRACKER_WRITE_AUDIO_H
 
+#include <stdatomic.h>
+
 #include "mix.h"
 #include "voice.h"
 #include "audio_api/api.h"
@@ -15,6 +17,8 @@ typedef struct
     stereo_frame_t *mix_buffer;
     stereo_frame_t *output_buffer;
     int frames_filled;
+    atomic_uint peak_l;
+    atomic_uint peak_r;
     audio_api_t api;
     bool healthy;
 } audio_out_t;

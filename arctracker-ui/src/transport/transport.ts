@@ -51,7 +51,8 @@ export const transport = {
   },
 
   getTransportState: async (): Promise<TransportState> => {
-    return await engine.getTransportState();
+    const ts = await engine.getTransportState();
+    return ts;
   },
 
   transportStatePoller: (() =>

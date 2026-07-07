@@ -40,4 +40,9 @@
     --colour-sample-edit-input-text: #cccc22;
     --colour-master-gain-accent: #cccc22;
     --colour-master-gain-value: #cccc22;
+    --colour-clip-indicator-off: #550000;
+    --colour-clip-indicator-on: #ff0000;
+    --colour-vu-meter-guide: #333333;
+    --colour-vu-meter-bottom: rgb(0, 255, 0);
+    --colour-vu-meter-top: rgb(255, 0, 0);
 }

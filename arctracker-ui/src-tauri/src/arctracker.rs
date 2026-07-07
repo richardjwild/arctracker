@@ -204,6 +204,15 @@ pub struct UiTransportState {
     pub pattern_index: i32,
     pub pattern_no: i32,
     pub pattern_length: i32,
+    pub peak_left: f32,
+    pub peak_right: f32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiPeakLevels {
+    pub left: f32,
+    pub right: f32,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -469,6 +478,20 @@ impl Arctracker {
             pattern_index: transport_state.pattern_index,
             pattern_no: transport_state.pattern_no,
             pattern_length: transport_state.pattern_length,
+            peak_left: transport_state.peak_l,
+            peak_right: transport_state.peak_r,
+        }
+    }
+    
+    pub fn get_and_reset_peak_levels(&mut self) -> UiPeakLevels {
+        let mut peak_levels = std::mem::MaybeUninit::<ffi::UiPeakLevels>::uninit();
+        unsafe {
+            ffi::arctracker_get_and_reset_peak_levels(self.handle, peak_levels.as_mut_ptr())
+        };
+        let peak_levels = unsafe { peak_levels.assume_init() };
+        UiPeakLevels {
+            left: peak_levels.left,
+            right: peak_levels.right,
         }
     }
 
@@ -524,6 +547,7 @@ impl Arctracker {
             track: 0,
             note: 0,
             instrument_no: 0,
+            master_gain: 0.0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -538,6 +562,7 @@ impl Arctracker {
             track: 0,
             note: 0,
             instrument_no: 0,
+            master_gain: 0.0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -552,6 +577,7 @@ impl Arctracker {
             track: 0,
             note: 0,
             instrument_no: 0,
+            master_gain: 0.0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -567,6 +593,7 @@ impl Arctracker {
             track: track,
             note,
             instrument_no,
+            master_gain: 0.0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -582,6 +609,22 @@ impl Arctracker {
             track: track,
             note,
             instrument_no,
+            master_gain: 0.0,
+        };
+        unsafe {
+            ffi::arctracker_player_cmd(self.handle, &command);
+        }
+    }
+
+    pub fn set_master_gain(&mut self, master_gain: f32) {
+        let command = ffi::PlayerCommand {
+            cmd_type: ffi::PlayerCommandType::SetMasterGain,
+            new_sequence_pos: 0,
+            new_pattern_pos: 0,
+            track: 0,
+            note: 0,
+            instrument_no: 0,
+            master_gain,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);

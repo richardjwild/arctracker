@@ -11,6 +11,7 @@ typedef enum cmd_type {
     KEYBOARD_NOTE_ON = 4,
     KEYBOARD_NOTE_OFF = 5, // Reserved for future use.
     TOGGLE_LOOP = 6,
+    SET_MASTER_GAIN = 7,
 } cmd_type_t;
 
 typedef struct player_command {
@@ -20,6 +21,7 @@ typedef struct player_command {
     int track;
     int note;
     uint8_t instrument_no;
+    float master_gain;
 } player_command_t;
 
 #endif //ARCTRACKER_PLAYER_COMMAND_H

@@ -50,6 +50,11 @@ export type TransportState = {
   patternLength: number;
 }
 
+export type PeakLevels = {
+  left: number;
+  right: number;
+}
+
 export type ExportState = {
   completed: boolean;
   percentComplete: number;
@@ -168,8 +173,18 @@ export const engine = {
     });
   },
 
+  setMasterGain: (masterGain: number) => {
+    void invoke("set_master_gain", {
+      masterGain,
+    })
+  },
+
   getTransportState: async (): Promise<TransportState> => {
     return await invoke("get_transport_state");
+  },
+
+  getAndResetPeakLevels: async (): Promise<PeakLevels> => {
+    return await invoke("get_and_reset_peak_levels");
   },
 
   getPattern: async (

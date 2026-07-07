@@ -4,7 +4,7 @@ pub mod state;
 
 use std::sync::Arc;
 use tauri::{AppHandle};
-use crate::arctracker::{PatternLine, PlayerEvent, Module, UiExportState, PatternEvent, InstrumentUpdate, Sample};
+use crate::arctracker::{PatternLine, PlayerEvent, Module, UiExportState, PatternEvent, InstrumentUpdate, Sample, UiPeakLevels};
 use crate::arctracker::UiTransportState;
 pub use crate::state::AppState;
 
@@ -85,6 +85,12 @@ fn get_transport_state(state: tauri::State<Arc<AppState>>) -> UiTransportState {
 }
 
 #[tauri::command]
+fn get_and_reset_peak_levels(state: tauri::State<Arc<AppState>>) -> UiPeakLevels {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.get_and_reset_peak_levels()
+}
+
+#[tauri::command]
 fn get_pattern(
     pattern_no: i32,
     num_lines: i32,
@@ -154,6 +160,14 @@ fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(),
     let mut tracker = state.tracker.lock().unwrap();
     let editor = state.editor.lock().unwrap();
     tracker.keyboard_note_on(note, editor.selected_instrument, editor.selected_channel);
+    Ok(())
+}
+
+#[tauri::command]
+fn set_master_gain(state: tauri::State<Arc<AppState>>, master_gain: f32) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    let editor = state.editor.lock().unwrap();
+    tracker.set_master_gain(master_gain);
     Ok(())
 }
 
@@ -255,6 +269,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             toggle_loop,
             seek,
             get_transport_state,
+            get_and_reset_peak_levels,
             get_pattern,
             set_selected_instrument,
             set_selected_channel,
@@ -265,6 +280,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             get_export_state,
             export_cleanup,
             keyboard_note_on,
+            set_master_gain,
             edit_get_event,
             edit_set_event,
             edit_get_sequence,

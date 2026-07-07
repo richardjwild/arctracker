@@ -15,6 +15,7 @@ static void process_seek_command(player_t *player, player_command_t command);
 static void process_note_on_command(const player_t *player, player_command_t command, bool from_midi);
 static void process_note_off_command(const player_t *player, player_command_t command);
 static void process_toggle_loop_command(player_t *player);
+static void process_set_master_gain_command(player_t *player, player_command_t command);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(const player_t *);
@@ -117,6 +118,14 @@ void player_destroy(player_t *player)
     deallocate(PLAYER, player);
 }
 
+void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r)
+{
+    const unsigned l = atomic_exchange_explicit(&player->audio_out.peak_l, 0, memory_order_relaxed);
+    const unsigned r = atomic_exchange_explicit(&player->audio_out.peak_r, 0, memory_order_relaxed);
+    *peak_l = (float) l / 65535.0f;
+    *peak_r = (float) r / 65535.0f;
+}
+
 static bool player_tick(player_t *player)
 {
     process_commands(player);
@@ -167,6 +176,9 @@ static void process_command(player_t *player, const player_command_t command)
             break;
         case TOGGLE_LOOP:
             process_toggle_loop_command(player);
+            break;
+        case SET_MASTER_GAIN:
+            process_set_master_gain_command(player, command);
             break;
         default:
             break;
@@ -219,6 +231,12 @@ static void process_toggle_loop_command(player_t *player)
         set_pattern_loop(&player->sequence);
 }
 
+static void process_set_master_gain_command(player_t *player, const player_command_t command)
+{
+    player->audio_out.master_gain = command.master_gain;
+    player->module->master_gain = command.master_gain;
+}
+
 static voice_t *initialise_voices(const player_t *player)
 {
     voice_t *voices = allocate_array(PLAYER, player->module->num_tracks, sizeof(voice_t));
@@ -256,7 +274,7 @@ static void player_step(player_t *player)
 
 static event_t *get_events(const player_t *player)
 {
-    const int track_capacity = player->module->track_capacity;
+    const int track_capacity = (int) player->module->track_capacity;
     const sequence_t *sequence = &player->sequence;
     const int pattern_no = sequence->sequence[sequence->sequence_pos];
     const pattern_t pattern = player->module->patterns[pattern_no];

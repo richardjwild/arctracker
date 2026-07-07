@@ -52,4 +52,6 @@ void player_sequence_restore(player_t *player, sequence_t sequence);
 
 void player_destroy(player_t *);
 
+void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r);
+
 #endif //ARCTRACKER_PLAY_MOD_H

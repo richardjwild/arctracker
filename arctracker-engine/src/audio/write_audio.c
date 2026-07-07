@@ -15,7 +15,7 @@ static const float PAN_HARD_RIGHT = 255.0f;
 static void calculate_gain_curve(float *gain_curve);
 static audio_api_result_t fill_audio_buffer(audio_out_t *, voice_t *, int);
 static void write_audio_for_channel(audio_out_t *, voice_t *, int, int);
-static audio_api_result_t mix_and_send(const audio_out_t *);
+static audio_api_result_t mix_and_send(audio_out_t *);
 
 audio_out_result_t initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain)
 {
@@ -27,6 +27,8 @@ audio_out_result_t initialise_audio(audio_out_t *audio_out, audio_api_t audio_ap
     audio_out->mix_buffer = allocate_array(AUDIO, audio_api.buffer_size_frames * num_channels, sizeof(stereo_frame_t));
     audio_out->output_buffer = allocate_audio_buffer(audio_api.buffer_size_frames);
     audio_out->frames_filled = 0;
+    audio_out->peak_l = 0;
+    audio_out->peak_r = 0;
     calculate_gain_curve(audio_out->gain_curve);
     audio_api_result_t result = audio_out->api.init();
     audio_out->healthy = true;
@@ -114,9 +116,9 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
     }
 }
 
-static audio_api_result_t mix_and_send(const audio_out_t *audio_out)
+static audio_api_result_t mix_and_send(audio_out_t *audio_out)
 {
-    const bool overflowed = mix(audio_out->mix_buffer, audio_out->output_buffer, audio_out->num_channels, audio_out->api.buffer_size_frames);
+    const bool overflowed = mix(audio_out->mix_buffer, audio_out->output_buffer, &audio_out->peak_l, &audio_out->peak_r, audio_out->num_channels, audio_out->api.buffer_size_frames);
     audio_api_result_t result = audio_out->api.write(audio_out->output_buffer, audio_out->frames_filled);
     result.overflowed |= overflowed;
     return result;

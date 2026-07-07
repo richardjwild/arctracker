@@ -30,6 +30,7 @@ pub enum PlayerCommandType {
     KeyboardNoteOn = 4,
     KeyboardNoteOff = 5,
     ToggleLoop = 6,
+    SetMasterGain = 7,
 }
 
 #[repr(C)]
@@ -40,6 +41,7 @@ pub struct PlayerCommand {
     pub track: c_int,
     pub note: c_int,
     pub instrument_no: u8,
+    pub master_gain: f32,
 }
 
 #[repr(C)]
@@ -105,6 +107,14 @@ pub struct UiTransportState {
     pub pattern_index: c_int,
     pub pattern_no: c_int,
     pub pattern_length: c_int,
+    pub peak_l: f32,
+    pub peak_r: f32,
+}
+
+#[repr(C)]
+pub struct UiPeakLevels {
+    pub left: f32,
+    pub right: f32,
 }
 
 #[repr(C)]
@@ -161,6 +171,10 @@ extern "C" {
     pub fn arctracker_get_transport_state(
         handle: *mut ArctrackerHandle,
         out_state: *mut UiTransportState,
+    );
+    pub fn arctracker_get_and_reset_peak_levels(
+        handle: *mut ArctrackerHandle, peak_levels:
+        *mut UiPeakLevels
     );
     pub fn arctracker_get_pattern(
         handle: *mut ArctrackerHandle,
