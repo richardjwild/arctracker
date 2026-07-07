@@ -10,13 +10,15 @@ import SampleEditDialog from "./view/SampleEditDialog.tsx";
 import EditPatternLength from "./view/EditPatternLength.tsx";
 import EditModuleTitle from "./view/EditModuleTitle.tsx";
 import EditTrackCount from "./view/EditTrackCount.tsx";
+import MasterGain from "./view/MasterGain.tsx";
 
 export default function AppLayout() {
   return (
     <main className="container">
       <ModuleHeader />
-      <TransportBar />
+      <MasterGain />
       <Sequence />
+      <TransportBar />
       <PatternView />
       <InstrumentList />
       <SampleEditDialog />

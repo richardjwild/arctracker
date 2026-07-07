@@ -38,4 +38,6 @@
     --colour-transport-button-bg: #dfdfdf;
     --colour-sample-edit-label: #999999;
     --colour-sample-edit-input-text: #cccc22;
+    --colour-master-gain-accent: #cccc22;
+    --colour-master-gain-value: #cccc22;
 }

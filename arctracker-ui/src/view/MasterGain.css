@@ -1,0 +1,27 @@
+.masterGain {
+    grid-area: masterGain;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    padding-left: 10px;
+    border-top-right-radius: 10px;
+}
+
+.masterGain input[type='range'] {
+    accent-color: var(--colour-master-gain-accent);
+    width: 115px;
+}
+
+.masterGain .gainValue {
+    font-size: 12px;
+    color: var(--colour-master-gain-value);
+    padding-right: 5px;
+}
+
+.masterGain canvas.vuMeter {
+    background-color: var(--colour-panel-bg);
+    display: block;
+    width: 120px;
+    height: 100%;
+}

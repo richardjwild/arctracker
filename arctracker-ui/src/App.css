@@ -28,8 +28,8 @@
   grid-template-columns: 1fr 300px;
   grid-template-rows: 50px 50px minmax(0, 1fr);
   grid-template-areas:
-    "moduleHeader transport"
-    "sequenceView sequenceView"
+    "moduleHeader masterGain"
+    "sequenceView transport"
     "patternView sampleList";
 }
 
