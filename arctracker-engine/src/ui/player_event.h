@@ -6,7 +6,6 @@
 typedef enum player_event_type {
     PLAYER_ERROR = 0,
     USER_MIDI_NOTE_ON = 1,
-    AUDIO_OVERFLOWED = 2,
 } player_event_type_t;
 
 typedef struct player_event {

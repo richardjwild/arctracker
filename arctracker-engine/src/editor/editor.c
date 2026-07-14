@@ -58,7 +58,6 @@ edit_result_t editor_create_pattern(module_t *module, const int pattern_length, 
     *new_pattern_no = module->num_patterns;
     if (!module_create_pattern(module, *new_pattern_no, pattern_length))
         return failure(MEMORY_ALLOCATION_FAILED);
-    module->num_patterns++;
     return EDIT_SUCCESS;
 }
 

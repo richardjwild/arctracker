@@ -10,7 +10,6 @@ pub struct ArctrackerHandle {
 pub enum PlayerEventType {
     PlayerError = 0,
     UserMidiNoteOn = 1,
-    AudioOverflowed = 2,
 }
 
 #[repr(C)]

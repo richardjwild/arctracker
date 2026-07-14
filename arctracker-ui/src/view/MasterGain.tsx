@@ -3,6 +3,10 @@ import { useStore } from "../store/useStore.ts";
 import { engine } from "../engine/engine.ts";
 import { useEffect, useRef } from "react";
 import { animation } from "../rendering/animation.ts";
+import {
+  VuMeterColours,
+  VuMeterRenderer,
+} from "../rendering/renderVuMeters.ts";
 
 function toText(value: number) {
   return `${Math.round(value * 100)}%`;
@@ -14,11 +18,7 @@ function cssColour(name: string): string {
     .trim();
 }
 
-const FALL_PER_SECOND = 1.5; // full-scale units per second
-
 export default function MasterGain() {
-  const displayedPeaksRef = useRef({ left: 0, right: 0 });
-  const lastFrameTimeRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const masterGain = useStore((state) => state.module.masterGain);
   const setMasterGain = useStore((state) => state.setMasterGain);
@@ -26,40 +26,13 @@ export default function MasterGain() {
     setMasterGain(gain);
     engine.setMasterGain(gain);
   };
-  const clipIndicatorOffColour = cssColour("--colour-clip-indicator-off");
-  const vuMeterGuideColour = cssColour("--colour-vu-meter-guide");
-  const bottomColour = cssColour("--colour-vu-meter-bottom");
-  const topColour = cssColour("--colour-vu-meter-top");
-
-  const renderVuMeter = async (ctx: CanvasRenderingContext2D) => {
-    const now = performance.now();
-    const last = lastFrameTimeRef.current ?? now;
-    const dt = (now - last) / 1000;
-    lastFrameTimeRef.current = now;
-    const peakLevels = await engine.getAndResetPeakLevels();
-    const displayed = displayedPeaksRef.current;
-    displayed.left = Math.max(
-      peakLevels.left,
-      displayed.left - FALL_PER_SECOND * dt,
-    );
-    displayed.right = Math.max(
-      peakLevels.right,
-      displayed.right - FALL_PER_SECOND * dt,
-    );
-    ctx.clearRect(0, 0, 240, 100);
-    // draw VU meters
-    ctx.fillStyle = clipIndicatorOffColour;
-    ctx.fillRect(220, 30, 20, 40);
-    ctx.strokeStyle = vuMeterGuideColour;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(1, 24, 200, 22);
-    ctx.strokeRect(1, 56, 200, 22);
-    const gradient = ctx.createLinearGradient(1, 0, 201, 0);
-    gradient.addColorStop(0, bottomColour);
-    gradient.addColorStop(1, topColour);
-    ctx.fillStyle = gradient;
-    if (displayed.left > 0) ctx.fillRect(1, 24, 200 * displayed.left, 22);
-    if (displayed.right > 0) ctx.fillRect(1, 56, 200 * displayed.right, 22);
+  const colours: VuMeterColours = {
+    clipIndicatorOff: cssColour("--colour-clip-indicator-off"),
+    clipIndicatorOn: cssColour("--colour-clip-indicator-on"),
+    guide: cssColour("--colour-vu-meter-guide"),
+    vuMeterBottom: cssColour("--colour-vu-meter-bottom"),
+    vuMeterMiddle: cssColour("--colour-vu-meter-middle"),
+    vuMeterTop: cssColour("--colour-vu-meter-top"),
   };
 
   useEffect(() => {
@@ -67,8 +40,18 @@ export default function MasterGain() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    return animation.registerRenderer(() => renderVuMeter(ctx));
-  }, []);
+    const renderer = new VuMeterRenderer(ctx, colours);
+    return animation.registerRenderer((timestamp) => {
+      void renderer.render(timestamp);
+    });
+  }, [
+    colours.clipIndicatorOff,
+    colours.clipIndicatorOn,
+    colours.guide,
+    colours.vuMeterBottom,
+    colours.vuMeterMiddle,
+    colours.vuMeterTop,
+  ]);
 
   return (
     <div className="masterGain uiArea">

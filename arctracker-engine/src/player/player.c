@@ -29,7 +29,6 @@ static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
 static player_event_t create_user_midi_event(int note);
-static player_event_t create_audio_overflowed_event(void);
 static player_event_t create_error_event(const char *);
 
 player_t *player_create(module_t *module, const audio_api_t audio_api, player_event_queue_t *player_event_queue)
@@ -287,11 +286,7 @@ static bool audio_consume(player_t *player)
     const int samples_to_write = tick_scheduler_samples_to_write(audio_accumulator);
     const audio_out_result_t result = write_audio_data(&player->audio_out, player->voices, samples_to_write);
     if (result.success)
-    {
         tick_scheduler_consume_samples(audio_accumulator);
-        if (result.overflowed)
-            event_queue_add(player->player_event_queue, create_audio_overflowed_event());
-    }
     else
         player->error_message = result.error_message;
     return result.success;
@@ -382,13 +377,6 @@ static player_event_t create_user_midi_event(const int note)
     event.type = USER_MIDI_NOTE_ON;
     event.midi_note = note;
     return event;
-}
-
-static player_event_t create_audio_overflowed_event(void)
-{
-    return (player_event_t) {
-        .type = AUDIO_OVERFLOWED
-    };
 }
 
 static player_event_t create_error_event(const char *error_message)

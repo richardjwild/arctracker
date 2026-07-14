@@ -11,7 +11,6 @@ pub struct Arctracker {
 pub enum PlayerEventType {
     PlayerError = 0,
     UserMidiNoteOn = 1,
-    AudioOverflowed = 2,
 }
 
 impl From<ffi::PlayerEventType> for PlayerEventType {
@@ -19,9 +18,6 @@ impl From<ffi::PlayerEventType> for PlayerEventType {
         match event_type {
             ffi::PlayerEventType::PlayerError => {
                 PlayerEventType::PlayerError
-            }
-            ffi::PlayerEventType::AudioOverflowed => {
-                PlayerEventType::AudioOverflowed
             }
             ffi::PlayerEventType::UserMidiNoteOn => {
                 PlayerEventType::UserMidiNoteOn

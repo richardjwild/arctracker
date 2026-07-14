@@ -28,9 +28,6 @@ function processPlayerEvents() {
         case "userMidiNoteOn":
           commands.editNoteField(event.midiNote);
           break;
-        case "audioOverflowed":
-          console.log("Audio overflowed"); // TODO: Light an indicator or something.
-          break;
       }
     }
   });

@@ -199,6 +199,12 @@ export class PatternRenderer {
       x += this.patternLayout.getEventWidth(track);
     }
     const y = (gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight) + this.patternLayout.playheadPadding;
+    this.withStrokeStyle(this.colours().cursor).withLineWidth(2).strokeRect(
+      x - 1,
+      y - 1,
+      2 + this.patternLayout.getEventWidth(cursorTrack) - (this.patternLayout.glyphWidth * 2),
+      2 + this.patternLayout.rowHeight
+    );
     let cursorX = this.patternLayout.leftPadding + x - this.patternLayout.glyphWidth;
     let cursorWidth = this.patternLayout.glyphWidth;
     const cursor = new Cursor();
@@ -358,6 +364,11 @@ export class PatternRenderer {
 
   private withStrokeStyle(strokeStyle: string): PatternRenderer {
     this.ctx.strokeStyle = strokeStyle;
+    return this;
+  }
+
+  private withLineWidth(lineWidth: number): PatternRenderer {
+    this.ctx.lineWidth = lineWidth;
     return this;
   }
 

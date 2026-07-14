@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "module.h"
+
+#include "messages.h"
+#include "io/error.h"
 #include "memory/bits.h"
 #include "memory/heap.h"
 
@@ -11,8 +14,8 @@
 
 static bool ensure_sequence_capacity(module_t *, int);
 static bool ensure_pattern_capacity(module_t *, int);
-static bool ensure_pattern_line_capacity(pattern_t *, int, int);
-static void clear_added_events(event_t *, int, int, int);
+static bool ensure_pattern_line_capacity(pattern_t *, uint32_t, int);
+static void clear_added_events(event_t *, int, int, uint32_t);
 static bool ensure_sample_capacity(module_t *module, int required_samples);
 static bool resize_pattern(pattern_t, event_t **, uint32_t, uint32_t);
 static int *resize_track_panning(const int *, uint32_t, uint32_t);
@@ -58,11 +61,7 @@ bool module_init(module_t *module)
         module->initial_panning[i] = 0x80; // Centre
     for (int i = 0; i < NUM_INSTRUMENT_SLOTS; i++)
         module->instruments[i].assigned = false;
-    module->patterns[0] = (pattern_t) {
-        .num_lines = 64,
-        .events = allocate_array(MODULE, 64 * module->num_tracks, sizeof(event_t)),
-    };
-    if (module->patterns[0].events == NULL)
+    if (!module_create_pattern(module, 0, 64))
         return false;
     return true;
 }
@@ -93,6 +92,11 @@ static bool ensure_sequence_capacity(module_t *module, const int required_sequen
 
 bool module_create_pattern(module_t *module, const int pattern_no, const int num_lines)
 {
+    if (pattern_no < module->pattern_capacity && module->patterns[pattern_no].events != NULL)
+    {
+        error(PATTERN_ALREADY_EXISTS);
+        return false;
+    }
     if (!ensure_pattern_capacity(module, pattern_no + 1))
         return false;
     const int line_capacity = num_lines > INITIAL_PATTERN_LINE_CAPACITY ? num_lines : INITIAL_PATTERN_LINE_CAPACITY;
@@ -117,11 +121,9 @@ void module_delete_pattern(module_t *module, const int pattern_no)
         return;
     }
     deallocate(MODULE, module->patterns[pattern_no].events);
-    module->patterns[pattern_no] = (pattern_t) {
-        .num_lines = 0,
-        .events = NULL,
-    };
-    module->num_patterns--;
+    module->patterns[pattern_no].num_lines = 0;
+    module->patterns[pattern_no].events = NULL;
+    module->num_patterns = pattern_no;
 }
 
 static bool ensure_pattern_capacity(module_t *module, const int required_patterns)
@@ -142,28 +144,28 @@ static bool ensure_pattern_capacity(module_t *module, const int required_pattern
 bool module_set_pattern_length(const module_t *module, const int pattern_no, const int new_length)
 {
     pattern_t pattern = module->patterns[pattern_no];
-    if (!ensure_pattern_line_capacity(&pattern, module->num_tracks, new_length)) return false;
+    if (!ensure_pattern_line_capacity(&pattern, module->track_capacity, new_length)) return false;
     pattern.num_lines = new_length;
     module->patterns[pattern_no] = pattern;
     return true;
 }
 
-static bool ensure_pattern_line_capacity(pattern_t *pattern, const int num_tracks, const int required_lines)
+static bool ensure_pattern_line_capacity(pattern_t *pattern, const uint32_t track_capacity, const int required_lines)
 {
     if (pattern->line_capacity >= required_lines)
         return true;
-    event_t *new_events = reallocate_array(MODULE, pattern->events, required_lines * num_tracks, sizeof(event_t));
+    event_t *new_events = reallocate_array(MODULE, pattern->events, required_lines * track_capacity, sizeof(event_t));
     if (new_events == NULL) return false;
     pattern->events = new_events;
-    clear_added_events(pattern->events, pattern->line_capacity, required_lines, num_tracks);
+    clear_added_events(pattern->events, pattern->line_capacity, required_lines, track_capacity);
     pattern->line_capacity = required_lines;
     return true;
 }
 
-static void clear_added_events(event_t *events, const int old_capacity, const int new_capacity, const int num_tracks)
+static void clear_added_events(event_t *events, const int old_capacity, const int new_capacity, const uint32_t track_capacity)
 {
-    const int added_events_start = old_capacity * num_tracks;
-    const int added_events_end = new_capacity * num_tracks - 1;
+    const int added_events_start = old_capacity * track_capacity;
+    const int added_events_end = new_capacity * track_capacity - 1;
     for (int i = added_events_start; i <= added_events_end; i++)
         events[i] = (event_t) {0};
 }

@@ -5,8 +5,7 @@
 #include "pcm/mu_law.h"
 
 #define AUDIO_OUT_SUCCESS (audio_out_result_t) {\
-    .success = true,\
-    .overflowed = false\
+    .success = true\
 }
 
 static const float PAN_HARD_LEFT = 1.0f;
@@ -70,7 +69,6 @@ audio_out_result_t write_audio_data(audio_out_t *audio_out, voice_t *voices, int
             result.error_message = fill_result.error_message;
             return result;
         }
-        result.overflowed |= fill_result.overflowed;
         samples_to_write -= samples_to_write_now;
     }
     return result;
@@ -118,10 +116,8 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
 
 static audio_api_result_t mix_and_send(audio_out_t *audio_out)
 {
-    const bool overflowed = mix(audio_out->mix_buffer, audio_out->output_buffer, &audio_out->peak_l, &audio_out->peak_r, audio_out->num_channels, audio_out->api.buffer_size_frames);
-    audio_api_result_t result = audio_out->api.write(audio_out->output_buffer, audio_out->frames_filled);
-    result.overflowed |= overflowed;
-    return result;
+    mix(audio_out->mix_buffer, audio_out->output_buffer, &audio_out->peak_l, &audio_out->peak_r, audio_out->num_channels, audio_out->api.buffer_size_frames);
+    return audio_out->api.write(audio_out->output_buffer, audio_out->frames_filled);
 }
 
 void send_remaining_audio(audio_out_t *audio_out)

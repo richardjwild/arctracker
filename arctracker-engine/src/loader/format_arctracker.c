@@ -529,7 +529,7 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
         return false;
     }
     const int32_t transpose = read_s32_le(data + 12 + INSTRUMENT_NAME_LEN);
-    if (transpose < -11 || transpose > 11)
+    if (transpose < -12 || transpose > 12)
     {
         error(MODFILE_INVALID_TRANSPOSE);
         return false;

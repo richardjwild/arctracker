@@ -44,5 +44,6 @@
     --colour-clip-indicator-on: #ff0000;
     --colour-vu-meter-guide: #333333;
     --colour-vu-meter-bottom: rgb(0, 255, 0);
+    --colour-vu-meter-middle: rgb(255, 255, 0);
     --colour-vu-meter-top: rgb(255, 0, 0);
 }

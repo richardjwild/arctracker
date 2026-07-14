@@ -25,7 +25,6 @@ typedef struct
 
 typedef struct {
     bool success;
-    bool overflowed;
     const char *error_message;
 } audio_out_result_t;
 
