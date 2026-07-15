@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "arctracker-ui",
+  "productName": "arctracker",
   "version": "0.1.0",
-  "identifier": "com.hmpo.arctracker-ui",
+  "identifier": "richardjwild.arctracker",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "title": "Arctracker",
-        "width": 1352,
+        "width": 1337,
         "height": 946,
         "visible": true,
         "resizable": true,

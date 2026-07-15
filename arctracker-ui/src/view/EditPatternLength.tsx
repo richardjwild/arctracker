@@ -38,7 +38,7 @@ export default function EditPatternLength() {
   return (
     <Modal className="editPatternLength">
       <label htmlFor="patternLength">Pattern Length:</label>
-      <div className="uiArea padded">
+      <div className="uiArea padded rounded">
         <input
           type="text"
           id="patternLength"

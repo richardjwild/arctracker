@@ -21,23 +21,30 @@ type Rectangle = {
   height: number;
 };
 
+type Circle = {
+  x: number;
+  y: number;
+  radius: number;
+};
+
 type Objects = {
   meterL: Rectangle;
   meterR: Rectangle;
-  clipIndicatorL: Rectangle;
-  clipIndicatorR: Rectangle;
+  clipIndicatorL: Circle;
+  clipIndicatorR: Circle;
 };
 
 const objects: Objects = {
   meterL: { x: 1, y: 24, width: 210, height: 22 },
   meterR: { x: 1, y: 56, width: 210, height: 22 },
-  clipIndicatorL: { x: 220, y: 24, width: 20, height: 22 },
-  clipIndicatorR: { x: 220, y: 56, width: 20, height: 22 },
+  clipIndicatorL: { x: 230, y: 35, radius: 10 },
+  clipIndicatorR: { x: 230, y: 67, radius: 10 },
 };
 
 const FALL_PER_SECOND = 1.5;
 const CANVAS_WIDTH = 240;
 const CANVAS_HEIGHT = 100;
+const FULL_CIRCLE = 2 * Math.PI;
 
 export class VuMeterRenderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -118,11 +125,11 @@ export class VuMeterRenderer {
     this.ctx.fillStyle = this.clip.left
       ? this.colours.clipIndicatorOn
       : this.colours.clipIndicatorOff;
-    this.fillRect(objects.clipIndicatorL);
+    this.fillCircle(objects.clipIndicatorL);
     this.ctx.fillStyle = this.clip.right
       ? this.colours.clipIndicatorOn
       : this.colours.clipIndicatorOff;
-    this.fillRect(objects.clipIndicatorR);
+    this.fillCircle(objects.clipIndicatorR);
   }
 
   private strokeRect(rectangle: Rectangle) {
@@ -141,5 +148,11 @@ export class VuMeterRenderer {
       rectangle.width,
       rectangle.height,
     );
+  }
+
+  private fillCircle(circle: Circle) {
+    this.ctx.beginPath();
+    this.ctx.arc(circle.x, circle.y, circle.radius, 0, FULL_CIRCLE);
+    this.ctx.fill();
   }
 }

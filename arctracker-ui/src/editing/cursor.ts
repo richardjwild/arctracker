@@ -142,7 +142,6 @@ export class Cursor {
 function moveCursor(moveOperation: (cursor: Cursor) => void): CursorPosition {
   let cursor = new Cursor();
   const { editorState, setEditorState } = useStore.getState();
-  if (!patternEvents.editing()) return cursor.currentPosition();
   moveOperation(cursor);
   setEditorState({
     ...editorState,
@@ -153,10 +152,12 @@ function moveCursor(moveOperation: (cursor: Cursor) => void): CursorPosition {
 
 export const cursor = {
   moveFieldLeft: (): CursorPosition => {
+    if (!patternEvents.editing()) return cursor.currentPosition();
     return moveCursor((cursor) => cursor.moveFieldLeft());
   },
 
   moveFieldRight: (): CursorPosition => {
+    if (!patternEvents.editing()) return cursor.currentPosition();
     return moveCursor((cursor) => cursor.moveFieldRight());
   },
 

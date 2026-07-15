@@ -142,6 +142,12 @@ function processCommands() {
           command.extendSelection,
         );
         break;
+      case CommandType.PATTERN_GRID_JUMP_TO_LOCATION:
+        selection.navigateGrid(
+          () => patternGrid.moveTo({ track: command.track, patternIndex: command.patternIndex }),
+          command.extendSelection,
+        );
+        break;
       case CommandType.CURSOR_FIELD_LEFT:
         cursor.moveFieldLeft();
         break;

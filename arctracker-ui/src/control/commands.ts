@@ -42,6 +42,7 @@ export enum CommandType {
   PATTERN_GRID_STRIDE_UP,
   PATTERN_GRID_JUMP_TO_TOP,
   PATTERN_GRID_JUMP_TO_BOTTOM,
+  PATTERN_GRID_JUMP_TO_LOCATION,
   EDIT_NOTE_FIELD,
   EDIT_SAMPLE_FIELD,
   EDIT_EFFECT_CODE,
@@ -107,6 +108,12 @@ export type Command =
   | { type: CommandType.PATTERN_GRID_STRIDE_UP; extendSelection: boolean }
   | { type: CommandType.PATTERN_GRID_JUMP_TO_TOP; extendSelection: boolean }
   | { type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM; extendSelection: boolean }
+  | {
+      type: CommandType.PATTERN_GRID_JUMP_TO_LOCATION;
+      track: number;
+      patternIndex: number;
+      extendSelection: boolean;
+    }
   | { type: CommandType.CURSOR_FIELD_LEFT }
   | { type: CommandType.CURSOR_FIELD_RIGHT }
   | { type: CommandType.INCREASE_EFFECTS_DISPLAYED }
@@ -242,6 +249,13 @@ export const commands = {
   patternGridJumpToBottom: (extendSelection: boolean) =>
     commandQueue.push({
       type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM,
+      extendSelection,
+    }),
+  patternGridJumpToLocation: (track: number, patternIndex: number, extendSelection: boolean) =>
+    commandQueue.push({
+      type: CommandType.PATTERN_GRID_JUMP_TO_LOCATION,
+      track,
+      patternIndex,
       extendSelection,
     }),
   cursorFieldLeft: () =>

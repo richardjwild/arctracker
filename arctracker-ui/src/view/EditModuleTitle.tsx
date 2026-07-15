@@ -50,7 +50,7 @@ export default function EditModuleTitle() {
       <div className="moduleNameLabel">
         <label htmlFor="moduleNameInput">Module Name:</label>
       </div>
-      <div className="moduleNameEdit uiArea padded">
+      <div className="moduleNameEdit uiArea padded rounded">
         <input
           type="text"
           id="moduleNameInput"
@@ -64,7 +64,7 @@ export default function EditModuleTitle() {
       <div className="authorLabel">
         <label htmlFor="authorInput">Author:</label>
       </div>
-      <div className="authorEdit uiArea padded">
+      <div className="authorEdit uiArea padded rounded">
         <input
           type="text"
           id="authorInput"
@@ -75,7 +75,7 @@ export default function EditModuleTitle() {
           onChange={(e) => updateDraftAuthor(e.target.value)}
         />
       </div>
-      <div className="saveCloseButtons uiArea padded">
+      <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.setModuleTitle}>
           Save
         </button>

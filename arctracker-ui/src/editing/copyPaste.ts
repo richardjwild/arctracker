@@ -21,6 +21,17 @@ function getSelectionBounds(
   };
 }
 
+function getPasteLocation(
+  providedLocation: PatternGridPosition | null,
+): PatternGridPosition {
+  if (providedLocation) return providedLocation;
+  const cursorPosition = cursor.currentPosition();
+  return {
+    track: cursorPosition.track,
+    patternIndex: cursorPosition.patternIndex,
+  };
+}
+
 function getFocusPatternNo() {
   const { sequence } = useStore.getState();
   const { sequencePosition } = useStore.getState().editorState;
@@ -85,19 +96,20 @@ export const copyPaste = {
     if (cutLocations.length > 0) await patternEvents.clearEvents(cutLocations);
   },
 
-  pastePatternEvents: async (pasteLocation: PatternGridPosition | null) => {
+  pastePatternEvents: async (providedLocation: PatternGridPosition | null) => {
     const pasteBuffer = useStore.getState().pasteBuffer;
     if (!pasteBuffer || pasteBuffer.type !== "patternEvents") return;
+    const pasteLocation = getPasteLocation(providedLocation);
     const currentPattern = useStore.getState().currentPattern;
     const cursorPosition = cursor.currentPosition();
     const numTracks = useStore.getState().module.numTracks;
     const blockWidth = Math.min(
       pasteBuffer.block.width,
-      numTracks - cursorPosition.track,
+      numTracks - pasteLocation.track,
     );
     const blockHeight = Math.min(
       pasteBuffer.block.height,
-      currentPattern.lines.length - cursorPosition.patternIndex,
+      currentPattern.lines.length - pasteLocation.patternIndex,
     );
     const pastedEvents: { location: EventLocation; event: PatternEvent }[] = [];
     for (let line = 0; line < blockHeight; line++) {
@@ -117,7 +129,7 @@ export const copyPaste = {
       }
     }
     await patternEvents.setEvents(pastedEvents);
-    if (!pasteLocation) {
+    if (!providedLocation) {
       patternGrid.moveTo({
         track: cursorPosition.track,
         patternIndex: cursorPosition.patternIndex + blockHeight - 1,

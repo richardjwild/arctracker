@@ -1,6 +1,6 @@
 import "./PatternView.css";
 import { useStore } from "../store/useStore.ts";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { engine } from "../engine/engine.ts";
 import { animation } from "../rendering/animation.ts";
 import {
@@ -10,16 +10,34 @@ import {
 import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
 import useSequencePosition from "../hooks/useSequencePosition.ts";
+import { commands } from "../control/commands.ts";
+import { patternLayout } from "../rendering/patternLayout.ts";
+
+function normalisedWheelDelta(event: React.WheelEvent): number {
+  switch (event.deltaMode) {
+    case WheelEvent.DOM_DELTA_LINE:
+      return event.deltaY * 16;
+    case WheelEvent.DOM_DELTA_PAGE:
+      return event.deltaY * window.innerHeight;
+    case WheelEvent.DOM_DELTA_PIXEL:
+    default:
+      return event.deltaY;
+  }
+}
+
+const wheelScrollThreshold = 40;
 
 export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
   const moduleVersion = useStore((state) => state.patternRevision);
   const numTracks = useStore((state) => state.module.numTracks);
   const setCurrentPattern = useStore((state) => state.setCurrentPattern);
+  const playing = useStore((state) => state.transportState.playing);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const viewportSizeRef = useRef({ width: 0, height: 0 });
+  const wheelDeltaRef = useRef(0);
   const { patternNo, patternLength } = useSequencePosition();
 
   const resizeCanvas = (
@@ -75,6 +93,44 @@ export default function PatternView() {
       );
       patternRenderer.renderPattern(patternIndex);
     };
+  };
+
+  const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    wheelDeltaRef.current += normalisedWheelDelta(event);
+    while (wheelDeltaRef.current >= wheelScrollThreshold) {
+      commands.patternGridDown(false);
+      wheelDeltaRef.current -= wheelScrollThreshold;
+    }
+    while (wheelDeltaRef.current <= -wheelScrollThreshold) {
+      commands.patternGridUp(false);
+      wheelDeltaRef.current += wheelScrollThreshold;
+    }
+  };
+
+  const handlePointer = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    if (playing) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const boundingRect = event.currentTarget.getBoundingClientRect();
+    const pointerX = event.clientX - boundingRect.left;
+    const pointerY = event.clientY - boundingRect.top;
+    const playheadIndex = getPatternIndex();
+    const patternLength = useStore.getState().currentPattern.lines.length;
+    const clickedPosition = patternLayout.cursorPositionAt(
+      pointerX,
+      pointerY,
+      { width: container.clientWidth, height: container.clientHeight },
+      playheadIndex,
+      numTracks,
+      patternLength,
+    );
+    commands.patternGridJumpToLocation(
+      clickedPosition.track,
+      clickedPosition.patternIndex,
+      false,
+    );
   };
 
   useEffect(() => {
@@ -136,7 +192,14 @@ export default function PatternView() {
 
   return (
     <div ref={containerRef} className="patternView uiArea" id="patternView">
-      <canvas className="uiArea" ref={canvasRef} width="1024" height="1024" />
+      <canvas
+        className="uiArea"
+        ref={canvasRef}
+        onWheel={handleWheel}
+        onClick={handlePointer}
+        width="1024"
+        height="1024"
+      />
     </div>
   );
 }

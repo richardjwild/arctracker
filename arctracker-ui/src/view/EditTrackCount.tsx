@@ -34,7 +34,7 @@ export default function EditTrackCount() {
   return (
     <Modal className="editTrackCount">
       <label htmlFor="trackCount">Number of Tracks:</label>
-      <div className="uiArea padded">
+      <div className="uiArea padded rounded">
         <input
           type="text"
           id="patternLength"

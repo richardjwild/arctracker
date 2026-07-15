@@ -12,6 +12,7 @@
   font-weight: 400;
   color: var(--colour-text);
   background: var(--colour-ui-bg);
+  overscroll-behavior: none;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -39,6 +40,10 @@
 
 .padded {
   padding: 10px 10px 10px 10px;
+}
+
+.rounded {
+  border-radius: 10px;
 }
 
 .visually-hidden {

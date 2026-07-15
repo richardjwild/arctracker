@@ -154,7 +154,7 @@ export default function SampleEditDialog() {
       <div className="sampleNameLabel padded sampleEditLabel">
         <label htmlFor="sampleNameInput">Name:</label>
       </div>
-      <div className="sampleNameEdit uiArea padded sampleEditField">
+      <div className="sampleNameEdit uiArea padded rounded sampleEditField">
         <input
           type="text"
           id="sampleNameInput"
@@ -170,7 +170,7 @@ export default function SampleEditDialog() {
       <div className="defaultVolumeLabel padded sampleEditLabel">
         <label htmlFor="defaultVolumeInput">Default Volume:</label>
       </div>
-      <div className="defaultVolumeEdit uiArea padded sampleEditField">
+      <div className="defaultVolumeEdit uiArea padded rounded sampleEditField">
         <input
           type="range"
           id="defaultVolumeInput"
@@ -188,7 +188,7 @@ export default function SampleEditDialog() {
       <div className="transposeLabel padded sampleEditLabel">
         <label htmlFor="transposeInput">Transpose:</label>
       </div>
-      <div className="transposeEdit uiArea padded sampleEditField">
+      <div className="transposeEdit uiArea padded rounded sampleEditField">
         <input
           type="text"
           id="transposeInput"
@@ -241,7 +241,7 @@ export default function SampleEditDialog() {
       <div className="repeatStartLabel padded sampleEditLabel">
         <label htmlFor="repeatStartInput">Loop Start:</label>
       </div>
-      <div className="repeatStartEdit uiArea padded sampleEditField">
+      <div className="repeatStartEdit uiArea padded rounded sampleEditField">
         <input
           type="text"
           id="repeatStartInput"
@@ -263,7 +263,7 @@ export default function SampleEditDialog() {
       <div className="repeatEndLabel padded sampleEditLabel">
         <label htmlFor="repeatEndInput">Loop End:</label>
       </div>
-      <div className="repeatEndEdit uiArea padded sampleEditField">
+      <div className="repeatEndEdit uiArea padded rounded sampleEditField">
         <input
           type="text"
           id="repeatEndInput"
@@ -282,7 +282,7 @@ export default function SampleEditDialog() {
           }}
         />
       </div>
-      <div className="saveCloseButtons uiArea padded">
+      <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.loadSample}>
           Load Sample
         </button>
