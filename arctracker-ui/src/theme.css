@@ -3,6 +3,8 @@
     --colour-panel-bg: #1c1c1c;
     --colour-track-lane-separator: #333333;
     --colour-text: #dddddd;
+    --colour-track-header-fg: black;
+    --colour-track-header-bg: #aaaaaa;
     --colour-pattern-text-muted: #666666;
     --colour-pattern-text-bright: #ffffff;
     --colour-playhead: #333333;

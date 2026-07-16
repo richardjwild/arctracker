@@ -14,6 +14,11 @@ export type { Module, Sample } from "../engine/engine.ts";
 
 const FormatArctracker = 0;
 
+async function okToDiscardModule() {
+  if (!editor.hasUnsavedChanges()) return true;
+  return await alerting.askConfirmation("You have unsaved changes which will be lost. Proceed anyway?");
+}
+
 export const module = {
   getCurrent: async () => {
     engine
@@ -22,6 +27,7 @@ export const module = {
   },
 
   load: async (): Promise<boolean> => {
+    if (!await okToDiscardModule()) return false;
     const { setLoadingModule, setModule } = useStore.getState();
     setLoadingModule(true);
     try {
@@ -54,6 +60,7 @@ export const module = {
     ) {
       try {
         await engine.saveModule(module.fileName, FormatArctracker);
+        editor.allChangesSaved();
       } catch (err) {
         void alerting.showError(err as string);
       }
@@ -76,15 +83,20 @@ export const module = {
     try {
       await engine.saveModule(filePath, FormatArctracker);
       useStore.getState().setModuleFilename(filePath);
+      editor.allChangesSaved();
     } catch (err) {
       void alerting.showError(err as string);
     }
   },
 
   create: async (numTracks: number): Promise<boolean> => {
+    if (!await okToDiscardModule()) return false;
     try {
       const newModule = await engine.createModule(numTracks);
-      if (newModule) useStore.getState().setModule(newModule);
+      if (newModule) {
+        useStore.getState().setModule(newModule);
+        editor.newModuleLoaded();
+      }
       return true;
     } catch (err) {
       await alerting.showError(err as string);

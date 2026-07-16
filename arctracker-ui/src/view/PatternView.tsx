@@ -129,7 +129,7 @@ export default function PatternView() {
     commands.patternGridJumpToLocation(
       clickedPosition.track,
       clickedPosition.patternIndex,
-      false,
+      event.shiftKey,
     );
   };
 

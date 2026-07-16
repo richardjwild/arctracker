@@ -14,28 +14,20 @@ import { editInstrument } from "../editing/editInstrument.ts";
 import { pattern } from "../editing/pattern.ts";
 import { moduleTitle } from "../editing/moduleTitle.ts";
 
-function processCommands() {
+async function processCommands() {
   const commands = commandQueue.consume();
   for (const command of commands) {
     switch (command.type) {
       case CommandType.CREATE_MODULE:
-        let moduleCreated = false;
-        module.create(command.numTracks).then((success) => {
-          editor.clearUndoBuffer();
-          moduleCreated = success;
-        });
-        // Don't execute any more commands if we have created a new module.
-        if (moduleCreated) return;
-        break;
+        void module.create(command.numTracks).then((success) => {
+          if (success) editor.newModuleLoaded();
+        })
+        return; // Don't execute any more commands if we have created a new module.
       case CommandType.LOAD_FILE:
-        let moduleLoaded = false;
-        module.load().then((success) => {
-          editor.clearUndoBuffer();
-          moduleLoaded = success;
+        void module.load().then((success) => {
+          if (success) editor.newModuleLoaded();
         });
-        // Don't execute any more commands if we have loaded a new module.
-        if (moduleLoaded) return;
-        break;
+        return; // Don't execute any more commands if we have loaded a new module.
       case CommandType.SAVE_MODULE_AS:
         void module.saveAs();
         break;

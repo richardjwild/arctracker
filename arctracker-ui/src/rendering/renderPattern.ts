@@ -45,6 +45,8 @@ function cssColour(name: string): string {
 
 type Colours = {
   trackLaneSeparator: string;
+  trackHeaderFg: string;
+  trackHeaderBg: string;
   playheadBackground: string;
   text: string;
   cursor: string;
@@ -83,6 +85,8 @@ export class PatternRenderer {
     this.patternLayout = patternLayout.getPatternLayout();
     this.coloursAtPlayhead = {
       trackLaneSeparator: cssColour("--colour-track-lane-separator"),
+      trackHeaderFg: cssColour("--colour-track-header-fg"),
+      trackHeaderBg: cssColour("--colour-track-header-bg"),
       playheadBackground: cssColour("--colour-playhead"),
       text: cssColour("--colour-pattern-text-bright"),
       cursor: cssColour("--colour-cursor"),
@@ -95,6 +99,8 @@ export class PatternRenderer {
     };
     this.coloursOffPlayhead = {
       trackLaneSeparator: cssColour("--colour-track-lane-separator"),
+      trackHeaderFg: cssColour("--colour-track-header-fg"),
+      trackHeaderBg: cssColour("--colour-track-header-bg"),
       playheadBackground: cssColour("--colour-playhead"),
       text: cssColour("--colour-pattern-text-muted"),
       cursor: cssColour("--colour-cursor"),
@@ -113,12 +119,10 @@ export class PatternRenderer {
     this.ctx.textBaseline = "hanging";
     this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
     this.renderTrackLanes();
+    this.renderTrackHeaders();
     this.renderPlayhead();
     if (this.patternSelection) this.renderSelection(playheadIndex);
-    if (patternEvents.editing())
-      this.renderEditCursor();
-    else
-      this.renderNonEditCursor();
+    this.renderCursor(patternEvents.editing());
     this.renderPatternLines(playheadIndex);
   }
 
@@ -129,8 +133,16 @@ export class PatternRenderer {
     }
   }
 
+  private renderTrackHeaders() {
+    let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
+    for (let track = 0; track <= this.numTracks; track++) {
+      x += this.renderTrackHeader(x, track);
+    }
+  }
+
   private renderPlayhead() {
-    const y = this.gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight;
+    const y = this.patternLayout.trackHeaderHeight
+      + this.gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight;
     this.withFillStyle(this.colours().playheadBackground)
       .fillRect(0, y + this.patternLayout.playheadPadding, this.viewportSize.width, this.patternLayout.rowHeight);
   }
@@ -145,21 +157,29 @@ export class PatternRenderer {
     for (let track = Math.max(bounds.left, this.gridViewportFit.firstVisibleTrack); track <= bounds.right; track++)
       boxWidth += this.patternLayout.getEventWidth(track);
     const rowOffsetFromPlayhead = bounds.top - playheadIndex;
-    const top = (this.gridViewportFit.playheadLocationOnScreen + rowOffsetFromPlayhead) *
-      this.patternLayout.rowHeight +
-      this.patternLayout.playheadPadding;
+    const top = (this.gridViewportFit.playheadLocationOnScreen + rowOffsetFromPlayhead)
+      * this.patternLayout.rowHeight
+      + this.patternLayout.trackHeaderHeight
+      + this.patternLayout.playheadPadding;
     const boxHeight = (bounds.bottom - bounds.top + 1) * this.patternLayout.rowHeight;
     this.withFillStyle(this.colours().selectionBox).fillRect(boxLeft, top, boxWidth, boxHeight);
     this.withStrokeStyle(this.colours().selectionBoxOutline).strokeRect(boxLeft, top, boxWidth, boxHeight);
   }
 
-  private renderNonEditCursor() {
+  private renderCursor(editMode: boolean) {
     const cursorTrack = this.editorState.cursorPosition.track;
     let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth;
     for (let track = this.gridViewportFit.firstVisibleTrack; track < cursorTrack; track++) {
       x += this.patternLayout.getEventWidth(track);
     }
-    const y = (this.gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight) + this.patternLayout.playheadPadding;
+    const y = this.patternLayout.trackHeaderHeight
+      + (this.gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight)
+      + this.patternLayout.playheadPadding;
+    if (editMode) this.renderEditCursor(x, y, cursorTrack);
+    else this.renderNonEditCursor(x, y, cursorTrack);
+  }
+
+  private renderNonEditCursor(x: number, y: number, cursorTrack: number) {
     this.withStrokeStyle(this.colours().playheadBackground).withLineWidth(2).strokeRect(
       x - 1,
       y - 1,
@@ -168,13 +188,7 @@ export class PatternRenderer {
     );
   }
 
-  private renderEditCursor() {
-    const cursorTrack = this.editorState.cursorPosition.track;
-    let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth;
-    for (let track = this.gridViewportFit.firstVisibleTrack; track < cursorTrack; track++) {
-      x += this.patternLayout.getEventWidth(track);
-    }
-    const y = (this.gridViewportFit.playheadLocationOnScreen * this.patternLayout.rowHeight) + this.patternLayout.playheadPadding;
+  private renderEditCursor(x: number, y: number, cursorTrack: number) {
     this.withStrokeStyle(this.colours().cursor).withLineWidth(2).strokeRect(
       x - 1,
       y - 1,
@@ -203,7 +217,7 @@ export class PatternRenderer {
   }
 
   private renderPatternLines(playheadIndex: number) {
-    let y = 0;
+    let y = this.patternLayout.trackHeaderHeight;
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
       const patternLine =
@@ -228,6 +242,20 @@ export class PatternRenderer {
       return 0;
     this.withStrokeStyle(this.colours().trackLaneSeparator)
       .renderLine(trackX + trackWidth, 0, trackX + trackWidth, this.viewportSize.height);
+    return trackWidth;
+  }
+
+  private renderTrackHeader(trackX: number, track: number): number {
+    const trackWidth = this.patternLayout.getEventWidth(track);
+    if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
+      return 0;
+    this.withFillStyle(this.colours().trackHeaderBg)
+      .fillRect(trackX + 1, 0, trackWidth - 2, this.patternLayout.trackHeaderHeight);
+    this.withFillStyle(this.colours().trackHeaderFg).renderGlyph(
+      (track + 1).toString(),
+      trackX + this.patternLayout.glyphWidth / 2,
+      0,
+    );
     return trackWidth;
   }
 

@@ -1,6 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 import { alerting } from "../alerting/alert.ts";
+import { transport } from "../transport/transport.ts";
 
 export type EditMode =
   | "none"
@@ -23,8 +24,17 @@ export type EditCommand = {
   undo: () => Promise<void>;
 };
 
-const undoStack: EditCommand[] = [];
-const redoStack: EditCommand[] = [];
+type HistoryEntry = {
+  command: EditCommand;
+  beforeRevision: number;
+  afterRevision: number;
+};
+
+const undoStack: HistoryEntry[] = [];
+const redoStack: HistoryEntry[] = [];
+let nextRevisionId = 1;
+let currentRevisionId = 0;
+let savedRevisionId = 0;
 
 export const editor = {
   setEditMode: (editMode: EditMode) => {
@@ -33,6 +43,12 @@ export const editor = {
       ...editorState,
       editMode,
     });
+  },
+
+  hasUnsavedChanges: (): boolean => currentRevisionId !== savedRevisionId,
+
+  allChangesSaved: () => {
+    savedRevisionId = currentRevisionId;
   },
 
   inputtingText: () => {
@@ -56,7 +72,7 @@ export const editor = {
   },
 
   togglePatternEdit: () => {
-    if (useStore.getState().transportState.playing) return;
+    if (transport.playing()) return;
     const { editorState, setEditorState, setPatternSelection } =
       useStore.getState();
     setEditorState({
@@ -105,7 +121,14 @@ export const editor = {
     try {
       const revised = await command.apply(false);
       if (revised) {
-        undoStack.push(command);
+        const entry: HistoryEntry = {
+          command,
+          beforeRevision: currentRevisionId,
+          afterRevision: nextRevisionId,
+        };
+        nextRevisionId += 1;
+        currentRevisionId = entry.afterRevision;
+        undoStack.push(entry);
         redoStack.length = 0;
       }
     } catch (err) {
@@ -115,31 +138,38 @@ export const editor = {
   },
 
   undoEdit: async () => {
-    const command = undoStack.pop();
-    if (!command) return;
+    const entry = undoStack.pop();
+    if (!entry) return;
     try {
-      await command.undo();
-      redoStack.push(command);
+      await entry.command.undo();
+      currentRevisionId = entry.beforeRevision;
+      redoStack.push(entry);
     } catch (err) {
+      undoStack.push(entry);
       void alerting.showError(err as string);
       throw err;
     }
   },
 
   redoEdit: async () => {
-    const command = redoStack.pop();
-    if (!command) return;
+    const entry = redoStack.pop();
+    if (!entry) return;
     try {
-      await command.apply(true);
-      undoStack.push(command);
+      await entry.command.apply(true);
+      currentRevisionId = entry.afterRevision;
+      undoStack.push(entry);
     } catch (err) {
+      redoStack.push(entry);
       void alerting.showError(err as string);
       throw err;
     }
   },
 
-  clearUndoBuffer: () => {
+  newModuleLoaded: () => {
     undoStack.length = 0;
     redoStack.length = 0;
+    nextRevisionId = 1;
+    currentRevisionId = 0;
+    savedRevisionId = 0;
   },
 };

@@ -1,4 +1,4 @@
-import { message } from "@tauri-apps/plugin-dialog";
+import { ask, message } from "@tauri-apps/plugin-dialog";
 
 export const alerting = {
   showError: async (errorMessage: string) => {
@@ -20,4 +20,14 @@ export const alerting = {
       },
     )
   },
-}
+
+  askConfirmation: async (question: string) => {
+    return await ask(
+      question,
+      {
+        title: "Arctracker",
+        kind: "warning"
+      }
+    );
+  },
+};

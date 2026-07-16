@@ -1,5 +1,6 @@
 import { patternGrid, PatternGridPosition } from "./patternGrid.ts";
 import { useStore } from "../store/useStore.ts";
+import { patternEvents } from "./patternEvents.ts";
 
 export type PatternSelection = {
   anchor: PatternGridPosition,
@@ -17,7 +18,7 @@ export const selection = {
   navigateGrid: (move: () => PatternGridPosition, extendSelection: boolean) => {
     const before = patternGrid.currentPosition();
     const after = move();
-    if (extendSelection) {
+    if (extendSelection && patternEvents.editing()) {
       const existing = useStore.getState().patternSelection;
       useStore.getState().setPatternSelection({
         anchor: existing?.anchor ?? before,

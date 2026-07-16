@@ -5,6 +5,7 @@ export type PatternLayout = {
   leftPadding: number;
   glyphWidth: number;
   rowHeight: number;
+  trackHeaderHeight: number;
   playheadPadding: number;
   rowNumberWidth: number;
   getEventWidth: (track: number) => number;
@@ -30,6 +31,7 @@ export const patternLayout = {
       leftPadding,
       glyphWidth,
       rowHeight: glyphHeight,
+      trackHeaderHeight: glyphHeight + 1,
       playheadPadding: 2,
       rowNumberWidth: glyphWidth * 5,
       getEventWidth: (track: number) =>
@@ -45,9 +47,8 @@ export const patternLayout = {
     const layout = patternLayout.getPatternLayout();
     const editorState = useStore.getState().editorState;
     const playheadRowHeight = layout.rowHeight + 2 * layout.playheadPadding;
-    const linesToShow =
-      1 +
-      Math.floor((viewportSize.height - playheadRowHeight) / layout.rowHeight);
+    const availableHeight = viewportSize.height - layout.trackHeaderHeight - playheadRowHeight;
+    const linesToShow = 1 + Math.floor(availableHeight / layout.rowHeight);
     let displayedWidth =
       layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
     displayedWidth += layout.getEventWidth(0);
@@ -55,12 +56,19 @@ export const patternLayout = {
     let lastVisibleTrack = 0;
     const cursorTrack = editorState.cursorPosition.track;
     for (let track = 1; track < numTracks; track++) {
-      const trackWidth = layout.getEventWidth(track);
-      if (displayedWidth + trackWidth > viewportSize.width) {
-        if (cursorTrack <= lastVisibleTrack) break;
-        else firstVisibleTrack++;
+      displayedWidth += layout.getEventWidth(track);
+      if (displayedWidth > viewportSize.width) {
+        if (cursorTrack <= lastVisibleTrack) {
+          // Cursor is visible, we have our answer now.
+          break;
+        }
+        // Cursor is not visible, so progressively cut off the leftmost track
+        // until everything fits within the viewport again.
+        while (displayedWidth > viewportSize.width && firstVisibleTrack <= lastVisibleTrack) {
+          displayedWidth -= layout.getEventWidth(firstVisibleTrack);
+          firstVisibleTrack++;
+        }
       }
-      displayedWidth += trackWidth;
       lastVisibleTrack++;
     }
     return {
@@ -88,27 +96,27 @@ export const patternLayout = {
     );
     let x = layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
     if (pointerX <= x) return currentPosition;
-    let trackIndex = currentPosition.track;
+    let track = currentPosition.track;
     for (
-      let track = gridViewportFit.firstVisibleTrack;
-      track <= gridViewportFit.lastVisibleTrack;
-      track++
+      let candidateTrack = gridViewportFit.firstVisibleTrack;
+      candidateTrack <= gridViewportFit.lastVisibleTrack;
+      candidateTrack++
     ) {
-      x += layout.getEventWidth(track);
+      x += layout.getEventWidth(candidateTrack);
       if (pointerX <= x) {
-        trackIndex = track;
+        track = candidateTrack;
         break;
       }
     }
     let patternIndex = currentPosition.patternIndex;
-    const playheadY = gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
+    const playheadY = layout.trackHeaderHeight + gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
     const relativeLine = Math.floor((pointerY - playheadY - layout.playheadPadding) / layout.rowHeight);
     if (playheadIndex + relativeLine >= 0 && playheadIndex + relativeLine < patternLength) {
       patternIndex = playheadIndex + relativeLine;
     }
     return {
       ...currentPosition,
-      track: trackIndex,
+      track,
       patternIndex,
     };
   },
