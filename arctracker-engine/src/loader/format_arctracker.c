@@ -44,13 +44,14 @@
  *                                                                           *
  *   Chunk id: META                                                          *
  *   Chunk contents:                                                         *
- *   - u32  number of tracks (1-256)                                         *
- *   - u32  sequence length (1-65535)                                        *
  *   - char module name (64 characters, null terminated)                     *
  *   - char author (64 characters, null terminated)                          *
- *   - u32  master gain (0-65535)                                            *
- *   - u32  ticks per event (1-255)                                          *
- *   - u32  ticks per second (1-255)                                         *
+ *   - u8 number of tracks minus 1 (0-255)                                   *
+ *   - u16 sequence length (1-65535)                                         *
+ *   - u16 master gain (0-65535)                                             *
+ *   - u8 ticks per event (1-255)                                            *
+ *   - u8 ticks per second (1-255)                                           *
+ *   - u8 reserved for future use                                            *
  *                                                                           *
  * Track chunk                                                               *
  * -----------                                                               *
@@ -58,9 +59,12 @@
  *                                                                           *
  *   Chunk id: TRCK                                                          *
  *   Chunk contents:                                                         *
- *   - u32 track index (0-255)                                               *
- *   - u32 initial panning (0-255: 0-centre, 1-full left, 255-full right)    *
- *   - u32 effects displayed (0-4)                                           *
+ *   - u8 track index (0-255)                                                *
+ *   - char reserved for future use (31 characters)                          *
+ *   - u8 track muted (0-not muted, 1-muted)                                 *
+ *   - u8 initial panning (0-255: 0-centre, 1-full left, 255-full right)     *
+ *   - u8 commands displayed (0-4)                                           *
+ *   - u8 reserved for future use                                            *
  *                                                                           *
  * Sequence chunk                                                            *
  * --------------                                                            *
@@ -77,7 +81,9 @@
  *   Chunk id: PATT                                                          *
  *   Chunk contents:                                                         *
  *   - u32 pattern id                                                        *
- *   - u32 number of lines (aka pattern length)                              *
+ *   - u16 number of lines (aka pattern length)                              *
+ *   - u8 reserved for future use                                            *
+ *   - u8 reserved for future use                                            *
  *   - events                                                                *
  *                                                                           *
  * Events are stored in row-major order:                                     *
@@ -88,17 +94,31 @@
  *   line 1, track 1                                                         *
  *   ...                                                                     *
  *                                                                           *
- * Each event is 40 bytes:                                                   *
- *   u32 note (0-62: 0-no note, 1-C0, 62-B4)                                 *
- *   u32 instrument number                                                   *
- *   u32 effect 1 command                                                    *
- *   u32 effect 1 data                                                       *
- *   u32 effect 2 command                                                    *
- *   u32 effect 2 data                                                       *
- *   u32 effect 3 command                                                    *
- *   u32 effect 3 data                                                       *
- *   u32 effect 4 command                                                    *
- *   u32 effect 4 data                                                       *
+ * Each event is 24 bytes:                                                   *
+ *   u8 instrument number                                                    *
+ *   u8 note (0-62: 0-no note, 1-C0, 62-B4)                                  *
+ *   u8 reserved for future use                                              *
+ *   u8 reserved for future use                                              *
+ *   u8 reserved for future use                                              *
+ *   u8 reserved for future use                                              *
+ *   u8 reserved for future use                                              *
+ *   u8 reserved for future use                                              *
+ *   u8 (command 1) command code                                             *
+ *   u8 (command 1) reserved for future use                                  *
+ *   u8 (command 1) command data                                             *
+ *   u8 (command 1) reserved for future use                                  *
+ *   u8 (command 2) command code                                             *
+ *   u8 (command 2) reserved for future use                                  *
+ *   u8 (command 2) command data                                             *
+ *   u8 (command 2) reserved for future use                                  *
+ *   u8 (command 3) command code                                             *
+ *   u8 (command 3) reserved for future use                                  *
+ *   u8 (command 3) command data                                             *
+ *   u8 (command 3) reserved for future use                                  *
+ *   u8 (command 4) command code                                             *
+ *   u8 (command 4) reserved for future use                                  *
+ *   u8 (command 4) command data                                             *
+ *   u8 (command 4) reserved for future use                                  *
  *                                                                           *
  * Empty pattern chunk                                                       *
  * -------------------                                                       *
@@ -107,7 +127,9 @@
  *   Chunk id: EPAT                                                          *
  *   Chunk contents:                                                         *
  *   - u32 pattern id                                                        *
- *   - u32 number of lines (aka pattern length)                              *
+ *   - u16 number of lines (aka pattern length)                              *
+ *   - u8 reserved for future use                                            *
+ *   - u8 reserved for future use                                            *
  *                                                                           *
  * Instrument chunk                                                          *
  * ----------------                                                          *
@@ -117,11 +139,11 @@
  *   Chunk contents:                                                         *
  *   - u32 instrument index                                                  *
  *   - char instrument name (32 characters, null terminated)                 *
- *   - u32 instrument type (0-sample)                                        *
- *   - u32 instrument volume (0-255)                                         *
- *   - s32 transpose value (semitones; -11 to +11)                           *
+ *   - u8 instrument type (0-sample)                                         *
+ *   - u8 instrument volume (0-255)                                          *
+ *   - s8 transpose value (semitones; -11 to +11)                            *
+ *   - u8 loop flag (0-does not loop, 1-instrument loops)                    *
  *   - u32 sample index (when instrument type = 0)                           *
- *   - u32 sample loop flag (0-does not loop, 1-instrument loops)            *
  *   - u32 sample loop start (ignored if loop flag = 0)                      *
  *   - u32 sample loop length (ignored if loop flag = 0)                     *
  *                                                                           *
@@ -140,11 +162,12 @@
 
 #define MODULE_NAME_LEN 64
 #define AUTHOR_NAME_LEN 64
+#define TRACK_NAME_LEN 31
 #define INSTRUMENT_NAME_LEN 32
-#define EVENT_SIZE 40
+#define EVENT_SIZE 24
 #define INSTRUMENT_TYPE_SAMPLE 0
 
-static const uint32_t FORMAT_VERSION = 1;
+static const uint32_t FORMAT_VERSION = 2;
 static const char *FORMAT_CHUNK_ID = "ARCT";
 static const char *META_CHUNK_ID = "META";
 static const char *TRACK_CHUNK_ID = "TRCK";
@@ -155,18 +178,20 @@ static const char *SAMPLE_CHUNK_ID = "SAMP";
 static const char *INSTRUMENT_CHUNK_ID = "INST";
 static const uint32_t CHUNK_HEADER_SIZE = 8;
 static const uint32_t FORMAT_CHUNK_LEN = 4;
-static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 20;
-static const uint32_t TRACK_CHUNK_LEN = 12;
+static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 8;
+static const uint32_t TRACK_CHUNK_LEN = TRACK_NAME_LEN + 5;
 static const uint32_t EMPTY_PATTERN_CHUNK_LEN = 8;
-static const uint32_t INSTRUMENT_CHUNK_LEN = 32 + INSTRUMENT_NAME_LEN;
+static const uint32_t INSTRUMENT_CHUNK_LEN = 20 + INSTRUMENT_NAME_LEN;
 static const uint32_t MASTER_GAIN_MAX = 65535;
 
 static bool is_arctracker_module(mapped_file_t);
 static bool chunk_is(const char *, const uint8_t *);
 static module_t *read_arctracker_module(mapped_file_t);
 static module_t *instantiate_module(const uint8_t *, size_t);
+static uint8_t read_u8(const uint8_t *);
+static int8_t read_s8(const uint8_t *);
+static uint16_t read_u16_le(const uint8_t *);
 static uint32_t read_u32_le(const uint8_t *);
-static int32_t read_s32_le(const uint8_t *);
 static float read_f32_le(const uint8_t *);
 static uint8_t *next_chunk_address(uint8_t *);
 static float read_gain(uint32_t);
@@ -199,8 +224,10 @@ static bool write_sample_chunk(const module_t *, uint32_t, FILE *);
 static uint32_t write_gain(float);
 static bool write_fourcc(FILE *, const char *);
 static bool write_cc(FILE *, const char *, size_t);
+static bool write_u8(FILE *, uint8_t);
+static bool write_s8(FILE *, int8_t);
+static bool write_u16_le(FILE *, uint16_t);
 static bool write_u32_le(FILE *, uint32_t);
-static bool write_s32_le(FILE *fp, int32_t);
 static bool write_f32_le(FILE *fp, float);
 
 format_t arctracker_format(void)
@@ -214,7 +241,10 @@ format_t arctracker_format(void)
 
 static bool is_arctracker_module(const mapped_file_t mapped_file)
 {
-    return mapped_file.size >= 12 && chunk_is(FORMAT_CHUNK_ID, mapped_file.addr);
+    if (mapped_file.size < 12) return false;
+    if (!chunk_is(FORMAT_CHUNK_ID, mapped_file.addr)) return false;
+    const uint32_t format_version = read_u32_le(mapped_file.addr + 8);
+    return format_version == FORMAT_VERSION;
 }
 
 static bool chunk_is(const char *chunk_id, const uint8_t *addr)
@@ -228,12 +258,6 @@ static bool chunk_is(const char *chunk_id, const uint8_t *addr)
 
 static module_t *read_arctracker_module(const mapped_file_t mapped_file)
 {
-    const uint32_t format_version = read_u32_le(mapped_file.addr + 8);
-    if (format_version > FORMAT_VERSION)
-    {
-        error(UNSUPPORTED_MODULE_FILE_VERSION);
-        return NULL;
-    }
     const size_t file_end = (size_t) mapped_file.addr + mapped_file.size;
     uint8_t *chunk_addr = next_chunk_address(mapped_file.addr);
     if (!chunk_is(META_CHUNK_ID, chunk_addr))
@@ -295,40 +319,35 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         error(INVALID_META_CHUNK_LENGTH);
         return NULL;
     }
-    const uint32_t num_tracks = read_u32_le(meta_data);
-    if (num_tracks == 0 || num_tracks > MAX_TRACKS)
-    {
-        error(MODFILE_INVALID_NUM_TRACKS);
-        return NULL;
-    }
-    const uint32_t sequence_length = read_u32_le(meta_data + 4);
+    char module_name[MODULE_NAME_LEN + 1];
+    memcpy(module_name, meta_data, MODULE_NAME_LEN);
+    module_name[MODULE_NAME_LEN] = '\0';
+    char author[AUTHOR_NAME_LEN + 1];
+    memcpy(author, meta_data + MODULE_NAME_LEN, AUTHOR_NAME_LEN);
+    author[AUTHOR_NAME_LEN] = '\0';
+    const uint8_t num_tracks = read_u8(meta_data + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    const uint16_t sequence_length = read_u16_le(meta_data + 1 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
     if (sequence_length == 0)
     {
         error(MODFILE_INVALID_SEQUENCE_LENGTH);
         return NULL;
     }
-    module_t *module = module_create(num_tracks, sequence_length, 0, 0);
+    module_t *module = module_create(num_tracks + 1, sequence_length, 0, 0);
     if (module == NULL)
     {
         return NULL;
     }
-    char module_name[MODULE_NAME_LEN + 1];
-    memcpy(module_name, meta_data + 8, MODULE_NAME_LEN);
-    module_name[MODULE_NAME_LEN] = '\0';
     module_set_name(module, module_name);
-    char author[AUTHOR_NAME_LEN + 1];
-    memcpy(author, meta_data + 8 + MODULE_NAME_LEN, AUTHOR_NAME_LEN);
-    author[AUTHOR_NAME_LEN] = '\0';
     module_set_author(module, author);
-    const uint32_t master_gain = read_u32_le(meta_data + 8 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    const uint16_t master_gain = read_u16_le(meta_data + 3 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
     if (master_gain > MASTER_GAIN_MAX)
     {
         error(MODFILE_INVALID_MASTER_GAIN);
         goto read_module_metadata_failed;
     }
     module->master_gain = read_gain(master_gain);
-    const uint32_t initial_speed = read_u32_le(meta_data + 12 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
-    if (initial_speed == 0 || initial_speed > 255)
+    const uint8_t initial_speed = read_u8(meta_data + 5 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    if (initial_speed == 0)
     {
         error(MODFILE_INVALID_INITIAL_SPEED);
         goto read_module_metadata_failed;
@@ -341,14 +360,24 @@ read_module_metadata_failed:
     return NULL;
 }
 
+static uint8_t read_u8(const uint8_t *addr)
+{
+    return *addr;
+}
+
+static int8_t read_s8(const uint8_t *addr)
+{
+    return (int8_t) *addr;
+}
+
+static uint16_t read_u16_le(const uint8_t *addr)
+{
+    return addr[0] | addr[1] << 8;
+}
+
 static uint32_t read_u32_le(const uint8_t *addr)
 {
     return addr[0] | addr[1] << 8 | addr[2] << 16 | addr[3] << 24;
-}
-
-static int32_t read_s32_le(const uint8_t *addr)
-{
-    return (int32_t) read_u32_le(addr);
 }
 
 static float read_f32_le(const uint8_t *addr)
@@ -391,31 +420,27 @@ static bool read_sequence_chunk(const uint8_t *data, const size_t data_size, mod
 
 static bool read_track_chunk(const uint8_t *data, const size_t data_size, const module_t *module)
 {
-    if (data_size < 12)
+    if (data_size < TRACK_CHUNK_LEN)
     {
         error(INVALID_TRACK_CHUNK_LENGTH);
         return false;
     }
-    const uint32_t track = read_u32_le(data);
-    if (track >= (uint32_t) module->num_tracks)
+    const uint8_t track = read_u8(data);
+    if (track >= (uint8_t) module->num_tracks)
     {
         error(MODFILE_INVALID_TRACK_ID);
         return false;
     }
-    const uint32_t initial_panning = read_u32_le(data + 4);
-    if (initial_panning > 255)
-    {
-        error(MODFILE_INVALID_TRACK_PAN);
-        return false;
-    }
-    const uint32_t effects_displayed = read_u32_le(data + 8);
-    if (effects_displayed > 4)
+    // TODO: Implement track muting (offset: data + TRACK_NAME_LEN + 1).
+    const uint8_t initial_panning = read_u8(data + TRACK_NAME_LEN + 2);
+    const uint8_t commands_displayed = read_u8(data + TRACK_NAME_LEN + 3);
+    if (commands_displayed > 4)
     {
         error(MODFILE_INVALID_EFFECTS_DISPLAYED);
         return false;
     }
     module->initial_panning[track] = initial_panning;
-    // TODO: Add number of effects displayed to module.
+    // TODO: Add number of commands displayed to module.
     return true;
 }
 
@@ -427,13 +452,13 @@ static bool read_pattern_chunk(const uint8_t *data, const size_t data_size, modu
         error(MODFILE_INVALID_PATTERN_NUMBER);
         return false;
     }
-    const uint32_t num_lines = read_u32_le(data + 4);
+    const uint16_t num_lines = read_u16_le(data + 4);
     if (num_lines == 0 || num_lines > 1000)
     {
         error(MODFILE_INVALID_PATTERN_LENGTH);
         return false;
     }
-    if (data_size != 8 + module->num_tracks * num_lines * EVENT_SIZE)
+    if (data_size != 8 + module->num_tracks * (size_t) num_lines * EVENT_SIZE)
     {
         error(INVALID_PATTERN_CHUNK_LENGTH);
         return false;
@@ -460,19 +485,18 @@ static bool read_pattern_chunk(const uint8_t *data, const size_t data_size, modu
 static event_t read_pattern_event(const uint8_t *data)
 {
     event_t event = {0};
-    const uint32_t note = read_u32_le(data);
-    const uint32_t instrument_no = read_u32_le(data + 4);
-    if (!NOTE_OUT_OF_RANGE(note))
-        event.note = note;
-    if (instrument_no < 256)
-        event.instrument_no = instrument_no;
-    for (uint32_t effect = 0; effect < 4; effect++)
+    const uint8_t instrument_no = read_u8(data);
+    const uint8_t note = read_u8(data + 1);
+    if (!NOTE_OUT_OF_RANGE(note)) event.note = note;
+    event.instrument_no = instrument_no;
+    for (int effect = 0; effect < 4; effect++)
     {
-        const uint32_t effect_command = read_u32_le(data + 8 + effect * 8);
-        const uint32_t effect_data = read_u32_le(data + 12 + effect * 8);
+        const size_t effect_offset = 8 + effect * 4;
+        const uint8_t effect_command = read_u8(data + effect_offset);
+        const uint8_t effect_data = read_u8(data + effect_offset + 2);
         event.effects[effect] = (effect_t) {
             .command = (char) effect_command,
-            .data = effect_data & 0xff,
+            .data = effect_data,
         };
     }
     return event;
@@ -486,7 +510,7 @@ static bool read_empty_pattern_chunk(const uint8_t *data, const size_t data_size
         error(MODFILE_INVALID_PATTERN_NUMBER);
         return false;
     }
-    const uint32_t num_lines = read_u32_le(data + 4);
+    const uint16_t num_lines = read_u16_le(data + 4);
     if (num_lines == 0 || num_lines > 1000)
     {
         error(MODFILE_INVALID_PATTERN_LENGTH);
@@ -516,33 +540,28 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
     char instrument_name[INSTRUMENT_NAME_LEN];
     memcpy(instrument_name, data + 4, INSTRUMENT_NAME_LEN);
     instrument_name[INSTRUMENT_NAME_LEN - 1] = '\0';
-    const uint32_t instrument_type = read_u32_le(data + 4 + INSTRUMENT_NAME_LEN);
+    const uint8_t instrument_type = read_u8(data + 4 + INSTRUMENT_NAME_LEN);
     if (instrument_type != INSTRUMENT_TYPE_SAMPLE)
     {
         error(MODFILE_INVALID_INSTRUMENT_TYPE);
         return false;
     }
-    const uint32_t instrument_volume = read_u32_le(data + 8 + INSTRUMENT_NAME_LEN);
-    if (instrument_volume > 255)
-    {
-        error(MODFILE_INVALID_INSTRUMENT_VOLUME);
-        return false;
-    }
-    const int32_t transpose = read_s32_le(data + 12 + INSTRUMENT_NAME_LEN);
+    const uint8_t instrument_volume = read_u8(data + 5 + INSTRUMENT_NAME_LEN);
+    const int8_t transpose = read_s8(data + 6 + INSTRUMENT_NAME_LEN);
     if (transpose < -12 || transpose > 12)
     {
         error(MODFILE_INVALID_TRANSPOSE);
         return false;
     }
-    const uint32_t sample_index = read_u32_le(data + 16 + INSTRUMENT_NAME_LEN);
-    const uint32_t sample_loop_flag = read_u32_le(data + 20 + INSTRUMENT_NAME_LEN);
+    const uint8_t sample_loop_flag = read_u8(data + 7 + INSTRUMENT_NAME_LEN);
     if (sample_loop_flag != 0 && sample_loop_flag != 1)
     {
         error(MODFILE_INVALID_SAMPLE_LOOP_FLAG);
         return false;
     }
-    const uint32_t sample_loop_start = read_u32_le(data + 24 + INSTRUMENT_NAME_LEN);
-    const uint32_t sample_loop_length = read_u32_le(data + 28 + INSTRUMENT_NAME_LEN);
+    const uint32_t sample_index = read_u32_le(data + 8 + INSTRUMENT_NAME_LEN);
+    const uint32_t sample_loop_start = read_u32_le(data + 12 + INSTRUMENT_NAME_LEN);
+    const uint32_t sample_loop_length = read_u32_le(data + 16 + INSTRUMENT_NAME_LEN);
     instrument_t instrument = {0};
     instrument.assigned = true;
     snprintf(instrument.name, sizeof instrument.name, "%s", instrument_name);
@@ -638,13 +657,14 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     snprintf(author, sizeof author, "%s", module->author);
     if (!write_fourcc(fp, META_CHUNK_ID)) return false;
     if (!write_u32_le(fp, META_CHUNK_LEN)) return false;
-    if (!write_u32_le(fp, module->num_tracks)) return false;
-    if (!write_u32_le(fp, module->tune_length)) return false;   // TODO: Rename sequence_length.
     if (!write_cc(fp, module_name, sizeof module_name)) return false;
     if (!write_cc(fp, author, sizeof author)) return false;
-    if (!write_u32_le(fp, write_gain(module->master_gain))) return false;
-    if (!write_u32_le(fp, module->initial_speed)) return false; // TODO: Rename ticks_per_event.
-    if (!write_u32_le(fp, 50)) return false;                    // TODO: Initial ticks per second not in module yet
+    if (!write_u8(fp, module->num_tracks - 1)) return false;
+    if (!write_u16_le(fp, module->tune_length)) return false; // TODO: Rename sequence_length.
+    if (!write_u16_le(fp, write_gain(module->master_gain))) return false;
+    if (!write_u8(fp, module->initial_speed)) return false;   // TODO: Rename ticks_per_event.
+    if (!write_u8(fp, 50)) return false;                      // TODO: Initial ticks per second not in module yet
+    if (!write_u8(fp, 0)) return false;
     return true;
 }
 
@@ -657,11 +677,15 @@ static bool write_track_chunks(const module_t *module, FILE *fp)
 
 static bool write_track_chunk(const module_t *module, const int track, FILE *fp)
 {
+    const char reserved_for_track_name[TRACK_NAME_LEN] = {0};
     if (!write_fourcc(fp, TRACK_CHUNK_ID)) return false;
     if (!write_u32_le(fp, TRACK_CHUNK_LEN)) return false;
-    if (!write_u32_le(fp, (uint32_t) track)) return false;
-    if (!write_u32_le(fp, (uint32_t) module->initial_panning[track])) return false;
-    if (!write_u32_le(fp, 1)) return false;                     // TODO: Number of effects displayed
+    if (!write_u8(fp, (uint8_t) track)) return false;
+    if (!write_cc(fp, reserved_for_track_name, sizeof reserved_for_track_name)) return false;
+    if (!write_u8(fp, 0)) return false; // TODO: Implement track muting.
+    if (!write_u8(fp, (uint8_t) module->initial_panning[track])) return false;
+    if (!write_u8(fp, 1)) return false; // TODO: Number of commands displayed.
+    if (!write_u8(fp, 0)) return false;
     return true;
 }
 
@@ -691,7 +715,9 @@ static bool write_pattern_chunk(const module_t *module, const int pattern_no, FI
     if (!write_fourcc(fp, PATTERN_CHUNK_ID)) return false;
     if (!write_u32_le(fp, 8 + pattern.num_lines * module->num_tracks * EVENT_SIZE)) return false;
     if (!write_u32_le(fp, (uint32_t) pattern_no)) return false;
-    if (!write_u32_le(fp, (uint32_t) pattern.num_lines)) return false;
+    if (!write_u16_le(fp, (uint16_t) pattern.num_lines)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
     if (!write_pattern_events(pattern, module, fp)) return false;
     return true;
 }
@@ -701,7 +727,9 @@ static bool write_empty_pattern_chunk(const int pattern_no, const int num_lines,
     if (!write_fourcc(fp, EMPTY_PATTERN_CHUNK_ID)) return false;
     if (!write_u32_le(fp, EMPTY_PATTERN_CHUNK_LEN)) return false;
     if (!write_u32_le(fp, (uint32_t) pattern_no)) return false;
-    if (!write_u32_le(fp, (uint32_t) num_lines)) return false;
+    if (!write_u16_le(fp, (uint16_t) num_lines)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
     return true;
 }
 
@@ -742,12 +770,20 @@ static bool write_pattern_events(const pattern_t pattern, const module_t *module
 
 static bool write_event(const event_t event, FILE *fp)
 {
-    if (!write_u32_le(fp, (uint32_t) event.note)) return false;
-    if (!write_u32_le(fp, (uint32_t) event.instrument_no)) return false;
+    if (!write_u8(fp, (uint8_t) event.instrument_no)) return false;
+    if (!write_u8(fp, (uint8_t) event.note)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
-        if (!write_u32_le(fp, (uint32_t) event.effects[effect_no].command)) return false;
-        if (!write_u32_le(fp, event.effects[effect_no].data)) return false;
+        if (!write_u8(fp, (uint8_t) event.effects[effect_no].command)) return false;
+        if (!write_u8(fp, 0)) return false;
+        if (!write_u8(fp, event.effects[effect_no].data)) return false;
+        if (!write_u8(fp, 0)) return false;
     }
     return true;
 }
@@ -770,11 +806,11 @@ static bool write_instrument_chunk(const module_t *module, const uint8_t instrum
     if (!write_u32_le(fp, INSTRUMENT_CHUNK_LEN)) return false;
     if (!write_u32_le(fp, instrument_index)) return false;
     if (!write_cc(fp, instrument_name, INSTRUMENT_NAME_LEN)) return false;
-    if (!write_u32_le(fp, INSTRUMENT_TYPE_SAMPLE)) return false;
-    if (!write_u32_le(fp, instrument.default_volume)) return false;
-    if (!write_s32_le(fp, instrument.transpose - 13)) return false;
+    if (!write_u8(fp, INSTRUMENT_TYPE_SAMPLE)) return false;
+    if (!write_u8(fp, instrument.default_volume)) return false;
+    if (!write_s8(fp, instrument.transpose - 13)) return false;
+    if (!write_u8(fp, instrument.repeats ? 1 : 0)) return false;
     if (!write_u32_le(fp, instrument.sample_index)) return false;
-    if (!write_u32_le(fp, instrument.repeats ? 1 : 0)) return false;
     if (!write_u32_le(fp, instrument.repeat_offset)) return false;
     if (!write_u32_le(fp, instrument.repeat_length)) return false;
     return true;
@@ -820,6 +856,25 @@ static bool write_cc(FILE *fp, const char *ch, const size_t len)
     return fwrite(ch, sizeof(char), len, fp) == len;
 }
 
+static bool write_u8(FILE *fp, const uint8_t value)
+{
+    return fwrite(&value, sizeof value, 1, fp) == 1;
+}
+
+static bool write_s8(FILE *fp, const int8_t value)
+{
+    return fwrite(&value, sizeof value, 1, fp) == 1;
+}
+
+static bool write_u16_le(FILE *fp, const uint16_t value)
+{
+    const uint8_t bytes[2] = {
+        (uint8_t) (value & 0xFF),
+        (uint8_t) (value >> 8 & 0xFF)
+    };
+    return fwrite(bytes, sizeof bytes, 1, fp) == 1;
+}
+
 static bool write_u32_le(FILE *fp, const uint32_t value)
 {
     const uint8_t bytes[4] = {
@@ -829,11 +884,6 @@ static bool write_u32_le(FILE *fp, const uint32_t value)
         (uint8_t) (value >> 24 & 0xFF)
     };
     return fwrite(bytes, sizeof bytes, 1, fp) == 1;
-}
-
-static bool write_s32_le(FILE *fp, const int32_t value)
-{
-    return write_u32_le(fp, (uint32_t) value);
 }
 
 static bool write_f32_le(FILE *fp, const float value)

@@ -106,8 +106,8 @@ export type PatternLine = {
   events: PatternEvent[];
 }
 
-function shutdownApp() {
-  invoke("shutdown_app").then(() => {});
+function exitUnsuccessfully() {
+  invoke("exit_unsuccessfully").then(() => {});
 }
 
 export const engine = {
@@ -142,7 +142,7 @@ export const engine = {
           title: "Arctracker",
           kind: "error",
         },
-      ).then(() => shutdownApp());
+      ).then(() => exitUnsuccessfully());
     });
   },
 
@@ -325,5 +325,9 @@ export const engine = {
     return await invoke("edit_set_num_tracks", {
       numTracks,
     })
-  }
+  },
+
+  exitSuccessfully: async () => {
+    return await invoke("exit_successfully");
+  },
 };

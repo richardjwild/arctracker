@@ -249,7 +249,12 @@ fn edit_set_num_tracks(state: tauri::State<Arc<AppState>>, num_tracks: i32) -> R
 }
 
 #[tauri::command]
-fn shutdown_app(app: AppHandle) {
+fn exit_successfully(app: AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+fn exit_unsuccessfully(app: AppHandle) {
     app.exit(1);
 }
 
@@ -273,7 +278,6 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             get_pattern,
             set_selected_instrument,
             set_selected_channel,
-            shutdown_app,
             default_save_path,
             default_export_path,
             export_audio,
@@ -292,5 +296,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_load_sample,
             edit_set_module_title,
             edit_set_num_tracks,
+            exit_successfully,
+            exit_unsuccessfully,
         ])
 }

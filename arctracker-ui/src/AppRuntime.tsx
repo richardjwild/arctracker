@@ -5,12 +5,14 @@ import useMidiPlayback from "./hooks/useMidiPlayback.ts";
 import useExportMonitoring from "./hooks/useExportMonitoring.ts";
 import useKeyboardInput from "./hooks/useKeyboardInput.ts";
 import useAnimation from "./hooks/useAnimation.ts";
+import { useExitGuard } from "./hooks/useExitGuard.ts";
 
 interface AppRuntimeProps {
   children: React.ReactNode;
 }
 
 export default function AppRuntime({ children }: AppRuntimeProps) {
+  useExitGuard();
   useInitialModule();
   usePolling();
   useMidiPlayback();
