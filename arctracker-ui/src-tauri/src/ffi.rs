@@ -106,8 +106,6 @@ pub struct UiTransportState {
     pub pattern_index: c_int,
     pub pattern_no: c_int,
     pub pattern_length: c_int,
-    pub peak_l: f32,
-    pub peak_r: f32,
 }
 
 #[repr(C)]

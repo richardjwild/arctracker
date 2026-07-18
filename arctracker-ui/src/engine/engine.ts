@@ -48,6 +48,7 @@ export type TransportState = {
   patternIndex: number;
   patternNo: number;
   patternLength: number;
+  newPattern: PatternLine[] | null;
 }
 
 export type PeakLevels = {
@@ -179,8 +180,11 @@ export const engine = {
     })
   },
 
-  getTransportState: async (): Promise<TransportState> => {
-    return await invoke("get_transport_state");
+  getTransportState: async (displayedPatternNo: number | null, numTracks: number): Promise<TransportState> => {
+    return await invoke("get_transport_state", {
+      displayedPatternNo,
+      numTracks,
+    });
   },
 
   getAndResetPeakLevels: async (): Promise<PeakLevels> => {

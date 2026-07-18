@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "arctracker",
+  "productName": "Arctracker",
   "version": "0.1.0",
   "identifier": "richardjwild.arctracker",
   "build": {

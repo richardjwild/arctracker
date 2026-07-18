@@ -44,9 +44,12 @@ function cssColour(name: string): string {
 }
 
 type Colours = {
+  background: string;
   trackLaneSeparator: string;
-  trackHeaderFg: string;
-  trackHeaderBg: string;
+  trackHeaderMutedFg: string;
+  trackHeaderMutedBg: string;
+  trackHeaderNotMutedFg: string;
+  trackHeaderNotMutedBg: string;
   playheadBackground: string;
   text: string;
   cursor: string;
@@ -84,9 +87,12 @@ export class PatternRenderer {
     this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = patternLayout.getPatternLayout();
     this.coloursAtPlayhead = {
+      background: cssColour("--colour-panel-bg"),
       trackLaneSeparator: cssColour("--colour-track-lane-separator"),
-      trackHeaderFg: cssColour("--colour-track-header-fg"),
-      trackHeaderBg: cssColour("--colour-track-header-bg"),
+      trackHeaderMutedFg: cssColour("--colour-track-header-muted-fg"),
+      trackHeaderMutedBg: cssColour("--colour-track-header-muted-bg"),
+      trackHeaderNotMutedFg: cssColour("--colour-track-header-not-muted-fg"),
+      trackHeaderNotMutedBg: cssColour("--colour-track-header-not-muted-bg"),
       playheadBackground: cssColour("--colour-playhead"),
       text: cssColour("--colour-pattern-text-bright"),
       cursor: cssColour("--colour-cursor"),
@@ -98,9 +104,12 @@ export class PatternRenderer {
       selectionBoxOutline: cssColour("--colour-selection-outline"),
     };
     this.coloursOffPlayhead = {
+      background: cssColour("--colour-panel-bg"),
       trackLaneSeparator: cssColour("--colour-track-lane-separator"),
-      trackHeaderFg: cssColour("--colour-track-header-fg"),
-      trackHeaderBg: cssColour("--colour-track-header-bg"),
+      trackHeaderMutedFg: cssColour("--colour-track-header-muted-fg"),
+      trackHeaderMutedBg: cssColour("--colour-track-header-muted-bg"),
+      trackHeaderNotMutedFg: cssColour("--colour-track-header-not-muted-fg"),
+      trackHeaderNotMutedBg: cssColour("--colour-track-header-not-muted-bg"),
       playheadBackground: cssColour("--colour-playhead"),
       text: cssColour("--colour-pattern-text-muted"),
       cursor: cssColour("--colour-cursor"),
@@ -115,7 +124,6 @@ export class PatternRenderer {
   }
 
   public renderPattern(playheadIndex: number) {
-    this.ctx.font = "16px FiraCode";
     this.ctx.textBaseline = "hanging";
     this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
     this.renderTrackLanes();
@@ -134,9 +142,10 @@ export class PatternRenderer {
   }
 
   private renderTrackHeaders() {
+    this.ctx.font = "12px FiraCode";
     let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
     for (let track = 0; track <= this.numTracks; track++) {
-      x += this.renderTrackHeader(x, track);
+      x += this.renderTrackHeader(x, track, false);
     }
   }
 
@@ -217,6 +226,7 @@ export class PatternRenderer {
   }
 
   private renderPatternLines(playheadIndex: number) {
+    this.ctx.font = "16px FiraCode";
     let y = this.patternLayout.trackHeaderHeight;
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
@@ -245,18 +255,51 @@ export class PatternRenderer {
     return trackWidth;
   }
 
-  private renderTrackHeader(trackX: number, track: number): number {
+  private renderTrackHeader(trackX: number, track: number, muted: boolean): number {
+    const fgColour = muted ? this.colours().trackHeaderMutedFg : this.colours().trackHeaderNotMutedFg;
+    const bgColour = muted ? this.colours().trackHeaderMutedBg : this.colours().trackHeaderNotMutedBg;
     const trackWidth = this.patternLayout.getEventWidth(track);
     if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
       return 0;
-    this.withFillStyle(this.colours().trackHeaderBg)
+    this.withFillStyle(bgColour)
       .fillRect(trackX + 1, 0, trackWidth - 2, this.patternLayout.trackHeaderHeight);
-    this.withFillStyle(this.colours().trackHeaderFg).renderGlyph(
+    this.withFillStyle(fgColour).renderGlyph(
       (track + 1).toString(),
       trackX + this.patternLayout.glyphWidth / 2,
-      0,
+      2,
     );
+    if (muted) this.renderMutedIcon(trackX + trackWidth - 14, 3);
+    else this.renderNotMutedIcon(trackX + trackWidth - 14, 3);
     return trackWidth;
+  }
+
+  private renderMutedIcon(x: number, y: number) {
+    this.ctx.lineWidth = 1;
+    this.withStrokeStyle(this.colours().trackHeaderMutedFg);
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y + 2);
+    this.ctx.lineTo(x + 10, y + 12);
+    this.ctx.closePath();
+    this.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.moveTo(x + 10, y + 2);
+    this.ctx.lineTo(x, y + 12);
+    this.ctx.closePath();
+    this.ctx.stroke();
+  }
+
+  private renderNotMutedIcon(x: number, y: number) {
+    this.withStrokeStyle(this.colours().trackHeaderNotMutedFg);
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y + 2);
+    this.ctx.lineTo(x + 4, y + 5);
+    this.ctx.lineTo(x + 8, y + 5);
+    this.ctx.lineTo(x + 8, y + 10);
+    this.ctx.lineTo(x + 4, y + 10);
+    this.ctx.lineTo(x, y + 13);
+    this.ctx.closePath();
+    this.ctx.stroke();
   }
 
   private renderPatternLine(line: PatternLine | null, y: number, atPlayhead: boolean): number {

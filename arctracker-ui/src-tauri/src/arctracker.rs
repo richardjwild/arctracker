@@ -200,8 +200,7 @@ pub struct UiTransportState {
     pub pattern_index: i32,
     pub pattern_no: i32,
     pub pattern_length: i32,
-    pub peak_left: f32,
-    pub peak_right: f32,
+    pub new_pattern: Option<Vec<PatternLine>>,
 }
 
 #[derive(Serialize)]
@@ -461,12 +460,17 @@ impl Arctracker {
         }
     }
 
-    pub fn get_transport_state(&mut self) -> UiTransportState {
+    pub fn get_transport_state(&mut self, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiTransportState {
         let mut transport_state = std::mem::MaybeUninit::<ffi::UiTransportState>::uninit();
         unsafe {
             ffi::arctracker_get_transport_state(self.handle, transport_state.as_mut_ptr())
         };
         let transport_state = unsafe { transport_state.assume_init() };
+        let new_pattern = if displayed_pattern_no == Some(transport_state.pattern_no as u32) {
+            None
+        } else {
+            Some(self.get_pattern(transport_state.pattern_no, transport_state.pattern_length, num_tracks))
+        };
         UiTransportState {
             playing: transport_state.playing,
             looping: transport_state.looping,
@@ -474,8 +478,7 @@ impl Arctracker {
             pattern_index: transport_state.pattern_index,
             pattern_no: transport_state.pattern_no,
             pattern_length: transport_state.pattern_length,
-            peak_left: transport_state.peak_l,
-            peak_right: transport_state.peak_r,
+            new_pattern,
         }
     }
     

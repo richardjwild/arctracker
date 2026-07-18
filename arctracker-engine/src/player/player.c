@@ -101,7 +101,7 @@ void player_shutdown(player_t *player)
     player->running = false;
 }
 
-void player_sequence_changed(player_t *player, module_t *module)
+void player_sequence_changed(player_t *player, const module_t *module)
 {
     player->sequence = reinitialise_sequence(module, &player->sequence, false);
 }
@@ -265,7 +265,7 @@ static void player_step(player_t *player)
     bool row_advanced = false;
     if (tick_scheduler_is_new_event(&player->tick_scheduler.event_scheduler))
     {
-        sequence_advance(&player->sequence);
+        pattern_step(&player->sequence);
         row_advanced = true;
     }
     set_current_frame(player, row_advanced);

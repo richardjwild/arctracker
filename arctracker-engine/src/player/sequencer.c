@@ -10,17 +10,17 @@
 static const int NO_JUMP = -1;
 
 static void begin_new_pattern(sequence_t *);
-static bool end_of_sequence(sequence_t *);
+static bool end_of_sequence(const sequence_t *);
 static void advance_sequence_position(sequence_t *);
-static bool end_of_pattern(sequence_t *);
-static bool end_of_loop(sequence_t *);
+static bool end_of_pattern(const sequence_t *);
+static bool end_of_loop(const sequence_t *);
 static void advance_pattern_event(sequence_t *);
 static void go_to_jump_target(sequence_t *);
-static bool jump_permitted(int, sequence_t *);
+static bool jump_permitted(int, const sequence_t *);
 
-sequence_t initialise_sequence(module_t *module, bool bouncing)
+sequence_t initialise_sequence(const module_t *module, const bool bouncing)
 {
-    sequence_t sequence = (sequence_t) {
+    return (sequence_t) {
         .sequence_pos = 0,
         .looping_state = NOT_LOOPING,
         .pattern_index = 0,
@@ -30,10 +30,9 @@ sequence_t initialise_sequence(module_t *module, bool bouncing)
         .patterns = module->patterns,
         .continuous_play = !bouncing,
     };
-    return sequence;
 }
 
-sequence_t reinitialise_sequence(module_t *module, sequence_t *old_sequence, bool bouncing)
+sequence_t reinitialise_sequence(const module_t *module, const sequence_t *old_sequence, const bool bouncing)
 {
     sequence_t sequence = (sequence_t) {
         .sequence_pos = old_sequence->sequence_pos,
@@ -50,7 +49,7 @@ sequence_t reinitialise_sequence(module_t *module, sequence_t *old_sequence, boo
     return sequence;
 }
 
-void sequence_advance(sequence_t *sequence)
+void pattern_step(sequence_t *sequence)
 {
     if (sequence->jump_target == NO_JUMP || sequence->looping_state.looping)
         advance_pattern_event(sequence);
@@ -58,7 +57,7 @@ void sequence_advance(sequence_t *sequence)
         go_to_jump_target(sequence);
 }
 
-void set_jump_target(int next_position, sequence_t *sequence)
+void set_jump_target(const int next_position, sequence_t *sequence)
 {
     if (jump_permitted(next_position, sequence))
         sequence->jump_target = next_position;
@@ -108,9 +107,9 @@ static void advance_sequence_position(sequence_t *sequence)
     begin_new_pattern(sequence);
 }
 
-static bool end_of_sequence(sequence_t *sequence)
+static bool end_of_sequence(const sequence_t *sequence)
 {
-    return (sequence->sequence_pos == sequence->tune_length);
+    return sequence->sequence_pos == sequence->tune_length;
 }
 
 static void begin_new_pattern(sequence_t *sequence)
@@ -130,16 +129,16 @@ static void advance_pattern_event(sequence_t *sequence)
         advance_sequence_position(sequence);
 }
 
-static bool end_of_pattern(sequence_t *sequence)
+static bool end_of_pattern(const sequence_t *sequence)
 {
-    int current_pattern = sequence->sequence[sequence->sequence_pos];
-    int pattern_length = sequence->patterns[current_pattern].num_lines;
-    return (sequence->pattern_index == pattern_length);
+    const int current_pattern = sequence->sequence[sequence->sequence_pos];
+    const int pattern_length = sequence->patterns[current_pattern].num_lines;
+    return sequence->pattern_index == pattern_length;
 }
 
-static bool end_of_loop(sequence_t *sequence)
+static bool end_of_loop(const sequence_t *sequence)
 {
-    return (sequence->pattern_index == sequence->looping_state.loop_pattern_end);
+    return sequence->pattern_index == sequence->looping_state.loop_pattern_end;
 }
 
 static void go_to_jump_target(sequence_t *sequence)
@@ -149,8 +148,8 @@ static void go_to_jump_target(sequence_t *sequence)
     begin_new_pattern(sequence);
 }
 
-static bool jump_permitted(int next_position, sequence_t *sequence)
+static bool jump_permitted(const int next_position, const sequence_t *sequence)
 {
-    return (next_position < sequence->tune_length)
-           && (sequence->continuous_play || (next_position > sequence->sequence_pos));
+    return next_position < sequence->tune_length
+           && (sequence->continuous_play || next_position > sequence->sequence_pos);
 }

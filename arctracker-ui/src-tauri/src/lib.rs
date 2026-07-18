@@ -79,9 +79,9 @@ fn seek(state: tauri::State<Arc<AppState>>, new_sequence_pos: i32, new_pattern_p
 }
 
 #[tauri::command]
-fn get_transport_state(state: tauri::State<Arc<AppState>>) -> UiTransportState {
+fn get_transport_state(state: tauri::State<Arc<AppState>>, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiTransportState {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.get_transport_state()
+    tracker.get_transport_state(displayed_pattern_no, num_tracks)
 }
 
 #[tauri::command]

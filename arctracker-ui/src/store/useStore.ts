@@ -67,6 +67,7 @@ const initialTransportState: TransportState = {
   patternIndex: 0,
   patternNo: 0,
   patternLength: 0,
+  newPattern: null,
 };
 
 const initialPattern: CurrentPattern = {

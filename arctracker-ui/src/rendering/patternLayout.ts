@@ -1,5 +1,4 @@
 import { useStore } from "../store/useStore.ts";
-import { cursor, CursorPosition } from "../editing/cursor.ts";
 
 export type PatternLayout = {
   leftPadding: number;
@@ -19,6 +18,11 @@ export type GridViewportFit = {
   lastVisibleTrack: number;
   playheadLocationOnScreen: number;
 };
+
+export type PointerClickHit =
+  | { objectType: "patternEvent", event: { track: number; patternIndex: number } }
+  | { objectType: "trackHeader", track: number }
+  | { objectType: "trackFooter", track: number };
 
 const leftPadding = 10;
 const glyphHeight = 20;
@@ -80,23 +84,22 @@ export const patternLayout = {
     };
   },
 
-  cursorPositionAt: (
+  pointerClickedOn: (
     pointerX: number,
     pointerY: number,
     viewportSize: { width: number; height: number },
     playheadIndex: number,
     numTracks: number,
     patternLength: number,
-  ): CursorPosition => {
-    const currentPosition = cursor.currentPosition();
+  ): PointerClickHit | null => {
     const layout = patternLayout.getPatternLayout();
     const gridViewportFit = patternLayout.calculateGridViewportFit(
       viewportSize,
       numTracks,
     );
     let x = layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
-    if (pointerX <= x) return currentPosition;
-    let track = currentPosition.track;
+    if (pointerX <= x) return null;
+    let track = null;
     for (
       let candidateTrack = gridViewportFit.firstVisibleTrack;
       candidateTrack <= gridViewportFit.lastVisibleTrack;
@@ -108,16 +111,20 @@ export const patternLayout = {
         break;
       }
     }
-    let patternIndex = currentPosition.patternIndex;
+    if (track === null) return null;
+    let patternIndex = null;
     const playheadY = layout.trackHeaderHeight + gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
     const relativeLine = Math.floor((pointerY - playheadY - layout.playheadPadding) / layout.rowHeight);
     if (playheadIndex + relativeLine >= 0 && playheadIndex + relativeLine < patternLength) {
       patternIndex = playheadIndex + relativeLine;
     }
+    if (patternIndex === null) return null;
     return {
-      ...currentPosition,
-      track,
-      patternIndex,
+      objectType: "patternEvent",
+      event: {
+        track,
+        patternIndex,
+      },
     };
   },
 };

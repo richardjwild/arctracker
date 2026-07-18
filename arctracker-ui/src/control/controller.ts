@@ -51,28 +51,28 @@ async function processCommands() {
         break;
       case CommandType.SEQUENCE_SEEK:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeek(command.position);
-        else sequence.updatePosition(command.position);
+        transport.sequenceSeek(command.position);
+        sequence.updatePosition(command.position);
         break;
       case CommandType.SEQUENCE_SEEK_FORWARDS:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeekForwards();
-        else sequence.advance();
+        transport.sequenceSeekForwards();
+        sequence.advance();
         break;
       case CommandType.SEQUENCE_SEEK_BACKWARDS:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeekBackwards();
-        else sequence.reverse();
+        transport.sequenceSeekBackwards();
+        sequence.reverse();
         break;
       case CommandType.SEQUENCE_SEEK_TO_START:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeekToStart();
-        else sequence.goToStart();
+        transport.sequenceSeekToStart();
+        sequence.goToStart();
         break;
       case CommandType.SEQUENCE_SEEK_TO_END:
         selection.clearPatternSelection();
-        if (transport.playing()) transport.sequenceSeekToEnd();
-        else sequence.goToEnd();
+        transport.sequenceSeekToEnd();
+        sequence.goToEnd();
         break;
       case CommandType.NEXT_INSTRUMENT:
         editInstrument.nextInstrument();

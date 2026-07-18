@@ -23,11 +23,11 @@ typedef struct {
     bool continuous_play;
 } sequence_t;
 
-sequence_t initialise_sequence(module_t *module, bool bouncing);
+sequence_t initialise_sequence(const module_t *module, bool bouncing);
 
-sequence_t reinitialise_sequence(module_t *module, sequence_t *old_sequence, bool bouncing);
+sequence_t reinitialise_sequence(const module_t *module, const sequence_t *old_sequence, bool bouncing);
 
-void sequence_advance(sequence_t *);
+void pattern_step(sequence_t *);
 
 void sequence_seek(sequence_t *, int new_sequence_pos, int new_pattern_pos);
 

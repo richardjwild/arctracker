@@ -3,8 +3,6 @@
     --colour-panel-bg: #1c1c1c;
     --colour-track-lane-separator: #333333;
     --colour-text: #dddddd;
-    --colour-track-header-fg: black;
-    --colour-track-header-bg: #aaaaaa;
     --colour-pattern-text-muted: #666666;
     --colour-pattern-text-bright: #ffffff;
     --colour-playhead: #333333;
@@ -48,4 +46,8 @@
     --colour-vu-meter-bottom: rgb(0, 255, 0);
     --colour-vu-meter-middle: rgb(255, 255, 0);
     --colour-vu-meter-top: rgb(255, 0, 0);
+    --colour-track-header-muted-fg: #aaaaaa;
+    --colour-track-header-muted-bg: #1c1c1c;
+    --colour-track-header-not-muted-fg: black;
+    --colour-track-header-not-muted-bg: #aaaaaa;
 }

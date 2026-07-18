@@ -46,7 +46,7 @@ bool player_queue_command(const player_t *, player_command_t);
 
 void player_shutdown(player_t *);
 
-void player_sequence_changed(player_t *, module_t *);
+void player_sequence_changed(player_t *, const module_t *);
 
 void player_sequence_restore(player_t *player, sequence_t sequence);
 

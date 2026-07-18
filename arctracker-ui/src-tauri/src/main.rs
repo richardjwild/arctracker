@@ -45,7 +45,7 @@ fn start_midi(app_state: Arc<AppState>) {
 }
 
 fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
-    install_menu(app)?;
+    install_menu(app)?; 
     app.on_menu_event(|app_handle, event| {
         if event.id().as_ref() == QUIT_MENU_ID {
             request_exit_confirmation(app_handle);
@@ -62,7 +62,7 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
         true,
         Some("CmdOrCtrl+Q"),
     )?;
-    let about = PredefinedMenuItem::about(app, None, None)?;
+    let about = PredefinedMenuItem::about(app, Some("About Arctracker"), None)?;
     let separator = PredefinedMenuItem::separator(app)?;
     let app_menu = Submenu::with_items(app, "Arctracker", true, &[&about, &separator, &quit])?;
     let menu = Menu::with_items(app, &[&app_menu])?;

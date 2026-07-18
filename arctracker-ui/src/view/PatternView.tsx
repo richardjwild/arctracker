@@ -118,7 +118,7 @@ export default function PatternView() {
     const pointerY = event.clientY - boundingRect.top;
     const playheadIndex = getPatternIndex();
     const patternLength = useStore.getState().currentPattern.lines.length;
-    const clickedPosition = patternLayout.cursorPositionAt(
+    const clickedPosition = patternLayout.pointerClickedOn(
       pointerX,
       pointerY,
       { width: container.clientWidth, height: container.clientHeight },
@@ -126,11 +126,13 @@ export default function PatternView() {
       numTracks,
       patternLength,
     );
-    commands.patternGridJumpToLocation(
-      clickedPosition.track,
-      clickedPosition.patternIndex,
-      event.shiftKey,
-    );
+    if (clickedPosition && clickedPosition.objectType === "patternEvent") {
+      commands.patternGridJumpToLocation(
+        clickedPosition.event.track,
+        clickedPosition.event.patternIndex,
+        event.shiftKey,
+      );
+    }
   };
 
   useEffect(() => {
@@ -172,8 +174,8 @@ export default function PatternView() {
   }, [numTracks]);
 
   useEffect(() => {
-    // Get the current pattern whenever it changes.
-    if (patternLength > 0 && numTracks > 0)
+    // Get the current pattern whenever it changes and we are not playing.
+    if (!playing && patternLength > 0 && numTracks > 0)
       engine
         .getPattern(patternNo, patternLength, numTracks)
         .then((patternLines) =>

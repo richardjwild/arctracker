@@ -46,11 +46,14 @@
  *   Chunk contents:                                                         *
  *   - char module name (64 characters, null terminated)                     *
  *   - char author (64 characters, null terminated)                          *
- *   - u8 number of tracks minus 1 (0-255)                                   *
+ *   - u8 number of tracks less 1 (0-255; 0=1 track, 1=2 tracks, etc.)       *
  *   - u16 sequence length (1-65535)                                         *
- *   - u16 master gain (0-65535)                                             *
+ *   - u16 master gain (0-65535; 0=minimum, 65535=maximum)                   *
  *   - u8 ticks per event (1-255)                                            *
  *   - u8 ticks per second (1-255)                                           *
+ *   - u8 lines per beat (0-255: 0=undefined)                                *
+ *   - u16 default pattern length (1-1000)                                   *
+ *   - u8 reserved for future use                                            *
  *   - u8 reserved for future use                                            *
  *                                                                           *
  * Track chunk                                                               *
@@ -62,7 +65,7 @@
  *   - u8 track index (0-255)                                                *
  *   - char reserved for future use (31 characters)                          *
  *   - u8 track muted (0-not muted, 1-muted)                                 *
- *   - u8 initial panning (0-255: 0-centre, 1-full left, 255-full right)     *
+ *   - u8 initial panning (0-255: 0=centre, 1=full left, 255=full right)     *
  *   - u8 commands displayed (0-4)                                           *
  *   - u8 reserved for future use                                            *
  *                                                                           *
@@ -178,7 +181,7 @@ static const char *SAMPLE_CHUNK_ID = "SAMP";
 static const char *INSTRUMENT_CHUNK_ID = "INST";
 static const uint32_t CHUNK_HEADER_SIZE = 8;
 static const uint32_t FORMAT_CHUNK_LEN = 4;
-static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 8;
+static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 12;
 static const uint32_t TRACK_CHUNK_LEN = TRACK_NAME_LEN + 5;
 static const uint32_t EMPTY_PATTERN_CHUNK_LEN = 8;
 static const uint32_t INSTRUMENT_CHUNK_LEN = 20 + INSTRUMENT_NAME_LEN;
@@ -353,6 +356,8 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         goto read_module_metadata_failed;
     }
     module->initial_speed = initial_speed;
+    // TODO: Read lines per beat (u8).
+    // TODO: Read default pattern length (u16).
     return module;
 
 read_module_metadata_failed:
@@ -663,7 +668,10 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u16_le(fp, module->tune_length)) return false; // TODO: Rename sequence_length.
     if (!write_u16_le(fp, write_gain(module->master_gain))) return false;
     if (!write_u8(fp, module->initial_speed)) return false;   // TODO: Rename ticks_per_event.
-    if (!write_u8(fp, 50)) return false;                      // TODO: Initial ticks per second not in module yet
+    if (!write_u8(fp, 50)) return false;                      // TODO: Initial ticks per second not in module yet.
+    if (!write_u8(fp, 0)) return false;                       // TODO: Lines per beat not in module yet.
+    if (!write_u16_le(fp, 64)) return false;                  // TODO: Default pattern length not in module yet.
+    if (!write_u8(fp, 0)) return false;
     if (!write_u8(fp, 0)) return false;
     return true;
 }

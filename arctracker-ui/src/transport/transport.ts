@@ -51,12 +51,19 @@ export const transport = {
   },
 
   getTransportState: async (): Promise<TransportState> => {
-    const ts = await engine.getTransportState();
-    return ts;
+    const numTracks = useStore.getState().module.numTracks;
+    const displayedPatternNo = useStore.getState().currentPattern?.patternNo;
+    return await engine.getTransportState(displayedPatternNo, numTracks);
   },
 
-  transportStatePoller: (() =>
-    transport
-      .getTransportState()
-      .then(useStore.getState().setTransportState)) as AppPoller,
+  transportStatePoller: (() => {
+    transport.getTransportState().then((state) => {
+      useStore.getState().setTransportState(state);
+      if (state.newPattern !== null)
+        useStore.getState().setCurrentPattern({
+          patternNo: state.patternNo,
+          lines: state.newPattern,
+        });
+    });
+  }) as AppPoller,
 };
