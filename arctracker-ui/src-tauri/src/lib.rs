@@ -5,7 +5,7 @@ pub mod state;
 use std::sync::Arc;
 use tauri::{AppHandle};
 use crate::arctracker::{PatternLine, PlayerEvent, Module, UiExportState, PatternEvent, InstrumentUpdate, Sample, UiPeakLevels};
-use crate::arctracker::UiTransportState;
+use crate::arctracker::UiPlayerSnapshot;
 pub use crate::state::AppState;
 
 #[tauri::command]
@@ -86,9 +86,9 @@ fn toggle_track_mute(state: tauri::State<Arc<AppState>>, track: i32) -> Result<(
 }
 
 #[tauri::command]
-fn get_transport_state(state: tauri::State<Arc<AppState>>, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiTransportState {
+fn get_player_snapshot(state: tauri::State<Arc<AppState>>, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiPlayerSnapshot {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.get_transport_state(displayed_pattern_no, num_tracks)
+    tracker.get_player_snapshot(displayed_pattern_no, num_tracks)
 }
 
 #[tauri::command]
@@ -281,7 +281,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             toggle_loop,
             seek,
             toggle_track_mute,
-            get_transport_state,
+            get_player_snapshot,
             get_and_reset_peak_levels,
             get_pattern,
             set_selected_instrument,

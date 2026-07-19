@@ -1,9 +1,13 @@
-import { engine, type PatternLine, TransportState } from "../engine/engine.ts";
+import { engine, type PatternLine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
-import { AppPoller } from "../polling/poller.ts";
 import { sequence } from "../editing/sequence.ts";
 
-export type { TransportState };
+export type TransportState = {
+  playing: boolean;
+  looping: boolean;
+  sequencePos: number;
+  patternIndex: number;
+}
 
 export type CurrentPattern = {
   patternNo: number;
@@ -49,21 +53,4 @@ export const transport = {
     const sequencePos = useStore.getState().transportState.sequencePos;
     transport.sequenceSeek(sequencePos - 1);
   },
-
-  getTransportState: async (): Promise<TransportState> => {
-    const numTracks = useStore.getState().module.numTracks;
-    const displayedPatternNo = useStore.getState().currentPattern?.patternNo;
-    return await engine.getTransportState(displayedPatternNo, numTracks);
-  },
-
-  transportStatePoller: (() => {
-    transport.getTransportState().then((state) => {
-      useStore.getState().setTransportState(state);
-      if (state.newPattern !== null)
-        useStore.getState().setCurrentPattern({
-          patternNo: state.patternNo,
-          lines: state.newPattern,
-        });
-    });
-  }) as AppPoller,
 };

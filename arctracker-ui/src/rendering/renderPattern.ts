@@ -85,7 +85,7 @@ export class PatternRenderer {
     this.ctx = ctx;
     this.viewportSize = viewportSize;
     this.numTracks = numTracks;
-    this.trackMuted = useStore.getState().transportState.trackMuted;
+    this.trackMuted = useStore.getState().trackMuteState;
     this.editorState = useStore.getState().editorState;
     this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = patternLayout.getPatternLayout();

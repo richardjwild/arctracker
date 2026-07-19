@@ -1,15 +1,14 @@
 import { useEffect } from "react";
 import { poller } from "../polling/poller.ts";
-import { transport } from "../transport/transport.ts";
 import { controller } from "../control/controller.ts";
-import { playerEvents } from "../engine/playerEvents.ts";
+import { player } from "../player/player.ts";
 
 export default function usePolling() {
   useEffect(() => {
     const deregisterAll = [
       poller.registerPoller(controller.commandPoller),
-      poller.registerPoller(transport.transportStatePoller),
-      poller.registerPoller(playerEvents.poller),
+      poller.registerPoller(player.snapshotPoller),
+      poller.registerPoller(player.eventsPoller),
     ];
     poller.start();
     return () => {

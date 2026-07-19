@@ -193,7 +193,7 @@ impl TryFrom<PatternEvent> for ffi::UiPatternEvent {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UiTransportState {
+pub struct UiPlayerSnapshot {
     pub playing: bool,
     pub looping: bool,
     pub sequence_pos: i32,
@@ -461,7 +461,7 @@ impl Arctracker {
         }
     }
 
-    pub fn get_transport_state(&mut self, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiTransportState {
+    pub fn get_player_snapshot(&mut self, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiPlayerSnapshot {
         let mut transport_state = std::mem::MaybeUninit::<ffi::UiTransportState>::uninit();
         unsafe {
             ffi::arctracker_get_transport_state(self.handle, transport_state.as_mut_ptr())
@@ -476,7 +476,7 @@ impl Arctracker {
         unsafe {
             ffi::arctracker_get_track_mute_state(self.handle, track_muted.as_mut_ptr(), num_tracks)
         };
-        UiTransportState {
+        UiPlayerSnapshot {
             playing: transport_state.playing,
             looping: transport_state.looping,
             sequence_pos: transport_state.sequence_pos,

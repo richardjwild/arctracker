@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { ExportState, Instrument, Module, TransportState } from "../engine/engine.ts";
-import { CurrentPattern } from "../transport/transport.ts";
+import type { ExportState, Instrument, Module } from "../engine/engine.ts";
+import { CurrentPattern, TransportState } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
@@ -15,6 +15,7 @@ interface AppStore {
   patternGridStrideLength: number;
   transportState: TransportState;
   editorState: EditorState;
+  trackMuteState: boolean[];
   patternSelection: PatternSelection | null;
   pasteBuffer: PasteBufferObjectType | null;
   exportMonitoring: boolean;
@@ -39,6 +40,7 @@ interface AppStore {
   setPatternGridStrideLength: (lines: number) => void;
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
+  setTrackMuteState: (trackMuteState: boolean[]) => void;
   setPatternSelection: (selection: PatternSelection | null) => void;
   setPasteBuffer: (buffer: PasteBufferObjectType | null) => void;
   setExportMonitoring: (monitoring: boolean) => void;
@@ -65,10 +67,8 @@ const initialTransportState: TransportState = {
   looping: false,
   sequencePos: 0,
   patternIndex: 0,
-  patternNo: 0,
-  patternLength: 0,
-  trackMuted: [],
-  newPattern: null,
+  // patternNo: 0,
+  // patternLength: 0,
 };
 
 const initialPattern: CurrentPattern = {
@@ -139,6 +139,7 @@ export const useStore = create<AppStore>((set) => ({
   patternGridStrideLength: 8,
   transportState: initialTransportState,
   editorState: initialEditorState(),
+  trackMuteState: [],
   patternSelection: null,
   pasteBuffer: null,
   exportMonitoring: false,
@@ -258,10 +259,7 @@ export const useStore = create<AppStore>((set) => ({
         current.playing === next.playing &&
         current.looping === next.looping &&
         current.sequencePos === next.sequencePos &&
-        current.patternIndex === next.patternIndex &&
-        current.patternNo === next.patternNo &&
-        current.patternLength === next.patternLength &&
-        muteStatesEqual(current.trackMuted, next.trackMuted)
+        current.patternIndex === next.patternIndex
       ) {
         return state;
       }
@@ -271,6 +269,14 @@ export const useStore = create<AppStore>((set) => ({
   setEditorState: (next) =>
     set({
       editorState: next,
+    }),
+
+  setTrackMuteState: (next) =>
+    set((state) => {
+      if (muteStatesEqual(state.trackMuteState, next))
+        return state;
+      else
+        return { trackMuteState: next };
     }),
 
   setPatternSelection: (patternSelection) => set({ patternSelection }),

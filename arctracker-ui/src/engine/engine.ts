@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import { PlayerEvent } from "./playerEvents.ts";
 import { message } from "@tauri-apps/plugin-dialog";
+import { PlayerEvent, PlayerSnapshot } from "../player/player.ts";
 
 export type Module = {
   fileName: string | null;
@@ -39,17 +39,6 @@ export type InstrumentUpdate = {
   repeatOffset: number;
   repeatLength: number;
   sampleIndex: number;
-}
-
-export type TransportState = {
-  playing: boolean;
-  looping: boolean;
-  sequencePos: number;
-  patternIndex: number;
-  patternNo: number;
-  patternLength: number;
-  trackMuted: boolean[];
-  newPattern: PatternLine[] | null;
 }
 
 export type PeakLevels = {
@@ -187,8 +176,8 @@ export const engine = {
     });
   },
 
-  getTransportState: async (displayedPatternNo: number | null, numTracks: number): Promise<TransportState> => {
-    return await invoke("get_transport_state", {
+  getPlayerSnapshot: async (displayedPatternNo: number | null, numTracks: number): Promise<PlayerSnapshot> => {
+    return await invoke("get_player_snapshot", {
       displayedPatternNo,
       numTracks,
     });
