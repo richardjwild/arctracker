@@ -52,6 +52,7 @@ type Colours = {
   trackHeaderNotMutedBg: string;
   playheadBackground: string;
   text: string;
+  channelMuted: string;
   cursor: string;
   cursorText: string;
   note: string;
@@ -69,6 +70,7 @@ export class PatternRenderer {
   private readonly patternSelection: PatternSelection | null;
   private patternLayout: PatternLayout;
   private readonly numTracks: number;
+  private readonly trackMuted: boolean[];
   private readonly coloursAtPlayhead: Colours;
   private readonly coloursOffPlayhead: Colours;
   private readonly gridViewportFit: GridViewportFit;
@@ -83,6 +85,7 @@ export class PatternRenderer {
     this.ctx = ctx;
     this.viewportSize = viewportSize;
     this.numTracks = numTracks;
+    this.trackMuted = useStore.getState().transportState.trackMuted;
     this.editorState = useStore.getState().editorState;
     this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = patternLayout.getPatternLayout();
@@ -95,6 +98,7 @@ export class PatternRenderer {
       trackHeaderNotMutedBg: cssColour("--colour-track-header-not-muted-bg"),
       playheadBackground: cssColour("--colour-playhead"),
       text: cssColour("--colour-pattern-text-bright"),
+      channelMuted: cssColour("--colour-pattern-text-channel-muted"),
       cursor: cssColour("--colour-cursor"),
       cursorText: cssColour("--colour-cursor-text"),
       note: cssColour("--colour-note-at-playhead"),
@@ -112,6 +116,7 @@ export class PatternRenderer {
       trackHeaderNotMutedBg: cssColour("--colour-track-header-not-muted-bg"),
       playheadBackground: cssColour("--colour-playhead"),
       text: cssColour("--colour-pattern-text-muted"),
+      channelMuted: cssColour("--colour-pattern-text-channel-muted"),
       cursor: cssColour("--colour-cursor"),
       cursorText: cssColour("--colour-cursor-text"),
       note: cssColour("--colour-note"),
@@ -145,7 +150,7 @@ export class PatternRenderer {
     this.ctx.font = "12px FiraCode";
     let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
     for (let track = 0; track <= this.numTracks; track++) {
-      x += this.renderTrackHeader(x, track, false);
+      x += this.renderTrackHeader(x, track, this.trackMuted[track]);
     }
   }
 
@@ -331,18 +336,21 @@ export class PatternRenderer {
     if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
       return 0;
     const cursorOnEvent = (atPlayhead && patternEvents.editing() && track === this.editorState.cursorPosition.track);
-    x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent);
-    x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent);
+    const muted = this.trackMuted[track];
+    x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent, muted);
+    x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent, muted);
     for (let effectIndex = 0; effectIndex < this.editorState.effectsDisplayed[track]; effectIndex++) {
-      x += this.renderEffect(x, y, effectIndex, event.effects[effectIndex], atPlayhead, cursorOnEvent);
+      x += this.renderEffect(x, y, effectIndex, event.effects[effectIndex], atPlayhead, cursorOnEvent, muted);
     }
     return this.patternLayout.getEventWidth(track);
   }
 
-  private renderNote(x: number, y: number, note: number, atPlayhead: boolean, cursorOnEvent: boolean): number {
+  private renderNote(x: number, y: number, note: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
     const noteStr = notes.toString(note);
     let colour;
-    if (cursorOnEvent && this.editorState.cursorPosition.field === NOTE_FIELD)
+    if (muted)
+      colour = this.colours().channelMuted;
+    else if (cursorOnEvent && this.editorState.cursorPosition.field === NOTE_FIELD)
       colour = this.colours().cursorText;
     else if (note === 0)
       colour = this.colours(atPlayhead).text;
@@ -356,21 +364,23 @@ export class PatternRenderer {
     return this.patternLayout.glyphWidth * 4;
   }
 
-  private renderSample(x: number, y: number, sampleNo: number, atPlayhead: boolean, cursorOnEvent: boolean) {
+  private renderSample(x: number, y: number, sampleNo: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean) {
     if (sampleNo === 0) {
-      x += this.renderSampleDigit(x, y, "-", SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent);
-      this.renderSampleDigit(x, y, "-", SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent);
+      x += this.renderSampleDigit(x, y, "-", SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
+      this.renderSampleDigit(x, y, "-", SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent, muted);
     } else {
       const sampleNumber = hexadecimal.toHex(sampleNo, 2);
-      x += this.renderSampleDigit(x, y, sampleNumber.charAt(0), SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent);
-      this.renderSampleDigit(x, y, sampleNumber.charAt(1), SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent);
+      x += this.renderSampleDigit(x, y, sampleNumber.charAt(0), SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
+      this.renderSampleDigit(x, y, sampleNumber.charAt(1), SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent, muted);
     }
     return this.patternLayout.glyphWidth * 3;
   }
 
-  private renderSampleDigit(x: number, y: number, digit: string, field: number, atPlayhead: boolean, cursorOnEvent: boolean): number {
+  private renderSampleDigit(x: number, y: number, digit: string, field: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
     let colour;
-    if (cursorOnEvent && this.editorState.cursorPosition.field === field) {
+    if (muted)
+      colour = this.colours().channelMuted;
+    else if (cursorOnEvent && this.editorState.cursorPosition.field === field) {
       colour = this.colours().cursorText;
     } else {
       colour = (digit === "-") ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
@@ -379,25 +389,25 @@ export class PatternRenderer {
     return this.patternLayout.glyphWidth;
   }
 
-  private renderEffect(x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean): number {
+  private renderEffect(x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
     if (effect.effectCode === "" && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
-      this.withFillStyle(this.colours(atPlayhead).text);
-      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 0);
-      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 1);
-      this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 2);
+      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 0, muted);
+      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 1, muted);
+      this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 2, muted);
     } else {
-      this.withFillStyle(this.colours(atPlayhead).effect);
-      x += this.renderEffectField(x, y, effectIndex, effect.effectCode, atPlayhead, cursorOnEvent, 0);
-      x += this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 1);
-      this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[1]), atPlayhead, cursorOnEvent, 2);
+      x += this.renderEffectField(x, y, effectIndex, effect.effectCode, atPlayhead, cursorOnEvent, 0, muted);
+      x += this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 1, muted);
+      this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[1]), atPlayhead, cursorOnEvent, 2, muted);
     }
     return this.patternLayout.glyphWidth * (FIELDS_PER_EFFECT + 1);
   }
 
-  private renderEffectField(x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number): number {
+  private renderEffectField(x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
     const cursorField = FIRST_EFFECT_FIELD + (effectIndex * 3) + effectField;
     let colour;
-    if (cursorOnEvent && this.editorState.cursorPosition.field === cursorField)
+    if (muted)
+      colour = this.colours().channelMuted;
+    else if (cursorOnEvent && this.editorState.cursorPosition.field === cursorField)
       colour = this.colours().cursorText;
     else
       colour = (effectParam === "-") ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;

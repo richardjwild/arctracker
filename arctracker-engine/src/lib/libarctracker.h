@@ -40,6 +40,8 @@ bool arctracker_poll_export_event(arctracker_t *handle, player_event_t *event);
 
 void arctracker_get_transport_state(arctracker_t *handle, ui_transport_state_t *transport_state);
 
+void arctracker_get_track_mute_state(arctracker_t *handle, bool *track_mute_state, int num_tracks);
+
 void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t *peak_levels);
 
 void arctracker_get_export_state(arctracker_t *handle, ui_export_state_t *export_state);

@@ -48,6 +48,7 @@ export type TransportState = {
   patternIndex: number;
   patternNo: number;
   patternLength: number;
+  trackMuted: boolean[];
   newPattern: PatternLine[] | null;
 }
 
@@ -178,6 +179,12 @@ export const engine = {
     void invoke("set_master_gain", {
       masterGain,
     })
+  },
+
+  toggleTrackMute: (track: number) => {
+    void invoke("toggle_track_mute", {
+      track,
+    });
   },
 
   getTransportState: async (displayedPatternNo: number | null, numTracks: number): Promise<TransportState> => {

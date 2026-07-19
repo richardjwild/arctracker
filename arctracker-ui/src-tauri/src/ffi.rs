@@ -30,6 +30,7 @@ pub enum PlayerCommandType {
     KeyboardNoteOff = 5,
     ToggleLoop = 6,
     SetMasterGain = 7,
+    ToggleTrackMute = 8,
 }
 
 #[repr(C)]
@@ -168,6 +169,11 @@ extern "C" {
     pub fn arctracker_get_transport_state(
         handle: *mut ArctrackerHandle,
         out_state: *mut UiTransportState,
+    );
+    pub fn arctracker_get_track_mute_state(
+        handle: *mut ArctrackerHandle,
+        track_mute_state: *mut bool,
+        num_tracks: c_int
     );
     pub fn arctracker_get_and_reset_peak_levels(
         handle: *mut ArctrackerHandle, peak_levels:

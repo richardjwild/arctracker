@@ -2,11 +2,10 @@
 #define ARCTRACKER_UI_H
 
 #include <stdbool.h>
-
 #define TUNE_NAME_MAX_LEN 65
 #define AUTHOR_NAME_MAX_LEN 65
 #define MAX_LEN_SAMPLENAME 33
-#define MAX_SAMPLES 36
+#define MAX_TRACKS 256
 
 typedef struct ui_sample_info {
     int sample_index;
@@ -62,6 +61,7 @@ typedef struct ui_transport_state {
     int pattern_index;
     int pattern_no;
     int pattern_length;
+    bool track_muted[MAX_TRACKS];
 } ui_transport_state_t;
 
 typedef struct ui_export_state {

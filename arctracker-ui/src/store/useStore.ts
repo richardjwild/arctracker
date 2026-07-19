@@ -67,6 +67,7 @@ const initialTransportState: TransportState = {
   patternIndex: 0,
   patternNo: 0,
   patternLength: 0,
+  trackMuted: [],
   newPattern: null,
 };
 
@@ -118,6 +119,14 @@ function initialEditorState(numTracks: number = 0): EditorState {
     sequencePosition: 0,
     effectsDisplayed: Array.from({ length: numTracks }, () => 1),
   };
+}
+
+function muteStatesEqual(a: boolean[], b: boolean[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 export const useStore = create<AppStore>((set) => ({
@@ -251,7 +260,8 @@ export const useStore = create<AppStore>((set) => ({
         current.sequencePos === next.sequencePos &&
         current.patternIndex === next.patternIndex &&
         current.patternNo === next.patternNo &&
-        current.patternLength === next.patternLength
+        current.patternLength === next.patternLength &&
+        muteStatesEqual(current.trackMuted, next.trackMuted)
       ) {
         return state;
       }

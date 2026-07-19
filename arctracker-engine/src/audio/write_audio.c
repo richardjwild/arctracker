@@ -1,4 +1,7 @@
 #include "write_audio.h"
+
+#include <stdio.h>
+
 #include "mix.h"
 #include "resample.h"
 #include "memory/heap.h"
@@ -96,7 +99,7 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
     voice_t *voice = voices + channel;
     resample(voice, audio_out->resample_buffer, audio_out->phase_increments, frames_to_fill);
     const float voice_gain = audio_out->gain_curve[voice->volume];
-    const float gain = voice_gain * audio_out->master_gain;
+    const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
     const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;
     const float right_gain = gain * ((float) voice->panning - PAN_HARD_LEFT) / 254.0f;
     const int channels = audio_out->num_channels;

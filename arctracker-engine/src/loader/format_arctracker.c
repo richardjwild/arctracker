@@ -19,8 +19,25 @@
  *                                                                           *
  * An Arctracker module file always begins with an ARCT format chunk, which  *
  * is always followed by a META module info chunk. That is then followed by  *
- * zero or more other chunks which contain the rest of the module data. The  *
- * chunks may be in any order, except for the format and meta chunks.        *
+ * other chunks which contain the rest of the module data. Other than the    *
+ * format and meta chunks, the chunks may be in any order.                   *
+ *                                                                           *
+ * All multi-byte number values are stored in little-endian order. The       *
+ * meaning of the datatypes are as follows:                                  *
+ *                                                                           *
+ *   Type  Meaning                                                           *
+ *   u8    Unsigned byte (8 bits).                                           *
+ *   s8    Signed byte.                                                      *
+ *   u16   Unsigned 16-bit word.                                             *
+ *   u32   Unsigned 32-bit word.                                             *
+ *   f32   32-bit IEEE-754 single precision float.                           *
+ *   char  A string of characters, UTF-8 encoded, terminated by NUL. The     *
+ *         length of the string, including the terminator, does not exceed   *
+ *         the specified length. The string will be padded as necessary up   *
+ *         to the specified length.                                          *
+ *                                                                           *
+ * Some parts of the file are reserved for future use. For now, these must   *
+ * be written with zero, and when reading, they must be ignored.             *
  *                                                                           *
  * A description of the various chunks follows:                              *
  *                                                                           *
@@ -44,8 +61,8 @@
  *                                                                           *
  *   Chunk id: META                                                          *
  *   Chunk contents:                                                         *
- *   - char module name (64 characters, null terminated)                     *
- *   - char author (64 characters, null terminated)                          *
+ *   - char module name (64 bytes)                           *
+ *   - char author (64 bytes)                                *
  *   - u8 number of tracks less 1 (0-255; 0=1 track, 1=2 tracks, etc.)       *
  *   - u16 sequence length (1-65535)                                         *
  *   - u16 master gain (0-65535; 0=minimum, 65535=maximum)                   *
@@ -87,7 +104,7 @@
  *   - u16 number of lines (aka pattern length)                              *
  *   - u8 reserved for future use                                            *
  *   - u8 reserved for future use                                            *
- *   - events                                                                *
+ *   - (array) events                                                        *
  *                                                                           *
  * Events are stored in row-major order:                                     *
  *   line 0, track 0                                                         *
@@ -141,7 +158,7 @@
  *   Chunk id: INST                                                          *
  *   Chunk contents:                                                         *
  *   - u32 instrument index                                                  *
- *   - char instrument name (32 characters, null terminated)                 *
+ *   - char instrument name (32 bytes)                                       *
  *   - u8 instrument type (0-sample)                                         *
  *   - u8 instrument volume (0-255)                                          *
  *   - s8 transpose value (semitones; -11 to +11)                            *
@@ -160,7 +177,7 @@
  *   Chunk contents:                                                         *
  *   - u32 sample index                                                      *
  *   - u32 sample length (no of frames)                                      *
- *   - sample data                                                           *
+ *   - f32 (array) sample data                                               *
  *****************************************************************************/
 
 #define MODULE_NAME_LEN 64

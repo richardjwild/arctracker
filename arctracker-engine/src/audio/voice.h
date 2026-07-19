@@ -14,6 +14,7 @@ typedef struct {
     const float *sample_pointer;
     uint8_t volume;
     bool channel_playing;
+    bool muted;
     uint8_t panning;
     bool arpeggiator_on;
     int arpeggio_counter;

@@ -79,6 +79,13 @@ fn seek(state: tauri::State<Arc<AppState>>, new_sequence_pos: i32, new_pattern_p
 }
 
 #[tauri::command]
+fn toggle_track_mute(state: tauri::State<Arc<AppState>>, track: i32) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.toggle_track_mute(track);
+    Ok(())
+}
+
+#[tauri::command]
 fn get_transport_state(state: tauri::State<Arc<AppState>>, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiTransportState {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_transport_state(displayed_pattern_no, num_tracks)
@@ -273,6 +280,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             toggle_play,
             toggle_loop,
             seek,
+            toggle_track_mute,
             get_transport_state,
             get_and_reset_peak_levels,
             get_pattern,

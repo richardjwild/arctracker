@@ -110,7 +110,6 @@ export default function PatternView() {
 
   const handlePointer = (event: React.MouseEvent<HTMLCanvasElement>) => {
     event.preventDefault();
-    if (playing) return;
     const container = containerRef.current;
     if (!container) return;
     const boundingRect = event.currentTarget.getBoundingClientRect();
@@ -126,12 +125,20 @@ export default function PatternView() {
       numTracks,
       patternLength,
     );
-    if (clickedPosition && clickedPosition.objectType === "patternEvent") {
-      commands.patternGridJumpToLocation(
-        clickedPosition.event.track,
-        clickedPosition.event.patternIndex,
-        event.shiftKey,
-      );
+    if (!clickedPosition) return;
+    switch (clickedPosition.objectType) {
+      case "trackHeader":
+        commands.toggleTrackMute(clickedPosition.track);
+        break;
+      case "patternEvent":
+        if (!playing) {
+          commands.patternGridJumpToLocation(
+            clickedPosition.event.track,
+            clickedPosition.event.patternIndex,
+            event.shiftKey,
+          );
+        }
+        break;
     }
   };
 

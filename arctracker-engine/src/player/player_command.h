@@ -12,6 +12,7 @@ typedef enum cmd_type {
     KEYBOARD_NOTE_OFF = 5, // Reserved for future use.
     TOGGLE_LOOP = 6,
     SET_MASTER_GAIN = 7,
+    TOGGLE_TRACK_MUTE = 8,
 } cmd_type_t;
 
 typedef struct player_command {

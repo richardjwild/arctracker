@@ -211,6 +211,17 @@ void arctracker_get_transport_state(arctracker_t *arctracker, ui_transport_state
     get_transport_state(arctracker->playback.player, arctracker->module, transport_state);
 }
 
+void arctracker_get_track_mute_state(arctracker_t *arctracker, bool *track_mute_state, const int num_tracks)
+{
+    if (arctracker == NULL || arctracker->module == NULL || !arctracker->playback.thread_active)
+        return;
+    for (int track = 0; track < num_tracks; track++)
+    {
+        if (track >= arctracker->module->num_tracks) return;
+        track_mute_state[track] = arctracker->playback.player->voices[track].muted;
+    }
+}
+
 void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t *peak_levels)
 {
     if (handle == NULL || !handle->playback.thread_active)
@@ -251,6 +262,8 @@ static void get_transport_state(player_t *player, module_t *module, ui_transport
     transport_state->pattern_index = sequence.pattern_index;
     transport_state->pattern_no = pattern_no;
     transport_state->pattern_length = module->patterns[pattern_no].num_lines;
+    for (int track = 0; track < module->num_tracks; track++)
+        transport_state->track_muted[track] = player->voices[track].muted;
 }
 
 void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_tracks)

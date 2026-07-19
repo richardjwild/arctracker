@@ -112,6 +112,12 @@ export const patternLayout = {
       }
     }
     if (track === null) return null;
+    if (pointerY <= layout.trackHeaderHeight) {
+      return {
+        objectType: "trackHeader",
+        track,
+      };
+    }
     let patternIndex = null;
     const playheadY = layout.trackHeaderHeight + gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
     const relativeLine = Math.floor((pointerY - playheadY - layout.playheadPadding) / layout.rowHeight);

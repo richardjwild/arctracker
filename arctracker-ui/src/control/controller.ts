@@ -13,6 +13,7 @@ import { sequence } from "../editing/sequence.ts";
 import { editInstrument } from "../editing/editInstrument.ts";
 import { pattern } from "../editing/pattern.ts";
 import { moduleTitle } from "../editing/moduleTitle.ts";
+import { engine } from "../engine/engine.ts";
 
 async function processCommands() {
   const commands = commandQueue.consume();
@@ -261,6 +262,9 @@ async function processCommands() {
         break;
       case CommandType.SET_TRACK_COUNT:
         void module.setTrackCount(command.trackCount);
+        break;
+      case CommandType.TOGGLE_TRACK_MUTE:
+        void engine.toggleTrackMute(command.track);
         break;
     }
   }

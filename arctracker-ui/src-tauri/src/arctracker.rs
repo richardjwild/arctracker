@@ -200,6 +200,7 @@ pub struct UiTransportState {
     pub pattern_index: i32,
     pub pattern_no: i32,
     pub pattern_length: i32,
+    pub track_muted: Vec<bool>,
     pub new_pattern: Option<Vec<PatternLine>>,
 }
 
@@ -471,6 +472,10 @@ impl Arctracker {
         } else {
             Some(self.get_pattern(transport_state.pattern_no, transport_state.pattern_length, num_tracks))
         };
+        let mut track_muted = vec![false; num_tracks as usize];
+        unsafe {
+            ffi::arctracker_get_track_mute_state(self.handle, track_muted.as_mut_ptr(), num_tracks)
+        };
         UiTransportState {
             playing: transport_state.playing,
             looping: transport_state.looping,
@@ -478,6 +483,7 @@ impl Arctracker {
             pattern_index: transport_state.pattern_index,
             pattern_no: transport_state.pattern_no,
             pattern_length: transport_state.pattern_length,
+            track_muted,
             new_pattern,
         }
     }
@@ -624,6 +630,21 @@ impl Arctracker {
             note: 0,
             instrument_no: 0,
             master_gain,
+        };
+        unsafe {
+            ffi::arctracker_player_cmd(self.handle, &command);
+        }
+    }
+
+    pub fn toggle_track_mute(&mut self, track: i32) {
+        let command = ffi::PlayerCommand {
+            cmd_type: ffi::PlayerCommandType::ToggleTrackMute,
+            new_sequence_pos: 0,
+            new_pattern_pos: 0,
+            track,
+            note: 0,
+            instrument_no: 0,
+            master_gain: 0.0,
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
