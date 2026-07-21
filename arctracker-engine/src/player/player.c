@@ -16,7 +16,7 @@ static void process_note_on_command(const player_t *player, player_command_t com
 static void process_note_off_command(const player_t *player, player_command_t command);
 static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, player_command_t command);
-static void process_toggle_track_mute_command(const player_t *player, player_command_t command);
+static void process_track_mute_state_changed_command(const player_t *player, player_command_t command);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(const player_t *);
@@ -180,8 +180,8 @@ static void process_command(player_t *player, const player_command_t command)
         case SET_MASTER_GAIN:
             process_set_master_gain_command(player, command);
             break;
-        case TOGGLE_TRACK_MUTE:
-            process_toggle_track_mute_command(player, command);
+        case TRACK_MUTE_STATE_CHANGED:
+            process_track_mute_state_changed_command(player, command);
             break;
         default:
             break;
@@ -240,13 +240,14 @@ static void process_set_master_gain_command(player_t *player, const player_comma
     player->module->master_gain = command.master_gain;
 }
 
-static void process_toggle_track_mute_command(const player_t *player, const player_command_t command)
+static void process_track_mute_state_changed_command(const player_t *player, const player_command_t command)
 {
     const int track = command.track;
     if (track < 0 || track >= player->module->num_tracks)
         return;
+    const bool new_state = player->module->tracks[track].muted;
     voice_t *voice = player->voices + track;
-    voice->muted = !voice->muted;
+    voice->muted = new_state;
 }
 
 static voice_t *initialise_voices(const player_t *player)
@@ -257,9 +258,9 @@ static voice_t *initialise_voices(const player_t *player)
     for (int channel = 0; channel < player->module->num_tracks; channel++)
     {
         voices[channel].channel_playing = false;
-        voices[channel].muted = false;
+        voices[channel].muted = player->module->tracks[channel].muted;
         voices[channel].arpeggiator_on = false;
-        voices[channel].panning = player->module->initial_panning[channel] - 1;
+        voices[channel].panning = player->module->tracks[channel].panning - 1;
         voices[channel].volume = INTERNAL_GAIN_MAX;
     }
     return voices;

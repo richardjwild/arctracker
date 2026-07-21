@@ -30,7 +30,7 @@ const glyphWidth = 10;
 
 export const patternLayout = {
   getPatternLayout: (): PatternLayout => {
-    const effectsDisplayed = useStore.getState().editorState.effectsDisplayed;
+    const effectsDisplayed = useStore.getState().effectsDisplayed;
     return {
       leftPadding,
       glyphWidth,

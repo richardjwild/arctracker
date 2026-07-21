@@ -34,6 +34,12 @@ typedef struct ui_instrument_update {
     int repeat_length;
 } ui_instrument_update_t;
 
+typedef struct ui_track_state {
+    bool muted;
+    int panning;
+    int effects_displayed;
+} ui_track_state_t;
+
 typedef struct ui_module_info {
     char name[TUNE_NAME_MAX_LEN];
     char author[AUTHOR_NAME_MAX_LEN];
@@ -61,7 +67,6 @@ typedef struct ui_transport_state {
     int pattern_index;
     int pattern_no;
     int pattern_length;
-    bool track_muted[MAX_TRACKS];
 } ui_transport_state_t;
 
 typedef struct ui_export_state {

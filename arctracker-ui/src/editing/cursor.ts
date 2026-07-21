@@ -27,18 +27,20 @@ export const FIELDS_PER_EFFECT = 3;
 
 export class Cursor {
   editorState: EditorState;
+  effectsDisplayed: number[]
   numTracks: number;
 
   constructor() {
     const {
       editorState,
+      effectsDisplayed,
       module: { numTracks },
     } = useStore.getState();
     this.editorState = {
       ...editorState,
       cursorPosition: { ...editorState.cursorPosition },
-      effectsDisplayed: [...editorState.effectsDisplayed],
     };
+    this.effectsDisplayed = effectsDisplayed;
     this.numTracks = numTracks;
   }
 
@@ -69,7 +71,7 @@ export class Cursor {
 
   rightmostFieldFor(track: number): number {
     return (
-      FIRST_EFFECT_FIELD + this.editorState.effectsDisplayed[track] * 3 - 1
+      FIRST_EFFECT_FIELD + this.effectsDisplayed[track] * 3 - 1
     );
   }
 
@@ -119,7 +121,7 @@ export class Cursor {
 
   ensureCursorStillVisible() {
     const effectsDisplayed =
-      this.editorState.effectsDisplayed[this.editorState.cursorPosition.track];
+      this.effectsDisplayed[this.editorState.cursorPosition.track];
     const totalFields =
       FIRST_EFFECT_FIELD + effectsDisplayed * FIELDS_PER_EFFECT;
     while (this.editorState.cursorPosition.field >= totalFields)
@@ -131,7 +133,7 @@ export class Cursor {
     const relativeField =
       this.editorState.cursorPosition.field - FIRST_EFFECT_FIELD;
     const effectsDisplayed =
-      this.editorState.effectsDisplayed[this.editorState.cursorPosition.track] -
+      this.effectsDisplayed[this.editorState.cursorPosition.track] -
       1;
     if (Math.floor(relativeField / FIELDS_PER_EFFECT) >= effectsDisplayed) {
       this.editorState.cursorPosition.field -= FIELDS_PER_EFFECT;

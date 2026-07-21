@@ -1,6 +1,7 @@
-import { engine, type PatternLine } from "../engine/engine.ts";
+import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import { sequence } from "../editing/sequence.ts";
+import { PatternLine } from "../editing/patternEvents.ts";
 
 export type TransportState = {
   playing: boolean;

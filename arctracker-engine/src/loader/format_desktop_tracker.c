@@ -133,10 +133,10 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
         const uint8_t track_panning = file_format->initial_stereo[track];
         if (track_panning == 0 || track_panning > 7)
         {
-            module->initial_panning[track] = 128;
+            module->tracks[track].panning = 128;
             continue;
         }
-        module->initial_panning[track] = PANNING[track_panning - 1];
+        module->tracks[track].panning = PANNING[track_panning - 1];
     }
     uint8_t *positions_start = file.addr + sizeof(dtt_file_format_t);
     copy_int_array(positions_start, module->sequence, module->tune_length);

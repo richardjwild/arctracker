@@ -1,8 +1,15 @@
-import { engine, PatternLine } from "../engine/engine.ts";
+import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import { AppPoller } from "../polling/poller.ts";
 import { commands } from "../control/commands.ts";
 import { alerting } from "../alerting/alert.ts";
+import { PatternLine } from "../editing/patternEvents.ts";
+
+export type Track = {
+  muted: boolean;
+  panning: number;
+  effectsDisplayed: number;
+};
 
 export type PlayerSnapshot = {
   playing: boolean;
@@ -11,9 +18,9 @@ export type PlayerSnapshot = {
   patternIndex: number;
   patternNo: number;
   patternLength: number;
-  trackMuted: boolean[];
+  tracks: Track[];
   newPattern: PatternLine[] | null;
-}
+};
 
 export type PlayerEvent =
   | { eventType: "playerError"; errorMessage: string }
@@ -30,24 +37,32 @@ function handlePlayerError(errorMessage: string) {
     });
 }
 
+let snapshotPolling = false;
+
 export const player = {
-  snapshotPoller: (() => {
-    const numTracks = useStore.getState().module.numTracks;
-    const displayedPatternNo = useStore.getState().currentPattern?.patternNo;
-    engine.getPlayerSnapshot(displayedPatternNo, numTracks).then((snapshot) => {
+  snapshotPoller: (async () => {
+    if (snapshotPolling) return;
+    snapshotPolling = true;
+    try {
+      const numTracks = useStore.getState().module.numTracks;
+      const displayedPatternNo = useStore.getState().currentPattern?.patternNo;
+      const snapshot = await engine.getPlayerSnapshot(displayedPatternNo, numTracks);
       useStore.getState().setTransportState({
         playing: snapshot.playing,
         looping: snapshot.looping,
         sequencePos: snapshot.sequencePos,
         patternIndex: snapshot.patternIndex,
       });
-      useStore.getState().setTrackMuteState(snapshot.trackMuted);
-      if (snapshot.newPattern !== null)
+      useStore.getState().setTrackMuteState(snapshot.tracks.map((track) => track.muted));
+      if (snapshot.newPattern !== null) {
         useStore.getState().setCurrentPattern({
           patternNo: snapshot.patternNo,
           lines: snapshot.newPattern,
         });
-    });
+      }
+    } finally {
+      snapshotPolling = false;
+    }
   }) as AppPoller,
 
   eventsPoller: (() => {

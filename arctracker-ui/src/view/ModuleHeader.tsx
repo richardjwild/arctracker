@@ -1,7 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import "./ModuleHeader.css";
-import { Module } from "../engine/engine.ts";
 import { commands } from "../control/commands.ts";
+import { Module } from "../module/module.ts";
 
 export default function ModuleHeader() {
   const module = useStore((state) => state.module);

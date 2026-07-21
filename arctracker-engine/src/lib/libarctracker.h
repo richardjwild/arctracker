@@ -40,7 +40,11 @@ bool arctracker_poll_export_event(arctracker_t *handle, player_event_t *event);
 
 void arctracker_get_transport_state(arctracker_t *handle, ui_transport_state_t *transport_state);
 
-void arctracker_get_track_mute_state(arctracker_t *handle, bool *track_mute_state, int num_tracks);
+void arctracker_get_track_state(arctracker_t *handle, ui_track_state_t *track_state, int track);
+
+void arctracker_toggle_mute_state(arctracker_t *handle, int track);
+
+void arctracker_set_effects_displayed(arctracker_t *handle, int track, int effects_displayed);
 
 void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t *peak_levels);
 

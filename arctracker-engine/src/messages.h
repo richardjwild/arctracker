@@ -81,6 +81,7 @@
 #define INVALID_TRACK_CHUNK_LENGTH "File corrupt: invalid track data size"
 #define MODFILE_INVALID_TRACK_ID "File corrupt: invalid track id"
 #define MODFILE_INVALID_TRACK_PAN "File corrupt: invalid track panning"
+#define MODFILE_INVALID_TRACK_MUTE_STATE "File corrupt: invalid track mute state"
 #define MODFILE_INVALID_EFFECTS_DISPLAYED "File corrupt: invalid number of effects displayed"
 #define MODFILE_INVALID_PATTERN_NUMBER "File corrupt: invalid pattern number"
 #define MODFILE_INVALID_PATTERN_LENGTH "File corrupt: invalid pattern length"

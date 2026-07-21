@@ -9,8 +9,19 @@ import {
 import { alerting } from "../alerting/alert.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
+import { Instrument } from "../editing/editInstrument.ts";
 
-export type { Module, Sample } from "../engine/engine.ts";
+export type Module = {
+  fileName: string | null;
+  name: string;
+  author: string;
+  numTracks: number;
+  numPatterns: number;
+  patternLengths: number[];
+  tuneLength: number;
+  instruments: Instrument[];
+  masterGain: number;
+}
 
 const FormatArctracker = 0;
 
@@ -23,12 +34,12 @@ export const module = {
   getCurrent: async () => {
     engine
       .getCurrentModule()
-      .then((module) => useStore.getState().setModule(module));
+      .then((module) => useStore.getState().replaceModule(module));
   },
 
   load: async (): Promise<boolean> => {
     if (!await okToDiscardModule()) return false;
-    const { setLoadingModule, setModule } = useStore.getState();
+    const { setLoadingModule, replaceModule } = useStore.getState();
     setLoadingModule(true);
     try {
       const selected = await filePicker.chooseFileToOpen([
@@ -40,7 +51,7 @@ export const module = {
         let module = await engine.loadModule(selected);
         if (module) {
           module.fileName = selected;
-          setModule(module);
+          replaceModule(module);
         }
       }
       return true;
@@ -94,7 +105,7 @@ export const module = {
     try {
       const newModule = await engine.createModule(numTracks);
       if (newModule) {
-        useStore.getState().setModule(newModule);
+        useStore.getState().replaceModule(newModule);
         editor.newModuleLoaded();
       }
       return true;
@@ -110,7 +121,7 @@ export const module = {
     const module = useStore.getState().module;
     const currentTracks = module.numTracks;
     const currentEffectsDisplayed =
-      useStore.getState().editorState.effectsDisplayed;
+      useStore.getState().effectsDisplayed;
     let newEffectsDisplayed = [...currentEffectsDisplayed];
     if (trackCount < currentTracks) {
       newEffectsDisplayed.splice(
@@ -126,21 +137,13 @@ export const module = {
         apply: async () => {
           await engine.setNumTracks(trackCount);
           useStore.getState().updateTracks(trackCount);
-          const editorState = useStore.getState().editorState;
-          useStore.getState().setEditorState({
-            ...editorState,
-            effectsDisplayed: newEffectsDisplayed,
-          });
+          useStore.getState().setEffectsDisplayed(newEffectsDisplayed);
           return true;
         },
         undo: async () => {
           await engine.setNumTracks(currentTracks);
           useStore.getState().updateTracks(currentTracks);
-          const editorState = useStore.getState().editorState;
-          useStore.getState().setEditorState({
-            ...editorState,
-            effectsDisplayed: currentEffectsDisplayed,
-          });
+          useStore.getState().setEffectsDisplayed(currentEffectsDisplayed);
         },
       });
     }

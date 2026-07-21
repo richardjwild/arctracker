@@ -130,7 +130,7 @@ pub struct PatternEvent {
 #[serde(rename_all = "camelCase")]
 pub struct PatternLine {
     pub row: i32,
-    pub events: Vec<PatternEvent>,
+    pub events: Vec<[u32; 3]>,
 }
 
 impl From<ffi::UiEffect> for Effect {
@@ -200,8 +200,16 @@ pub struct UiPlayerSnapshot {
     pub pattern_index: i32,
     pub pattern_no: i32,
     pub pattern_length: i32,
-    pub track_muted: Vec<bool>,
+    pub tracks: Vec<UiTrackState>,
     pub new_pattern: Option<Vec<PatternLine>>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiTrackState {
+    pub muted: bool,
+    pub panning: i32,
+    pub effects_displayed: i32,
 }
 
 #[derive(Serialize)]
@@ -384,9 +392,22 @@ impl Arctracker {
             .enumerate()
             .map(|(row, line)| PatternLine {
                 row: row as i32,
-                events: line.iter().copied().map(PatternEvent::from).collect(),
+                events: line.iter().copied().map(|e| Self::pack_event(e)).collect(),
             })
             .collect()
+    }
+
+    fn pack_event(event: ffi::UiPatternEvent) -> [u32; 3] {
+        let note_and_instrument: u32 = ((event.note as u32) & 0xff) << 16 | ((event.sample_no as u32) & 0xff) << 24;
+        let mut effect_codes: u32 = 0;
+        let mut effect_data: u32 = 0;
+        for effect in 0..4 {
+            let shift = effect * 8;
+            effect_codes |= ((event.effects[effect].effect_code as u32) & 0xff) << shift;
+            effect_data |= ((event.effects[effect].effect_data[1] as u32) & 0xf) << shift;
+            effect_data |= ((event.effects[effect].effect_data[0] as u32) & 0xf) << (shift + 4);
+        }
+        [note_and_instrument, effect_codes, effect_data]
     }
 
     pub fn create_module(&mut self, num_tracks: i32) -> Result<Module, ArctrackerError> {
@@ -472,10 +493,19 @@ impl Arctracker {
         } else {
             Some(self.get_pattern(transport_state.pattern_no, transport_state.pattern_length, num_tracks))
         };
-        let mut track_muted = vec![false; num_tracks as usize];
-        unsafe {
-            ffi::arctracker_get_track_mute_state(self.handle, track_muted.as_mut_ptr(), num_tracks)
-        };
+        let mut tracks = Vec::new();
+        for track in 0..num_tracks {
+            let mut track_state = std::mem::MaybeUninit::<ffi::UiTrackState>::uninit();
+            unsafe {
+                ffi::arctracker_get_track_state(self.handle, track_state.as_mut_ptr(), track)
+            };
+            let track_state = unsafe { track_state.assume_init() };
+            tracks.push(UiTrackState {
+                muted: track_state.muted,
+                panning: track_state.panning,
+                effects_displayed: track_state.effects_displayed,
+            })
+        }
         UiPlayerSnapshot {
             playing: transport_state.playing,
             looping: transport_state.looping,
@@ -483,11 +513,11 @@ impl Arctracker {
             pattern_index: transport_state.pattern_index,
             pattern_no: transport_state.pattern_no,
             pattern_length: transport_state.pattern_length,
-            track_muted,
+            tracks,
             new_pattern,
         }
     }
-    
+
     pub fn get_and_reset_peak_levels(&mut self) -> UiPeakLevels {
         let mut peak_levels = std::mem::MaybeUninit::<ffi::UiPeakLevels>::uninit();
         unsafe {
@@ -638,7 +668,7 @@ impl Arctracker {
 
     pub fn toggle_track_mute(&mut self, track: i32) {
         let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::ToggleTrackMute,
+            cmd_type: ffi::PlayerCommandType::TrackMuteStateChanged,
             new_sequence_pos: 0,
             new_pattern_pos: 0,
             track,
@@ -647,7 +677,14 @@ impl Arctracker {
             master_gain: 0.0,
         };
         unsafe {
+            ffi::arctracker_toggle_mute_state(self.handle, track);
             ffi::arctracker_player_cmd(self.handle, &command);
+        }
+    }
+    
+    pub fn set_effects_displayed(&mut self, track: i32, effects_displayed: i32) {
+        unsafe {
+            ffi::arctracker_set_effects_displayed(self.handle, track, effects_displayed);
         }
     }
 

@@ -86,6 +86,13 @@ fn toggle_track_mute(state: tauri::State<Arc<AppState>>, track: i32) -> Result<(
 }
 
 #[tauri::command]
+fn set_effects_displayed(state: tauri::State<Arc<AppState>>, track: i32, effects_displayed: i32) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.set_effects_displayed(track, effects_displayed);
+    Ok(())
+}
+
+#[tauri::command]
 fn get_player_snapshot(state: tauri::State<Arc<AppState>>, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiPlayerSnapshot {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_player_snapshot(displayed_pattern_no, num_tracks)
@@ -281,6 +288,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             toggle_loop,
             seek,
             toggle_track_mute,
+            set_effects_displayed,
             get_player_snapshot,
             get_and_reset_peak_levels,
             get_pattern,

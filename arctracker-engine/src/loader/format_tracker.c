@@ -118,10 +118,10 @@ static module_t *read_tracker_module(mapped_file_t file)
         const uint8_t track_panning = initial_stereo[track];
         if (track_panning == 0 || track_panning > 7)
         {
-            module->initial_panning[track] = 128;
+            module->tracks[track].panning = 128;
             continue;
         }
-        module->initial_panning[track] = PANNING[track_panning - 1];
+        module->tracks[track].panning = PANNING[track_panning - 1];
     }
     if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK)) == CHUNK_NOT_FOUND)
     {

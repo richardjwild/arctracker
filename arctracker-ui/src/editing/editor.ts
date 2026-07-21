@@ -16,7 +16,6 @@ export type EditorState = {
   inputtingText: boolean;
   cursorPosition: CursorPosition;
   sequencePosition: number;
-  effectsDisplayed: number[];
 };
 
 export type EditCommand = {
@@ -91,30 +90,27 @@ export const editor = {
   },
 
   increaseEffectsDisplayed: () => {
-    const { editorState, setEditorState } = useStore.getState();
+    const { editorState, effectsDisplayed, setEffectsDisplayed } = useStore.getState();
     const track = editorState.cursorPosition.track;
-    const effectsDisplayed = [...editorState.effectsDisplayed];
-    if (effectsDisplayed[track] === 4) return;
-    effectsDisplayed[track] += 1;
-    setEditorState({
-      ...editorState,
-      effectsDisplayed,
-    });
+    const newEffectsDisplayed = [...effectsDisplayed];
+    if (newEffectsDisplayed[track] === 4) return;
+    newEffectsDisplayed[track] += 1;
+    setEffectsDisplayed(newEffectsDisplayed);
   },
 
   decreaseEffectsDisplayed: () => {
-    const { editorState, setEditorState } = useStore.getState();
+    const { editorState, effectsDisplayed, setEditorState, setEffectsDisplayed } = useStore.getState();
     const track = editorState.cursorPosition.track;
     let cursor = new Cursor();
-    let effectsDisplayed = [...editorState.effectsDisplayed];
-    if (effectsDisplayed[track] === 0) return;
-    effectsDisplayed[track] -= 1;
+    let newEffectsDisplayed = [...effectsDisplayed];
+    if (newEffectsDisplayed[track] === 0) return;
+    newEffectsDisplayed[track] -= 1;
     cursor.effectsDisplayedDecreased();
     setEditorState({
       ...editorState,
       cursorPosition: cursor.currentPosition(),
-      effectsDisplayed,
     });
+    setEffectsDisplayed(newEffectsDisplayed);
   },
 
   applyEdit: async (command: EditCommand) => {

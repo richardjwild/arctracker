@@ -1,34 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { message } from "@tauri-apps/plugin-dialog";
-import { PlayerEvent, PlayerSnapshot } from "../player/player.ts";
-
-export type Module = {
-  fileName: string | null;
-  name: string;
-  author: string;
-  numTracks: number;
-  numPatterns: number;
-  patternLengths: number[];
-  tuneLength: number;
-  instruments: Instrument[];
-  masterGain: number;
-}
-
-export type Instrument = {
-  assigned: boolean;
-  name: string;
-  defaultVolume: number;
-  transpose: number;
-  repeats: boolean;
-  repeatOffset: number;
-  repeatLength: number;
-  sample: Sample;
-}
-
-export type Sample = {
-  sampleIndex: number;
-  sampleLength: number;
-}
+import { PlayerEvent, PlayerSnapshot, Track } from "../player/player.ts";
+import { Sample } from "../editing/editInstrument.ts";
+import { Module } from "../module/module.ts";
+import { Effect, PatternEvent, PatternLine } from "../editing/patternEvents.ts";
+import { ExportState } from "../audioExport/audioExport.ts";
 
 export type InstrumentUpdate = {
   assigned: boolean;
@@ -39,62 +15,60 @@ export type InstrumentUpdate = {
   repeatOffset: number;
   repeatLength: number;
   sampleIndex: number;
-}
+};
 
 export type PeakLevels = {
   left: number;
   right: number;
-}
+};
 
-export type ExportState = {
-  completed: boolean;
-  percentComplete: number;
-}
-
-export type Effect = {
-  effectCode: string;
-  effectData: number[];
-}
-
-export type PatternEvent = {
-  note: number;
-  sampleNo: number;
-  effects: Effect[];
-}
-
-export function effectsEqual(a: Effect, b: Effect): boolean {
-  return (
-    a.effectCode === b.effectCode &&
-    a.effectData[0] === b.effectData[0] &&
-    a.effectData[1] === b.effectData[1]
-  );
-}
-
-export function eventsEqual(a: PatternEvent, b: PatternEvent): boolean {
-  return (
-    a.note === b.note &&
-    a.sampleNo === b.sampleNo &&
-    a.effects.length === b.effects.length &&
-    a.effects.every((effect, i) => effectsEqual(effect, b.effects[i]))
-  );
-}
-
-export function instrumentsEqual(a: Instrument, b: Instrument): boolean {
-  return (
-    a.assigned === b.assigned &&
-    a.name === b.name &&
-    a.defaultVolume === b.defaultVolume &&
-    a.transpose === b.transpose &&
-    a.repeats === b.repeats &&
-    a.repeatOffset === b.repeatOffset &&
-    a.repeatLength === b.repeatLength &&
-    a.sample.sampleIndex === b.sample.sampleIndex
-  );
-}
-
-export type PatternLine = {
+type PackedPatternLine = {
   row: number;
-  events: PatternEvent[];
+  events: number[][];
+};
+
+type PackedSnapshot = {
+  playing: boolean;
+  looping: boolean;
+  sequencePos: number;
+  patternIndex: number;
+  patternNo: number;
+  patternLength: number;
+  tracks: Track[];
+  newPattern: PackedPatternLine[] | null;
+};
+
+function toPatternLine(snapshotLine: PackedPatternLine): PatternLine {
+  return {
+    row: snapshotLine.row,
+    events: snapshotLine.events.map((event) => unpackEvent(event)),
+  };
+}
+
+function unpackEvent(packed: number[]): PatternEvent {
+  const noteAndInstrument = packed[0];
+  const effectCodes = packed[1];
+  const effectData = packed[2];
+  const effects: Effect[] = [];
+  for (let effect = 0; effect < 4; effect++) {
+    const shift = effect * 8;
+    const effectCode = toEffectCode((effectCodes >>> shift) & 0xff);
+    const packedData = (effectData >>> shift) & 0xff;
+    effects.push({
+      effectCode,
+      effectData: [(packedData >>> 4) & 0xf0, packedData & 0xf],
+    });
+  }
+  return {
+    note: (noteAndInstrument & 0xff0000) >>> 16,
+    sampleNo: (noteAndInstrument & 0xff000000) >>> 24,
+    effects,
+  };
+}
+
+function toEffectCode(charCode: number): string {
+  if (charCode === 0) return "";
+  return String.fromCharCode(charCode);
 }
 
 function exitUnsuccessfully() {
@@ -116,7 +90,7 @@ export const engine = {
     return await invoke("save_module", {
       path: fileName,
       format,
-    })
+    });
   },
 
   createModule: async (numTracks: number) => {
@@ -167,7 +141,7 @@ export const engine = {
   setMasterGain: (masterGain: number) => {
     void invoke("set_master_gain", {
       masterGain,
-    })
+    });
   },
 
   toggleTrackMute: (track: number) => {
@@ -176,11 +150,24 @@ export const engine = {
     });
   },
 
-  getPlayerSnapshot: async (displayedPatternNo: number | null, numTracks: number): Promise<PlayerSnapshot> => {
-    return await invoke("get_player_snapshot", {
+  getPlayerSnapshot: async (
+    displayedPatternNo: number | null,
+    numTracks: number,
+  ): Promise<PlayerSnapshot> => {
+    const packedSnapshot: PackedSnapshot = await invoke("get_player_snapshot", {
       displayedPatternNo,
       numTracks,
     });
+    return {
+      playing: packedSnapshot.playing,
+      looping: packedSnapshot.looping,
+      sequencePos: packedSnapshot.sequencePos,
+      patternIndex: packedSnapshot.patternIndex,
+      patternNo: packedSnapshot.patternNo,
+      patternLength: packedSnapshot.patternLength,
+      tracks: packedSnapshot.tracks,
+      newPattern: packedSnapshot.newPattern ? packedSnapshot.newPattern.map(toPatternLine) : null,
+    };
   },
 
   getAndResetPeakLevels: async (): Promise<PeakLevels> => {
@@ -192,11 +179,12 @@ export const engine = {
     numLines: number,
     numTracks: number,
   ): Promise<PatternLine[]> => {
-    return await invoke("get_pattern", {
+    const packedPattern: PackedPatternLine[] = await invoke("get_pattern", {
       patternNo,
       numLines,
       numTracks,
     });
+    return packedPattern.map(toPatternLine);
   },
 
   pollPlaybackEvents: async (): Promise<PlayerEvent[]> => {
@@ -207,9 +195,7 @@ export const engine = {
     return await invoke("poll_export_events");
   },
 
-  defaultSavePath: async (
-    modulePath: string,
-  ): Promise<string | undefined> => {
+  defaultSavePath: async (modulePath: string): Promise<string | undefined> => {
     return await invoke("default_save_path", {
       modulePath,
     });
@@ -289,22 +275,24 @@ export const engine = {
 
   deletePattern: async (patternNo: number) => {
     await invoke("edit_delete_pattern", {
-      patternNo
+      patternNo,
     });
   },
 
   setPatternLength: async (patternNo: number, newLength: number) => {
-    console.log('set_pattern_length', patternNo, newLength);
     await invoke("edit_set_pattern_length", {
       patternNo,
       newLength,
     });
   },
 
-  updateInstrument: async (instrumentIndex: number, instrumentUpdate: InstrumentUpdate) => {
+  updateInstrument: async (
+    instrumentIndex: number,
+    instrumentUpdate: InstrumentUpdate,
+  ) => {
     await invoke("edit_update_instrument", {
       instrumentIndex,
-      instrumentUpdate
+      instrumentUpdate,
     });
   },
 
@@ -324,7 +312,7 @@ export const engine = {
   setNumTracks: async (numTracks: number) => {
     return await invoke("edit_set_num_tracks", {
       numTracks,
-    })
+    });
   },
 
   exitSuccessfully: async () => {

@@ -453,7 +453,12 @@ static bool read_track_chunk(const uint8_t *data, const size_t data_size, const 
         error(MODFILE_INVALID_TRACK_ID);
         return false;
     }
-    // TODO: Implement track muting (offset: data + TRACK_NAME_LEN + 1).
+    const uint8_t muted = read_u8(data + TRACK_NAME_LEN + 1);
+    if (muted != 0 && muted != 1)
+    {
+        error(MODFILE_INVALID_TRACK_MUTE_STATE);
+        return false;
+    }
     const uint8_t initial_panning = read_u8(data + TRACK_NAME_LEN + 2);
     const uint8_t commands_displayed = read_u8(data + TRACK_NAME_LEN + 3);
     if (commands_displayed > 4)
@@ -461,7 +466,8 @@ static bool read_track_chunk(const uint8_t *data, const size_t data_size, const 
         error(MODFILE_INVALID_EFFECTS_DISPLAYED);
         return false;
     }
-    module->initial_panning[track] = initial_panning;
+    module->tracks[track].panning = initial_panning;
+    module->tracks[track].muted = muted == 1;
     // TODO: Add number of commands displayed to module.
     return true;
 }
@@ -707,8 +713,8 @@ static bool write_track_chunk(const module_t *module, const int track, FILE *fp)
     if (!write_u32_le(fp, TRACK_CHUNK_LEN)) return false;
     if (!write_u8(fp, (uint8_t) track)) return false;
     if (!write_cc(fp, reserved_for_track_name, sizeof reserved_for_track_name)) return false;
-    if (!write_u8(fp, 0)) return false; // TODO: Implement track muting.
-    if (!write_u8(fp, (uint8_t) module->initial_panning[track])) return false;
+    if (!write_u8(fp, (uint8_t) module->tracks[track].muted ? 1 : 0)) return false;
+    if (!write_u8(fp, (uint8_t) module->tracks[track].panning)) return false;
     if (!write_u8(fp, 1)) return false; // TODO: Number of commands displayed.
     if (!write_u8(fp, 0)) return false;
     return true;

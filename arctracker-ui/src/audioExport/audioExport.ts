@@ -1,10 +1,15 @@
-import { engine, ExportState } from "../engine/engine.ts";
+import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import {
   filePicker,
   AUDIO_EXPORT_EXTENSION,
 } from "../filesystem/filePicker.ts";
 import { message } from "@tauri-apps/plugin-dialog";
+
+export type ExportState = {
+  completed: boolean;
+  percentComplete: number;
+}
 
 const { setExportState, setExportMonitoring } = useStore.getState();
 

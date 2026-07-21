@@ -18,7 +18,7 @@ static bool ensure_pattern_line_capacity(pattern_t *, uint32_t, int);
 static void clear_added_events(event_t *, int, int, uint32_t);
 static bool ensure_sample_capacity(module_t *module, int required_samples);
 static bool resize_pattern(pattern_t, event_t **, uint32_t, uint32_t);
-static int *resize_track_panning(const int *, uint32_t, uint32_t);
+static track_t *resize_tracks(const track_t *, uint32_t, uint32_t);
 static void destroy_sample(sample_t *);
 static void destroy_pattern(pattern_t *);
 
@@ -38,8 +38,8 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
         goto fail;
-    module->initial_panning = allocate_array(MODULE, (int) module->track_capacity, sizeof(int));
-    if (module->initial_panning == NULL)
+    module->tracks = allocate_array(MODULE, (int) module->track_capacity, sizeof(track_t));
+    if (module->tracks == NULL)
         goto fail;
     module->patterns = allocate_array(MODULE, module->pattern_capacity, sizeof(pattern_t));
     if (module->patterns == NULL)
@@ -58,7 +58,11 @@ bool module_init(module_t *module)
     module->initial_speed = 6;
     module->master_gain = 0.25f;
     for (int i = 0; i < module->num_tracks; i++)
-        module->initial_panning[i] = 0x80; // Centre
+    {
+        module->tracks[i].panning = 0x80; // Centre
+        module->tracks[i].effects_displayed = 1;
+        module->tracks[i].muted = false;
+    }
     for (int i = 0; i < NUM_INSTRUMENT_SLOTS; i++)
         module->instruments[i].assigned = false;
     if (!module_create_pattern(module, 0, 64))
@@ -285,7 +289,7 @@ void module_set_author(module_t *module, const char *author)
 bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_capacity)
 {
     const uint32_t old_track_capacity = module->track_capacity;
-    int *resized_panning = NULL;
+    track_t *resized_tracks = NULL;
     event_t **resized_patterns = NULL;
     resized_patterns = allocate_array(MODULE, module->num_patterns, sizeof(event_t *));
     if (resized_patterns == NULL) goto track_capacity_adjustment_failed;
@@ -297,8 +301,8 @@ bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_cap
             goto track_capacity_adjustment_failed;
         resized_patterns[pno] = resized_pattern_data;
     }
-    resized_panning = resize_track_panning(module->initial_panning, old_track_capacity, new_track_capacity);
-    if (resized_panning == NULL) goto track_capacity_adjustment_failed;
+    resized_tracks = resize_tracks(module->tracks, old_track_capacity, new_track_capacity);
+    if (resized_tracks == NULL) goto track_capacity_adjustment_failed;
     //
     // If we reach here, we are good and can now commit the changes.
     //
@@ -309,14 +313,14 @@ bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_cap
         pattern.events = resized_patterns[p];
         module->patterns[p] = pattern;
     }
-    deallocate(MODULE, module->initial_panning);
-    module->initial_panning = resized_panning;
+    deallocate(MODULE, module->tracks);
+    module->tracks = resized_tracks;
     module->track_capacity = new_track_capacity;
     deallocate(MODULE, resized_patterns);
     return true;
 
 track_capacity_adjustment_failed:
-    deallocate(MODULE, resized_panning);
+    deallocate(MODULE, resized_tracks);
     if (resized_patterns == NULL) return false;
     for (int p = 0; p < module->num_patterns; p++)
         deallocate(MODULE, resized_patterns[p]);
@@ -339,14 +343,14 @@ static bool resize_pattern(const pattern_t pattern, event_t **resized_pattern_da
     return true;
 }
 
-static int *resize_track_panning(const int *track_panning, const uint32_t old_track_capacity, const uint32_t new_track_capacity)
+static track_t *resize_tracks(const track_t *tracks, const uint32_t old_track_capacity, const uint32_t new_track_capacity)
 {
-    int *resized_panning = allocate_array(MODULE, (int) new_track_capacity, sizeof(int));
-    if (resized_panning == NULL)
+    track_t *resized_tracks = allocate_array(MODULE, (int) new_track_capacity, sizeof(track_t));
+    if (resized_tracks == NULL)
         return NULL;
     for (uint32_t tno = 0; tno < old_track_capacity; tno++)
-        resized_panning[tno] = track_panning[tno];
-    return resized_panning;
+        resized_tracks[tno] = tracks[tno];
+    return resized_tracks;
 }
 
 void module_set_num_tracks(module_t *module, const uint32_t num_tracks)
@@ -365,6 +369,17 @@ void module_set_num_tracks(module_t *module, const uint32_t num_tracks)
     }
 }
 
+void module_toggle_mute_state(const module_t *module, const int track)
+{
+    const bool current_state = module->tracks[track].muted;
+    module->tracks[track].muted = !current_state;
+}
+
+void module_set_effects_displayed(const module_t *module, const int track, const int effects_displayed)
+{
+    module->tracks[track].effects_displayed = effects_displayed;
+}
+
 void module_destroy(module_t *module)
 {
     for (int i = 0; i < module->sample_slots; i++)
@@ -372,7 +387,7 @@ void module_destroy(module_t *module)
     for (int i = 0; i < module->num_patterns; i++)
         destroy_pattern(&module->patterns[i]);
     deallocate(MODULE, module->patterns);
-    deallocate(MODULE, module->initial_panning);
+    deallocate(MODULE, module->tracks);
     deallocate(MODULE, module->sequence);
     deallocate(MODULE, module->samples);
     deallocate(MODULE, module);

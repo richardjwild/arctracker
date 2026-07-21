@@ -1,10 +1,12 @@
 import { create } from "zustand";
-import type { ExportState, Instrument, Module } from "../engine/engine.ts";
 import { CurrentPattern, TransportState } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
 import { ModuleTitle } from "../editing/moduleTitle.ts";
+import { Instrument } from "../editing/editInstrument.ts";
+import { Module } from "../module/module.ts";
+import { ExportState } from "../audioExport/audioExport.ts";
 
 interface AppStore {
   moduleId: number;
@@ -15,6 +17,7 @@ interface AppStore {
   patternGridStrideLength: number;
   transportState: TransportState;
   editorState: EditorState;
+  effectsDisplayed: number[];
   trackMuteState: boolean[];
   patternSelection: PatternSelection | null;
   pasteBuffer: PasteBufferObjectType | null;
@@ -25,7 +28,7 @@ interface AppStore {
   draftInstrument: Instrument;
   draftModuleTitle: ModuleTitle | null;
   isLoadingModule: boolean;
-  setModule: (result: Module) => void;
+  replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
   setModuleTitle: (name: string, author: string) => void;
@@ -40,6 +43,7 @@ interface AppStore {
   setPatternGridStrideLength: (lines: number) => void;
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
+  setEffectsDisplayed: (effectsDisplayed: number[]) => void;
   setTrackMuteState: (trackMuteState: boolean[]) => void;
   setPatternSelection: (selection: PatternSelection | null) => void;
   setPasteBuffer: (buffer: PasteBufferObjectType | null) => void;
@@ -107,7 +111,7 @@ const initialInstrument: Instrument = {
 };
 
 
-function initialEditorState(numTracks: number = 0): EditorState {
+function initialEditorState(): EditorState {
   return {
     editMode: "none",
     inputtingText: false,
@@ -117,7 +121,6 @@ function initialEditorState(numTracks: number = 0): EditorState {
       patternIndex: 0,
     },
     sequencePosition: 0,
-    effectsDisplayed: Array.from({ length: numTracks }, () => 1),
   };
 }
 
@@ -139,6 +142,7 @@ export const useStore = create<AppStore>((set) => ({
   patternGridStrideLength: 8,
   transportState: initialTransportState,
   editorState: initialEditorState(),
+  effectsDisplayed: [],
   trackMuteState: [],
   patternSelection: null,
   pasteBuffer: null,
@@ -150,22 +154,25 @@ export const useStore = create<AppStore>((set) => ({
   draftModuleTitle: null,
   isLoadingModule: false,
 
-  setModule: (result) =>
+  replaceModule: (result) => {
     set((state) => ({
       moduleId: state.moduleId + 1,
       patternRevision: 0,
       sequenceRevision: 0,
       module: result,
       sequence: [],
-      selectedInstrument: result.instruments.findIndex((i) => i.assigned) >= 0
-        ? result.instruments.findIndex((i) => i.assigned)
-        : null,
+      selectedInstrument:
+        result.instruments.findIndex((i: Instrument) => i.assigned) >= 0
+          ? result.instruments.findIndex((i: Instrument) => i.assigned)
+          : null,
       selectedChannel: 0,
       isLoadingModule: false,
-      editorState: initialEditorState(result.numTracks),
+      editorState: initialEditorState(),
+      effectsDisplayed: Array.from({ length: result.numTracks }, () => 1),
       patternSelection: null,
       pasteBuffer: null,
-    })),
+    }));
+  },
 
   setMasterGain: (gain: number) =>
     set((state) => ({
@@ -197,7 +204,7 @@ export const useStore = create<AppStore>((set) => ({
       module: {
         ...state.module,
         numTracks,
-      }
+      },
     })),
 
   updatePatterns: (numPatterns: number, patternLengths: number[]) =>
@@ -213,7 +220,7 @@ export const useStore = create<AppStore>((set) => ({
 
   setInstrument: (instrumentIndex: number, instrument: Instrument) =>
     set((state) => {
-      let instruments = [ ...state.module.instruments ];
+      let instruments = [...state.module.instruments];
       instruments[instrumentIndex] = {
         ...instruments[instrumentIndex],
         assigned: instrument.assigned,
@@ -232,8 +239,8 @@ export const useStore = create<AppStore>((set) => ({
         module: {
           ...state.module,
           instruments,
-        }
-      }
+        },
+      };
     }),
 
   setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
@@ -271,12 +278,15 @@ export const useStore = create<AppStore>((set) => ({
       editorState: next,
     }),
 
+  setEffectsDisplayed: (next) =>
+    set({
+      effectsDisplayed: next,
+    }),
+
   setTrackMuteState: (next) =>
     set((state) => {
-      if (muteStatesEqual(state.trackMuteState, next))
-        return state;
-      else
-        return { trackMuteState: next };
+      if (muteStatesEqual(state.trackMuteState, next)) return state;
+      else return { trackMuteState: next };
     }),
 
   setPatternSelection: (patternSelection) => set({ patternSelection }),

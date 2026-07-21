@@ -1,5 +1,4 @@
 import { CurrentPattern } from "../transport/transport.ts";
-import { Effect, PatternEvent, PatternLine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import { EditorState } from "../editing/editor.ts";
 import {
@@ -12,7 +11,7 @@ import {
 } from "../editing/cursor.ts";
 import { hexadecimal } from "./hexadecimal.ts";
 import { PatternSelection, selection } from "../editing/selection.ts";
-import { patternEvents } from "../editing/patternEvents.ts";
+import { Effect, PatternEvent, patternEvents, PatternLine } from "../editing/patternEvents.ts";
 import { notes } from "./notes.ts";
 import { GridViewportFit, PatternLayout, patternLayout } from "./patternLayout.ts";
 
@@ -67,6 +66,7 @@ export class PatternRenderer {
   private ctx: CanvasRenderingContext2D;
   private viewportSize: ViewportSize;
   private readonly editorState: EditorState;
+  private readonly effectsDisplayed: number[];
   private readonly patternSelection: PatternSelection | null;
   private patternLayout: PatternLayout;
   private readonly numTracks: number;
@@ -87,6 +87,7 @@ export class PatternRenderer {
     this.numTracks = numTracks;
     this.trackMuted = useStore.getState().trackMuteState;
     this.editorState = useStore.getState().editorState;
+    this.effectsDisplayed = useStore.getState().effectsDisplayed;
     this.patternSelection = useStore.getState().patternSelection;
     this.patternLayout = patternLayout.getPatternLayout();
     this.coloursAtPlayhead = {
@@ -129,14 +130,18 @@ export class PatternRenderer {
   }
 
   public renderPattern(playheadIndex: number) {
-    this.ctx.textBaseline = "hanging";
-    this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
-    this.renderTrackLanes();
-    this.renderTrackHeaders();
-    this.renderPlayhead();
-    if (this.patternSelection) this.renderSelection(playheadIndex);
-    this.renderCursor(patternEvents.editing());
-    this.renderPatternLines(playheadIndex);
+    try {
+      this.ctx.textBaseline = "hanging";
+      this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
+      this.renderTrackLanes();
+      this.renderTrackHeaders();
+      this.renderPlayhead();
+      if (this.patternSelection) this.renderSelection(playheadIndex);
+      this.renderCursor(patternEvents.editing());
+      this.renderPatternLines(playheadIndex);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   private renderTrackLanes() {
@@ -339,7 +344,7 @@ export class PatternRenderer {
     const muted = this.trackMuted[track];
     x += this.renderNote(x, y, event.note, atPlayhead, cursorOnEvent, muted);
     x += this.renderSample(x, y, event.sampleNo, atPlayhead, cursorOnEvent, muted);
-    for (let effectIndex = 0; effectIndex < this.editorState.effectsDisplayed[track]; effectIndex++) {
+    for (let effectIndex = 0; effectIndex < this.effectsDisplayed[track]; effectIndex++) {
       x += this.renderEffect(x, y, effectIndex, event.effects[effectIndex], atPlayhead, cursorOnEvent, muted);
     }
     return this.patternLayout.getEventWidth(track);

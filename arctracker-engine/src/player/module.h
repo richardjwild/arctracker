@@ -77,6 +77,12 @@ typedef struct
     const float *sample_data;
 } sample_t;
 
+typedef struct {
+    bool muted;
+    int panning;
+    int effects_displayed;
+} track_t;
+
 typedef struct
 {
     const char *format;
@@ -86,8 +92,8 @@ typedef struct
     int *sequence;
     int sequence_capacity;
     int num_tracks;
+    track_t *tracks;
     uint32_t track_capacity;
-    int *initial_panning;
     int num_patterns;
     pattern_t *patterns;
     int pattern_capacity;
@@ -128,6 +134,10 @@ void module_set_author(module_t *module, const char *author);
 bool module_adjust_track_capacity(module_t *module, uint32_t new_track_capacity);
 
 void module_set_num_tracks(module_t *module, uint32_t num_tracks);
+
+void module_toggle_mute_state(const module_t *module, int track);
+
+void module_set_effects_displayed(const module_t *module, int track, int effects_displayed);
 
 void module_destroy(module_t *module);
 

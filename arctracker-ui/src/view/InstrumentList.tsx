@@ -3,6 +3,7 @@ import "./InstrumentList.css";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import {commands} from "../control/commands.ts";
 import {useEffect, useRef, useState} from "react";
+import { Instrument } from "../editing/editInstrument.ts";
 
 export default function InstrumentList() {
   const instruments = useStore((state) => state.module.instruments);
@@ -55,8 +56,8 @@ export default function InstrumentList() {
   return (
     <div className="sampleList uiArea" ref={containerRef}>
       {visibleInstruments
-        .map((instrument, index) => ({ instrument, index }))
-        .map(({ instrument, index }) => (
+        .map((instrument: Instrument, index: number) => ({ instrument, index }))
+        .map(({ instrument, index }: { instrument: Instrument, index: number}) => (
           <button
             key={index}
             type="button"

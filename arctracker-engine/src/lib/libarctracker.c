@@ -211,15 +211,34 @@ void arctracker_get_transport_state(arctracker_t *arctracker, ui_transport_state
     get_transport_state(arctracker->playback.player, arctracker->module, transport_state);
 }
 
-void arctracker_get_track_mute_state(arctracker_t *arctracker, bool *track_mute_state, const int num_tracks)
+void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *track_state, const int track)
 {
     if (arctracker == NULL || arctracker->module == NULL || !arctracker->playback.thread_active)
         return;
-    for (int track = 0; track < num_tracks; track++)
-    {
-        if (track >= arctracker->module->num_tracks) return;
-        track_mute_state[track] = arctracker->playback.player->voices[track].muted;
-    }
+    if (track < 0 || track >= arctracker->module->num_tracks) return;
+    track_state->muted = arctracker->module->tracks[track].muted;
+    track_state->panning = arctracker->module->tracks[track].panning;
+    track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
+}
+
+void arctracker_toggle_mute_state(arctracker_t *arctracker, const int track)
+{
+    if (arctracker == NULL || arctracker->module == NULL)
+        return;
+    if (track < 0 || track >= arctracker->module->num_tracks)
+        return;
+    module_toggle_mute_state(arctracker->module, track);
+}
+
+void arctracker_set_effects_displayed(arctracker_t *arctracker, int track, int effects_displayed)
+{
+    if (arctracker == NULL || arctracker->module == NULL)
+        return;
+    if (track < 0 || track >= arctracker->module->num_tracks)
+        return;
+    if (effects_displayed < 0 || effects_displayed > 4)
+        return;
+    module_set_effects_displayed(arctracker->module, track, effects_displayed);
 }
 
 void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t *peak_levels)
@@ -262,8 +281,6 @@ static void get_transport_state(player_t *player, module_t *module, ui_transport
     transport_state->pattern_index = sequence.pattern_index;
     transport_state->pattern_no = pattern_no;
     transport_state->pattern_length = module->patterns[pattern_no].num_lines;
-    for (int track = 0; track < module->num_tracks; track++)
-        transport_state->track_muted[track] = player->voices[track].muted;
 }
 
 void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_tracks)

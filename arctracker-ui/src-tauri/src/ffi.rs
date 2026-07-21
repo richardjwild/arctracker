@@ -30,7 +30,7 @@ pub enum PlayerCommandType {
     KeyboardNoteOff = 5,
     ToggleLoop = 6,
     SetMasterGain = 7,
-    ToggleTrackMute = 8,
+    TrackMuteStateChanged = 8,
 }
 
 #[repr(C)]
@@ -110,6 +110,13 @@ pub struct UiTransportState {
 }
 
 #[repr(C)]
+pub struct UiTrackState {
+    pub muted: bool,
+    pub panning: c_int,
+    pub effects_displayed: c_int,
+}
+
+#[repr(C)]
 pub struct UiPeakLevels {
     pub left: f32,
     pub right: f32,
@@ -170,11 +177,13 @@ extern "C" {
         handle: *mut ArctrackerHandle,
         out_state: *mut UiTransportState,
     );
-    pub fn arctracker_get_track_mute_state(
+    pub fn arctracker_get_track_state(
         handle: *mut ArctrackerHandle,
-        track_mute_state: *mut bool,
+        track_state: *mut UiTrackState,
         num_tracks: c_int
     );
+    pub fn arctracker_toggle_mute_state(handle: *mut ArctrackerHandle, track: c_int);
+    pub fn arctracker_set_effects_displayed(handle: *mut ArctrackerHandle, track: c_int, effects_displayed: c_int);
     pub fn arctracker_get_and_reset_peak_levels(
         handle: *mut ArctrackerHandle, peak_levels:
         *mut UiPeakLevels

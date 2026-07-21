@@ -1,9 +1,25 @@
 import { useStore } from "../store/useStore.ts";
-import { engine, Effect, PatternEvent, eventsEqual } from "../engine/engine.ts";
+import { engine } from "../engine/engine.ts";
 import { editor, EditCommand } from "./editor.ts";
 import { Cursor, CursorField } from "./cursor.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { patternGrid } from "./patternGrid.ts";
+
+export type Effect = {
+  effectCode: string;
+  effectData: number[];
+}
+
+export type PatternEvent = {
+  note: number;
+  sampleNo: number;
+  effects: Effect[];
+}
+
+export type PatternLine = {
+  row: number;
+  events: PatternEvent[];
+}
 
 export type EventEdit = {
   patternNo: number;
@@ -37,7 +53,7 @@ async function buildEventEditCommand({
       patternIndex: currentPosition.patternIndex,
       track: currentPosition.track,
     };
-    const currentEvent: PatternEvent = await engine.getEvent(
+    const currentEvent: PatternEvent = await patternEvents.getEvent(
       location.patternNo,
       location.patternIndex,
       location.track,
@@ -105,6 +121,23 @@ function buildMultipleEventEditCommand(eventEdits: EventEdit[]): EditCommand {
   };
 }
 
+function eventsEqual(a: PatternEvent, b: PatternEvent): boolean {
+  return (
+    a.note === b.note &&
+    a.sampleNo === b.sampleNo &&
+    a.effects.length === b.effects.length &&
+    a.effects.every((effect, i) => effectsEqual(effect, b.effects[i]))
+  );
+}
+
+function effectsEqual(a: Effect, b: Effect): boolean {
+  return (
+    a.effectCode === b.effectCode &&
+    a.effectData[0] === b.effectData[0] &&
+    a.effectData[1] === b.effectData[1]
+  );
+}
+
 function copyEffects(effects: Effect[]) {
   let copy: Effect[] = [];
   for (const effect of effects) {
@@ -131,6 +164,9 @@ export const patternEvents = {
   editing: () => {
     return useStore.getState().editorState.editMode === "patternEvents";
   },
+
+  getEvent: async (patternNo: number, patternIndex: number, track: number) =>
+    await engine.getEvent(patternNo, patternIndex, track),
 
   setEventNote: async (note: number) => {
     if (!patternEvents.editing()) return;
@@ -262,7 +298,7 @@ export const patternEvents = {
     if (!patternEvents.editing()) return;
     const eventEdits: EventEdit[] = [];
     for (const location of locations) {
-      const before = await engine.getEvent(
+      const before = await patternEvents.getEvent(
         location.patternNo,
         location.patternIndex,
         location.track,
@@ -286,7 +322,7 @@ export const patternEvents = {
     if (!patternEvents.editing()) return;
     const eventEdits: EventEdit[] = [];
     for (const { location, event } of events) {
-      const before = await engine.getEvent(
+      const before = await patternEvents.getEvent(
         location.patternNo,
         location.patternIndex,
         location.track,

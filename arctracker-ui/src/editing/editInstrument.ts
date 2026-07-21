@@ -1,13 +1,24 @@
 import { useStore } from "../store/useStore";
-import {
-  engine,
-  Instrument,
-  instrumentsEqual,
-  InstrumentUpdate,
-} from "../engine/engine.ts";
+import { engine, InstrumentUpdate } from "../engine/engine.ts";
 import { EditCommand, editor } from "./editor.ts";
 import { filePicker } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
+
+export type Instrument = {
+  assigned: boolean;
+  name: string;
+  defaultVolume: number;
+  transpose: number;
+  repeats: boolean;
+  repeatOffset: number;
+  repeatLength: number;
+  sample: Sample;
+};
+
+export type Sample = {
+  sampleIndex: number;
+  sampleLength: number;
+};
 
 export const SampleNameMaxLength = 33;
 
@@ -25,6 +36,19 @@ export function emptyInstrument(): Instrument {
       sampleLength: 0,
     },
   };
+}
+
+function instrumentsEqual(a: Instrument, b: Instrument): boolean {
+  return (
+    a.assigned === b.assigned &&
+    a.name === b.name &&
+    a.defaultVolume === b.defaultVolume &&
+    a.transpose === b.transpose &&
+    a.repeats === b.repeats &&
+    a.repeatOffset === b.repeatOffset &&
+    a.repeatLength === b.repeatLength &&
+    a.sample.sampleIndex === b.sample.sampleIndex
+  );
 }
 
 export const editInstrument = {

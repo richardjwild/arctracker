@@ -1,4 +1,4 @@
-import { PatternEvent } from "../engine/engine.ts";
+import { PatternEvent } from "./patternEvents.ts";
 
 export type PatternEventBlock = {
   width: number;

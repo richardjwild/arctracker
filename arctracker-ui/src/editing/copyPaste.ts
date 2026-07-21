@@ -2,8 +2,7 @@ import { PatternSelectionBounds, selection } from "./selection.ts";
 import { useStore } from "../store/useStore.ts";
 import { cursor } from "./cursor.ts";
 import { PasteBufferObjectType } from "./pasteBuffer.ts";
-import { engine, PatternEvent } from "../engine/engine.ts";
-import { EventLocation, patternEvents } from "./patternEvents.ts";
+import { EventLocation, PatternEvent, patternEvents } from "./patternEvents.ts";
 import { patternGrid, PatternGridPosition } from "./patternGrid.ts";
 
 function getSelectionBounds(
@@ -79,7 +78,7 @@ export const copyPaste = {
       ) {
         const bufferTrack = track - selectionBounds.left;
         pasteBuffer.block.events[bufferLine][bufferTrack] =
-          await engine.getEvent(patternNo, patternIndex, track);
+          await patternEvents.getEvent(patternNo, patternIndex, track);
         cutLocations.push({
           patternNo,
           patternIndex,
