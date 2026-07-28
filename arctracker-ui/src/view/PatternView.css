@@ -2,7 +2,6 @@
     grid-area: patternView;
     min-height: 0;
     overflow: hidden;
-    font-family: FiraCode, monospace;
     padding: 0;
     border-bottom-left-radius: 10px;
 }

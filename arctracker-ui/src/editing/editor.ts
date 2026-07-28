@@ -2,6 +2,7 @@ import { useStore } from "../store/useStore.ts";
 import { Cursor, CursorPosition } from "./cursor.ts";
 import { alerting } from "../alerting/alert.ts";
 import { transport } from "../transport/transport.ts";
+import { engine } from "../engine/engine.ts";
 
 export type EditMode =
   | "none"
@@ -90,16 +91,16 @@ export const editor = {
   },
 
   increaseEffectsDisplayed: () => {
-    const { editorState, effectsDisplayed, setEffectsDisplayed } = useStore.getState();
+    const { editorState, effectsDisplayed } = useStore.getState();
     const track = editorState.cursorPosition.track;
     const newEffectsDisplayed = [...effectsDisplayed];
     if (newEffectsDisplayed[track] === 4) return;
     newEffectsDisplayed[track] += 1;
-    setEffectsDisplayed(newEffectsDisplayed);
+    engine.setEffectsDisplayed(track, newEffectsDisplayed[track]);
   },
 
   decreaseEffectsDisplayed: () => {
-    const { editorState, effectsDisplayed, setEditorState, setEffectsDisplayed } = useStore.getState();
+    const { editorState, effectsDisplayed, setEditorState } = useStore.getState();
     const track = editorState.cursorPosition.track;
     let cursor = new Cursor();
     let newEffectsDisplayed = [...effectsDisplayed];
@@ -110,7 +111,7 @@ export const editor = {
       ...editorState,
       cursorPosition: cursor.currentPosition(),
     });
-    setEffectsDisplayed(newEffectsDisplayed);
+    engine.setEffectsDisplayed(track, newEffectsDisplayed[track]);
   },
 
   applyEdit: async (command: EditCommand) => {

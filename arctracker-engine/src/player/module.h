@@ -88,7 +88,7 @@ typedef struct
     const char *format;
     char name[MAX_LEN_TUNENAME];
     char author[MAX_LEN_AUTHOR];
-    int tune_length;
+    int sequence_length;
     int *sequence;
     int sequence_capacity;
     int num_tracks;
@@ -101,7 +101,7 @@ typedef struct
     sample_t *samples;
     int sample_capacity;
     instrument_t instruments[NUM_INSTRUMENT_SLOTS];
-    int initial_speed;
+    int initial_ticks_per_event;
     float master_gain;
 } module_t;
 

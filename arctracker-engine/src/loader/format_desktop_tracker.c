@@ -124,7 +124,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     if (module == NULL)
         goto fail;
     module->format = DESKTOP_TRACKER_FORMAT;
-    module->initial_speed = file_format->initial_speed;
+    module->initial_ticks_per_event = file_format->initial_speed;
     module->master_gain = 0.25f;
     strncpy(module->name, file_format->name, MAX_LEN_TUNENAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
@@ -137,10 +137,12 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
             continue;
         }
         module->tracks[track].panning = PANNING[track_panning - 1];
+        module->tracks[track].muted = false;
+        module->tracks[track].effects_displayed = 1;
     }
     uint8_t *positions_start = file.addr + sizeof(dtt_file_format_t);
-    copy_int_array(positions_start, module->sequence, module->tune_length);
-    uint8_t *pattern_offsets_start = positions_start + ALIGN_TO_WORD(module->tune_length);
+    copy_int_array(positions_start, module->sequence, module->sequence_length);
+    uint8_t *pattern_offsets_start = positions_start + ALIGN_TO_WORD(module->sequence_length);
     uint8_t *pattern_lengths_start = pattern_offsets_start + (module->num_patterns * sizeof(uint32_t));
     pattern_lengths = allocate_array(MODULE, module->num_patterns, sizeof(int));
     if (pattern_lengths == NULL)

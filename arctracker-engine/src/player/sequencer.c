@@ -26,7 +26,7 @@ sequence_t initialise_sequence(const module_t *module, const bool bouncing)
         .pattern_index = 0,
         .jump_target = NO_JUMP,
         .sequence = module->sequence,
-        .tune_length = module->tune_length,
+        .tune_length = module->sequence_length,
         .patterns = module->patterns,
         .continuous_play = !bouncing,
     };
@@ -40,7 +40,7 @@ sequence_t reinitialise_sequence(const module_t *module, const sequence_t *old_s
         .pattern_index = 0,
         .jump_target = NO_JUMP,
         .sequence = module->sequence,
-        .tune_length = module->tune_length,
+        .tune_length = module->sequence_length,
         .patterns = module->patterns,
         .continuous_play = !bouncing,
     };

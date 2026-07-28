@@ -23,9 +23,10 @@ export type PatternContentDimensions = {
 };
 
 export function getPatternContentDimensions(
+  viewportSize: ViewportSize,
   numTracks: number,
 ): PatternContentDimensions {
-  const layout = patternLayout.getPatternLayout();
+  const layout = patternLayout.getPatternLayout(viewportSize);
   let eventsWidth = 0;
   for (let track = 0; track < numTracks; track++)
     eventsWidth += layout.getEventWidth(track);
@@ -36,7 +37,7 @@ export function getPatternContentDimensions(
   };
 }
 
-function cssColour(name: string): string {
+function cssProperty(name: string): string {
   return getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
@@ -49,6 +50,10 @@ type Colours = {
   trackHeaderMutedBg: string;
   trackHeaderNotMutedFg: string;
   trackHeaderNotMutedBg: string;
+  trackFooterMutedFg: string;
+  trackFooterMutedBg: string;
+  trackFooterNotMutedFg: string;
+  trackFooterNotMutedBg: string;
   playheadBackground: string;
   text: string;
   channelMuted: string;
@@ -61,6 +66,9 @@ type Colours = {
   selectionBoxOutline: string;
 };
 
+const FULL_CIRCLE = 2 * Math.PI;
+const DASH = "–";
+
 export class PatternRenderer {
   private readonly pattern: CurrentPattern;
   private ctx: CanvasRenderingContext2D;
@@ -71,8 +79,11 @@ export class PatternRenderer {
   private patternLayout: PatternLayout;
   private readonly numTracks: number;
   private readonly trackMuted: boolean[];
+  private readonly trackPanning: number[];
   private readonly coloursAtPlayhead: Colours;
   private readonly coloursOffPlayhead: Colours;
+  private readonly fontTrackHeader: string;
+  private readonly fontPatternData: string;
   private readonly gridViewportFit: GridViewportFit;
 
   public constructor(
@@ -86,46 +97,57 @@ export class PatternRenderer {
     this.viewportSize = viewportSize;
     this.numTracks = numTracks;
     this.trackMuted = useStore.getState().trackMuteState;
+    this.trackPanning = useStore.getState().trackPanning;
     this.editorState = useStore.getState().editorState;
     this.effectsDisplayed = useStore.getState().effectsDisplayed;
     this.patternSelection = useStore.getState().patternSelection;
-    this.patternLayout = patternLayout.getPatternLayout();
+    this.patternLayout = patternLayout.getPatternLayout(viewportSize);
     this.coloursAtPlayhead = {
-      background: cssColour("--colour-panel-bg"),
-      trackLaneSeparator: cssColour("--colour-track-lane-separator"),
-      trackHeaderMutedFg: cssColour("--colour-track-header-muted-fg"),
-      trackHeaderMutedBg: cssColour("--colour-track-header-muted-bg"),
-      trackHeaderNotMutedFg: cssColour("--colour-track-header-not-muted-fg"),
-      trackHeaderNotMutedBg: cssColour("--colour-track-header-not-muted-bg"),
-      playheadBackground: cssColour("--colour-playhead"),
-      text: cssColour("--colour-pattern-text-bright"),
-      channelMuted: cssColour("--colour-pattern-text-channel-muted"),
-      cursor: cssColour("--colour-cursor"),
-      cursorText: cssColour("--colour-cursor-text"),
-      note: cssColour("--colour-note-at-playhead"),
-      sample: cssColour("--colour-sample-at-playhead"),
-      effect: cssColour("--colour-effect-at-playhead"),
-      selectionBox: cssColour("--colour-selection-fill"),
-      selectionBoxOutline: cssColour("--colour-selection-outline"),
+      background: cssProperty("--colour-panel-bg"),
+      trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
+      trackHeaderMutedFg: cssProperty("--colour-track-header-muted-fg"),
+      trackHeaderMutedBg: cssProperty("--colour-track-header-muted-bg"),
+      trackHeaderNotMutedFg: cssProperty("--colour-track-header-not-muted-fg"),
+      trackHeaderNotMutedBg: cssProperty("--colour-track-header-not-muted-bg"),
+      trackFooterMutedFg: cssProperty("--colour-track-footer-muted-fg"),
+      trackFooterMutedBg: cssProperty("--colour-track-footer-muted-bg"),
+      trackFooterNotMutedFg: cssProperty("--colour-track-footer-not-muted-fg"),
+      trackFooterNotMutedBg: cssProperty("--colour-track-footer-not-muted-bg"),
+      playheadBackground: cssProperty("--colour-playhead"),
+      text: cssProperty("--colour-pattern-text-bright"),
+      channelMuted: cssProperty("--colour-pattern-text-channel-muted"),
+      cursor: cssProperty("--colour-cursor"),
+      cursorText: cssProperty("--colour-cursor-text"),
+      note: cssProperty("--colour-note-at-playhead"),
+      sample: cssProperty("--colour-sample-at-playhead"),
+      effect: cssProperty("--colour-effect-at-playhead"),
+      selectionBox: cssProperty("--colour-selection-fill"),
+      selectionBoxOutline: cssProperty("--colour-selection-outline"),
     };
     this.coloursOffPlayhead = {
-      background: cssColour("--colour-panel-bg"),
-      trackLaneSeparator: cssColour("--colour-track-lane-separator"),
-      trackHeaderMutedFg: cssColour("--colour-track-header-muted-fg"),
-      trackHeaderMutedBg: cssColour("--colour-track-header-muted-bg"),
-      trackHeaderNotMutedFg: cssColour("--colour-track-header-not-muted-fg"),
-      trackHeaderNotMutedBg: cssColour("--colour-track-header-not-muted-bg"),
-      playheadBackground: cssColour("--colour-playhead"),
-      text: cssColour("--colour-pattern-text-muted"),
-      channelMuted: cssColour("--colour-pattern-text-channel-muted"),
-      cursor: cssColour("--colour-cursor"),
-      cursorText: cssColour("--colour-cursor-text"),
-      note: cssColour("--colour-note"),
-      sample: cssColour("--colour-sample"),
-      effect: cssColour("--colour-effect"),
-      selectionBox: cssColour("--colour-selection-fill"),
-      selectionBoxOutline: cssColour("--colour-selection-outline"),
+      background: cssProperty("--colour-panel-bg"),
+      trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
+      trackHeaderMutedFg: cssProperty("--colour-track-header-muted-fg"),
+      trackHeaderMutedBg: cssProperty("--colour-track-header-muted-bg"),
+      trackHeaderNotMutedFg: cssProperty("--colour-track-header-not-muted-fg"),
+      trackHeaderNotMutedBg: cssProperty("--colour-track-header-not-muted-bg"),
+      trackFooterMutedFg: cssProperty("--colour-track-footer-muted-fg"),
+      trackFooterMutedBg: cssProperty("--colour-track-footer-muted-bg"),
+      trackFooterNotMutedFg: cssProperty("--colour-track-footer-not-muted-fg"),
+      trackFooterNotMutedBg: cssProperty("--colour-track-footer-not-muted-bg"),
+      playheadBackground: cssProperty("--colour-playhead"),
+      text: cssProperty("--colour-pattern-text-muted"),
+      channelMuted: cssProperty("--colour-pattern-text-channel-muted"),
+      cursor: cssProperty("--colour-cursor"),
+      cursorText: cssProperty("--colour-cursor-text"),
+      note: cssProperty("--colour-note"),
+      sample: cssProperty("--colour-sample"),
+      effect: cssProperty("--colour-effect"),
+      selectionBox: cssProperty("--colour-selection-fill"),
+      selectionBoxOutline: cssProperty("--colour-selection-outline"),
     };
+    this.fontTrackHeader = cssProperty("--font-track-header");
+    this.fontPatternData = cssProperty("--font-pattern-data");
     this.gridViewportFit = patternLayout.calculateGridViewportFit(viewportSize, numTracks);
   }
 
@@ -135,6 +157,7 @@ export class PatternRenderer {
       this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
       this.renderTrackLanes();
       this.renderTrackHeaders();
+      this.renderTrackFooters();
       this.renderPlayhead();
       if (this.patternSelection) this.renderSelection(playheadIndex);
       this.renderCursor(patternEvents.editing());
@@ -152,10 +175,18 @@ export class PatternRenderer {
   }
 
   private renderTrackHeaders() {
-    this.ctx.font = "12px FiraCode";
+    this.ctx.font = this.fontTrackHeader;
     let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackHeader(x, track, this.trackMuted[track]);
+    }
+  }
+
+  private renderTrackFooters() {
+    this.ctx.font = this.fontTrackHeader;
+    let x = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
+    for (let track = 0; track <= this.numTracks; track++) {
+      x += this.renderTrackFooter(x, track, this.trackMuted[track]);
     }
   }
 
@@ -236,7 +267,7 @@ export class PatternRenderer {
   }
 
   private renderPatternLines(playheadIndex: number) {
-    this.ctx.font = "16px FiraCode";
+    this.ctx.font = this.fontPatternData;
     let y = this.patternLayout.trackHeaderHeight;
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
@@ -280,6 +311,49 @@ export class PatternRenderer {
     );
     if (muted) this.renderMutedIcon(trackX + trackWidth - 14, 3);
     else this.renderNotMutedIcon(trackX + trackWidth - 14, 3);
+    return trackWidth;
+  }
+
+  private renderTrackFooter(trackX: number, track: number, muted: boolean): number {
+    const fgColour = muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterNotMutedFg;
+    const bgColour = muted ? this.colours().trackFooterMutedBg : this.colours().trackFooterNotMutedBg;
+    const trackWidth = this.patternLayout.getEventWidth(track);
+    if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
+      return 0;
+    this.withFillStyle(bgColour)
+      .fillRect(trackX + 1, this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight, trackWidth - 2, this.patternLayout.trackFooterHeight);
+    this.withFillStyle(fgColour).renderGlyph(
+      "L",
+      trackX + this.patternLayout.glyphWidth,
+      this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight + 2,
+    );
+    this.withFillStyle(fgColour).renderGlyph(
+      "R",
+      trackX + trackWidth - this.patternLayout.glyphWidth * 2 + 1,
+      this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight + 2,
+    );
+    const centreX = trackX - 1 + trackWidth / 2;
+    const sliderThrow = (trackWidth - this.patternLayout.glyphWidth * 5) / 2;
+    this.ctx.lineWidth = 1;
+    this.withStrokeStyle(fgColour);
+    this.ctx.beginPath();
+    this.ctx.moveTo(centreX - sliderThrow, this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight / 2);
+    this.ctx.lineTo(centreX + sliderThrow, this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight / 2);
+    this.ctx.closePath();
+    this.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.moveTo(centreX, this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight + 4);
+    this.ctx.lineTo(centreX, this.patternLayout.viewportSize.height - 4);
+    this.ctx.closePath();
+    this.ctx.stroke();
+    const trackPanning =
+      track >= 0 && track < this.trackPanning.length
+        ? this.trackPanning[track] - 128
+        : 0;
+    const deflection = sliderThrow * trackPanning / 127;
+    this.ctx.beginPath();
+    this.ctx.arc(centreX + deflection, this.patternLayout.viewportSize.height - this.patternLayout.trackFooterHeight / 2, 5, 0, FULL_CIRCLE);
+    this.ctx.fill();
     return trackWidth;
   }
 
@@ -371,8 +445,8 @@ export class PatternRenderer {
 
   private renderSample(x: number, y: number, sampleNo: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean) {
     if (sampleNo === 0) {
-      x += this.renderSampleDigit(x, y, "-", SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
-      this.renderSampleDigit(x, y, "-", SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent, muted);
+      x += this.renderSampleDigit(x, y, DASH, SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
+      this.renderSampleDigit(x, y, DASH, SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent, muted);
     } else {
       const sampleNumber = hexadecimal.toHex(sampleNo, 2);
       x += this.renderSampleDigit(x, y, sampleNumber.charAt(0), SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
@@ -388,7 +462,7 @@ export class PatternRenderer {
     else if (cursorOnEvent && this.editorState.cursorPosition.field === field) {
       colour = this.colours().cursorText;
     } else {
-      colour = (digit === "-") ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
+      colour = (digit === DASH) ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
     }
     this.withFillStyle(colour).renderGlyph(digit, x, y);
     return this.patternLayout.glyphWidth;
@@ -396,9 +470,9 @@ export class PatternRenderer {
 
   private renderEffect(x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
     if (effect.effectCode === "" && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
-      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 0, muted);
-      x += this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 1, muted);
-      this.renderEffectField(x, y, effectIndex, "-", atPlayhead, cursorOnEvent, 2, muted);
+      x += this.renderEffectField(x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 0, muted);
+      x += this.renderEffectField(x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 1, muted);
+      this.renderEffectField(x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 2, muted);
     } else {
       x += this.renderEffectField(x, y, effectIndex, effect.effectCode, atPlayhead, cursorOnEvent, 0, muted);
       x += this.renderEffectField(x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 1, muted);
@@ -415,7 +489,7 @@ export class PatternRenderer {
     else if (cursorOnEvent && this.editorState.cursorPosition.field === cursorField)
       colour = this.colours().cursorText;
     else
-      colour = (effectParam === "-") ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;
+      colour = (effectParam === DASH) ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;
     this.withFillStyle(colour).renderGlyph(effectParam, x, y)
     return this.patternLayout.glyphWidth;
   }
@@ -458,7 +532,7 @@ export class PatternRenderer {
   }
 
   private renderGlyph(glyph: string, x: number, y: number): PatternRenderer {
-    this.ctx.fillText(glyph, x, y);
+    this.ctx.fillText(glyph, x, y + 1);
     return this;
   }
 }

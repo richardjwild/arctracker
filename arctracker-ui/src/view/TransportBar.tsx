@@ -1,7 +1,6 @@
 import { useStore } from "../store/useStore.ts";
 import "./TransportBar.css";
 import { commands } from "../control/commands.ts";
-import useSequencePosition from "../hooks/useSequencePosition.ts";
 
 export default function TransportBar() {
   const PlayIcon = () => (
@@ -111,53 +110,50 @@ export default function TransportBar() {
 
   const playing = useStore((state) => state.transportState.playing);
   const looping = useStore((state) => state.transportState.looping);
-  const tuneLength = useStore((state) => state.sequence.length);
-  const { sequencePos } = useSequencePosition();
 
   return (
     <div className="transportBar uiArea padded">
-      <button
-        title="Play/pause"
-        onClick={() => commands.togglePlay()}
-        aria-label="Play/Pause"
-        className="playPause"
-      >
-        {playing ? <PauseIcon /> : <PlayIcon />}
-      </button>
-      <button
-        title="Repeat on/off"
-        onClick={() => commands.toggleLoop()}
-        aria-label="Repeat on/off"
-        className="repeatOnOff"
-      >
-        {looping ? <TurnRepeatOffIcon /> : <TurnRepeatOnIcon />}
-      </button>
-      <button
-        title="Seek forwards"
-        onClick={() => commands.sequenceSeekForwards()}
-        aria-label="Fast forward"
-        className="fastForward"
-      >
-        <FastForwardIcon />
-      </button>
-      <button
-        title="Seek backwards"
-        onClick={() => commands.sequenceSeekBackwards()}
-        aria-label="Rewind"
-        className="rewind"
-      >
-        <RewindIcon />
-      </button>
-      {/*<button title="Record MIDI" onClick={() => {}} aria-label="Record">*/}
-      {/*  <RecordIcon />*/}
-      {/*</button>*/}
-      <div className="transportState">
-        {tuneLength && (
-          <span>
-            Pos {sequencePos + 1}/{tuneLength}
-          </span>
-        )}
+      <div className="buttons">
+        <button
+          title="Play/pause"
+          onClick={() => commands.togglePlay()}
+          aria-label="Play/Pause"
+          className="playPause"
+        >
+          {playing ? <PauseIcon /> : <PlayIcon />}
+        </button>
+        <button
+          title="Repeat on/off"
+          onClick={() => commands.toggleLoop()}
+          aria-label="Repeat on/off"
+          className="repeatOnOff"
+        >
+          {looping ? <TurnRepeatOffIcon /> : <TurnRepeatOnIcon />}
+        </button>
+        <button
+          title="Seek forwards"
+          onClick={() => commands.sequenceSeekForwards()}
+          aria-label="Fast forward"
+          className="fastForward"
+        >
+          <FastForwardIcon />
+        </button>
+        <button
+          title="Seek backwards"
+          onClick={() => commands.sequenceSeekBackwards()}
+          aria-label="Rewind"
+          className="rewind"
+        >
+          <RewindIcon />
+        </button>
+        {/*<button title="Record MIDI" onClick={() => {}} aria-label="Record">*/}
+        {/*  <RecordIcon />*/}
+        {/*</button>*/}
       </div>
+      <button className={`tempo ${playing ? "" : "tempo-enabled"}`}>
+        <div className="bpm">Tempo</div>
+        <div className="lines-per-beat">Not set</div>
+      </button>
     </div>
   );
 }

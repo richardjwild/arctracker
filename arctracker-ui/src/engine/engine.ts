@@ -56,7 +56,7 @@ function unpackEvent(packed: number[]): PatternEvent {
     const packedData = (effectData >>> shift) & 0xff;
     effects.push({
       effectCode,
-      effectData: [(packedData >>> 4) & 0xf0, packedData & 0xf],
+      effectData: [(packedData >>> 4) & 0xf, packedData & 0xf],
     });
   }
   return {
@@ -147,6 +147,13 @@ export const engine = {
   toggleTrackMute: (track: number) => {
     void invoke("toggle_track_mute", {
       track,
+    });
+  },
+
+  setEffectsDisplayed: (track: number, effectsDisplayed: number) => {
+    void invoke("set_effects_displayed", {
+      track,
+      effectsDisplayed,
     });
   },
 

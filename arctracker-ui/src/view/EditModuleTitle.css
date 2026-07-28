@@ -26,8 +26,6 @@
     border: none;
     background-color: transparent;
     color: var(--colour-sample-edit-input-text);
-    font-family: FiraCode, monospace;
-    font-size: 16px;
     caret-shape: block;
     caret-color: var(--colour-sample-edit-input-text);
     accent-color: var(--colour-sample-edit-input-text);

@@ -53,10 +53,8 @@ export default function Sequence() {
 
   useEffect(() => {
     setFirstVisiblePos(() => {
-      if (sequencePos >= visibleCount)
-        return 1 + sequencePos - visibleCount;
-      else
-        return 0;
+      if (sequencePos >= visibleCount) return 1 + sequencePos - visibleCount;
+      else return 0;
     });
   }, [sequencePos, visibleCount]);
 
@@ -200,41 +198,51 @@ export default function Sequence() {
   };
 
   return (
-    <div className="sequenceView uiArea">
-      <div className="sequence" ref={containerRef}>
-        {visibleSequence.map((patternNo, index) =>
-          renderSequencePosition(patternNo, firstVisiblePos + index, index),
-        )}
+    <>
+      <div className="currentPosition uiArea">
+        <div className="position">{sequencePos + 1}</div>
+        <div className="tuneLength">({tuneLength})</div>
       </div>
-      <div className="sequenceEditButtons">
-        <button
-          type="button"
-          title="Insert new position before current (shift-click to create new pattern)"
-          disabled={playing}
-          className={playing ? "disabled" : "enabled"}
-          onClick={(event) => commands.insertSequencePositionBefore(event.shiftKey)}
-        >
-          <InsertBeforeIcon />
-        </button>
-        <button
-          type="button"
-          title="Insert new position after current (shift-click to create new pattern)"
-          disabled={playing}
-          className={playing ? "disabled" : "enabled"}
-          onClick={(event) => commands.insertSequencePositionAfter(event.shiftKey)}
-        >
-          <InsertAfterIcon />
-        </button>
-        <button
-          type="button"
-          title="Delete position at current"
-          disabled={playing}
-          className={playing ? "disabled" : "enabled"}
-          onClick={commands.deleteSequencePosition}
-        >
-          <DeleteIcon />
-        </button>
+      <div className="sequenceView uiArea">
+        <div className="sequence" ref={containerRef}>
+          {visibleSequence.map((patternNo, index) =>
+            renderSequencePosition(patternNo, firstVisiblePos + index, index),
+          )}
+        </div>
+        <div className="sequenceEditButtons">
+          <button
+            type="button"
+            title="Insert new position before current (shift-click to create new pattern)"
+            disabled={playing}
+            className={playing ? "disabled" : "enabled"}
+            onClick={(event) =>
+              commands.insertSequencePositionBefore(event.shiftKey)
+            }
+          >
+            <InsertBeforeIcon />
+          </button>
+          <button
+            type="button"
+            title="Insert new position after current (shift-click to create new pattern)"
+            disabled={playing}
+            className={playing ? "disabled" : "enabled"}
+            onClick={(event) =>
+              commands.insertSequencePositionAfter(event.shiftKey)
+            }
+          >
+            <InsertAfterIcon />
+          </button>
+          <button
+            type="button"
+            title="Delete position at current"
+            disabled={playing}
+            className={playing ? "disabled" : "enabled"}
+            onClick={commands.deleteSequencePosition}
+          >
+            <DeleteIcon />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

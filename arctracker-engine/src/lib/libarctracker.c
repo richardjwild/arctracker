@@ -217,7 +217,14 @@ void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *trac
         return;
     if (track < 0 || track >= arctracker->module->num_tracks) return;
     track_state->muted = arctracker->module->tracks[track].muted;
-    track_state->panning = arctracker->module->tracks[track].panning;
+    if (arctracker->playback.player->playing)
+    {
+        track_state->panning = arctracker->playback.player->voices[track].panning;
+    }
+    else
+    {
+        track_state->panning = arctracker->module->tracks[track].panning;
+    }
     track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
 }
 
@@ -267,7 +274,7 @@ void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *ex
     else
     {
         export_state->completed = false;
-        export_state->percent_complete = (arctracker->export.player->sequence.sequence_pos * 100) / (arctracker->module->tune_length);
+        export_state->percent_complete = (arctracker->export.player->sequence.sequence_pos * 100) / (arctracker->module->sequence_length);
     }
 }
 
@@ -456,9 +463,9 @@ api_result_t arctracker_edit_get_sequence(arctracker_t *arctracker, int *sequenc
     if (sequence == NULL)
         return failure(BAD_SEQUENCE_BUFFER);
     module_t *module = arctracker->module;
-    if (expected_sequence_len != module->tune_length)
+    if (expected_sequence_len != module->sequence_length)
         return failure(INVALID_SEQUENCE_LENGTH);
-    memcpy(sequence, module->sequence, module->tune_length * sizeof(int));
+    memcpy(sequence, module->sequence, module->sequence_length * sizeof(int));
     return SUCCESS;
 }
 

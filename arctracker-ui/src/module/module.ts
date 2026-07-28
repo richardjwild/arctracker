@@ -120,30 +120,16 @@ export const module = {
   setTrackCount: async (trackCount: number) => {
     const module = useStore.getState().module;
     const currentTracks = module.numTracks;
-    const currentEffectsDisplayed =
-      useStore.getState().effectsDisplayed;
-    let newEffectsDisplayed = [...currentEffectsDisplayed];
-    if (trackCount < currentTracks) {
-      newEffectsDisplayed.splice(
-        newEffectsDisplayed.length - 1,
-        currentTracks - trackCount,
-      );
-    } else {
-      for (let i = 0; i < trackCount - currentTracks; i++)
-        newEffectsDisplayed.push(1);
-    }
     if (currentTracks !== trackCount) {
       void editor.applyEdit({
         apply: async () => {
           await engine.setNumTracks(trackCount);
           useStore.getState().updateTracks(trackCount);
-          useStore.getState().setEffectsDisplayed(newEffectsDisplayed);
           return true;
         },
         undo: async () => {
           await engine.setNumTracks(currentTracks);
           useStore.getState().updateTracks(currentTracks);
-          useStore.getState().setEffectsDisplayed(currentEffectsDisplayed);
         },
       });
     }

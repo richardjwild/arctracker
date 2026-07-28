@@ -152,7 +152,7 @@ export default function PatternView() {
     if (!container) return;
     const viewportWidth = container.clientWidth;
     const viewportHeight = container.clientHeight;
-    const { contentWidth } = getPatternContentDimensions(numTracks);
+    const { contentWidth } = getPatternContentDimensions({ width: viewportWidth, height: viewportHeight }, numTracks);
     const logicalWidth = Math.max(contentWidth, viewportWidth);
     ensureCanvasSize(canvas, logicalWidth * 1.5, viewportHeight * 1.5);
     const renderPatternView = getPatternViewRenderer(ctx, numTracks);
@@ -170,7 +170,7 @@ export default function PatternView() {
       };
       const canvas = canvasRef.current;
       if (canvas) {
-        const { contentWidth } = getPatternContentDimensions(numTracks);
+        const { contentWidth } = getPatternContentDimensions(viewportSizeRef.current, numTracks);
         const width = Math.max(contentWidth, entry.contentRect.width);
         const height = entry.contentRect.height;
         ensureCanvasSize(canvas, width, height);

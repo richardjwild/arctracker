@@ -54,6 +54,8 @@ export const player = {
         patternIndex: snapshot.patternIndex,
       });
       useStore.getState().setTrackMuteState(snapshot.tracks.map((track) => track.muted));
+      useStore.getState().setEffectsDisplayed(snapshot.tracks.map((track) => track.effectsDisplayed));
+      useStore.getState().setTrackPanning(snapshot.tracks.map((track) => track.panning));
       if (snapshot.newPattern !== null) {
         useStore.getState().setCurrentPattern({
           patternNo: snapshot.patternNo,

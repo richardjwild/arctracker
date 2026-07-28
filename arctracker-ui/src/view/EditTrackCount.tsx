@@ -46,7 +46,7 @@ export default function EditTrackCount() {
             e.preventDefault();
             const trackCount = validateTrackCount();
             if (trackCount) {
-              if (trackCount !== module.numTracks) commands.setTrackCount(trackCount);
+              commands.setTrackCount(trackCount);
               editor.stopTextInput();
             } else {
               trackCountInputRef.current?.focus();

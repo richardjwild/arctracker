@@ -29,7 +29,7 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
         goto fail;
     module->num_tracks = num_tracks;
     module->track_capacity = round_up_to_power_of_two(module->num_tracks);
-    module->tune_length = sequence_len;
+    module->sequence_length = sequence_len;
     module->sequence_capacity = sequence_len > INITIAL_SEQUENCE_CAPACITY ? sequence_len : INITIAL_SEQUENCE_CAPACITY;
     module->num_patterns = num_patterns;
     module->pattern_capacity = num_patterns > INITIAL_PATTERN_CAPACITY ? num_patterns : INITIAL_PATTERN_CAPACITY;
@@ -55,7 +55,7 @@ fail:
 
 bool module_init(module_t *module)
 {
-    module->initial_speed = 6;
+    module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
     for (int i = 0; i < module->num_tracks; i++)
     {
@@ -75,7 +75,7 @@ bool module_set_sequence(module_t *module, const int *new_sequence, const int ne
     if (!ensure_sequence_capacity(module, new_sequence_len))
         return false;
     memcpy(module->sequence, new_sequence, new_sequence_len * sizeof(int));
-    module->tune_length = new_sequence_len;
+    module->sequence_length = new_sequence_len;
     return true;
 }
 
@@ -179,7 +179,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     snprintf(module_info->name, sizeof module_info->name, "%s", module->name);
     snprintf(module_info->author, sizeof module_info->author, "%s", module->author);
     module_info->num_tracks = module->num_tracks;
-    module_info->tune_length = module->tune_length;
+    module_info->tune_length = module->sequence_length;
     module_info->num_patterns = module->num_patterns;
     module_info->master_gain = module->master_gain;
 }
@@ -358,6 +358,12 @@ void module_set_num_tracks(module_t *module, const uint32_t num_tracks)
     const uint32_t old_num_tracks = module->num_tracks;
     module->num_tracks = (int) num_tracks;
     if (num_tracks <= old_num_tracks) return;
+    for (uint32_t tno = old_num_tracks; tno < num_tracks; tno++)
+        module->tracks[tno] = (track_t) {
+            .muted = false,
+            .panning = 0x80,
+            .effects_displayed = 1,
+        };
     for (int pno = 0; pno < module->num_patterns; pno++)
     {
         const pattern_t pattern = module->patterns[pno];

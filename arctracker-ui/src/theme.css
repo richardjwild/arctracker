@@ -7,11 +7,11 @@
     --colour-pattern-text-channel-muted: #444444;
     --colour-pattern-text-bright: #ffffff;
     --colour-playhead: #333333;
-    --colour-note: #00ddcc;
+    --colour-note: #00aa90;
     --colour-note-at-playhead: #00ffee;
-    --colour-sample: #cccc77;
+    --colour-sample: #aaaa55;
     --colour-sample-at-playhead: #eeee33;
-    --colour-effect: #dd9900;
+    --colour-effect: #aa7700;
     --colour-effect-at-playhead: #ffbb00;
     --colour-cursor: #00ff00;
     --colour-cursor-text: #003300;
@@ -37,6 +37,8 @@
     --colour-sequence-edit-button-bg: #33330f;
     --colour-sequence-edit-button-enabled-bg: #cccc22;
     --colour-transport-button-bg: #dfdfdf;
+    --colour-transport-button-tempo-fg: #dfdfdf;
+    --colour-transport-button-tempo-bg: #1c1c1c;
     --colour-sample-edit-label: #999999;
     --colour-sample-edit-input-text: #cccc22;
     --colour-master-gain-accent: #cccc22;
@@ -51,4 +53,10 @@
     --colour-track-header-muted-bg: #1c1c1c;
     --colour-track-header-not-muted-fg: black;
     --colour-track-header-not-muted-bg: #aaaaaa;
+    --colour-track-footer-muted-fg: #444444;
+    --colour-track-footer-muted-bg: #1c1c1c;
+    --colour-track-footer-not-muted-fg: #aaaaaa;
+    --colour-track-footer-not-muted-bg: #1c1c1c;
+    --font-track-header: 12px SplineSansMono, monospace;
+    --font-pattern-data: bold 16px SplineSansMono, monospace;
 }

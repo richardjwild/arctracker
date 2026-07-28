@@ -1,5 +1,5 @@
 const noteStrings = [
-  "---",
+  "–––",
   "C0",
   "C♯0",
   "D0",

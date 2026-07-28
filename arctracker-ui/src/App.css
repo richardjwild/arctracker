@@ -3,11 +3,21 @@
   src: url('assets/fonts/FiraCode-Medium.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: PixelCode;
+  src: url('assets/fonts/PixelCode.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: SplineSansMono;
+  src: url('assets/fonts/SplineSansMono-VariableFont_wght.woff2') format('woff2');
+}
+
 :root {
   height: 100%;
   margin: 0;
-  font-family: FiraCode, monospace;
-  font-size: 16px;
+  font-family: SplineSansMono, monospace;
+  font-size: 12px;
   line-height: 24px;
   font-weight: 400;
   color: var(--colour-text);
@@ -26,12 +36,12 @@
   height: calc(100vh - 25px); /* because margin: 10px */
   display: grid;
   gap: 1px;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 50px 1fr 300px;
   grid-template-rows: 50px 50px minmax(0, 1fr);
   grid-template-areas:
-    "moduleHeader masterGain"
-    "sequenceView transport"
-    "patternView sampleList";
+    "moduleHeader moduleHeader masterGain"
+    "sequencePos sequenceView transport"
+    "patternView patternView sampleList";
 }
 
 .uiArea {
@@ -54,4 +64,14 @@
   position: absolute;
   white-space: nowrap;
   width: 1px;
+}
+
+input[type="text"] {
+  font-family: SplineSansMono, monospace;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+label {
+  font-size: 16px;
 }

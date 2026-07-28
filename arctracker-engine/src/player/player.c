@@ -42,7 +42,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->player_event_queue = player_event_queue;
     player->module = module;
     player->master_gain = module->master_gain;
-    player->tick_scheduler = tick_scheduler_create(module->initial_speed, audio_api.sample_rate);
+    player->tick_scheduler = tick_scheduler_create(module->initial_ticks_per_event, audio_api.sample_rate);
     player->sequence = initialise_sequence(module, audio_api.bouncing);
     player->bouncing = audio_api.bouncing;
     player->command_queue = command_queue_init();

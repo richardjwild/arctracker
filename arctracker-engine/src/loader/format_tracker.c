@@ -105,7 +105,7 @@ static module_t *read_tracker_module(mapped_file_t file)
         goto fail;
     }
     module->format = TRACKER_FORMAT;
-    module->initial_speed = 6;
+    module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
     {
@@ -122,6 +122,8 @@ static module_t *read_tracker_module(mapped_file_t file)
             continue;
         }
         module->tracks[track].panning = PANNING[track_panning - 1];
+        module->tracks[track].muted = false;
+        module->tracks[track].effects_displayed = 1;
     }
     if ((chunk_address = search_tff(file.addr, array_end, MNAM_CHUNK)) == CHUNK_NOT_FOUND)
     {
@@ -151,7 +153,7 @@ static module_t *read_tracker_module(mapped_file_t file)
         error("Modfile corrupt - SEQU chunk not found");
         goto fail;
     }
-    copy_int_array(chunk_address + 8, module->sequence, module->tune_length);
+    copy_int_array(chunk_address + 8, module->sequence, module->sequence_length);
     if (!decode_patterns(file.addr, array_end, module, pattern_lengths))
         goto fail;
     module->sample_slots = get_samples(file.addr, array_end, module->samples, module->instruments);

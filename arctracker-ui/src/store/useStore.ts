@@ -19,6 +19,7 @@ interface AppStore {
   editorState: EditorState;
   effectsDisplayed: number[];
   trackMuteState: boolean[];
+  trackPanning: number[];
   patternSelection: PatternSelection | null;
   pasteBuffer: PasteBufferObjectType | null;
   exportMonitoring: boolean;
@@ -45,6 +46,7 @@ interface AppStore {
   setEditorState: (state: EditorState) => void;
   setEffectsDisplayed: (effectsDisplayed: number[]) => void;
   setTrackMuteState: (trackMuteState: boolean[]) => void;
+  setTrackPanning: (trackPanning: number[]) => void;
   setPatternSelection: (selection: PatternSelection | null) => void;
   setPasteBuffer: (buffer: PasteBufferObjectType | null) => void;
   setExportMonitoring: (monitoring: boolean) => void;
@@ -124,7 +126,7 @@ function initialEditorState(): EditorState {
   };
 }
 
-function muteStatesEqual(a: boolean[], b: boolean[]): boolean {
+function arraysEqual<T>(a: T[], b: T[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;
@@ -144,6 +146,7 @@ export const useStore = create<AppStore>((set) => ({
   editorState: initialEditorState(),
   effectsDisplayed: [],
   trackMuteState: [],
+  trackPanning: [],
   patternSelection: null,
   pasteBuffer: null,
   exportMonitoring: false,
@@ -279,14 +282,21 @@ export const useStore = create<AppStore>((set) => ({
     }),
 
   setEffectsDisplayed: (next) =>
-    set({
-      effectsDisplayed: next,
+    set((state) => {
+      if (arraysEqual(state.effectsDisplayed, next)) return state;
+      else return { effectsDisplayed: next };
     }),
 
   setTrackMuteState: (next) =>
     set((state) => {
-      if (muteStatesEqual(state.trackMuteState, next)) return state;
+      if (arraysEqual(state.trackMuteState, next)) return state;
       else return { trackMuteState: next };
+    }),
+
+  setTrackPanning: (next) =>
+    set((state) => {
+      if (arraysEqual(state.trackPanning, next)) return state;
+      else return { trackPanning: next };
     }),
 
   setPatternSelection: (patternSelection) => set({ patternSelection }),

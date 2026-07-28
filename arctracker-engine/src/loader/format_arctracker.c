@@ -32,9 +32,9 @@
  *   u32   Unsigned 32-bit word.                                             *
  *   f32   32-bit IEEE-754 single precision float.                           *
  *   char  A string of characters, UTF-8 encoded, terminated by NUL. The     *
- *         length of the string, including the terminator, does not exceed   *
- *         the specified length. The string will be padded as necessary up   *
- *         to the specified length.                                          *
+ *         specified length of the string is the number of bytes allocated   *
+ *         in the file. The terminator is always included in this length.    *
+ *         When saving, the string may be truncated as necessary to fit.     *
  *                                                                           *
  * Some parts of the file are reserved for future use. For now, these must   *
  * be written with zero, and when reading, they must be ignored.             *
@@ -61,13 +61,13 @@
  *                                                                           *
  *   Chunk id: META                                                          *
  *   Chunk contents:                                                         *
- *   - char module name (64 bytes)                           *
- *   - char author (64 bytes)                                *
+ *   - char module name (256 bytes)                                          *
+ *   - char author (256 bytes)                                               *
  *   - u8 number of tracks less 1 (0-255; 0=1 track, 1=2 tracks, etc.)       *
  *   - u16 sequence length (1-65535)                                         *
  *   - u16 master gain (0-65535; 0=minimum, 65535=maximum)                   *
- *   - u8 ticks per event (1-255)                                            *
- *   - u8 ticks per second (1-255)                                           *
+ *   - u8 initial ticks per event (1-255)                                    *
+ *   - u8 initial tempo (beats per minute: 1-255)                            *
  *   - u8 lines per beat (0-255: 0=undefined)                                *
  *   - u16 default pattern length (1-1000)                                   *
  *   - u8 reserved for future use                                            *
@@ -80,10 +80,13 @@
  *   Chunk id: TRCK                                                          *
  *   Chunk contents:                                                         *
  *   - u8 track index (0-255)                                                *
- *   - char reserved for future use (31 characters)                          *
+ *   - char reserved for future use (128 characters)                         *
  *   - u8 track muted (0-not muted, 1-muted)                                 *
  *   - u8 initial panning (0-255: 0=centre, 1=full left, 255=full right)     *
  *   - u8 commands displayed (0-4)                                           *
+ *   - u8 reserved for future use                                            *
+ *   - u8 reserved for future use                                            *
+ *   - u8 reserved for future use                                            *
  *   - u8 reserved for future use                                            *
  *                                                                           *
  * Sequence chunk                                                            *
@@ -180,9 +183,9 @@
  *   - f32 (array) sample data                                               *
  *****************************************************************************/
 
-#define MODULE_NAME_LEN 64
-#define AUTHOR_NAME_LEN 64
-#define TRACK_NAME_LEN 31
+#define MODULE_NAME_LEN 256
+#define AUTHOR_NAME_LEN 256
+#define TRACK_NAME_LEN 128
 #define INSTRUMENT_NAME_LEN 32
 #define EVENT_SIZE 24
 #define INSTRUMENT_TYPE_SAMPLE 0
@@ -199,7 +202,7 @@ static const char *INSTRUMENT_CHUNK_ID = "INST";
 static const uint32_t CHUNK_HEADER_SIZE = 8;
 static const uint32_t FORMAT_CHUNK_LEN = 4;
 static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 12;
-static const uint32_t TRACK_CHUNK_LEN = TRACK_NAME_LEN + 5;
+static const uint32_t TRACK_CHUNK_LEN = TRACK_NAME_LEN + 8;
 static const uint32_t EMPTY_PATTERN_CHUNK_LEN = 8;
 static const uint32_t INSTRUMENT_CHUNK_LEN = 20 + INSTRUMENT_NAME_LEN;
 static const uint32_t MASTER_GAIN_MAX = 65535;
@@ -372,7 +375,8 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         error(MODFILE_INVALID_INITIAL_SPEED);
         goto read_module_metadata_failed;
     }
-    module->initial_speed = initial_speed;
+    module->initial_ticks_per_event = initial_speed;
+    // TODO: Read tempo (u8).
     // TODO: Read lines per beat (u8).
     // TODO: Read default pattern length (u16).
     return module;
@@ -423,18 +427,18 @@ static float read_gain(const uint32_t gain)
 
 static bool read_sequence_chunk(const uint8_t *data, const size_t data_size, module_t *module)
 {
-    if (data_size != (size_t) module->tune_length * 4)
+    if (data_size != (size_t) module->sequence_length * 4)
     {
         error(INVALID_SEQUENCE_CHUNK_LENGTH);
         return false;
     }
     // TODO: Change module->sequence to be array of uint32_t so I don't have to do this.
-    int *sequence = allocate_array(MODULE, module->tune_length, sizeof(int));
+    int *sequence = allocate_array(MODULE, module->sequence_length, sizeof(int));
     if (sequence == NULL)
         return false;
-    for (uint32_t i = 0; i < (uint32_t) module->tune_length; i++)
+    for (uint32_t i = 0; i < (uint32_t) module->sequence_length; i++)
         sequence[i] = (int) read_u32_le(data + i * 4);
-    const bool ok = module_set_sequence(module, sequence, module->tune_length);
+    const bool ok = module_set_sequence(module, sequence, module->sequence_length);
     if (!ok) error(FAILED_TO_SET_SEQUENCE);
     deallocate(MODULE, sequence);
     return ok;
@@ -468,7 +472,7 @@ static bool read_track_chunk(const uint8_t *data, const size_t data_size, const 
     }
     module->tracks[track].panning = initial_panning;
     module->tracks[track].muted = muted == 1;
-    // TODO: Add number of commands displayed to module.
+    module->tracks[track].effects_displayed = commands_displayed;
     return true;
 }
 
@@ -623,7 +627,7 @@ static bool read_sample_chunk(const uint8_t *data, const size_t data_size, modul
 
 static bool validate_module(const module_t *module)
 {
-    for (int sequence_index = 0; sequence_index < module->tune_length; sequence_index++)
+    for (int sequence_index = 0; sequence_index < module->sequence_length; sequence_index++)
     {
         const int pattern_no = module->sequence[sequence_index];
         if (pattern_no >= module->num_patterns)
@@ -680,7 +684,7 @@ static bool write_format_chunk(FILE *fp)
 
 static bool write_meta_chunk(const module_t *module, FILE *fp)
 {
-    char module_name[MODULE_NAME_LEN], author[AUTHOR_NAME_LEN];
+    char module_name[256], author[256];
     snprintf(module_name, sizeof module_name, "%s", module->name);
     snprintf(author, sizeof author, "%s", module->author);
     if (!write_fourcc(fp, META_CHUNK_ID)) return false;
@@ -688,12 +692,12 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_cc(fp, module_name, sizeof module_name)) return false;
     if (!write_cc(fp, author, sizeof author)) return false;
     if (!write_u8(fp, module->num_tracks - 1)) return false;
-    if (!write_u16_le(fp, module->tune_length)) return false; // TODO: Rename sequence_length.
+    if (!write_u16_le(fp, module->sequence_length)) return false;
     if (!write_u16_le(fp, write_gain(module->master_gain))) return false;
-    if (!write_u8(fp, module->initial_speed)) return false;   // TODO: Rename ticks_per_event.
-    if (!write_u8(fp, 50)) return false;                      // TODO: Initial ticks per second not in module yet.
-    if (!write_u8(fp, 0)) return false;                       // TODO: Lines per beat not in module yet.
-    if (!write_u16_le(fp, 64)) return false;                  // TODO: Default pattern length not in module yet.
+    if (!write_u8(fp, module->initial_ticks_per_event)) return false;
+    if (!write_u8(fp, 0)) return false;      // TODO: Initial tempo not in module yet.
+    if (!write_u8(fp, 0)) return false;      // TODO: Lines per beat not in module yet.
+    if (!write_u16_le(fp, 64)) return false; // TODO: Default pattern length not in module yet.
     if (!write_u8(fp, 0)) return false;
     if (!write_u8(fp, 0)) return false;
     return true;
@@ -715,7 +719,10 @@ static bool write_track_chunk(const module_t *module, const int track, FILE *fp)
     if (!write_cc(fp, reserved_for_track_name, sizeof reserved_for_track_name)) return false;
     if (!write_u8(fp, (uint8_t) module->tracks[track].muted ? 1 : 0)) return false;
     if (!write_u8(fp, (uint8_t) module->tracks[track].panning)) return false;
-    if (!write_u8(fp, 1)) return false; // TODO: Number of commands displayed.
+    if (!write_u8(fp, (uint8_t) module->tracks[track].effects_displayed)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
     if (!write_u8(fp, 0)) return false;
     return true;
 }
@@ -723,8 +730,8 @@ static bool write_track_chunk(const module_t *module, const int track, FILE *fp)
 static bool write_sequence_chunk(const module_t *module, FILE *fp)
 {
     if (!write_fourcc(fp, SEQUENCE_CHUNK_ID)) return false;
-    if (!write_u32_le(fp, (uint32_t) module->tune_length * 4)) return false;
-    for (int p = 0; p < module->tune_length; p++)
+    if (!write_u32_le(fp, (uint32_t) module->sequence_length * 4)) return false;
+    for (int p = 0; p < module->sequence_length; p++)
         if (!write_u32_le(fp, (uint32_t) module->sequence[p])) return false;
     return true;
 }
