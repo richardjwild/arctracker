@@ -10,7 +10,8 @@ export type EditMode =
   | "instrument"
   | "patternLength"
   | "nameAndAuthor"
-  | "trackCount";
+  | "trackCount"
+  | "tempo";
 
 export type EditorState = {
   editMode: EditMode;

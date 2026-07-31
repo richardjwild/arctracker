@@ -14,6 +14,7 @@ import { editInstrument } from "../editing/editInstrument.ts";
 import { pattern } from "../editing/pattern.ts";
 import { moduleTitle } from "../editing/moduleTitle.ts";
 import { engine } from "../engine/engine.ts";
+import { tempo } from "../editing/tempo.ts";
 
 async function processCommands() {
   const commands = commandQueue.consume();
@@ -22,7 +23,7 @@ async function processCommands() {
       case CommandType.CREATE_MODULE:
         void module.create(command.numTracks).then((success) => {
           if (success) editor.newModuleLoaded();
-        })
+        });
         return; // Don't execute any more commands if we have created a new module.
       case CommandType.LOAD_FILE:
         void module.load().then((success) => {
@@ -137,7 +138,11 @@ async function processCommands() {
         break;
       case CommandType.PATTERN_GRID_JUMP_TO_LOCATION:
         selection.navigateGrid(
-          () => patternGrid.moveTo({ track: command.track, patternIndex: command.patternIndex }),
+          () =>
+            patternGrid.moveTo({
+              track: command.track,
+              patternIndex: command.patternIndex,
+            }),
           command.extendSelection,
         );
         break;
@@ -262,6 +267,13 @@ async function processCommands() {
         break;
       case CommandType.SET_TRACK_COUNT:
         void module.setTrackCount(command.trackCount);
+        break;
+      case CommandType.EDIT_TEMPO:
+        if (transport.playing()) transport.togglePlay();
+        tempo.showDialog();
+        break;
+      case CommandType.SET_TEMPO:
+        tempo.setTempo(command.linesPerBeat, command.beatsPerMinute);
         break;
       case CommandType.TOGGLE_TRACK_MUTE:
         void engine.toggleTrackMute(command.track);

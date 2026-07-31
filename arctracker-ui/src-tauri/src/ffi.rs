@@ -82,6 +82,8 @@ pub struct UiModuleInfo {
     pub tune_length: c_int,
     pub num_patterns: c_int,
     pub master_gain: f32,
+    pub lines_per_beat: c_int,
+    pub initial_bpm: c_int,
 }
 
 #[repr(C)]
@@ -107,6 +109,7 @@ pub struct UiTransportState {
     pub pattern_index: c_int,
     pub pattern_no: c_int,
     pub pattern_length: c_int,
+    pub current_bpm: c_int,
 }
 
 #[repr(C)]
@@ -212,6 +215,7 @@ extern "C" {
     pub fn arctracker_edit_load_sample(handle: *mut ArctrackerHandle, filename: *const c_char, sample_info: *mut UiSampleInfo) -> ApiResult;
     pub fn arctracker_edit_set_module_title(handle: *mut ArctrackerHandle, name: *const c_char, author: *const c_char) -> ApiResult;
     pub fn arctracker_edit_set_num_tracks(handle: *mut ArctrackerHandle, num_tracks: c_int) -> ApiResult;
+    pub fn arctracker_edit_set_tempo(handle: *mut ArctrackerHandle, lines_per_beat: u8, beats_per_minute: u8) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

@@ -1,8 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "module.h"
-
+#include <math.h>
 #include "messages.h"
+#include "tempo.h"
 #include "io/error.h"
 #include "memory/bits.h"
 #include "memory/heap.h"
@@ -11,6 +12,8 @@
 #define INITIAL_PATTERN_CAPACITY 1024
 #define INITIAL_SAMPLE_CAPACITY 1024
 #define INITIAL_PATTERN_LINE_CAPACITY 64
+#define DEFAULT_TICKS_PER_SECOND 50
+#define MAX_BPM 255
 
 static bool ensure_sequence_capacity(module_t *, int);
 static bool ensure_pattern_capacity(module_t *, int);
@@ -47,6 +50,9 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     module->samples = allocate_array(MODULE, module->sample_capacity, sizeof(sample_t));
     if (module->samples == NULL)
         goto fail;
+    module->tempo_lookup = allocate_array(MODULE, 256, sizeof(tempo_t));
+    if (module->tempo_lookup == NULL)
+        goto fail;
     return module;
 fail:
     if (module != NULL) module_destroy(module);
@@ -56,6 +62,8 @@ fail:
 bool module_init(module_t *module)
 {
     module->initial_ticks_per_event = 6;
+    module->lines_per_beat = 4;
+    module->initial_bpm = 120;
     module->master_gain = 0.25f;
     for (int i = 0; i < module->num_tracks; i++)
     {
@@ -68,6 +76,19 @@ bool module_init(module_t *module)
     if (!module_create_pattern(module, 0, 64))
         return false;
     return true;
+}
+
+tempo_t module_get_initial_tempo(const module_t *module)
+{
+    if (module->initial_bpm > 0 && module->lines_per_beat > 0)
+    {
+        return module->tempo_lookup[module->initial_bpm];
+    }
+    return (tempo_t) {
+        .ticks_per_event = module->initial_ticks_per_event,
+        .ticks_per_second = DEFAULT_TICKS_PER_SECOND,
+        .actual_bpm = 0.0f,
+    };
 }
 
 bool module_set_sequence(module_t *module, const int *new_sequence, const int new_sequence_len)
@@ -182,6 +203,8 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->tune_length = module->sequence_length;
     module_info->num_patterns = module->num_patterns;
     module_info->master_gain = module->master_gain;
+    module_info->lines_per_beat = module->lines_per_beat;
+    module_info->initial_bpm = module->initial_bpm;
 }
 
 void module_get_instrument_info(const module_t *module, const int instrument_index, ui_instrument_info_t *instrument_info)
@@ -386,6 +409,21 @@ void module_set_effects_displayed(const module_t *module, const int track, const
     module->tracks[track].effects_displayed = effects_displayed;
 }
 
+void module_set_lines_per_beat(module_t *module, const uint8_t lines_per_beat)
+{
+    module->lines_per_beat = lines_per_beat;
+    for (int bpm = 0; bpm <= MAX_BPM; bpm++) module->tempo_lookup[bpm] = (tempo_t) {0};
+    if (module->lines_per_beat > 0)
+    {
+        calculate_tempo(module->tempo_lookup, lines_per_beat, MAX_BPM);
+    }
+}
+
+void module_set_initial_bpm(module_t *module, const uint8_t beats_per_minute)
+{
+    module->initial_bpm = beats_per_minute;
+}
+
 void module_destroy(module_t *module)
 {
     for (int i = 0; i < module->sample_slots; i++)
@@ -396,6 +434,7 @@ void module_destroy(module_t *module)
     deallocate(MODULE, module->tracks);
     deallocate(MODULE, module->sequence);
     deallocate(MODULE, module->samples);
+    deallocate(MODULE, module->tempo_lookup);
     deallocate(MODULE, module);
 }
 

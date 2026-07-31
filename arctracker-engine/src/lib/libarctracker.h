@@ -80,6 +80,8 @@ api_result_t arctracker_edit_set_module_title(const arctracker_t *handle, const 
 
 api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, int num_tracks);
 
+api_result_t arctracker_edit_set_tempo(arctracker_t *handle, uint8_t lines_per_beat, uint8_t beats_per_minute);
+
 api_result_t arctracker_destroy(arctracker_t *handle);
 
 #endif //ARCTRACKER_LIBARCTRACKER_H

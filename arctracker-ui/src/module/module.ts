@@ -21,6 +21,8 @@ export type Module = {
   tuneLength: number;
   instruments: Instrument[];
   masterGain: number;
+  linesPerBeat: number;
+  beatsPerMinute: number;
 }
 
 const FormatArctracker = 0;

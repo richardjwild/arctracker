@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "tempo.h"
+
 typedef struct {
     int accumulator;
     int ticks_per_second;
@@ -19,7 +21,9 @@ typedef struct {
     event_scheduler_t event_scheduler;
 } tick_scheduler_t;
 
-tick_scheduler_t tick_scheduler_create(int initial_ticks_per_event, int sample_rate_in);
+tick_scheduler_t tick_scheduler_create(tempo_t tempo, int sample_rate_in);
+
+void tick_scheduler_set_tempo(tick_scheduler_t *, tempo_t);
 
 void tick_scheduler_restart(tick_scheduler_t *);
 

@@ -7,6 +7,7 @@ import { ModuleTitle } from "../editing/moduleTitle.ts";
 import { Instrument } from "../editing/editInstrument.ts";
 import { Module } from "../module/module.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
+import { ModuleTempo } from "../editing/tempo.ts";
 
 interface AppStore {
   moduleId: number;
@@ -28,17 +29,20 @@ interface AppStore {
   selectedInstrument: number | null;
   draftInstrument: Instrument;
   draftModuleTitle: ModuleTitle | null;
+  draftTempo: ModuleTempo;
   isLoadingModule: boolean;
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
   setModuleTitle: (name: string, author: string) => void;
+  updateTempo: (linesPerBeat: number, beatsPerMinute: number) => void;
   updateTracks: (numTracks: number) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
   setSequence: (sequence: number[]) => void;
   setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
   setDraftInstrument: (instrument: Instrument) => void;
   setDraftModuleTitle: (moduleTitle: ModuleTitle) => void;
+  setDraftTempo: (tempo: ModuleTempo) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
   setPatternGridStrideLength: (lines: number) => void;
@@ -66,6 +70,8 @@ const initialModule: Module = {
   tuneLength: 1,
   instruments: [],
   masterGain: 1.0,
+  linesPerBeat: 0,
+  beatsPerMinute: 0,
 };
 
 const initialTransportState: TransportState = {
@@ -155,6 +161,7 @@ export const useStore = create<AppStore>((set) => ({
   selectedInstrument: null,
   draftInstrument: initialInstrument,
   draftModuleTitle: null,
+  draftTempo: { linesPerBeat: 0, beatsPerMinute: 0 },
   isLoadingModule: false,
 
   replaceModule: (result) => {
@@ -202,6 +209,15 @@ export const useStore = create<AppStore>((set) => ({
       },
     })),
 
+  updateTempo: (linesPerBeat: number, beatsPerMinute: number) =>
+    set((state) => ({
+      module: {
+        ...state.module,
+        linesPerBeat,
+        beatsPerMinute,
+      }
+    })),
+
   updateTracks: (numTracks: number) =>
     set((state) => ({
       module: {
@@ -219,7 +235,14 @@ export const useStore = create<AppStore>((set) => ({
       },
     })),
 
-  setSequence: (sequence) => set({ sequence }),
+  setSequence: (sequence) =>
+    set((state) => ({
+      sequence,
+      module: {
+        ...state.module,
+        tuneLength: sequence.length,
+      }
+    })),
 
   setInstrument: (instrumentIndex: number, instrument: Instrument) =>
     set((state) => {
@@ -249,6 +272,8 @@ export const useStore = create<AppStore>((set) => ({
   setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
 
   setDraftModuleTitle: (draftModuleTitle) => set({ draftModuleTitle }),
+
+  setDraftTempo: (draftTempo) => set({ draftTempo }),
 
   setPianoKeyboardTranspose: (pianoKeyboardTranspose) =>
     set({ pianoKeyboardTranspose }),

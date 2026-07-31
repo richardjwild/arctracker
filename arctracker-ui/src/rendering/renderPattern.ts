@@ -45,6 +45,7 @@ function cssProperty(name: string): string {
 
 type Colours = {
   background: string;
+  beatLine: string;
   trackLaneSeparator: string;
   trackHeaderMutedFg: string;
   trackHeaderMutedBg: string;
@@ -77,6 +78,7 @@ export class PatternRenderer {
   private readonly effectsDisplayed: number[];
   private readonly patternSelection: PatternSelection | null;
   private patternLayout: PatternLayout;
+  private readonly linesPerBeat: number;
   private readonly numTracks: number;
   private readonly trackMuted: boolean[];
   private readonly trackPanning: number[];
@@ -96,6 +98,7 @@ export class PatternRenderer {
     this.ctx = ctx;
     this.viewportSize = viewportSize;
     this.numTracks = numTracks;
+    this.linesPerBeat = useStore.getState().module.linesPerBeat;
     this.trackMuted = useStore.getState().trackMuteState;
     this.trackPanning = useStore.getState().trackPanning;
     this.editorState = useStore.getState().editorState;
@@ -104,6 +107,7 @@ export class PatternRenderer {
     this.patternLayout = patternLayout.getPatternLayout(viewportSize);
     this.coloursAtPlayhead = {
       background: cssProperty("--colour-panel-bg"),
+      beatLine: cssProperty("--colour-beat-line"),
       trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
       trackHeaderMutedFg: cssProperty("--colour-track-header-muted-fg"),
       trackHeaderMutedBg: cssProperty("--colour-track-header-muted-bg"),
@@ -126,6 +130,7 @@ export class PatternRenderer {
     };
     this.coloursOffPlayhead = {
       background: cssProperty("--colour-panel-bg"),
+      beatLine: cssProperty("--colour-beat-line"),
       trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
       trackHeaderMutedFg: cssProperty("--colour-track-header-muted-fg"),
       trackHeaderMutedBg: cssProperty("--colour-track-header-muted-bg"),
@@ -155,6 +160,7 @@ export class PatternRenderer {
     try {
       this.ctx.textBaseline = "hanging";
       this.ctx.clearRect(0, 0, this.viewportSize.width, this.viewportSize.height);
+      if (this.linesPerBeat > 0) this.renderBeatLines(playheadIndex);
       this.renderTrackLanes();
       this.renderTrackHeaders();
       this.renderTrackFooters();
@@ -164,6 +170,21 @@ export class PatternRenderer {
       this.renderPatternLines(playheadIndex);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  private renderBeatLines(playheadIndex: number) {
+    let y = this.patternLayout.trackHeaderHeight;
+    for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
+      const patternIndex = playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
+      const atPlayhead = (patternIndex === playheadIndex);
+      if (patternIndex >= 0 && patternIndex < this.pattern.lines.length && patternIndex % this.linesPerBeat === 0) {
+        this.withFillStyle(this.colours().beatLine)
+          .fillRect(0, y, this.viewportSize.width, this.patternLayout.rowHeight);
+      }
+      y += atPlayhead
+        ? this.patternLayout.rowHeight + 2 * this.patternLayout.playheadPadding
+        : this.patternLayout.rowHeight;
     }
   }
 

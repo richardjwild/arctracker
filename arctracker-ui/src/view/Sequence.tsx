@@ -201,7 +201,7 @@ export default function Sequence() {
     <>
       <div className="currentPosition uiArea">
         <div className="position">{sequencePos + 1}</div>
-        <div className="tuneLength">({tuneLength})</div>
+        <div className="tuneLength">({moduleSequence.length})</div>
       </div>
       <div className="sequenceView uiArea">
         <div className="sequence" ref={containerRef}>

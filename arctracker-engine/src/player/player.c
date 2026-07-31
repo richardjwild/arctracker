@@ -7,6 +7,8 @@
 #include "messages.h"
 #include "io/error.h"
 
+#define DEFAULT_TICKS_PER_SECOND 50
+
 static bool player_tick(player_t *);
 static void process_commands(player_t *player);
 static void process_command(player_t *player, player_command_t command);
@@ -42,7 +44,9 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->player_event_queue = player_event_queue;
     player->module = module;
     player->master_gain = module->master_gain;
-    player->tick_scheduler = tick_scheduler_create(module->initial_ticks_per_event, audio_api.sample_rate);
+    player->current_bpm = module->initial_bpm;
+    const tempo_t initial_tempo = module_get_initial_tempo(module);
+    player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.sample_rate);
     player->sequence = initialise_sequence(module, audio_api.bouncing);
     player->bouncing = audio_api.bouncing;
     player->command_queue = command_queue_init();
@@ -124,6 +128,14 @@ void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r)
     const unsigned r = atomic_exchange_explicit(&player->audio_out.peak_r, 0, memory_order_relaxed);
     *peak_l = (float) l / 65535.0f;
     *peak_r = (float) r / 65535.0f;
+}
+
+void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
+{
+    if (beats_per_minute == 0) return;
+    const tempo_t tempo = player->module->tempo_lookup[beats_per_minute];
+    tick_scheduler_set_tempo(&player->tick_scheduler, tempo);
+    player->current_bpm = beats_per_minute;
 }
 
 static bool player_tick(player_t *player)

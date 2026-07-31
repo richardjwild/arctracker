@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "tempo.h"
 #include "ui/ui.h"
 
 #define MAX_LEN_TUNENAME 65
@@ -34,7 +35,7 @@ typedef enum
     FINE_DECRESCENDO = 'F',
     SEQUENCE_JUMP = 'J',
     SET_PANNING = 'P',
-    SET_TICKS_PER_EVENT = 'S',
+    SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
     SET_VOLUME = 'V',
 } command_t;
@@ -102,12 +103,17 @@ typedef struct
     int sample_capacity;
     instrument_t instruments[NUM_INSTRUMENT_SLOTS];
     int initial_ticks_per_event;
+    int lines_per_beat;
+    int initial_bpm;
+    tempo_t *tempo_lookup;
     float master_gain;
 } module_t;
 
 module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);
 
 bool module_init(module_t *module);
+
+tempo_t module_get_initial_tempo(const module_t *module);
 
 bool module_set_sequence(module_t *module, const int *new_sequence, int new_sequence_len);
 
@@ -138,6 +144,10 @@ void module_set_num_tracks(module_t *module, uint32_t num_tracks);
 void module_toggle_mute_state(const module_t *module, int track);
 
 void module_set_effects_displayed(const module_t *module, int track, int effects_displayed);
+
+void module_set_lines_per_beat(module_t *module, uint8_t lines_per_beat);
+
+void module_set_initial_bpm(module_t *module, uint8_t beats_per_minute);
 
 void module_destroy(module_t *module);
 

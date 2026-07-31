@@ -1,0 +1,43 @@
+.editTempo {
+    width: 230px;
+    height: 165px;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    grid-template-rows: 50px 50px 50px;
+    gap: 10px;
+    grid-template-areas:
+        "linesPerBeatLabel linesPerBeatEdit"
+        "tempoLabel tempoEdit"
+        "saveCloseButtons saveCloseButtons"
+}
+
+.editTempo label {
+    display: block;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-tempo-edit-label);
+    padding-top: 13px;
+}
+
+.editTempo input[type='text'] {
+    height: 28px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    color: var(--colour-tempo-edit-input-text);
+    caret-shape: block;
+    caret-color: var(--colour-tempo-edit-input-text);
+    accent-color: var(--colour-tempo-edit-input-text);
+}
+
+.editTempo input:focus {
+    outline: none;
+}
+
+.editTempo .linesPerBeatEdit {
+    width: 23px;
+}
+
+.editTempo .beatsPerMinuteEdit {
+    width: 32px;
+}

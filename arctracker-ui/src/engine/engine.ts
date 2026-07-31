@@ -30,6 +30,7 @@ type PackedPatternLine = {
 type PackedSnapshot = {
   playing: boolean;
   looping: boolean;
+  currentBpm: number;
   sequencePos: number;
   patternIndex: number;
   patternNo: number;
@@ -168,6 +169,7 @@ export const engine = {
     return {
       playing: packedSnapshot.playing,
       looping: packedSnapshot.looping,
+      currentBpm: packedSnapshot.currentBpm,
       sequencePos: packedSnapshot.sequencePos,
       patternIndex: packedSnapshot.patternIndex,
       patternNo: packedSnapshot.patternNo,
@@ -320,6 +322,13 @@ export const engine = {
     return await invoke("edit_set_num_tracks", {
       numTracks,
     });
+  },
+
+  setTempo: async (linesPerBeat: number, beatsPerMinute: number) => {
+    await invoke("edit_set_tempo", {
+      linesPerBeat,
+      beatsPerMinute,
+    })
   },
 
   exitSuccessfully: async () => {

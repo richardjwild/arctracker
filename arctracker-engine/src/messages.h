@@ -99,5 +99,6 @@
 #define INVALID_SEQUENCE_PATTERN_NO "Sequence position references non existent pattern"
 #define MODFILE_INVALID_SAMPLE_INDEX "Instrument references non existent sample"
 #define PATTERN_ALREADY_EXISTS "Cannot create pattern because it already exists"
+#define TEMPO_UNDEFINED "Tempo cannot be set because lines per beat is not set"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

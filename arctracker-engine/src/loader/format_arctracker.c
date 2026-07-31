@@ -376,8 +376,10 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         goto read_module_metadata_failed;
     }
     module->initial_ticks_per_event = initial_speed;
-    // TODO: Read tempo (u8).
-    // TODO: Read lines per beat (u8).
+    const uint8_t initial_bpm = read_u8(meta_data + 6 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    const uint8_t lines_per_beat = read_u8(meta_data + 7 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    module_set_lines_per_beat(module, lines_per_beat);
+    module_set_initial_bpm(module, initial_bpm);
     // TODO: Read default pattern length (u16).
     return module;
 
@@ -695,8 +697,8 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u16_le(fp, module->sequence_length)) return false;
     if (!write_u16_le(fp, write_gain(module->master_gain))) return false;
     if (!write_u8(fp, module->initial_ticks_per_event)) return false;
-    if (!write_u8(fp, 0)) return false;      // TODO: Initial tempo not in module yet.
-    if (!write_u8(fp, 0)) return false;      // TODO: Lines per beat not in module yet.
+    if (!write_u8(fp, module->initial_bpm)) return false;
+    if (!write_u8(fp, module->lines_per_beat)) return false;
     if (!write_u16_le(fp, 64)) return false; // TODO: Default pattern length not in module yet.
     if (!write_u8(fp, 0)) return false;
     if (!write_u8(fp, 0)) return false;

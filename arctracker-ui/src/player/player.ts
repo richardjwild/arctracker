@@ -14,6 +14,7 @@ export type Track = {
 export type PlayerSnapshot = {
   playing: boolean;
   looping: boolean;
+  currentBpm: number;
   sequencePos: number;
   patternIndex: number;
   patternNo: number;
@@ -61,6 +62,12 @@ export const player = {
           patternNo: snapshot.patternNo,
           lines: snapshot.newPattern,
         });
+      }
+      const currentBpm = useStore.getState().module.beatsPerMinute;
+      if (currentBpm !== snapshot.currentBpm) {
+        console.log('current, new', currentBpm, snapshot.currentBpm);
+        const linesPerBeat = useStore.getState().module.linesPerBeat;
+        useStore.getState().updateTempo(linesPerBeat, snapshot.currentBpm);
       }
     } finally {
       snapshotPolling = false;

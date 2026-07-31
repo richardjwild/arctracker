@@ -76,6 +76,8 @@ export enum CommandType {
   SET_MODULE_TITLE,
   EDIT_TRACK_COUNT,
   SET_TRACK_COUNT,
+  EDIT_TEMPO,
+  SET_TEMPO,
   TOGGLE_TRACK_MUTE,
 }
 
@@ -173,6 +175,8 @@ export type Command =
   | { type: CommandType.SET_MODULE_TITLE }
   | { type: CommandType.EDIT_TRACK_COUNT }
   | { type: CommandType.SET_TRACK_COUNT; trackCount: number }
+  | { type: CommandType.EDIT_TEMPO }
+  | { type: CommandType.SET_TEMPO; linesPerBeat: number; beatsPerMinute: number }
   | { type: CommandType.TOGGLE_TRACK_MUTE; track: number }
 
 const queue: Command[] = [];
@@ -339,6 +343,9 @@ export const commands = {
     commandQueue.push({ type: CommandType.EDIT_TRACK_COUNT }),
   setTrackCount: (trackCount: number) =>
     commandQueue.push({ type: CommandType.SET_TRACK_COUNT, trackCount }),
+  editTempo: () => commandQueue.push({ type: CommandType.EDIT_TEMPO }),
+  setTempo: (linesPerBeat: number, beatsPerMinute: number) =>
+    commandQueue.push({ type: CommandType.SET_TEMPO, linesPerBeat, beatsPerMinute}),
   toggleTrackMute: (track: number) =>
     commandQueue.push({ type: CommandType.TOGGLE_TRACK_MUTE, track }),
 };

@@ -4,6 +4,7 @@ player_sources = files(
     'module.c',
     'sequencer.c',
     'period.c',
+    'tempo.c',
     'tick_scheduler.c',
     'player_cmd_queue.c',
 )

@@ -206,6 +206,7 @@ void arctracker_get_transport_state(arctracker_t *arctracker, ui_transport_state
         transport_state->pattern_index = 0;
         transport_state->pattern_no = 0;
         transport_state->pattern_length = 0;
+        transport_state->current_bpm = 0;
         return;
     }
     get_transport_state(arctracker->playback.player, arctracker->module, transport_state);
@@ -283,6 +284,7 @@ static void get_transport_state(player_t *player, module_t *module, ui_transport
     const sequence_t sequence = player->sequence;
     const int pattern_no = module->sequence[sequence.sequence_pos];
     transport_state->playing = player->playing;
+    transport_state->current_bpm = player->current_bpm;
     transport_state->looping = player->sequence.looping_state.looping;
     transport_state->sequence_pos = sequence.sequence_pos;
     transport_state->pattern_index = sequence.pattern_index;
@@ -637,6 +639,22 @@ api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int 
     player_sequence_restore(arctracker->playback.player, sequence);
     if (!restart_result.success)
         return failure(restart_result.error_message);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_set_tempo(arctracker_t *arctracker, const uint8_t lines_per_beat, const uint8_t beats_per_minute)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (arctracker->playback.player->playing)
+        return failure(PLAYER_PLAYING);
+    if (beats_per_minute > 0 && lines_per_beat == 0)
+        return failure(TEMPO_UNDEFINED);
+    module_set_lines_per_beat(arctracker->module, lines_per_beat);
+    module_set_initial_bpm(arctracker->module, beats_per_minute);
+    player_set_bpm(arctracker->playback.player, beats_per_minute);
     return SUCCESS;
 }
 

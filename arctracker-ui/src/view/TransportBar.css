@@ -47,33 +47,25 @@
 }
 
 .transportBar button.tempo {
-    width: 150px;
+    width: 110px;
     color: var(--colour-transport-button-tempo-fg);
     background: var(--colour-transport-button-tempo-bg);
     border: none;
     padding: 5px;
-    height: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
+    height: 30px;
+    font-family: SplineSansMono, monospace;
+    font-size: 12px;
+    text-align: center;
+    vertical-align: middle;
 }
 
-.transportBar button.tempo-enabled:hover {
+.transportBar button.tempo-enabled {
     color: var(--colour-transport-button-tempo-bg);
     background: var(--colour-transport-button-tempo-fg);
 }
 
-.transportBar button.tempo .bpm {
-    font-size: 14px;
-    width: 100%;
-    height: 16px;
-    text-align: center;
-}
-
-.transportBar button.tempo .lines-per-beat {
-    font-size: 10px;
-    width: 100%;
-    height: 12px;
-    text-align: center;
+.transportBar button.tempo-enabled:hover {
+    color: var(--colour-transport-button-tempo-fg);
+    background: var(--colour-transport-button-tempo-bg);
+    border: solid 1px var(--colour-transport-button-tempo-fg);
 }

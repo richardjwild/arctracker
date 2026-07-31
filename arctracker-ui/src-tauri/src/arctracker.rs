@@ -106,6 +106,8 @@ pub struct Module {
     pub num_tracks: i32,
     pub tune_length: i32,
     pub master_gain: f32,
+    pub lines_per_beat: i32,
+    pub beats_per_minute: i32,
     pub num_patterns: i32,
     pub pattern_lengths: Vec<i32>,
     pub instruments: Vec<Instrument>,
@@ -196,6 +198,7 @@ impl TryFrom<PatternEvent> for ffi::UiPatternEvent {
 pub struct UiPlayerSnapshot {
     pub playing: bool,
     pub looping: bool,
+    pub current_bpm: i32,
     pub sequence_pos: i32,
     pub pattern_index: i32,
     pub pattern_no: i32,
@@ -289,6 +292,8 @@ impl Arctracker {
             num_tracks: module.num_tracks,
             tune_length: module.tune_length,
             master_gain: module.master_gain,
+            lines_per_beat: module.lines_per_beat,
+            beats_per_minute: module.initial_bpm,
             num_patterns: module.num_patterns,
             pattern_lengths,
             instruments,
@@ -349,6 +354,8 @@ impl Arctracker {
             num_tracks: module.num_tracks,
             tune_length: module.tune_length,
             master_gain: module.master_gain,
+            lines_per_beat: module.lines_per_beat,
+            beats_per_minute: module.initial_bpm,
             num_patterns: module.num_patterns,
             pattern_lengths,
             instruments,
@@ -428,6 +435,8 @@ impl Arctracker {
             num_tracks: module_info.num_tracks,
             tune_length: module_info.tune_length,
             master_gain: module_info.master_gain,
+            lines_per_beat: module_info.lines_per_beat,
+            beats_per_minute        : module_info.initial_bpm,
             num_patterns: module_info.num_patterns,
             pattern_lengths,
             instruments: Vec::new(),
@@ -509,6 +518,7 @@ impl Arctracker {
         UiPlayerSnapshot {
             playing: transport_state.playing,
             looping: transport_state.looping,
+            current_bpm: transport_state.current_bpm,
             sequence_pos: transport_state.sequence_pos,
             pattern_index: transport_state.pattern_index,
             pattern_no: transport_state.pattern_no,
@@ -897,6 +907,19 @@ impl Arctracker {
             });
         }
         Ok(())
+    }
+
+    pub fn edit_set_tempo(&mut self, lines_per_beat: u8, beats_per_minute: u8) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_set_tempo(self.handle, lines_per_beat, beats_per_minute)
+        };
+        if result.success {
+            Ok(())
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
     }
 }
 

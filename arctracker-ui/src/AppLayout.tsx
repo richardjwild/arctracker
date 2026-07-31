@@ -11,6 +11,7 @@ import EditPatternLength from "./view/EditPatternLength.tsx";
 import EditModuleTitle from "./view/EditModuleTitle.tsx";
 import EditTrackCount from "./view/EditTrackCount.tsx";
 import MasterGain from "./view/MasterGain.tsx";
+import EditTempo from "./view/EditTempo.tsx";
 
 export default function AppLayout() {
   return (
@@ -26,6 +27,7 @@ export default function AppLayout() {
       <EditPatternLength />
       <EditModuleTitle />
       <EditTrackCount />
+      <EditTempo />
     </main>
   );
 }

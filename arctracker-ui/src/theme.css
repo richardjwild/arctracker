@@ -1,6 +1,7 @@
 :root {
     --colour-ui-bg: #333333;
     --colour-panel-bg: #1c1c1c;
+    --colour-beat-line: #252525;
     --colour-track-lane-separator: #333333;
     --colour-text: #dddddd;
     --colour-pattern-text-muted: #666666;
@@ -41,6 +42,8 @@
     --colour-transport-button-tempo-bg: #1c1c1c;
     --colour-sample-edit-label: #999999;
     --colour-sample-edit-input-text: #cccc22;
+    --colour-tempo-edit-label: #999999;
+    --colour-tempo-edit-input-text: #cccc22;
     --colour-master-gain-accent: #cccc22;
     --colour-master-gain-value: #cccc22;
     --colour-clip-indicator-off: #550000;

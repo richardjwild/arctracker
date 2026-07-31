@@ -263,6 +263,13 @@ fn edit_set_num_tracks(state: tauri::State<Arc<AppState>>, num_tracks: i32) -> R
 }
 
 #[tauri::command]
+fn edit_set_tempo(state: tauri::State<Arc<AppState>>, lines_per_beat: u8, beats_per_minute: u8) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.edit_set_tempo(lines_per_beat, beats_per_minute).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn exit_successfully(app: AppHandle) {
     app.exit(0);
 }
@@ -312,6 +319,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_load_sample,
             edit_set_module_title,
             edit_set_num_tracks,
+            edit_set_tempo,
             exit_successfully,
             exit_unsuccessfully,
         ])

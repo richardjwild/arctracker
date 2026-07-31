@@ -1,23 +1,31 @@
 #include "tick_scheduler.h"
 
-static const int DEFAULT_TICKS_PER_SECOND = 50;
+#include <stdio.h>
 
-tick_scheduler_t tick_scheduler_create(const int initial_ticks_per_event, const int sample_rate_in)
+tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const int sample_rate_in)
 {
+    if (tempo.actual_bpm > 0.0001) printf("Actual BPM: %0.3f\n", tempo.actual_bpm);
     event_scheduler_t event_scheduler = {
         .ticks = 0,
-        .ticks_per_event = initial_ticks_per_event
+        .ticks_per_event = tempo.ticks_per_event,
     };
     audio_accumulator_t audio_accumulator = {
         .sample_rate = sample_rate_in,
         .accumulator = 0,
-        .ticks_per_second = DEFAULT_TICKS_PER_SECOND
+        .ticks_per_second = tempo.ticks_per_second,
     };
     tick_scheduler_t tick_scheduler = {
         .event_scheduler = event_scheduler,
         .audio_accumulator = audio_accumulator
     };
     return tick_scheduler;
+}
+
+void tick_scheduler_set_tempo(tick_scheduler_t *tick_scheduler, const tempo_t new_tempo)
+{
+    if (new_tempo.actual_bpm > 0.0001) printf("Actual BPM: %0.3f\n", new_tempo.actual_bpm);
+    tick_scheduler->event_scheduler.ticks_per_event = new_tempo.ticks_per_event;
+    tick_scheduler->audio_accumulator.ticks_per_second = new_tempo.ticks_per_second;
 }
 
 void tick_scheduler_restart(tick_scheduler_t *tick_scheduler)

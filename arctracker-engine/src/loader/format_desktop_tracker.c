@@ -243,7 +243,7 @@ static effect_t effect(const uint8_t code, const uint8_t data)
 static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
 {
     if (code == VOLUME_COMMAND) return SET_VOLUME;
-    if (code == SPEED_COMMAND) return SET_TICKS_PER_EVENT;
+    if (code == SPEED_COMMAND) return SET_TEMPO;
     if (code == STEREO_COMMAND) return SET_PANNING;
     if (code == VOLSLIDE_COMMAND && (data & 0x80) == 0) return CRESCENDO;
     if (code == VOLSLIDE_COMMAND && (data & 0x80) > 0) return DECRESCENDO;

@@ -15,7 +15,7 @@ static void tone_portamento(voice_t *, int);
 static void turn_arpeggiator_on(voice_t *);
 static void arpeggiate(voice_t *, uint8_t);
 static void set_volume(voice_t *, uint8_t);
-static void set_tempo(tick_scheduler_t *, uint8_t);
+static void set_tempo(player_t *, uint8_t);
 static void set_voice_panning(voice_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
 static void portamento_fine(voice_t *, uint8_t);
@@ -53,8 +53,8 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             volume_slide_up(voice, effect.data);
         else if (effect.command == FINE_DECRESCENDO)
             volume_slide_down(voice, effect.data);
-        else if (effect.command == SET_TICKS_PER_EVENT)
-            set_tempo(&player->tick_scheduler, effect.data);
+        else if (effect.command == SET_TEMPO)
+            set_tempo(player, effect.data);
         else if (effect.command == SET_PANNING)
             set_voice_panning(voice, effect.data);
         else if (effect.command == PATTERN_BREAK)
@@ -183,10 +183,12 @@ static void set_voice_panning(voice_t *voice, const uint8_t data)
     voice->panning = (data == 0) ? PAN_CENTRE : data;
 }
 
-static void set_tempo(tick_scheduler_t *tick_scheduler, const uint8_t data)
+static void set_tempo(player_t *player, const uint8_t data)
 {
-    if (data > 0)
-        tick_scheduler->event_scheduler.ticks_per_event = data;
+    if (data > 0 && data <= 15)
+        player->tick_scheduler.event_scheduler.ticks_per_event = data;
+    if (data > 15)
+        player_set_bpm(player, data);
 }
 
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)

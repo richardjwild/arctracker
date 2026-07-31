@@ -110,13 +110,14 @@ export default function TransportBar() {
 
   const playing = useStore((state) => state.transportState.playing);
   const looping = useStore((state) => state.transportState.looping);
+  const beatsPerMinute = useStore((state) => state.module.beatsPerMinute);
 
   return (
     <div className="transportBar uiArea padded">
       <div className="buttons">
         <button
           title="Play/pause"
-          onClick={() => commands.togglePlay()}
+          onClick={commands.togglePlay}
           aria-label="Play/Pause"
           className="playPause"
         >
@@ -124,7 +125,7 @@ export default function TransportBar() {
         </button>
         <button
           title="Repeat on/off"
-          onClick={() => commands.toggleLoop()}
+          onClick={commands.toggleLoop}
           aria-label="Repeat on/off"
           className="repeatOnOff"
         >
@@ -132,7 +133,7 @@ export default function TransportBar() {
         </button>
         <button
           title="Seek forwards"
-          onClick={() => commands.sequenceSeekForwards()}
+          onClick={commands.sequenceSeekForwards}
           aria-label="Fast forward"
           className="fastForward"
         >
@@ -140,7 +141,7 @@ export default function TransportBar() {
         </button>
         <button
           title="Seek backwards"
-          onClick={() => commands.sequenceSeekBackwards()}
+          onClick={commands.sequenceSeekBackwards}
           aria-label="Rewind"
           className="rewind"
         >
@@ -150,9 +151,11 @@ export default function TransportBar() {
         {/*  <RecordIcon />*/}
         {/*</button>*/}
       </div>
-      <button className={`tempo ${playing ? "" : "tempo-enabled"}`}>
-        <div className="bpm">Tempo</div>
-        <div className="lines-per-beat">Not set</div>
+      <button
+        className={`tempo ${playing ? "" : "tempo-enabled"}`}
+        onClick={commands.editTempo}
+      >
+        {beatsPerMinute === 0 ? "Set tempo" : `${beatsPerMinute}bpm`}
       </button>
     </div>
   );

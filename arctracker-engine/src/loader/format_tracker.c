@@ -185,7 +185,7 @@ static uint8_t *search_tff(uint8_t *array_start, const long array_end, const cha
 static command_t tracker_command(const int code, const uint8_t data)
 {
     if (code == VOLUME_COMMAND) return SET_VOLUME;
-    if (code == SPEED_COMMAND) return SET_TICKS_PER_EVENT;
+    if (code == SPEED_COMMAND) return SET_TEMPO;
     if (code == STEREO_COMMAND) return SET_PANNING;
     if (code == VOLSLIDEUP_COMMAND) return CRESCENDO;
     if (code == VOLSLIDEDOWN_COMMAND) return DECRESCENDO;

@@ -47,6 +47,8 @@ typedef struct ui_module_info {
     int tune_length;
     int num_patterns;
     float master_gain;
+    int lines_per_beat;
+    int initial_bpm;
 } ui_module_info_t;
 
 typedef struct ui_effect {
@@ -67,6 +69,7 @@ typedef struct ui_transport_state {
     int pattern_index;
     int pattern_no;
     int pattern_length;
+    int current_bpm;
 } ui_transport_state_t;
 
 typedef struct ui_export_state {
