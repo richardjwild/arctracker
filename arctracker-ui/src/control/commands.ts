@@ -176,7 +176,7 @@ export type Command =
   | { type: CommandType.EDIT_TRACK_COUNT }
   | { type: CommandType.SET_TRACK_COUNT; trackCount: number }
   | { type: CommandType.EDIT_TEMPO }
-  | { type: CommandType.SET_TEMPO; linesPerBeat: number; beatsPerMinute: number }
+  | { type: CommandType.SET_TEMPO }
   | { type: CommandType.TOGGLE_TRACK_MUTE; track: number }
 
 const queue: Command[] = [];
@@ -344,8 +344,7 @@ export const commands = {
   setTrackCount: (trackCount: number) =>
     commandQueue.push({ type: CommandType.SET_TRACK_COUNT, trackCount }),
   editTempo: () => commandQueue.push({ type: CommandType.EDIT_TEMPO }),
-  setTempo: (linesPerBeat: number, beatsPerMinute: number) =>
-    commandQueue.push({ type: CommandType.SET_TEMPO, linesPerBeat, beatsPerMinute}),
+  setTempo: () => commandQueue.push({ type: CommandType.SET_TEMPO }),
   toggleTrackMute: (track: number) =>
     commandQueue.push({ type: CommandType.TOGGLE_TRACK_MUTE, track }),
 };

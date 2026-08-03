@@ -599,7 +599,7 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, const char *name, const char *author)
+api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, const char *name, const char *author, const int default_pattern_length)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -613,7 +613,9 @@ api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, co
         return failure(AUTHOR_MISSING);
     if (strlen(author) > MAX_LEN_AUTHOR)
         return failure(AUTHOR_TOO_LONG);
-    const edit_result_t result = editor_set_module_title(arctracker->module, name, author);
+    if (default_pattern_length < 1 || default_pattern_length > MAX_PATTERN_LENGTH)
+        return failure(INVALID_PATTERN_LENGTH);
+    const edit_result_t result = editor_set_module_title(arctracker->module, name, author, default_pattern_length);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;

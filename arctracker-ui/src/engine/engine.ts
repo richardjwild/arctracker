@@ -311,10 +311,11 @@ export const engine = {
     });
   },
 
-  setModuleTitle: async (name: String, author: String) => {
+  setModuleTitle: async (name: String, author: String, defaultPatternLength: number) => {
     return await invoke("edit_set_module_title", {
       name,
       author,
+      defaultPatternLength,
     });
   },
 

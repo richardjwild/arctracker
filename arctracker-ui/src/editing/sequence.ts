@@ -79,6 +79,7 @@ export const sequence = {
         patternIndex,
       },
     });
+    if (!transport.playing()) transport.sequenceSeek(sequencePosition);
   },
 
   incrementPatternAtCurrentPosition: () => {
@@ -102,7 +103,7 @@ export const sequence = {
       apply: async () => {
         const moduleSequence = useStore.getState().sequence;
         const patternNo = createNewPattern
-          ? await pattern.createPattern(64) // TODO: Implement default length.
+          ? await pattern.createPattern()
           : moduleSequence[sequencePosition];
         const updatedSequence = [...moduleSequence];
         updatedSequence.splice(sequencePosition, 0, patternNo);
@@ -133,7 +134,7 @@ export const sequence = {
       apply: async () => {
         const moduleSequence = useStore.getState().sequence;
         const patternNo = createNewPattern
-          ? await pattern.createPattern(64) // TODO: Implement default length.
+          ? await pattern.createPattern()
           : moduleSequence[sequencePosition];
         const updatedSequence = [...moduleSequence];
         updatedSequence.splice(sequencePosition + 1, 0, patternNo);

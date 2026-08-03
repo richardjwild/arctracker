@@ -249,9 +249,9 @@ fn edit_load_sample(state: tauri::State<Arc<AppState>>, path: String) -> Result<
 }
 
 #[tauri::command]
-fn edit_set_module_title(state: tauri::State<Arc<AppState>>, name: String, author: String) -> Result<(), String> {
+fn edit_set_module_title(state: tauri::State<Arc<AppState>>, name: String, author: String, default_pattern_length: u16) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_module_title(name, author).map_err(|e| e.message)?;
+    tracker.edit_set_module_title(name, author, default_pattern_length).map_err(|e| e.message)?;
     Ok(())
 }
 

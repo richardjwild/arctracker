@@ -179,8 +179,9 @@ export class PatternRenderer {
       const patternIndex = playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
       const atPlayhead = (patternIndex === playheadIndex);
       if (patternIndex >= 0 && patternIndex < this.pattern.lines.length && patternIndex % this.linesPerBeat === 0) {
+        const lineY = atPlayhead ? y + this.patternLayout.playheadPadding : y;
         this.withFillStyle(this.colours().beatLine)
-          .fillRect(0, y, this.viewportSize.width, this.patternLayout.rowHeight);
+          .fillRect(0, lineY, this.viewportSize.width, this.patternLayout.rowHeight);
       }
       y += atPlayhead
         ? this.patternLayout.rowHeight + 2 * this.patternLayout.playheadPadding

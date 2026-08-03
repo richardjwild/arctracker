@@ -5,6 +5,7 @@ import { useStore } from "../store/useStore.ts";
 export type ModuleTitle = {
   moduleName: string;
   author: string;
+  defaultPatternLength: number;
 };
 
 export const moduleTitle = {
@@ -24,7 +25,8 @@ export const moduleTitle = {
     if (!draftModuleTitle) return;
     if (
       module.name === draftModuleTitle.moduleName &&
-      module.author === draftModuleTitle.author
+      module.author === draftModuleTitle.author &&
+      module.defaultPatternLength === draftModuleTitle.defaultPatternLength
     )
       return;
     void editor.applyEdit({
@@ -32,15 +34,28 @@ export const moduleTitle = {
         await engine.setModuleTitle(
           draftModuleTitle.moduleName,
           draftModuleTitle.author,
+          draftModuleTitle.defaultPatternLength,
         );
         useStore
           .getState()
-          .setModuleTitle(draftModuleTitle.moduleName, draftModuleTitle.author);
+          .setModuleTitle(
+            draftModuleTitle.moduleName,
+            draftModuleTitle.author,
+            draftModuleTitle.defaultPatternLength,
+          );
         return true;
       },
       undo: async () => {
-        await engine.setModuleTitle(module.name, module.author);
-        useStore.getState().setModuleTitle(module.name, module.author);
+        await engine.setModuleTitle(
+          module.name,
+          module.author,
+          module.defaultPatternLength,
+        );
+        useStore.getState().setModuleTitle(
+          module.name,
+          module.author,
+          module.defaultPatternLength,
+        );
       },
     });
   },

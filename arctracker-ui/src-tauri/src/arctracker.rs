@@ -106,6 +106,7 @@ pub struct Module {
     pub num_tracks: i32,
     pub tune_length: i32,
     pub master_gain: f32,
+    pub default_pattern_length: u16,
     pub lines_per_beat: i32,
     pub beats_per_minute: i32,
     pub num_patterns: i32,
@@ -292,6 +293,7 @@ impl Arctracker {
             num_tracks: module.num_tracks,
             tune_length: module.tune_length,
             master_gain: module.master_gain,
+            default_pattern_length: module.default_pattern_length as u16,
             lines_per_beat: module.lines_per_beat,
             beats_per_minute: module.initial_bpm,
             num_patterns: module.num_patterns,
@@ -354,6 +356,7 @@ impl Arctracker {
             num_tracks: module.num_tracks,
             tune_length: module.tune_length,
             master_gain: module.master_gain,
+            default_pattern_length: module.default_pattern_length as u16,
             lines_per_beat: module.lines_per_beat,
             beats_per_minute: module.initial_bpm,
             num_patterns: module.num_patterns,
@@ -435,8 +438,9 @@ impl Arctracker {
             num_tracks: module_info.num_tracks,
             tune_length: module_info.tune_length,
             master_gain: module_info.master_gain,
+            default_pattern_length: module_info.default_pattern_length as u16,
             lines_per_beat: module_info.lines_per_beat,
-            beats_per_minute        : module_info.initial_bpm,
+            beats_per_minute : module_info.initial_bpm,
             num_patterns: module_info.num_patterns,
             pattern_lengths,
             instruments: Vec::new(),
@@ -879,7 +883,7 @@ impl Arctracker {
         })
     }
 
-    pub fn edit_set_module_title(&mut self, name: String, author: String) -> Result<(), ArctrackerError> {
+    pub fn edit_set_module_title(&mut self, name: String, author: String, default_pattern_length: u16) -> Result<(), ArctrackerError> {
         let c_name = CString::new(name).map_err(|_| ArctrackerError {
             message: "Invalid module name".parse().unwrap(),
         })?;
@@ -887,7 +891,7 @@ impl Arctracker {
             message: "Invalid author".parse().unwrap(),
         })?;
         let result = unsafe {
-            ffi::arctracker_edit_set_module_title(self.handle, c_name.as_ptr(), c_author.as_ptr())
+            ffi::arctracker_edit_set_module_title(self.handle, c_name.as_ptr(), c_author.as_ptr(), default_pattern_length as c_int)
         };
         if !result.success {
             return Err(ArctrackerError {

@@ -39,7 +39,7 @@ edit_result_t editor_update_instrument(
 
 edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length);
 
-edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author);
+edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author, uint16_t default_pattern_length);
 
 edit_result_t editor_set_num_tracks(module_t *module, uint32_t num_tracks);
 

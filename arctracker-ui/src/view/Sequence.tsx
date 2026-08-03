@@ -199,17 +199,17 @@ export default function Sequence() {
 
   return (
     <>
-      <div className="currentPosition uiArea">
-        <div className="position">{sequencePos + 1}</div>
-        <div className="tuneLength">({moduleSequence.length})</div>
-      </div>
-      <div className="sequenceView uiArea">
-        <div className="sequence" ref={containerRef}>
+      <div className="sequenceView">
+        <div className="currentPosition uiArea">
+          <div className="position">{sequencePos + 1}</div>
+          <div className="tuneLength">({moduleSequence.length})</div>
+        </div>
+        <div className="sequence uiArea" ref={containerRef}>
           {visibleSequence.map((patternNo, index) =>
             renderSequencePosition(patternNo, firstVisiblePos + index, index),
           )}
         </div>
-        <div className="sequenceEditButtons">
+        <div className="sequenceEditButtons uiArea">
           <button
             type="button"
             title="Insert new position before current (shift-click to create new pattern)"

@@ -34,7 +34,7 @@ interface AppStore {
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
-  setModuleTitle: (name: string, author: string) => void;
+  setModuleTitle: (name: string, author: string, defaultPatternLength: number) => void;
   updateTempo: (linesPerBeat: number, beatsPerMinute: number) => void;
   updateTracks: (numTracks: number) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
@@ -70,6 +70,7 @@ const initialModule: Module = {
   tuneLength: 1,
   instruments: [],
   masterGain: 1.0,
+  defaultPatternLength: 64,
   linesPerBeat: 0,
   beatsPerMinute: 0,
 };
@@ -200,12 +201,13 @@ export const useStore = create<AppStore>((set) => ({
       },
     })),
 
-  setModuleTitle: (name: string, author: string) =>
+  setModuleTitle: (name: string, author: string, defaultPatternLength: number) =>
     set((state) => ({
       module: {
         ...state.module,
         name,
         author,
+        defaultPatternLength,
       },
     })),
 

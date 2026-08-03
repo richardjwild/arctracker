@@ -187,7 +187,7 @@ static void set_tempo(player_t *player, const uint8_t data)
 {
     if (data > 0 && data <= 15)
         player->tick_scheduler.event_scheduler.ticks_per_event = data;
-    if (data > 15)
+    if (data > 15 && player->module->lines_per_beat > 0)
         player_set_bpm(player, data);
 }
 

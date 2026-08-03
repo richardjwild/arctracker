@@ -107,6 +107,7 @@ typedef struct
     int initial_bpm;
     tempo_t *tempo_lookup;
     float master_gain;
+    uint16_t default_pattern_length;
 } module_t;
 
 module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);
@@ -136,6 +137,8 @@ bool module_set_sample(module_t *module, const float *sample_data, int sample_le
 void module_set_name(module_t *module, const char *name);
 
 void module_set_author(module_t *module, const char *author);
+
+void module_set_default_pattern_length(module_t *module, uint16_t default_pattern_length);
 
 bool module_adjust_track_capacity(module_t *module, uint32_t new_track_capacity);
 

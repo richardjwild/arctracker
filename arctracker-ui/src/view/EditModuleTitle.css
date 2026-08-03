@@ -1,13 +1,14 @@
 .editModuleTitle {
-    width: 765px;
-    height: 165px;
+    width: 835px;
+    height: 225px;
     display: grid;
-    grid-template-columns: 110px 1fr;
-    grid-template-rows: 50px 50px 50px;
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: 50px 50px 50px 50px;
     gap: 10px;
     grid-template-areas:
         "moduleNameLabel moduleNameEdit"
         "authorLabel authorEdit"
+        "defaultPatternLengthLabel defaultPatternLengthEdit"
         "saveCloseButtons saveCloseButtons"
 }
 
@@ -33,4 +34,8 @@
 
 .editModuleTitle input:focus {
     outline: none;
+}
+
+.defaultPatternLengthEdit .uiArea {
+    width: 35px;
 }

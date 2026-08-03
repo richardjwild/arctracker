@@ -116,7 +116,7 @@ export default function ModuleHeader() {
       </button>
       <div className="moduleInfo">{formatModuleInfo(module)}</div>
       <button
-        title="Edit module name and author"
+        title="Edit module details"
         className="editNameAuthorButton"
         onClick={commands.editModuleTitle}
       >

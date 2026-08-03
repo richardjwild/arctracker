@@ -62,9 +62,8 @@ fail:
 bool module_init(module_t *module)
 {
     module->initial_ticks_per_event = 6;
-    module->lines_per_beat = 4;
-    module->initial_bpm = 120;
     module->master_gain = 0.25f;
+    module->default_pattern_length = 64;
     for (int i = 0; i < module->num_tracks; i++)
     {
         module->tracks[i].panning = 0x80; // Centre
@@ -73,8 +72,10 @@ bool module_init(module_t *module)
     }
     for (int i = 0; i < NUM_INSTRUMENT_SLOTS; i++)
         module->instruments[i].assigned = false;
-    if (!module_create_pattern(module, 0, 64))
+    if (!module_create_pattern(module, 0, module->default_pattern_length))
         return false;
+    module_set_lines_per_beat(module, 4);
+    module_set_initial_bpm(module, 120);
     return true;
 }
 
@@ -203,6 +204,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->tune_length = module->sequence_length;
     module_info->num_patterns = module->num_patterns;
     module_info->master_gain = module->master_gain;
+    module_info->default_pattern_length = module->default_pattern_length;
     module_info->lines_per_beat = module->lines_per_beat;
     module_info->initial_bpm = module->initial_bpm;
 }
@@ -307,6 +309,11 @@ void module_set_name(module_t *module, const char *name)
 void module_set_author(module_t *module, const char *author)
 {
     snprintf(module->author, sizeof module->author, "%s", author);
+}
+
+void module_set_default_pattern_length(module_t *module, const uint16_t default_pattern_length)
+{
+    module->default_pattern_length = default_pattern_length;
 }
 
 bool module_adjust_track_capacity(module_t *module, const uint32_t new_track_capacity)

@@ -273,7 +273,7 @@ async function processCommands() {
         tempo.showDialog();
         break;
       case CommandType.SET_TEMPO:
-        tempo.setTempo(command.linesPerBeat, command.beatsPerMinute);
+        void tempo.setTempo();
         break;
       case CommandType.TOGGLE_TRACK_MUTE:
         void engine.toggleTrackMute(command.track);

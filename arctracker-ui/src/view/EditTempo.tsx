@@ -140,15 +140,7 @@ export default function EditTempo() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
-        <button
-          type="button"
-          onClick={() =>
-            commands.setTempo(
-              draftTempo.linesPerBeat,
-              draftTempo.beatsPerMinute,
-            )
-          }
-        >
+        <button type="button" onClick={commands.setTempo}>
           Save
         </button>
         <button type="button" onClick={tempo.hideDialog}>

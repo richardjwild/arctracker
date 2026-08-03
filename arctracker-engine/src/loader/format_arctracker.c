@@ -189,6 +189,7 @@
 #define INSTRUMENT_NAME_LEN 32
 #define EVENT_SIZE 24
 #define INSTRUMENT_TYPE_SAMPLE 0
+#define MAX_PATTERN_LENGTH 1000
 
 static const uint32_t FORMAT_VERSION = 2;
 static const char *FORMAT_CHUNK_ID = "ARCT";
@@ -380,7 +381,13 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
     const uint8_t lines_per_beat = read_u8(meta_data + 7 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
     module_set_lines_per_beat(module, lines_per_beat);
     module_set_initial_bpm(module, initial_bpm);
-    // TODO: Read default pattern length (u16).
+    const uint16_t default_pattern_length = read_u16_le(meta_data + 8 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    if (default_pattern_length == 0 || default_pattern_length > MAX_PATTERN_LENGTH)
+    {
+        error(MODFILE_INVALID_DEFAULT_PATTERN_LENGTH);
+        goto read_module_metadata_failed;
+    }
+    module->default_pattern_length = default_pattern_length;
     return module;
 
 read_module_metadata_failed:
@@ -699,7 +706,7 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u8(fp, module->initial_ticks_per_event)) return false;
     if (!write_u8(fp, module->initial_bpm)) return false;
     if (!write_u8(fp, module->lines_per_beat)) return false;
-    if (!write_u16_le(fp, 64)) return false; // TODO: Default pattern length not in module yet.
+    if (!write_u16_le(fp, module->default_pattern_length)) return false;
     if (!write_u8(fp, 0)) return false;
     if (!write_u8(fp, 0)) return false;
     return true;

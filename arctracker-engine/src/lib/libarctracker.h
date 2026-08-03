@@ -76,7 +76,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *handle, uint8_t slot, 
 
 api_result_t arctracker_edit_load_sample(arctracker_t *handle, const char *filename, ui_sample_info_t *sample_info);
 
-api_result_t arctracker_edit_set_module_title(const arctracker_t *handle, const char *name, const char *author);
+api_result_t arctracker_edit_set_module_title(const arctracker_t *handle, const char *name, const char *author, int default_pattern_length);
 
 api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, int num_tracks);
 

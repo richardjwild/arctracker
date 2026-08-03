@@ -17,11 +17,11 @@ export const pattern = {
     editor.setEditMode("patternLength");
   },
 
-  createPattern: async (length: number): Promise<number> => {
-    const patternNo = await engine.createPattern(length);
+  createPattern: async (): Promise<number> => {
     const module = useStore.getState().module;
+    const patternNo = await engine.createPattern(module.defaultPatternLength);
     const patternLengths = [...module.patternLengths];
-    patternLengths.push(length);
+    patternLengths.push(module.defaultPatternLength);
     useStore.getState().updatePatterns(module.numPatterns + 1, patternLengths);
     return patternNo;
   },

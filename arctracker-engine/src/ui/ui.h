@@ -47,6 +47,7 @@ typedef struct ui_module_info {
     int tune_length;
     int num_patterns;
     float master_gain;
+    int default_pattern_length;
     int lines_per_beat;
     int initial_bpm;
 } ui_module_info_t;

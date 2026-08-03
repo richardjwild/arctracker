@@ -6,12 +6,14 @@ import { editInstrument } from "./editInstrument.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
 import { moduleTitle } from "./moduleTitle.ts";
+import { tempo } from "./tempo.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
   handleEffectFieldInput: KeyHandler,
   handleInstrumentEditorInput: KeyHandler,
   handleModuleTitleInput: KeyHandler,
+  handleTempoInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -70,6 +72,19 @@ export const editorKeyHandlers: {
       return true;
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
       commands.setModuleTitle();
+      return true;
+    }
+    return false;
+  },
+
+  handleTempoInput: (e) => {
+    if (!tempo.editing())
+      return false;
+    if (e.code === 'Escape') {
+      tempo.hideDialog();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      commands.setTempo();
       return true;
     }
     return false;

@@ -2,15 +2,18 @@ import { useStore } from "../store/useStore.ts";
 import "./EditModuleTitle.css";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ModuleTitle, moduleTitle } from "../editing/moduleTitle.ts";
 import { commands } from "../control/commands.ts";
+import { alerting } from "../alerting/alert.ts";
 
 const ModuleNameMaxLength = 65;
 const AuthorMaxLength = 65;
+const DefaultPatternLengthMaxLength = 3;
 const emptyDraft: ModuleTitle = {
   moduleName: "",
   author: "",
+  defaultPatternLength: 64,
 };
 
 export default function EditModuleTitle() {
@@ -19,6 +22,8 @@ export default function EditModuleTitle() {
   const module = useStore((state) => state.module);
   const draftModuleTitle = useStore((state) => state.draftModuleTitle);
   const setDraftModuleTitle = useStore((state) => state.setDraftModuleTitle);
+  const [defaultPatternLengthInput, setDefaultPatternLengthInput] =
+    useState("");
 
   useEffect(() => {
     if (!editing) return;
@@ -26,7 +31,9 @@ export default function EditModuleTitle() {
       ...draftModuleTitle,
       moduleName: module.name,
       author: module.author,
+      defaultPatternLength: module.defaultPatternLength,
     });
+    setDefaultPatternLengthInput(module.defaultPatternLength.toString());
   }, [module, editing]);
 
   const updateDraftModuleName = (moduleName: string) => {
@@ -41,6 +48,31 @@ export default function EditModuleTitle() {
       ...(draftModuleTitle || emptyDraft),
       author,
     });
+  };
+
+  const updateDraftDefaultPatternLength = (defaultPatternLength: number) => {
+    setDraftModuleTitle({
+      ...(draftModuleTitle || emptyDraft),
+      defaultPatternLength,
+    });
+  };
+
+  const validateDefaultPatternLength = (): boolean => {
+    const defaultPatternLength = Number(defaultPatternLengthInput);
+    if (
+      Number.isInteger(defaultPatternLength) &&
+      defaultPatternLength >= 1 &&
+      defaultPatternLength <= 1000
+    ) {
+      updateDraftDefaultPatternLength(defaultPatternLength);
+      return true;
+    } else {
+      void alerting.showInfo(
+        "Default pattern length must be a number between 1 and 1000.",
+      );
+      setDefaultPatternLengthInput(module.defaultPatternLength.toString());
+      return false;
+    }
   };
 
   if (!editing) return null;
@@ -74,6 +106,27 @@ export default function EditModuleTitle() {
           onBlur={editor.stopTextInput}
           onChange={(e) => updateDraftAuthor(e.target.value)}
         />
+      </div>
+      <div className="defaultPatternLengthLabel">
+        <label htmlFor="defaultPatternLengthInput">
+          Default Pattern Length:
+        </label>
+      </div>
+      <div className="defaultPatternLengthEdit">
+        <div className="uiArea padded rounded">
+          <input
+            type="text"
+            id="defaultPatternLengthInput"
+            maxLength={DefaultPatternLengthMaxLength}
+            value={defaultPatternLengthInput}
+            onFocus={editor.startTextInput}
+            onBlur={() => {
+              validateDefaultPatternLength();
+              editor.stopTextInput();
+            }}
+            onChange={(e) => setDefaultPatternLengthInput(e.target.value)}
+          />
+        </div>
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.setModuleTitle}>

@@ -152,6 +152,7 @@ export default function TransportBar() {
         {/*</button>*/}
       </div>
       <button
+        title="Edit tempo"
         className={`tempo ${playing ? "" : "tempo-enabled"}`}
         onClick={commands.editTempo}
       >

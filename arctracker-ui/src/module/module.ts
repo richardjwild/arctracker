@@ -21,6 +21,7 @@ export type Module = {
   tuneLength: number;
   instruments: Instrument[];
   masterGain: number;
+  defaultPatternLength: number;
   linesPerBeat: number;
   beatsPerMinute: number;
 }

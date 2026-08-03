@@ -123,10 +123,11 @@ edit_result_t editor_load_sample(module_t *module, const char *filename, int *sa
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author)
+edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author, uint16_t default_pattern_length)
 {
     module_set_name(module, name);
     module_set_author(module, author);
+    module_set_default_pattern_length(module, default_pattern_length);
     return EDIT_SUCCESS;
 }
 
