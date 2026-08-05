@@ -6,6 +6,7 @@ import { tempo } from "../editing/tempo.ts";
 import { alerting } from "../alerting/alert.ts";
 import "./EditTempo.css";
 import { commands } from "../control/commands.ts";
+import { message } from "../language/messages.ts";
 
 const LinesPerBeatMaxLength = 2;
 const TempoMaxLength = 3;
@@ -45,14 +46,12 @@ export default function EditTempo() {
         beatsPerMinute: linesPerBeat === 0 ? 0 : draftTempo.beatsPerMinute,
       });
       setInputState({
-        linesPerBeat: linesPerBeat.toString(),
+        linesPerBeat: linesPerBeat === 0 ? "" : linesPerBeat.toString(),
         beatsPerMinute:
-          linesPerBeat === 0 ? "" : draftTempo.beatsPerMinute.toString(),
+          (linesPerBeat === 0 || draftTempo.beatsPerMinute === 0) ? "" : draftTempo.beatsPerMinute.toString(),
       });
     } else {
-      void alerting.showInfo(
-        "Lines per beat must be a number between 0 and 255.",
-      );
+      void alerting.showInfo(message("invalidLinesPerBeat"));
       setInputState({
         ...inputState,
         linesPerBeat: "",
@@ -64,9 +63,7 @@ export default function EditTempo() {
     const beatsPerMinute =
       inputState.beatsPerMinute === "" ? 0 : Number(inputState.beatsPerMinute);
     if (draftTempo.linesPerBeat === 0 && beatsPerMinute !== 0) {
-      void alerting.showInfo(
-        "Lines per beat must be set for tempo to be valid.",
-      );
+      void alerting.showInfo(message("tempoUndefinedWithoutLinesPerBeat"));
       setInputState({
         ...inputState,
         beatsPerMinute: "",
@@ -83,7 +80,7 @@ export default function EditTempo() {
         beatsPerMinute: beatsPerMinute.toString(),
       });
     } else {
-      void alerting.showInfo("Tempo must be a number between 0 and 255.");
+      void alerting.showInfo(message("invalidTempo"));
       setInputState({
         ...inputState,
         beatsPerMinute: "",
@@ -96,7 +93,7 @@ export default function EditTempo() {
   return (
     <Modal className="editTempo">
       <div className="linesPerBeatLabel">
-        <label htmlFor="linesPerBeatInput">Lines per Beat:</label>
+        <label htmlFor="linesPerBeatInput">{message("linesPerBeatLabel")}</label>
       </div>
       <div className="linesPerBeatEdit uiArea padded rounded">
         <input
@@ -118,7 +115,7 @@ export default function EditTempo() {
         />
       </div>
       <div className="beatsPerMinuteLabel">
-        <label htmlFor="beatsPerMinuteInput">Tempo (bpm):</label>
+        <label htmlFor="beatsPerMinuteInput">{message("beatsPerMinuteLabel")}</label>
       </div>
       <div className="beatsPerMinuteEdit uiArea padded rounded">
         <input
@@ -141,10 +138,10 @@ export default function EditTempo() {
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.setTempo}>
-          Save
+          {message("saveButtonLabel")}
         </button>
         <button type="button" onClick={tempo.hideDialog}>
-          Cancel
+          {message("cancelButtonLabel")}
         </button>
       </div>
     </Modal>

@@ -65,7 +65,6 @@ export const player = {
       }
       const currentBpm = useStore.getState().module.beatsPerMinute;
       if (currentBpm !== snapshot.currentBpm) {
-        console.log('current, new', currentBpm, snapshot.currentBpm);
         const linesPerBeat = useStore.getState().module.linesPerBeat;
         useStore.getState().updateTempo(linesPerBeat, snapshot.currentBpm);
       }

@@ -1,6 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import Modal from "./Modal.tsx";
 import "./ExportDialog.css";
+import { message } from "../language/messages.ts";
 
 export default function ExportDialog() {
   const exportMonitoring = useStore((s) => s.exportMonitoring);
@@ -12,7 +13,7 @@ export default function ExportDialog() {
 
   return (
     <Modal className="audioExportState">
-      <div>Exporting audio...</div>
+      <div>{message("exportingAudioMessage")}</div>
       <progress value={exportState.percentComplete} max={100} />
     </Modal>
   );

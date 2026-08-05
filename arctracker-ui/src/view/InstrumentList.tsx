@@ -4,6 +4,7 @@ import { hexadecimal } from "../rendering/hexadecimal.ts";
 import {commands} from "../control/commands.ts";
 import {useEffect, useRef, useState} from "react";
 import { Instrument } from "../editing/editInstrument.ts";
+import { message } from "../language/messages.ts";
 
 export default function InstrumentList() {
   const instruments = useStore((state) => state.module.instruments);
@@ -77,7 +78,7 @@ export default function InstrumentList() {
           >
             {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
             {": "}
-            {instrument.assigned ? instrument.name : "(empty)"}
+            {instrument.assigned ? instrument.name : message("unassignedInstrumentName")}
           </button>
         ))}
       <button
@@ -89,7 +90,7 @@ export default function InstrumentList() {
           commands.openInstrumentEditor();
         }}
       >
-        Add instrument
+        {message("addInstrumentButtonLabel")}
       </button>
     </div>
   );

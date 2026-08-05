@@ -6,12 +6,12 @@ export const ARCTRACKER_MODFILE_EXTENSION = "arctm";
 export const AUDIO_EXPORT_EXTENSION = "wav";
 
 export const filePicker = {
-  chooseFileToOpen: async (filteredExtensions: string[]) => {
+  chooseFileToOpen: async (filteredExtensions: string[], filterName: string) => {
     const selected = await open({
       multiple: false,
       filters: [
         {
-          name: "Tracker Modules",
+          name: filterName,
           extensions: filteredExtensions,
         },
       ],
@@ -26,13 +26,14 @@ export const filePicker = {
     title: string,
     defaultPath: string | undefined,
     filteredExtensions: string[],
+    filterName: string,
   ) => {
     return await save({
       title,
       defaultPath,
       filters: [
         {
-          name: "Audio files",
+          name: filterName,
           extensions: filteredExtensions,
         },
       ],

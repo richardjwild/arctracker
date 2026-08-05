@@ -107,6 +107,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     module->format = TRACKER_FORMAT;
     module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
+    module->default_pattern_length = 64;
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
     {
         error("Modfile corrupt - STER chunk not found");

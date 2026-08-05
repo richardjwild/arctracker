@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
 import { useStore } from "../store/useStore.ts";
 import './EditTrackCount.css';
+import { message } from "../language/messages.ts";
 
 export default function EditTrackCount() {
   const editingTrackCount =
@@ -24,7 +25,7 @@ export default function EditTrackCount() {
       return trackCount;
     } else {
       setInputTrackCount(module.numTracks.toString());
-      void alerting.showInfo("Number of tracks must be a number between 1 and 256.");
+      void alerting.showInfo(message("invalidTrackCount"));
       return null;
     }
   };
@@ -33,7 +34,7 @@ export default function EditTrackCount() {
 
   return (
     <Modal className="editTrackCount">
-      <label htmlFor="trackCount">Number of Tracks:</label>
+      <label htmlFor="trackCount">{message("trackCountLabel")}</label>
       <div className="uiArea padded rounded">
         <input
           type="text"

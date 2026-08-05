@@ -21,7 +21,7 @@ async function processCommands() {
   for (const command of commands) {
     switch (command.type) {
       case CommandType.CREATE_MODULE:
-        void module.create(command.numTracks).then((success) => {
+        void module.create().then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have created a new module.

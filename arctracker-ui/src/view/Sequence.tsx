@@ -5,6 +5,7 @@ import "./Sequence.css";
 import useSyncSequenceWithTransport from "../hooks/useSyncSequenceWithTransport.ts";
 import { commands } from "../control/commands.ts";
 import useSequencePosition from "../hooks/useSequencePosition.ts";
+import { message, messageFn } from "../language/messages.ts";
 
 export default function Sequence() {
   const moduleId = useStore((state) => state.moduleId);
@@ -120,7 +121,7 @@ export default function Sequence() {
     return (
       <button
         type="button"
-        title="Increment pattern at this position"
+        title={message("incrementPatternHintText")}
         disabled={playing}
         className={`changePatternButton increment ${playing ? "disabled" : "enabled"}`}
         onClick={commands.incrementPatternAtCurrentPosition}
@@ -142,7 +143,7 @@ export default function Sequence() {
     return (
       <button
         type="button"
-        title="Decrement pattern at this position"
+        title={message("decrementPatternHintText")}
         disabled={playing}
         className={`changePatternButton decrement ${playing ? "disabled" : "enabled"}`}
         onClick={commands.decrementPatternAtCurrentPosition}
@@ -185,7 +186,7 @@ export default function Sequence() {
       return (
         <button
           type="button"
-          title={`Jump to position ${absolutePos + 1}`}
+          title={messageFn("jumpToSequencePositionHintText")((absolutePos + 1).toString())}
           key={absolutePos}
           className="sequencePos"
           style={{ "--sequence-digits": digits } as React.CSSProperties}
@@ -212,7 +213,7 @@ export default function Sequence() {
         <div className="sequenceEditButtons uiArea">
           <button
             type="button"
-            title="Insert new position before current (shift-click to create new pattern)"
+            title={message("insertSequencePositionBeforeCurrentHintText")}
             disabled={playing}
             className={playing ? "disabled" : "enabled"}
             onClick={(event) =>
@@ -223,7 +224,7 @@ export default function Sequence() {
           </button>
           <button
             type="button"
-            title="Insert new position after current (shift-click to create new pattern)"
+            title={message("insertSequencePositionAfterCurrentHintText")}
             disabled={playing}
             className={playing ? "disabled" : "enabled"}
             onClick={(event) =>
@@ -234,7 +235,7 @@ export default function Sequence() {
           </button>
           <button
             type="button"
-            title="Delete position at current"
+            title={message("deleteSequencePositionHintText")}
             disabled={playing}
             className={playing ? "disabled" : "enabled"}
             onClick={commands.deleteSequencePosition}

@@ -132,10 +132,12 @@ void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r)
 
 void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
 {
-    if (beats_per_minute == 0) return;
-    const tempo_t tempo = player->module->tempo_lookup[beats_per_minute];
-    tick_scheduler_set_tempo(&player->tick_scheduler, tempo);
     player->current_bpm = beats_per_minute;
+    if (beats_per_minute > 0)
+    {
+        const tempo_t tempo = player->module->tempo_lookup[beats_per_minute];
+        tick_scheduler_set_tempo(&player->tick_scheduler, tempo);
+    }
 }
 
 static bool player_tick(player_t *player)

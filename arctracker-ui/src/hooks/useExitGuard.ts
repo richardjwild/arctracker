@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { editor } from "../editing/editor.ts";
 import { engine } from "../engine/engine.ts";
 import { alerting } from "../alerting/alert.ts";
+import { message } from "../language/messages.ts";
 
 export function useExitGuard() {
   useEffect(() => {
@@ -18,7 +19,7 @@ export function useExitGuard() {
           await engine.exitSuccessfully();
           return;
         }
-        const proceed = await alerting.askConfirmation("You have unsaved changes which will be lost. Proceed anyway?");
+        const proceed = await alerting.askConfirmation(message("unsavedChanges"));
         if (proceed) {
           await engine.exitSuccessfully();
           return;

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { editor } from "../editing/editor.ts";
 import { alerting } from "../alerting/alert.ts";
 import { commands } from "../control/commands.ts";
+import { message } from "../language/messages.ts";
 
 export default function EditPatternLength() {
   const editingPatternLength =
@@ -28,7 +29,7 @@ export default function EditPatternLength() {
       return patternLength;
     } else {
       setInputPatternLength(currentLength.toString());
-      void alerting.showInfo("Pattern length must be a number between 1 and 1000.");
+      void alerting.showInfo(message("invalidPatternLength"));
       return null;
     }
   };
@@ -37,7 +38,7 @@ export default function EditPatternLength() {
 
   return (
     <Modal className="editPatternLength">
-      <label htmlFor="patternLength">Pattern Length:</label>
+      <label htmlFor="patternLength">{message("patternLengthLabel")}</label>
       <div className="uiArea padded rounded">
         <input
           type="text"

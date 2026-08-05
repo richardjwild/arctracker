@@ -11,6 +11,7 @@ import {
   emptyInstrument,
   SampleNameMaxLength,
 } from "../editing/editInstrument.ts";
+import { message, messageFn } from "../language/messages.ts";
 
 type InputState = {
   transpose: string;
@@ -65,7 +66,7 @@ export default function SampleEditDialog() {
       setDraftInstrument({ ...draftInstrument, transpose: transpose + 13 });
     } else {
       syncInputStateWithDraft();
-      void alerting.showInfo("Transpose must be between -12 and 12.");
+      void alerting.showInfo(message("invalidTranspose"));
     }
     loseFocus();
   };
@@ -119,9 +120,10 @@ export default function SampleEditDialog() {
       setRepeatOffsetAndLength(repeatStart);
     } else {
       syncInputStateWithDraft();
-      void alerting.showInfo(
-        `Repeat start must be between 0 and ${draftInstrument.repeatLength === 0 ? "sample length" : "repeat end"}.`,
-      );
+      if (draftInstrument.repeatLength === 0)
+        void alerting.showInfo(message("invalidRepeatStartWithoutRepeatEnd"));
+      else
+        void alerting.showInfo(message("invalidRepeatStartWithRepeatEnd"));
     }
     loseFocus();
   };
@@ -139,9 +141,7 @@ export default function SampleEditDialog() {
       });
     } else {
       syncInputStateWithDraft();
-      void alerting.showInfo(
-        "Repeat end must be between repeat start and sample length.",
-      );
+      void alerting.showInfo(message("invalidRepeatEnd"));
     }
     loseFocus();
   };
@@ -149,10 +149,10 @@ export default function SampleEditDialog() {
   return (
     <Modal ref={modalRef} className="sampleEdit">
       <h1 className="instrumentEditTitle padded">
-        Instrument {hexadecimal.toHex(instrumentIndex + 1, 2)}
+        {messageFn("instrumentTitle")(hexadecimal.toHex(instrumentIndex + 1, 2))}
       </h1>
       <div className="sampleNameLabel padded sampleEditLabel">
-        <label htmlFor="sampleNameInput">Name:</label>
+        <label htmlFor="sampleNameInput">{message("instrumentNameLabel")}</label>
       </div>
       <div className="sampleNameEdit uiArea padded rounded sampleEditField">
         <input
@@ -168,7 +168,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="defaultVolumeLabel padded sampleEditLabel">
-        <label htmlFor="defaultVolumeInput">Default Volume:</label>
+        <label htmlFor="defaultVolumeInput">{message("instrumentDefaultVolumeLabel")}</label>
       </div>
       <div className="defaultVolumeEdit uiArea padded rounded sampleEditField">
         <input
@@ -186,7 +186,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="transposeLabel padded sampleEditLabel">
-        <label htmlFor="transposeInput">Transpose:</label>
+        <label htmlFor="transposeInput">{message("instrumentTransposeLabel")}</label>
       </div>
       <div className="transposeEdit uiArea padded rounded sampleEditField">
         <input
@@ -208,7 +208,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="sampleLengthLabel padded sampleEditLabel">
-        <label>Sample Length:</label>
+        <label>{message("instrumentSampleLengthLabel")}</label>
       </div>
       <div className="sampleLengthEdit padded sampleEditField">
         <input
@@ -218,7 +218,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="sampleRepeatsLabel padded sampleEditLabel">
-        <label>Sample Loops:</label>
+        <label>{message("instrumentSampleLoopsLabel")}</label>
       </div>
       <div className="sampleRepeatsEdit padded sampleEditField">
         <input
@@ -228,7 +228,7 @@ export default function SampleEditDialog() {
           checked={draftInstrument.repeats}
           onChange={setSampleRepeats}
         />
-        <label htmlFor="sampleRepeatsYes">Yes</label>
+        <label htmlFor="sampleRepeatsYes">{message("yes")}</label>
         <input
           type="radio"
           id="sampleRepeatsNo"
@@ -236,10 +236,10 @@ export default function SampleEditDialog() {
           checked={!draftInstrument.repeats}
           onChange={setSampleNoRepeat}
         />
-        <label htmlFor="sampleRepeatsNo">No</label>
+        <label htmlFor="sampleRepeatsNo">{message("no")}</label>
       </div>
       <div className="repeatStartLabel padded sampleEditLabel">
-        <label htmlFor="repeatStartInput">Loop Start:</label>
+        <label htmlFor="repeatStartInput">{message("instrumentLoopStartLabel")}</label>
       </div>
       <div className="repeatStartEdit uiArea padded rounded sampleEditField">
         <input
@@ -261,7 +261,7 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="repeatEndLabel padded sampleEditLabel">
-        <label htmlFor="repeatEndInput">Loop End:</label>
+        <label htmlFor="repeatEndInput">{message("instrumentLoopEndLabel")}</label>
       </div>
       <div className="repeatEndEdit uiArea padded rounded sampleEditField">
         <input
@@ -284,19 +284,19 @@ export default function SampleEditDialog() {
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.loadSample}>
-          Load Sample
+          {message("loadSampleButtonLabel")}
         </button>
         <button type="button" onClick={commands.deleteSample}>
-          Delete Sample
+          {message("deleteSampleButtonLabel")}
         </button>
         <button type="button" onClick={commands.saveAndCloseInstrumentEditor}>
-          Save Changes
+          {message("saveButtonLabel")}
         </button>
         <button
           type="button"
           onClick={commands.restoreAndCloseInstrumentEditor}
         >
-          Close
+          {message("cancelButtonLabel")}
         </button>
       </div>
     </Modal>

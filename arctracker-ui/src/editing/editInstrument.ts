@@ -3,6 +3,7 @@ import { engine, InstrumentUpdate } from "../engine/engine.ts";
 import { EditCommand, editor } from "./editor.ts";
 import { filePicker } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
+import { message } from "../language/messages.ts";
 
 export type Instrument = {
   assigned: boolean;
@@ -170,7 +171,7 @@ export const editInstrument = {
   loadSample: async () => {
     if (!editInstrument.instrumentEditing()) return;
     const { draftInstrument, setDraftInstrument } = useStore.getState();
-    const path = await filePicker.chooseFileToOpen(["wav"]);
+    const path = await filePicker.chooseFileToOpen(["wav"], message("audioFileFilterDescription"));
     if (!path) return;
     try {
       const sample = await engine.loadSample(path);
@@ -187,7 +188,7 @@ export const editInstrument = {
       };
       setDraftInstrument(updatedDraft);
     } catch (e) {
-      void alerting.showError(`Failed to load sample: ${e}`);
+      void alerting.showErrorWithContext(message("sampleLoadFailed"), e as string);
     }
   },
 

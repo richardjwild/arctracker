@@ -86,7 +86,7 @@ export type Command =
   | { type: CommandType.SAVE_MODULE_AS }
   | { type: CommandType.SAVE_MODULE }
   | { type: CommandType.EXPORT_AUDIO }
-  | { type: CommandType.CREATE_MODULE; numTracks: number }
+  | { type: CommandType.CREATE_MODULE }
   | { type: CommandType.TOGGLE_PLAY }
   | { type: CommandType.TOGGLE_LOOP }
   | { type: CommandType.TOGGLE_EDIT }
@@ -196,11 +196,7 @@ export const commands = {
   saveModuleAs: () => commandQueue.push({ type: CommandType.SAVE_MODULE_AS }),
   saveModule: () => commandQueue.push({ type: CommandType.SAVE_MODULE }),
   exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
-  createModule: (numTracks: number) =>
-    commandQueue.push({
-      type: CommandType.CREATE_MODULE,
-      numTracks: numTracks,
-    }),
+  createModule: () => commandQueue.push({ type: CommandType.CREATE_MODULE }),
   togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
   toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
   toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),

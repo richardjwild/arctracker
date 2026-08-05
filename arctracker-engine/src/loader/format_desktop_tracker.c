@@ -126,6 +126,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module->format = DESKTOP_TRACKER_FORMAT;
     module->initial_ticks_per_event = file_format->initial_speed;
     module->master_gain = 0.25f;
+    module->default_pattern_length = 64;
     strncpy(module->name, file_format->name, MAX_LEN_TUNENAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     for (int track = 0; track < module->num_tracks; track++)

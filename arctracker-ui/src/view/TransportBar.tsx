@@ -1,6 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import "./TransportBar.css";
 import { commands } from "../control/commands.ts";
+import { message } from "../language/messages.ts";
 
 export default function TransportBar() {
   const PlayIcon = () => (
@@ -14,7 +15,7 @@ export default function TransportBar() {
       >
         <path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" />
       </svg>
-      <span className="visually-hidden">Start playback</span>
+      <span className="visually-hidden">{message("startPlaybackHintText")}</span>
     </>
   );
 
@@ -29,7 +30,7 @@ export default function TransportBar() {
       >
         <path d="M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z" />
       </svg>
-      <span className="visually-hidden">Pause playback</span>
+      <span className="visually-hidden">{message("pausePlaybackHintText")}</span>
     </>
   );
 
@@ -44,7 +45,7 @@ export default function TransportBar() {
       >
         <path d="M280-80 120-240l160-160 56 58-62 62h406v-160h80v240H274l62 62-56 58Zm-80-440v-240h486l-62-62 56-58 160 160-160 160-56-58 62-62H280v160h-80Z" />
       </svg>
-      <span className="visually-hidden">Turn repeat on</span>
+      <span className="visually-hidden">{message("enableLoopModeHintText")}</span>
     </>
   );
 
@@ -59,7 +60,7 @@ export default function TransportBar() {
       >
         <path d="M120-40q-33 0-56.5-23.5T40-120v-720q0-33 23.5-56.5T120-920h720q33 0 56.5 23.5T920-840v720q0 33-23.5 56.5T840-40H120Zm160-40 56-58-62-62h486v-240h-80v160H274l62-62-56-58-160 160L280-80Zm-80-440h80v-160h406l-62 62 56 58 160-160-160-160-56 58 62 62H200v240Z" />
       </svg>
-      <span className="visually-hidden">Turn repeat off</span>
+      <span className="visually-hidden">{message("disableLoopModeHintText")}</span>
     </>
   );
 
@@ -74,7 +75,7 @@ export default function TransportBar() {
       >
         <path d="M100-240v-480l360 240-360 240Zm400 0v-480l360 240-360 240ZM180-480Zm400 0Zm-400 90 136-90-136-90v180Zm400 0 136-90-136-90v180Z" />
       </svg>
-      <span className="visually-hidden">Seek forwards 1 pattern</span>
+      <span className="visually-hidden">{message("seekSequenceForwardsHintText")}</span>
     </>
   );
 
@@ -89,7 +90,7 @@ export default function TransportBar() {
       >
         <path d="M860-240 500-480l360-240v480Zm-400 0L100-480l360-240v480Zm-80-240Zm400 0Zm-400 90v-180l-136 90 136 90Zm400 0v-180l-136 90 136 90Z" />
       </svg>
-      <span className="visually-hidden">Seek backwards 1 pattern</span>
+      <span className="visually-hidden">{message("seekSequenceBackwardsHintText")}</span>
     </>
   );
 
@@ -116,7 +117,7 @@ export default function TransportBar() {
     <div className="transportBar uiArea padded">
       <div className="buttons">
         <button
-          title="Play/pause"
+          title={message("togglePlayHintText")}
           onClick={commands.togglePlay}
           aria-label="Play/Pause"
           className="playPause"
@@ -124,7 +125,7 @@ export default function TransportBar() {
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
         <button
-          title="Repeat on/off"
+          title={message("toggleLoopModeHintText")}
           onClick={commands.toggleLoop}
           aria-label="Repeat on/off"
           className="repeatOnOff"
@@ -132,7 +133,7 @@ export default function TransportBar() {
           {looping ? <TurnRepeatOffIcon /> : <TurnRepeatOnIcon />}
         </button>
         <button
-          title="Seek forwards"
+          title={message("seekSequenceForwardsHintText")}
           onClick={commands.sequenceSeekForwards}
           aria-label="Fast forward"
           className="fastForward"
@@ -140,7 +141,7 @@ export default function TransportBar() {
           <FastForwardIcon />
         </button>
         <button
-          title="Seek backwards"
+          title={message("seekSequenceBackwardsHintText")}
           onClick={commands.sequenceSeekBackwards}
           aria-label="Rewind"
           className="rewind"
@@ -152,11 +153,11 @@ export default function TransportBar() {
         {/*</button>*/}
       </div>
       <button
-        title="Edit tempo"
+        title={message("editTempoHintText")}
         className={`tempo ${playing ? "" : "tempo-enabled"}`}
         onClick={commands.editTempo}
       >
-        {beatsPerMinute === 0 ? "Set tempo" : `${beatsPerMinute}bpm`}
+        {beatsPerMinute === 0 ? message("setTempoButtonLabel") : `${beatsPerMinute}bpm`}
       </button>
     </div>
   );

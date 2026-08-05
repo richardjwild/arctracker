@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ModuleTitle, moduleTitle } from "../editing/moduleTitle.ts";
 import { commands } from "../control/commands.ts";
 import { alerting } from "../alerting/alert.ts";
+import { message } from "../language/messages.ts";
 
 const ModuleNameMaxLength = 65;
 const AuthorMaxLength = 65;
@@ -67,9 +68,7 @@ export default function EditModuleTitle() {
       updateDraftDefaultPatternLength(defaultPatternLength);
       return true;
     } else {
-      void alerting.showInfo(
-        "Default pattern length must be a number between 1 and 1000.",
-      );
+      void alerting.showInfo(message("invalidDefaultPatternLength"));
       setDefaultPatternLengthInput(module.defaultPatternLength.toString());
       return false;
     }
@@ -80,7 +79,7 @@ export default function EditModuleTitle() {
   return (
     <Modal className="editModuleTitle">
       <div className="moduleNameLabel">
-        <label htmlFor="moduleNameInput">Module Name:</label>
+        <label htmlFor="moduleNameInput">{message("moduleNameLabel")}</label>
       </div>
       <div className="moduleNameEdit uiArea padded rounded">
         <input
@@ -94,7 +93,7 @@ export default function EditModuleTitle() {
         />
       </div>
       <div className="authorLabel">
-        <label htmlFor="authorInput">Author:</label>
+        <label htmlFor="authorInput">{message("authorNameLabel")}</label>
       </div>
       <div className="authorEdit uiArea padded rounded">
         <input
@@ -109,7 +108,7 @@ export default function EditModuleTitle() {
       </div>
       <div className="defaultPatternLengthLabel">
         <label htmlFor="defaultPatternLengthInput">
-          Default Pattern Length:
+          {message("defaultPatternLengthLabel")}
         </label>
       </div>
       <div className="defaultPatternLengthEdit">
@@ -130,10 +129,10 @@ export default function EditModuleTitle() {
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.setModuleTitle}>
-          Save
+          {message("saveButtonLabel")}
         </button>
         <button type="button" onClick={moduleTitle.hideDialog}>
-          Cancel
+          {message("cancelButtonLabel")}
         </button>
       </div>
     </Modal>

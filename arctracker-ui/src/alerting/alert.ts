@@ -11,6 +11,16 @@ export const alerting = {
     )
   },
 
+  showErrorWithContext: async (errorMessage: string, errorContext: string) => {
+    return await message(
+      `${errorMessage} (${errorContext})`,
+      {
+        title: "Arctracker",
+        kind: "error",
+      },
+    )
+  },
+
   showInfo: async (infoMessage: string) => {
     return await message(
       infoMessage,

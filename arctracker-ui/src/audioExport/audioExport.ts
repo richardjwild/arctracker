@@ -4,7 +4,8 @@ import {
   filePicker,
   AUDIO_EXPORT_EXTENSION,
 } from "../filesystem/filePicker.ts";
-import { message } from "@tauri-apps/plugin-dialog";
+import { alerting } from "../alerting/alert.ts";
+import { message } from "../language/messages.ts";
 
 export type ExportState = {
   completed: boolean;
@@ -14,10 +15,7 @@ export type ExportState = {
 const { setExportState, setExportMonitoring } = useStore.getState();
 
 function handleExportError(errorMessage: string) {
-  message(`Export audio encountered an error: ${errorMessage}`, {
-    title: "Arctracker",
-    kind: "error",
-  }).then(() => {
+  alerting.showErrorWithContext(message("exportAudioFailed"), errorMessage).then(() => {
     setExportMonitoring(false);
   });
 }
@@ -29,6 +27,7 @@ export const audioExport = {
       "Export audio",
       defaultExportPath,
       [AUDIO_EXPORT_EXTENSION],
+      message("audioFileFilterDescription")
     );
     if (!filePath) return;
     setExportMonitoring(true);
@@ -36,7 +35,7 @@ export const audioExport = {
       await engine.exportAudio(filePath);
     } catch (err) {
       setExportMonitoring(false);
-      await message(err as string, { title: "Arctracker", kind: "error" });
+      await alerting.showError(err as string);
     }
   },
 

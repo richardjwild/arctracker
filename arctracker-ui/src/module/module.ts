@@ -10,6 +10,7 @@ import { alerting } from "../alerting/alert.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { Instrument } from "../editing/editInstrument.ts";
+import { message } from "../language/messages.ts";
 
 export type Module = {
   fileName: string | null;
@@ -24,13 +25,13 @@ export type Module = {
   defaultPatternLength: number;
   linesPerBeat: number;
   beatsPerMinute: number;
-}
+};
 
 const FormatArctracker = 0;
 
 async function okToDiscardModule() {
   if (!editor.hasUnsavedChanges()) return true;
-  return await alerting.askConfirmation("You have unsaved changes which will be lost. Proceed anyway?");
+  return await alerting.askConfirmation(message("unsavedChanges"));
 }
 
 export const module = {
@@ -41,15 +42,18 @@ export const module = {
   },
 
   load: async (): Promise<boolean> => {
-    if (!await okToDiscardModule()) return false;
+    if (!(await okToDiscardModule())) return false;
     const { setLoadingModule, replaceModule } = useStore.getState();
     setLoadingModule(true);
     try {
-      const selected = await filePicker.chooseFileToOpen([
-        ARCTRACKER_MODFILE_EXTENSION,
-        TRACKER_MODFILE_EXTENSION,
-        DESKTOP_TRACKER_MODFILE_EXTENSION,
-      ]);
+      const selected = await filePicker.chooseFileToOpen(
+        [
+          ARCTRACKER_MODFILE_EXTENSION,
+          TRACKER_MODFILE_EXTENSION,
+          DESKTOP_TRACKER_MODFILE_EXTENSION,
+        ],
+        message("moduleFileFilterDescription"),
+      );
       if (selected) {
         let module = await engine.loadModule(selected);
         if (module) {
@@ -92,6 +96,7 @@ export const module = {
       "Save module",
       defaultPath,
       [ARCTRACKER_MODFILE_EXTENSION],
+      message("moduleFileFilterDescription")
     );
     if (!filePath) return;
     try {
@@ -103,8 +108,9 @@ export const module = {
     }
   },
 
-  create: async (numTracks: number): Promise<boolean> => {
-    if (!await okToDiscardModule()) return false;
+  create: async (): Promise<boolean> => {
+    if (!(await okToDiscardModule())) return false;
+    const numTracks = 8; // TODO: Make this a configuration option.
     try {
       const newModule = await engine.createModule(numTracks);
       if (newModule) {

@@ -17,12 +17,14 @@ export const tempo = {
 
   setTempo: async () => {
     const { linesPerBeat, beatsPerMinute } = useStore.getState().draftTempo;
+    const newLinesPerBeat = linesPerBeat;
+    const newBeatsPerMinute = (newLinesPerBeat === 0) ? 0 : beatsPerMinute;
     const oldLinesPerBeat = useStore.getState().module.linesPerBeat;
     const oldBeatsPerMinute = useStore.getState().module.beatsPerMinute;
     void editor.applyEdit({
       apply: async () => {
-        await engine.setTempo(linesPerBeat, beatsPerMinute);
-        useStore.getState().updateTempo(linesPerBeat, beatsPerMinute);
+        await engine.setTempo(newLinesPerBeat, newBeatsPerMinute);
+        useStore.getState().updateTempo(newLinesPerBeat, newBeatsPerMinute);
         return true;
       },
       undo: async () => {
