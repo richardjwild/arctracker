@@ -169,7 +169,7 @@ export class PatternRenderer {
       this.renderCursor(patternEvents.editing());
       this.renderPatternLines(playheadIndex);
     } catch (err) {
-      console.error(err);
+      this.renderError(err);
     }
   }
 
@@ -304,7 +304,7 @@ export class PatternRenderer {
 
   private renderRowNumberLane(): number {
     const laneWidth = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
-    this.withStrokeStyle(this.colours().trackLaneSeparator)
+    this.withStrokeStyle(this.colours().trackLaneSeparator).withLineWidth(1)
       .renderLine(laneWidth, 0, laneWidth, this.viewportSize.height);
     return laneWidth;
   }
@@ -313,7 +313,7 @@ export class PatternRenderer {
     const trackWidth = this.patternLayout.getEventWidth(track);
     if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
       return 0;
-    this.withStrokeStyle(this.colours().trackLaneSeparator)
+    this.withStrokeStyle(this.colours().trackLaneSeparator).withLineWidth(1)
       .renderLine(trackX + trackWidth, 0, trackX + trackWidth, this.viewportSize.height);
     return trackWidth;
   }
@@ -556,5 +556,28 @@ export class PatternRenderer {
   private renderGlyph(glyph: string, x: number, y: number): PatternRenderer {
     this.ctx.fillText(glyph, x, y + 1);
     return this;
+  }
+
+  private renderError(err: any) {
+    const cols = this.viewportSize.width / this.patternLayout.glyphWidth;
+    const rows = this.viewportSize.height / this.patternLayout.rowHeight;
+    if (err instanceof Error) {
+      const stack = (err.stack || "").split("\n");
+      const longestLine = [...stack, err.message].reduce((a, b) => a.length > b.length ? a : b);
+      const textWidth = Math.min(longestLine.length, cols - 2);
+      const textHeight = Math.min(stack.length + 3, rows - 2);
+      const boxWidth = (textWidth) * this.patternLayout.glyphWidth;
+      const boxHeight = (textHeight + 2) * this.patternLayout.rowHeight;
+      const boxX = (this.viewportSize.width - boxWidth) / 2;
+      const boxY = (this.viewportSize.height - boxHeight) / 2;
+      this.withFillStyle("rgba(0,0,0,0.5)").fillRect(boxX, boxY, boxWidth, boxHeight);
+      this.withStrokeStyle("red").withLineWidth(4).strokeRect(boxX, boxY, boxWidth, boxHeight);
+      this.withFillStyle("red").renderGlyph("Guru Meditation", boxX + ((textWidth - 15) / 2) * this.patternLayout.glyphWidth, boxY + this.patternLayout.rowHeight);
+      this.renderGlyph(err.message.substring(0, textWidth), boxX + this.patternLayout.glyphWidth, boxY + this.patternLayout.rowHeight * 3);
+      stack.forEach((line, i) =>
+        this.renderGlyph(("  at " + line).substring(0, textWidth), boxX, boxY + (i + 4) * this.patternLayout.rowHeight));
+    } else {
+      this.withFillStyle("red").renderGlyph(err as string, 0, this.patternLayout.rowHeight);
+    }
   }
 }

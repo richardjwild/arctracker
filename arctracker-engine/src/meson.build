@@ -11,6 +11,7 @@ subdir('editor')
 subdir('loader')
 subdir('io')
 subdir('memory')
+subdir('midi')
 subdir('pcm')
 subdir('player')
 subdir('lib')
@@ -25,6 +26,7 @@ libarctracker_sources += loader_sources
 libarctracker_sources += editor_sources
 libarctracker_sources += io_sources
 libarctracker_sources += memory_sources
+libarctracker_sources += midi_sources
 libarctracker_sources += pcm_sources
 libarctracker_sources += player_sources
 libarctracker_sources += ui_sources

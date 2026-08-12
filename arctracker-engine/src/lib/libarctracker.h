@@ -2,6 +2,8 @@
 #define ARCTRACKER_LIBARCTRACKER_H
 
 #include <stdint.h>
+
+#include "audio_api/api_portaudio.h"
 #include "ui/ui.h"
 #include "player/player_command.h"
 #include "ui/player_event.h"
@@ -17,6 +19,14 @@ typedef struct {
 static const int FORMAT_ARCTRACKER = 0;
 
 arctracker_t *arctracker_create(void);
+
+int arctracker_get_available_output_count(arctracker_t *handle);
+
+api_result_t arctracker_get_available_outputs(arctracker_t *handle, audio_device_info_t *output_devices, int requested_outputs);
+
+api_result_t arctracker_use_output(arctracker_t *handle, int device_index, const char *name, const char *host_api_name);
+
+api_result_t arctracker_use_default_output(arctracker_t *arctracker);
 
 api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_t *module_info);
 

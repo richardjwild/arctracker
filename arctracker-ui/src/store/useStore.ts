@@ -76,6 +76,7 @@ const initialModule: Module = {
 };
 
 const initialTransportState: TransportState = {
+  playbackAvailable: false,
   playing: false,
   looping: false,
   sequencePos: 0,
@@ -293,6 +294,7 @@ export const useStore = create<AppStore>((set) => ({
     set((state) => {
       const current = state.transportState;
       if (
+        current.playbackAvailable === next.playbackAvailable &&
         current.playing === next.playing &&
         current.looping === next.looping &&
         current.sequencePos === next.sequencePos &&

@@ -2,11 +2,34 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use std::sync::Arc;
-use tauri::{AppHandle};
-use crate::arctracker::{PatternLine, PlayerEvent, Module, UiExportState, PatternEvent, InstrumentUpdate, Sample, UiPeakLevels};
-use crate::arctracker::UiPlayerSnapshot;
+use crate::arctracker::{AudioDeviceInfo, UiPlayerSnapshot};
+use crate::arctracker::{
+    InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
+    UiPeakLevels,
+};
 pub use crate::state::AppState;
+use std::sync::Arc;
+use tauri::AppHandle;
+
+#[tauri::command]
+fn get_available_outputs(state: tauri::State<Arc<AppState>>) -> Result<Vec<AudioDeviceInfo>, String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.get_available_outputs()
+}
+
+#[tauri::command]
+fn use_output(state: tauri::State<Arc<AppState>>, device_index: i32, name: String, host_api_name: String) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.use_output(device_index, &name, &host_api_name).map_err(|e| e)?;
+    Ok(())
+}
+
+#[tauri::command]
+fn use_default_output(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.use_default_output().map_err(|e| e)?;
+    Ok(())
+}
 
 #[tauri::command]
 fn current_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
@@ -31,7 +54,11 @@ fn create_module(num_tracks: i32, state: tauri::State<Arc<AppState>>) -> Result<
 }
 
 #[tauri::command]
-fn save_module(path: String, format: i32, state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn save_module(
+    path: String,
+    format: i32,
+    state: tauri::State<Arc<AppState>>,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.save_module(&path, format)?;
     Ok(())
@@ -47,13 +74,19 @@ fn restart_player(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 
 #[tauri::command]
 fn poll_playback_events(state: tauri::State<Arc<AppState>>) -> Result<Vec<PlayerEvent>, String> {
-    let mut tracker = state.tracker.lock().map_err(|_| "Failed to lock Arctracker state".to_string())?;
+    let mut tracker = state
+        .tracker
+        .lock()
+        .map_err(|_| "Failed to lock Arctracker state".to_string())?;
     Ok(tracker.poll_playback_events())
 }
 
 #[tauri::command]
 fn poll_export_events(state: tauri::State<Arc<AppState>>) -> Result<Vec<PlayerEvent>, String> {
-    let mut tracker = state.tracker.lock().map_err(|_| "Failed to lock Arctracker state".to_string())?;
+    let mut tracker = state
+        .tracker
+        .lock()
+        .map_err(|_| "Failed to lock Arctracker state".to_string())?;
     Ok(tracker.poll_export_events())
 }
 
@@ -72,7 +105,11 @@ fn toggle_loop(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn seek(state: tauri::State<Arc<AppState>>, new_sequence_pos: i32, new_pattern_pos: i32) -> Result<(), String> {
+fn seek(
+    state: tauri::State<Arc<AppState>>,
+    new_sequence_pos: i32,
+    new_pattern_pos: i32,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.seek(new_sequence_pos, new_pattern_pos);
     Ok(())
@@ -86,14 +123,22 @@ fn toggle_track_mute(state: tauri::State<Arc<AppState>>, track: i32) -> Result<(
 }
 
 #[tauri::command]
-fn set_effects_displayed(state: tauri::State<Arc<AppState>>, track: i32, effects_displayed: i32) -> Result<(), String> {
+fn set_effects_displayed(
+    state: tauri::State<Arc<AppState>>,
+    track: i32,
+    effects_displayed: i32,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.set_effects_displayed(track, effects_displayed);
     Ok(())
 }
 
 #[tauri::command]
-fn get_player_snapshot(state: tauri::State<Arc<AppState>>, displayed_pattern_no: Option<u32>, num_tracks: i32) -> UiPlayerSnapshot {
+fn get_player_snapshot(
+    state: tauri::State<Arc<AppState>>,
+    displayed_pattern_no: Option<u32>,
+    num_tracks: i32,
+) -> UiPlayerSnapshot {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_player_snapshot(displayed_pattern_no, num_tracks)
 }
@@ -116,19 +161,13 @@ fn get_pattern(
 }
 
 #[tauri::command]
-fn set_selected_instrument(
-    instrument_no: u8,
-    state: tauri::State<Arc<AppState>>,
-) {
+fn set_selected_instrument(instrument_no: u8, state: tauri::State<Arc<AppState>>) {
     let mut editor = state.editor.lock().unwrap();
     editor.selected_instrument = instrument_no;
 }
 
 #[tauri::command]
-fn set_selected_channel(
-    channel_no: i32,
-    state: tauri::State<Arc<AppState>>,
-) {
+fn set_selected_channel(channel_no: i32, state: tauri::State<Arc<AppState>>) {
     let mut editor = state.editor.lock().unwrap();
     editor.selected_channel = channel_no;
 }
@@ -186,58 +225,102 @@ fn set_master_gain(state: tauri::State<Arc<AppState>>, master_gain: f32) -> Resu
 }
 
 #[tauri::command]
-fn edit_get_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, track: i32) -> Result<PatternEvent, String> {
+fn edit_get_event(
+    state: tauri::State<Arc<AppState>>,
+    pattern_no: i32,
+    pattern_index: i32,
+    track: i32,
+) -> Result<PatternEvent, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let result = tracker.edit_get_event(pattern_no, pattern_index, track).map_err(|e| e.message)?;
+    let result = tracker
+        .edit_get_event(pattern_no, pattern_index, track)
+        .map_err(|e| e.message)?;
     Ok(result)
 }
 
 #[tauri::command]
-fn edit_set_event(state: tauri::State<Arc<AppState>>, pattern_no: i32, pattern_index: i32, track: i32, new_event: PatternEvent) -> Result<(), String> {
+fn edit_set_event(
+    state: tauri::State<Arc<AppState>>,
+    pattern_no: i32,
+    pattern_index: i32,
+    track: i32,
+    new_event: PatternEvent,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_event(pattern_no, pattern_index, track, new_event).map_err(|e| e.message)?;
+    tracker
+        .edit_set_event(pattern_no, pattern_index, track, new_event)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn edit_get_sequence(state: tauri::State<Arc<AppState>>, expected_sequence_len: i32) -> Result<Vec<i32>, String> {
+fn edit_get_sequence(
+    state: tauri::State<Arc<AppState>>,
+    expected_sequence_len: i32,
+) -> Result<Vec<i32>, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let result = tracker.edit_get_sequence(expected_sequence_len).map_err(|e| e.message)?;
+    let result = tracker
+        .edit_get_sequence(expected_sequence_len)
+        .map_err(|e| e.message)?;
     Ok(result)
 }
 
 #[tauri::command]
-fn edit_set_sequence(state: tauri::State<Arc<AppState>>, new_sequence: Vec<i32>) -> Result<(), String> {
+fn edit_set_sequence(
+    state: tauri::State<Arc<AppState>>,
+    new_sequence: Vec<i32>,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_sequence(&new_sequence).map_err(|e| e.message)?;
+    tracker
+        .edit_set_sequence(&new_sequence)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn edit_create_pattern(state: tauri::State<Arc<AppState>>, pattern_length: i32) -> Result<i32, String> {
+fn edit_create_pattern(
+    state: tauri::State<Arc<AppState>>,
+    pattern_length: i32,
+) -> Result<i32, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let pattern_no = tracker.edit_create_pattern(pattern_length).map_err(|e| e.message)?;
+    let pattern_no = tracker
+        .edit_create_pattern(pattern_length)
+        .map_err(|e| e.message)?;
     Ok(pattern_no)
 }
 
 #[tauri::command]
 fn edit_delete_pattern(state: tauri::State<Arc<AppState>>, pattern_no: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_delete_pattern(pattern_no).map_err(|e| e.message)?;
+    tracker
+        .edit_delete_pattern(pattern_no)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn edit_set_pattern_length(state: tauri::State<Arc<AppState>>, pattern_no: i32, new_length: i32) -> Result<(), String> {
+fn edit_set_pattern_length(
+    state: tauri::State<Arc<AppState>>,
+    pattern_no: i32,
+    new_length: i32,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_pattern_length(pattern_no, new_length).map_err(|e| e.message)?;
+    tracker
+        .edit_set_pattern_length(pattern_no, new_length)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn edit_update_instrument(state: tauri::State<Arc<AppState>>, instrument_index: u8, instrument_update: InstrumentUpdate) -> Result<(), String> {
+fn edit_update_instrument(
+    state: tauri::State<Arc<AppState>>,
+    instrument_index: u8,
+    instrument_update: InstrumentUpdate,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_update_instrument(instrument_index, instrument_update).map_err(|e| e.message)?;
+    tracker
+        .edit_update_instrument(instrument_index, instrument_update)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
@@ -249,23 +332,38 @@ fn edit_load_sample(state: tauri::State<Arc<AppState>>, path: String) -> Result<
 }
 
 #[tauri::command]
-fn edit_set_module_title(state: tauri::State<Arc<AppState>>, name: String, author: String, default_pattern_length: u16) -> Result<(), String> {
+fn edit_set_module_title(
+    state: tauri::State<Arc<AppState>>,
+    name: String,
+    author: String,
+    default_pattern_length: u16,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_module_title(name, author, default_pattern_length).map_err(|e| e.message)?;
+    tracker
+        .edit_set_module_title(name, author, default_pattern_length)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
 fn edit_set_num_tracks(state: tauri::State<Arc<AppState>>, num_tracks: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_num_tracks(num_tracks).map_err(|e| e.message)?;
+    tracker
+        .edit_set_num_tracks(num_tracks)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn edit_set_tempo(state: tauri::State<Arc<AppState>>, lines_per_beat: u8, beats_per_minute: u8) -> Result<(), String> {
+fn edit_set_tempo(
+    state: tauri::State<Arc<AppState>>,
+    lines_per_beat: u8,
+    beats_per_minute: u8,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_tempo(lines_per_beat, beats_per_minute).map_err(|e| e.message)?;
+    tracker
+        .edit_set_tempo(lines_per_beat, beats_per_minute)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
@@ -281,9 +379,14 @@ fn exit_unsuccessfully(app: AppHandle) {
 
 pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .manage(app_state)
         .invoke_handler(tauri::generate_handler![
+            get_available_outputs,
+            use_output,
+            use_default_output,
             current_module,
             load_module,
             save_module,

@@ -2,6 +2,11 @@
 #define ARCTRACKER_ENGINE_MESSAGES_H
 
 #define BAD_ARCTRACKER_HANDLE "Invalid arctracker handle"
+#define AUDIO_SYSTEM_NOT_INITIALISED "Audio system is not initialised"
+#define FAILED_TO_GET_AVAILABLE_OUTPUTS "Failed to read available audio output devices"
+#define FAILED_TO_READ_DEVICE_INFO "Failed to read device info"
+#define FAILED_TO_READ_HOST_API_INFO "Failed to read host API info"
+#define AUDIO_DEVICE_MISMATCH "The audio device does not match the selection"
 #define BAD_FILENAME "Bad filename"
 #define FILE_OPEN_FAILED "Could not open file"
 #define FILE_EMPTY "File is empty"

@@ -12,6 +12,7 @@ import EditModuleTitle from "./view/EditModuleTitle.tsx";
 import EditTrackCount from "./view/EditTrackCount.tsx";
 import MasterGain from "./view/MasterGain.tsx";
 import EditTempo from "./view/EditTempo.tsx";
+import EditAppConfig from "./view/EditAppConfig.tsx";
 
 export default function AppLayout() {
   return (
@@ -28,6 +29,7 @@ export default function AppLayout() {
       <EditModuleTitle />
       <EditTrackCount />
       <EditTempo />
+      <EditAppConfig />
     </main>
   );
 }

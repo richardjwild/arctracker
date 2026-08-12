@@ -11,7 +11,8 @@ export type EditMode =
   | "patternLength"
   | "nameAndAuthor"
   | "trackCount"
-  | "tempo";
+  | "tempo"
+  | "appConfig";
 
 export type EditorState = {
   editMode: EditMode;

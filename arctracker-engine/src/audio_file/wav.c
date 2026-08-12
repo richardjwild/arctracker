@@ -355,7 +355,7 @@ static float *copy_sample_data_16(const int16_t *sample_data, const int channels
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
         {
-            const int16_t value = *sample_data++;
+            const int16_t value = *sample_data;
             frame += value < 0 ? (float) value / 32768.0f : (float) value / 32767.0f;
             sample_data++;
         }

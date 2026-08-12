@@ -3,39 +3,142 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "messages.h"
 #include "io/error.h"
 #include "memory/heap.h"
 
+#define DEFAULT_DEVICE_INDEX -1
+
 static PaStream *stream;
 static int16_t *output_buffer = NULL;
 
-static audio_api_result_t get_output_parameters(PaStreamParameters *output_parameters)
+bool start_portaudio(void)
 {
-    const PaDeviceIndex output_device = Pa_GetDefaultOutputDevice();
-    if (output_device == paNoDevice)
+    const PaError err = Pa_Initialize();
+    if (err != paNoError)
     {
-        return (audio_api_result_t) {
-            .success = false,
-            .error_message = NO_OUTPUT_DEVICE_AVAILABLE,
-        };
+        error(Pa_GetErrorText(err));
+        return false;
     }
-    const PaDeviceInfo *device_info = Pa_GetDeviceInfo(output_device);
-    output_parameters->device = output_device;
+    return true;
+}
+
+int get_available_output_count(void)
+{
+    const PaDeviceIndex total_devices = Pa_GetDeviceCount();
+    if (total_devices < 0)
+    {
+        // In this case total_devices is an error code instead.
+        error(Pa_GetErrorText(total_devices));
+    }
+    int available_devices = 0;
+    for (int device_index = 0; device_index < total_devices; device_index++)
+    {
+        const PaDeviceInfo* device_info = Pa_GetDeviceInfo(device_index);
+        if (device_info != NULL && device_info->maxOutputChannels >= 2)
+            available_devices++;
+    }
+    return available_devices;
+}
+
+bool get_available_outputs(audio_device_info_t* available_outputs, const int requested_outputs)
+{
+    const PaDeviceIndex total_devices = Pa_GetDeviceCount();
+    if (total_devices < 0)
+    {
+        // In this case total_devices is an error code instead.
+        error(Pa_GetErrorText(total_devices));
+        return false;
+    }
+    if (total_devices == 0 || requested_outputs == 0)
+    {
+        return true;
+    }
+    for (int output_index = 0; output_index < requested_outputs; output_index++)
+    {
+        available_outputs[output_index] = (audio_device_info_t) {0};
+    }
+    int output_index = 0;
+    for (int device_index = 0; device_index < total_devices && output_index < requested_outputs; device_index++)
+    {
+        const PaDeviceInfo* device_info = Pa_GetDeviceInfo(device_index);
+        if (device_info == NULL || device_info->maxOutputChannels < 2) continue;
+        const PaHostApiInfo* host_api_info = Pa_GetHostApiInfo(device_info->hostApi);
+        if (host_api_info == NULL) continue;
+        audio_device_info_t output = (audio_device_info_t) {
+            .device_index = device_index,
+        };
+        snprintf(output.name, sizeof(output.name), "%s", device_info->name);
+        snprintf(output.host_api_name, sizeof(output.host_api_name), "%s", host_api_info->name);
+        available_outputs[output_index] = output;
+        output_index++;
+    }
+    return true;
+}
+
+static bool get_device_index(const portaudio_config_t *config, int *device_index)
+{
+    if (config->device_index == DEFAULT_DEVICE_INDEX)
+    {
+        const PaDeviceIndex result = Pa_GetDefaultOutputDevice();
+        if (result == paNoDevice)
+        {
+            error(Pa_GetErrorText(result));
+            return false;
+        }
+        *device_index = result;
+        return true;
+    }
+    *device_index = config->device_index;
+    return true;
+}
+
+static bool get_output_parameters(const portaudio_config_t *config, PaStreamParameters *output_parameters)
+{
+    PaDeviceIndex device_index;
+    if (!get_device_index(config, &device_index)) return false;
+    const PaDeviceInfo *device_info = Pa_GetDeviceInfo(device_index);
+    if (device_info == NULL)
+    {
+        error(FAILED_TO_READ_DEVICE_INFO);
+        return false;
+    }
+    if (config->device_index != DEFAULT_DEVICE_INDEX)
+    {
+        // Verify that the device actually matches what the user selected.
+        const PaHostApiInfo* host_api_info = Pa_GetHostApiInfo(device_info->hostApi);
+        if (host_api_info == NULL)
+        {
+            error(FAILED_TO_READ_HOST_API_INFO);
+            return false;
+        }
+        if (strncmp(config->name, device_info->name, AUDIO_DEVICE_NAME_SIZE) != 0)
+        {
+            error(AUDIO_DEVICE_MISMATCH);
+            return false;
+        }
+        if (strncmp(config->host_api_name, host_api_info->name, HOST_API_NAME_SIZE) != 0)
+        {
+            error(AUDIO_DEVICE_MISMATCH);
+            return false;
+        }
+    }
+    output_parameters->device = device_index;
     output_parameters->channelCount = 2;
     output_parameters->sampleFormat = paInt16;
     output_parameters->suggestedLatency = device_info->defaultLowOutputLatency;
     output_parameters->hostApiSpecificStreamInfo = NULL;
-    return AUDIO_API_SUCCESS;
+    return true;
 }
 
-static audio_api_result_t open_stream(void)
+static bool open_stream(const portaudio_config_t *config)
 {
     PaStreamParameters output_parameters;
-    audio_api_result_t result = get_output_parameters(&output_parameters);
-    if (!result.success)
+    if (!get_output_parameters(config, &output_parameters))
     {
-        return result;
+        return false;
     }
     const PaError err = Pa_OpenStream(
         &stream,
@@ -46,16 +149,14 @@ static audio_api_result_t open_stream(void)
         paClipOff,
         NULL,
         NULL);
-    if (err == paNoError)
+    if (err != paNoError)
     {
-        const PaStreamInfo *stream_info = Pa_GetStreamInfo(stream);
-        printf("Actual latency: %f\n", stream_info->outputLatency);
-        return AUDIO_API_SUCCESS;
+        error(Pa_GetErrorText(err));
+        return false;
     }
-    return (audio_api_result_t) {
-        .success = false,
-        .error_message = Pa_GetErrorText(err)
-    };
+    const PaStreamInfo *stream_info = Pa_GetStreamInfo(stream);
+    printf("Actual latency: %f\n", stream_info->outputLatency);
+    return true;
 }
 
 static void destroy_output_buffer(void)
@@ -64,41 +165,30 @@ static void destroy_output_buffer(void)
     output_buffer = NULL;
 }
 
-static audio_api_result_t start_stream(void)
+static bool start_stream(void)
 {
     const PaError err = Pa_StartStream(stream);
-    if (err == paNoError)
+    if (err != paNoError)
     {
-        return AUDIO_API_SUCCESS;
+        destroy_output_buffer();
+        error(Pa_GetErrorText(err));
+        return false;
     }
-    destroy_output_buffer();
-    return (audio_api_result_t) {
-        .success = false,
-        .error_message = Pa_GetErrorText(err)
-    };
+    return true;
 }
 
-static audio_api_result_t init_portaudio(void)
+static bool open_audio_stream(const audio_api_info_t *info)
 {
     output_buffer = allocate_array(AUDIO, AUDIO_BUFFER_SIZE_FRAMES * 2, sizeof(int16_t));
     if (output_buffer == NULL)
     {
-        return audio_api_failure(MEMORY_ALLOCATION_FAILED);
+        error(MEMORY_ALLOCATION_FAILED);
+        return false;
     }
-    const PaError err = Pa_Initialize();
-    if (err != paNoError)
+    if (!open_stream(&info->config.portaudio))
     {
         destroy_output_buffer();
-        return (audio_api_result_t) {
-            .success = false,
-            .error_message = Pa_GetErrorText(err)
-        };
-    }
-    audio_api_result_t open_result = open_stream();
-    if (!open_result.success)
-    {
-        destroy_output_buffer();
-        return open_result;
+        return false;
     }
     return start_stream();
 }
@@ -122,36 +212,78 @@ static void copy_frames(const stereo_frame_t *input_buffer, int frames_to_copy)
     }
 }
 
-static audio_api_result_t write_audio(const stereo_frame_t *audio_buffer, int frames_in_buffer)
+static bool write_audio(const stereo_frame_t *audio_buffer, int frames_in_buffer)
 {
     copy_frames(audio_buffer, frames_in_buffer);
     const PaError err = Pa_WriteStream(stream, output_buffer, (unsigned) frames_in_buffer);
     if (err != paNoError)
     {
-        return audio_api_failure(Pa_GetErrorText(err));
+        error(Pa_GetErrorText(err));
+        return false;
     }
-    return AUDIO_API_SUCCESS;
+    return true;
 }
 
-static void terminate_portaudio(bool healthy)
+static void close_audio_stream(const audio_api_info_t *info)
 {
     if (stream != NULL)
     {
         Pa_StopStream(stream);
         Pa_CloseStream(stream);
     }
-    Pa_Terminate();
     destroy_output_buffer();
 }
 
-audio_api_t create_portaudio_api(void)
+bool stop_portaudio(void)
+{
+    const PaError err = Pa_Terminate();
+    if (err != paNoError)
+    {
+        error(Pa_GetErrorText(err));
+        return false;
+    }
+    return true;
+}
+
+audio_api_t get_output(const int device_index, const char *name, const char *host_api_name)
+{
+    audio_api_t audio_api_out = {
+        .info = (audio_api_info_t) {
+            .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
+            .sample_rate = SAMPLE_RATE,
+            .bouncing = false,
+            .healthy = true,
+            .config = (audio_backend_config_t) {
+                .portaudio = (portaudio_config_t) {
+                    .device_index = device_index,
+                },
+            },
+        },
+        .init = open_audio_stream,
+        .write = write_audio,
+        .finish = close_audio_stream,
+    };
+    snprintf(audio_api_out.info.config.portaudio.name, AUDIO_DEVICE_NAME_SIZE, "%s", name);
+    snprintf(audio_api_out.info.config.portaudio.host_api_name, HOST_API_NAME_SIZE, "%s", host_api_name);
+    return audio_api_out;
+}
+
+audio_api_t get_default_output(void)
 {
     return (audio_api_t) {
-        .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
-        .sample_rate = SAMPLE_RATE,
-        .bouncing = false,
-        .init = init_portaudio,
+        .info = (audio_api_info_t) {
+            .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
+            .sample_rate = SAMPLE_RATE,
+            .bouncing = false,
+            .healthy = true,
+            .config = (audio_backend_config_t) {
+                .portaudio = (portaudio_config_t) {
+                    .device_index = DEFAULT_DEVICE_INDEX,
+                },
+            },
+        },
+        .init = open_audio_stream,
         .write = write_audio,
-        .finish = terminate_portaudio
+        .finish = close_audio_stream,
     };
 }

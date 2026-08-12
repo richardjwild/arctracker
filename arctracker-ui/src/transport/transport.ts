@@ -4,23 +4,25 @@ import { sequence } from "../editing/sequence.ts";
 import { PatternLine } from "../editing/patternEvents.ts";
 
 export type TransportState = {
+  playbackAvailable: boolean;
   playing: boolean;
   looping: boolean;
   sequencePos: number;
   patternIndex: number;
-}
+};
 
 export type CurrentPattern = {
   patternNo: number;
   lines: PatternLine[];
-}
+};
 
 export const transport = {
-  playing: () => {
-    return useStore.getState().transportState.playing;
-  },
+  playbackAvailable: () => useStore.getState().transportState.playbackAvailable,
+
+  playing: () => useStore.getState().transportState.playing,
 
   togglePlay: () => {
+    if (!transport.playbackAvailable()) return;
     if (!transport.playing())
       transport.sequenceSeek(sequence.currentPosition());
     engine.togglePlay();

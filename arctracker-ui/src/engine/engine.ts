@@ -5,6 +5,7 @@ import { Sample } from "../editing/editInstrument.ts";
 import { Module } from "../module/module.ts";
 import { Effect, PatternEvent, PatternLine } from "../editing/patternEvents.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
+import { AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
 
 export type InstrumentUpdate = {
   assigned: boolean;
@@ -29,6 +30,7 @@ type PackedPatternLine = {
 
 type PackedSnapshot = {
   playing: boolean;
+  playbackAvailable: boolean;
   looping: boolean;
   currentBpm: number;
   sequencePos: number;
@@ -79,6 +81,22 @@ function exitUnsuccessfully() {
 export const engine = {
   getCurrentModule: async () => {
     return await invoke<Module>("current_module");
+  },
+
+  getAvailableOutputs: async (): Promise<AudioDeviceInfo[]> => {
+    return await invoke<AudioDeviceInfo[]>("get_available_outputs");
+  },
+
+  useOutput: async (deviceIndex: number, name: string, hostApiName: string) => {
+    return await invoke("use_output", {
+      deviceIndex,
+      name,
+      hostApiName,
+    });
+  },
+
+  useDefaultOutput: async () => {
+    return await invoke("use_default_output");
   },
 
   loadModule: async (fileName: string) => {
@@ -167,6 +185,7 @@ export const engine = {
       numTracks,
     });
     return {
+      playbackAvailable: packedSnapshot.playbackAvailable,
       playing: packedSnapshot.playing,
       looping: packedSnapshot.looping,
       currentBpm: packedSnapshot.currentBpm,

@@ -15,11 +15,19 @@ import { pattern } from "../editing/pattern.ts";
 import { moduleTitle } from "../editing/moduleTitle.ts";
 import { engine } from "../engine/engine.ts";
 import { tempo } from "../editing/tempo.ts";
+import { appConfig } from "../config/appConfig.ts";
 
 async function processCommands() {
   const commands = commandQueue.consume();
   for (const command of commands) {
     switch (command.type) {
+      case CommandType.EDIT_APP_CONFIG:
+        if (transport.playing()) transport.togglePlay();
+        appConfig.showDialog();
+        break;
+      case CommandType.SET_APP_CONFIG:
+        void appConfig.apply(command.newConfig);
+        break;
       case CommandType.CREATE_MODULE:
         void module.create().then((success) => {
           if (success) editor.newModuleLoaded();

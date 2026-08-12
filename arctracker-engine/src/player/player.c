@@ -46,19 +46,19 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->master_gain = module->master_gain;
     player->current_bpm = module->initial_bpm;
     const tempo_t initial_tempo = module_get_initial_tempo(module);
-    player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.sample_rate);
-    player->sequence = initialise_sequence(module, audio_api.bouncing);
-    player->bouncing = audio_api.bouncing;
+    player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.info.sample_rate);
+    player->sequence = initialise_sequence(module, audio_api.info.bouncing);
+    player->bouncing = audio_api.info.bouncing;
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
         goto init_failed;
     player->voices = initialise_voices(player);
     if (player->voices == NULL)
         goto init_failed;
-    const audio_out_result_t audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain);
-    if (!audio_init_result.success)
+    const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain);
+    if (!audio_init_result)
     {
-        error_with_detail(AUDIO_INIT_FAILED, audio_init_result.error_message);
+        error_with_detail(AUDIO_INIT_FAILED, get_error_message());
         goto init_failed;
     }
     tick_scheduler_restart(&player->tick_scheduler);
@@ -313,12 +313,12 @@ static bool audio_consume(player_t *player)
 {
     audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
     const int samples_to_write = tick_scheduler_samples_to_write(audio_accumulator);
-    const audio_out_result_t result = write_audio_data(&player->audio_out, player->voices, samples_to_write);
-    if (result.success)
+    const bool result = write_audio_data(&player->audio_out, player->voices, samples_to_write);
+    if (result)
         tick_scheduler_consume_samples(audio_accumulator);
     else
-        player->error_message = result.error_message;
-    return result.success;
+        player->error_message = get_error_message();
+    return result;
 }
 
 static void update_voices(player_t *player)

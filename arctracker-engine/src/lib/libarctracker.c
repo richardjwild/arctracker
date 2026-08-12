@@ -7,12 +7,15 @@
 #include "messages.h"
 #include "player/player.h"
 #include "audio_api/api.h"
+#include "audio_api/api_portaudio.h"
+#include "audio_api/api_wav.h"
 #include "io/error.h"
 #include "loader/loader.h"
 #include "memory/heap.h"
 #include "memory/bits.h"
 #include "editor/editor.h"
 #include "loader/format_arctracker.h"
+#include "midi/midi.h"
 
 #define SUCCESS (api_result_t) {\
     .success = true,\
@@ -21,7 +24,7 @@
 #define MAX_PATTERN_LENGTH 1000
 
 static void *run_player(void *);
-static void get_transport_state(player_t *player, module_t *module, ui_transport_state_t *transport_state);
+static void get_player_transport_state(const audio_subsystem_t *playback, module_t *module, ui_transport_state_t *transport_state);
 static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks);
 static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event);
 static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event);
@@ -48,7 +51,74 @@ arctracker_t *arctracker_create(void)
         arctracker_destroy(arctracker);
         return NULL;
     }
+    arctracker->playback.initialised = start_portaudio();
+    if (!arctracker->playback.initialised)
+    {
+        fprintf(stderr, "%s\n", get_error_message());
+    }
+    arctracker->midi = midi_initialise();
+    // TODO: Remove this when the GUI starts querying the MIDI input devices.
+    unsigned int midi_device_count;
+    if (midi_get_device_count(&arctracker->midi, &midi_device_count))
+    {
+        if (midi_device_count > 0)
+        {
+            midi_device_info_t *devices = malloc(sizeof(midi_device_info_t) * midi_device_count);
+            midi_get_devices(&arctracker->midi, devices, midi_device_count);
+            printf("MIDI devices:\n");
+            for (unsigned int i = 0; i < midi_device_count; i++)
+                printf("%d %s\n", i, devices[i].name);
+            free(devices);
+        }
+    }
+    // End TODO.
     return arctracker;
+}
+
+int arctracker_get_available_output_count(arctracker_t *arctracker)
+{
+    if (arctracker == NULL || !arctracker->playback.initialised)
+        return 0;
+    return get_available_output_count();
+}
+
+api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, audio_device_info_t *output_devices, int requested_outputs)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (!arctracker->playback.initialised)
+        return failure(AUDIO_SYSTEM_NOT_INITIALISED);
+    if (!get_available_outputs(output_devices, requested_outputs))
+        return failure(FAILED_TO_GET_AVAILABLE_OUTPUTS);
+    return SUCCESS;
+}
+
+static api_result_t use_output(arctracker_t *arctracker, audio_api_t audio_api)
+{
+    arctracker->playback_audio_api = audio_api;
+    if (arctracker->playback.thread_active)
+    {
+        const api_result_t result = arctracker_player_shutdown(arctracker);
+        if (!result.success)
+            return result;
+    }
+    return arctracker_player_start(arctracker);
+}
+
+api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_index, const char *name, const char *host_api_name)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    const audio_api_t audio_api = get_output(device_index, name, host_api_name);
+    return use_output(arctracker, audio_api);
+}
+
+api_result_t arctracker_use_default_output(arctracker_t *arctracker)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    const audio_api_t audio_api = get_default_output();
+    return use_output(arctracker, audio_api);
 }
 
 api_result_t arctracker_get_current_module(arctracker_t *arctracker, ui_module_info_t *module_info)
@@ -147,14 +217,15 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
+    if (!arctracker->playback.initialised)
+        return failure(AUDIO_SYSTEM_NOT_INITIALISED);
     if (arctracker->playback.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
-    audio_api_t audio_api = create_audio_api(false, NULL);
     if (has_error())
     {
         return failure(AUDIO_INIT_FAILED);
     }
-    arctracker->playback.player = player_create(arctracker->module, audio_api, arctracker->playback.event_queue);
+    arctracker->playback.player = player_create(arctracker->module, arctracker->playback_audio_api, arctracker->playback.event_queue);
     if (arctracker->playback.player == NULL)
         return failure(PLAYER_INIT_FAILED);
     pthread_t audio_thread;
@@ -198,35 +269,41 @@ bool arctracker_poll_export_event(arctracker_t *arctracker, player_event_t *even
 
 void arctracker_get_transport_state(arctracker_t *arctracker, ui_transport_state_t *transport_state)
 {
-    if (arctracker == NULL || !arctracker->playback.thread_active)
+    if (arctracker == NULL)
+        return;
+    if (arctracker->playback.thread_active)
     {
-        transport_state->playing = false;
-        transport_state->looping = false;
-        transport_state->sequence_pos = 0;
-        transport_state->pattern_index = 0;
-        transport_state->pattern_no = 0;
-        transport_state->pattern_length = 0;
-        transport_state->current_bpm = 0;
+        get_player_transport_state(&arctracker->playback, arctracker->module, transport_state);
         return;
     }
-    get_transport_state(arctracker->playback.player, arctracker->module, transport_state);
+    const int pattern_no = arctracker->module->sequence[0];
+    transport_state->playing = false;
+    transport_state->playback_available = false;
+    transport_state->looping = false;
+    transport_state->sequence_pos = 0;
+    transport_state->pattern_index = 0;
+    transport_state->pattern_no = pattern_no;
+    transport_state->pattern_length = arctracker->module->patterns[pattern_no].num_lines;
+    transport_state->current_bpm = 0;
 }
 
 void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *track_state, const int track)
 {
-    if (arctracker == NULL || arctracker->module == NULL || !arctracker->playback.thread_active)
+    if (arctracker == NULL || arctracker->module == NULL)
         return;
-    if (track < 0 || track >= arctracker->module->num_tracks) return;
-    track_state->muted = arctracker->module->tracks[track].muted;
-    if (arctracker->playback.player->playing)
+    if (track < 0 || track >= arctracker->module->num_tracks)
+        return;
+    track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
+    if (arctracker->playback.thread_active)
     {
+        track_state->muted = arctracker->playback.player->voices[track].muted;
         track_state->panning = arctracker->playback.player->voices[track].panning;
     }
     else
     {
+        track_state->muted = arctracker->module->tracks[track].muted;
         track_state->panning = arctracker->module->tracks[track].panning;
     }
-    track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
 }
 
 void arctracker_toggle_mute_state(arctracker_t *arctracker, const int track)
@@ -279,11 +356,13 @@ void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *ex
     }
 }
 
-static void get_transport_state(player_t *player, module_t *module, ui_transport_state_t *transport_state)
+static void get_player_transport_state(const audio_subsystem_t *playback, module_t *module, ui_transport_state_t *transport_state)
 {
+    const player_t *player = playback->player;
     const sequence_t sequence = player->sequence;
     const int pattern_no = module->sequence[sequence.sequence_pos];
     transport_state->playing = player->playing;
+    transport_state->playback_available = playback->thread_active;
     transport_state->current_bpm = player->current_bpm;
     transport_state->looping = player->sequence.looping_state.looping;
     transport_state->sequence_pos = sequence.sequence_pos;
@@ -367,7 +446,7 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
         return failure(NO_MODULE_LOADED);
     if (arctracker->export.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
-    audio_api_t audio_api = create_audio_api(true, output_filename);
+    audio_api_t audio_api = initialise_wav(output_filename);
     arctracker->export.player = player_create(arctracker->module, audio_api, arctracker->export.event_queue);
     if (arctracker->export.player == NULL)
         return failure(EXPORT_INIT_FAILED);
@@ -403,8 +482,6 @@ api_result_t arctracker_player_shutdown(arctracker_t *arctracker)
     arctracker->playback.thread_active = false;
     player_destroy(arctracker->playback.player);
     arctracker->playback.player = NULL;
-    count_resources(PLAYER, "player");
-    count_resources(AUDIO, "audio");
     return SUCCESS;
 }
 
@@ -670,15 +747,24 @@ api_result_t arctracker_destroy(arctracker_t *arctracker)
         remove_module(arctracker);
     event_queue_destroy(arctracker->playback.event_queue);
     event_queue_destroy(arctracker->export.event_queue);
+    if (arctracker->playback.initialised && !stop_portaudio())
+    {
+        // PortAudio returned an error code when terminating, but the utility of that is only
+        // that it might indicate a bug in Arctracker. It is not worth reporting to the user.
+        fprintf(stderr, "%s\n", get_error_message());
+    }
+    midi_destroy(&arctracker->midi);
     deallocate(MAIN, arctracker);
     count_resources(MAIN, "main");
+    count_resources(MODULE, "module");
+    count_resources(PLAYER, "player");
+    count_resources(AUDIO, "audio");
     return SUCCESS;
 }
 
 static void remove_module(arctracker_t *arctracker)
 {
     module_destroy(arctracker->module);
-    count_resources(MODULE, "module");
     arctracker->module = NULL;
 }
 
@@ -698,6 +784,7 @@ static api_result_t failure(char *error_message)
 
 static void count_resources(resource_group_t group, char *group_name)
 {
-    if (resource_count_for(group) > 0)
-        fprintf(stderr, "WARNING: %d %s resources were not deallocated\n", resource_count_for(group), group_name);
+    const int resource_count = resource_count_for(group);
+    if (resource_count > 0)
+        fprintf(stderr, "WARNING: %d %s resources were not deallocated\n", resource_count, group_name);
 }

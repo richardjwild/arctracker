@@ -1,4 +1,5 @@
 import { CursorField } from "../editing/cursor.ts";
+import { AppConfig } from "../config/appConfig.ts";
 
 type SampleCursorField = Extract<
   CursorField,
@@ -13,6 +14,8 @@ type EffectDataCursorField = Extract<
 >;
 
 export enum CommandType {
+  EDIT_APP_CONFIG,
+  SET_APP_CONFIG,
   LOAD_FILE,
   SAVE_MODULE_AS,
   SAVE_MODULE,
@@ -82,6 +85,8 @@ export enum CommandType {
 }
 
 export type Command =
+  | { type: CommandType.EDIT_APP_CONFIG }
+  | { type: CommandType.SET_APP_CONFIG; newConfig: AppConfig }
   | { type: CommandType.LOAD_FILE }
   | { type: CommandType.SAVE_MODULE_AS }
   | { type: CommandType.SAVE_MODULE }
@@ -177,7 +182,7 @@ export type Command =
   | { type: CommandType.SET_TRACK_COUNT; trackCount: number }
   | { type: CommandType.EDIT_TEMPO }
   | { type: CommandType.SET_TEMPO }
-  | { type: CommandType.TOGGLE_TRACK_MUTE; track: number }
+  | { type: CommandType.TOGGLE_TRACK_MUTE; track: number };
 
 const queue: Command[] = [];
 
@@ -192,6 +197,9 @@ export const commandQueue = {
 };
 
 export const commands = {
+  editAppConfig: () => commandQueue.push({ type: CommandType.EDIT_APP_CONFIG }),
+  setAppConfig: (newConfig: AppConfig) =>
+    commandQueue.push({ type: CommandType.SET_APP_CONFIG, newConfig }),
   loadFile: () => commandQueue.push({ type: CommandType.LOAD_FILE }),
   saveModuleAs: () => commandQueue.push({ type: CommandType.SAVE_MODULE_AS }),
   saveModule: () => commandQueue.push({ type: CommandType.SAVE_MODULE }),
@@ -253,7 +261,11 @@ export const commands = {
       type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM,
       extendSelection,
     }),
-  patternGridJumpToLocation: (track: number, patternIndex: number, extendSelection: boolean) =>
+  patternGridJumpToLocation: (
+    track: number,
+    patternIndex: number,
+    extendSelection: boolean,
+  ) =>
     commandQueue.push({
       type: CommandType.PATTERN_GRID_JUMP_TO_LOCATION,
       track,

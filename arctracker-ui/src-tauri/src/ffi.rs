@@ -1,8 +1,17 @@
 use std::os::raw::{c_char, c_int};
+use std::sync::Arc;
 
 #[repr(C)]
 pub struct ArctrackerHandle {
     _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct AudioDeviceInfo {
+    pub device_index: c_int,
+    pub name: [c_char; 256],
+    pub host_api_name: [c_char; 256],
 }
 
 #[derive(Copy, Clone)]
@@ -105,6 +114,7 @@ pub struct UiPatternEvent {
 #[repr(C)]
 pub struct UiTransportState {
     pub playing: bool,
+    pub playback_available: bool,
     pub looping: bool,
     pub sequence_pos: c_int,
     pub pattern_index: c_int,
@@ -141,6 +151,19 @@ pub struct ApiResult {
 #[link(name = "arctracker")]
 extern "C" {
     pub fn arctracker_create() -> *mut ArctrackerHandle;
+    pub fn arctracker_get_available_output_count(handle: *mut ArctrackerHandle) -> c_int;
+    pub fn arctracker_get_available_outputs(
+        handle: *mut ArctrackerHandle,
+        output_devices: *mut AudioDeviceInfo,
+        requested_outputs: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_use_output(
+        handle: *mut ArctrackerHandle,
+        device_index: c_int,
+        name: *const c_char,
+        host_api_name: *const c_char,
+    ) -> ApiResult;
+    pub fn arctracker_use_default_output(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_get_current_module(
         handle: *mut ArctrackerHandle,
         module_info: *mut UiModuleInfo,
@@ -153,7 +176,7 @@ extern "C" {
     pub fn arctracker_module_save(
         handle: *mut ArctrackerHandle,
         mod_filename: *const c_char,
-        format: c_int
+        format: c_int,
     ) -> ApiResult;
     pub fn arctracker_module_create(
         handle: *mut ArctrackerHandle,
@@ -168,15 +191,21 @@ extern "C" {
     pub fn arctracker_get_pattern_lengths(
         handle: *mut ArctrackerHandle,
         pattern_lengths: *mut c_int,
-        num_patterns: c_int
+        num_patterns: c_int,
     ) -> ApiResult;
     pub fn arctracker_player_start(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_player_cmd(
         handle: *mut ArctrackerHandle,
         command: *const PlayerCommand,
     ) -> bool;
-    pub fn arctracker_poll_playback_event(handle: *mut ArctrackerHandle, event: *mut PlayerEvent) -> bool;
-    pub fn arctracker_poll_export_event(handle: *mut ArctrackerHandle, event: *mut PlayerEvent) -> bool;
+    pub fn arctracker_poll_playback_event(
+        handle: *mut ArctrackerHandle,
+        event: *mut PlayerEvent,
+    ) -> bool;
+    pub fn arctracker_poll_export_event(
+        handle: *mut ArctrackerHandle,
+        event: *mut PlayerEvent,
+    ) -> bool;
     pub fn arctracker_get_transport_state(
         handle: *mut ArctrackerHandle,
         out_state: *mut UiTransportState,
@@ -184,13 +213,17 @@ extern "C" {
     pub fn arctracker_get_track_state(
         handle: *mut ArctrackerHandle,
         track_state: *mut UiTrackState,
-        num_tracks: c_int
+        num_tracks: c_int,
     );
     pub fn arctracker_toggle_mute_state(handle: *mut ArctrackerHandle, track: c_int);
-    pub fn arctracker_set_effects_displayed(handle: *mut ArctrackerHandle, track: c_int, effects_displayed: c_int);
+    pub fn arctracker_set_effects_displayed(
+        handle: *mut ArctrackerHandle,
+        track: c_int,
+        effects_displayed: c_int,
+    );
     pub fn arctracker_get_and_reset_peak_levels(
-        handle: *mut ArctrackerHandle, peak_levels:
-        *mut UiPeakLevels
+        handle: *mut ArctrackerHandle,
+        peak_levels: *mut UiPeakLevels,
     );
     pub fn arctracker_get_pattern(
         handle: *mut ArctrackerHandle,
@@ -203,20 +236,74 @@ extern "C" {
         handle: *mut ArctrackerHandle,
         output_filename: *const c_char,
     ) -> ApiResult;
-    pub fn arctracker_get_export_state(handle: *mut ArctrackerHandle, export_state: *mut UiExportState);
+    pub fn arctracker_get_export_state(
+        handle: *mut ArctrackerHandle,
+        export_state: *mut UiExportState,
+    );
     pub fn arctracker_export_cleanup(handle: *mut ArctrackerHandle) -> ApiResult;
-    pub fn arctracker_edit_get_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, track: c_int, event: *mut UiPatternEvent) -> ApiResult;
-    pub fn arctracker_edit_set_event(handle: *mut ArctrackerHandle, pattern_no: c_int, pattern_index: c_int, track: c_int, event: *mut UiPatternEvent) -> ApiResult;
-    pub fn arctracker_edit_get_sequence(handle: *mut ArctrackerHandle, sequence: *mut c_int, expected_sequence_len: c_int) -> ApiResult;
-    pub fn arctracker_edit_set_sequence(handle: *mut ArctrackerHandle, new_sequence: *const c_int, new_sequence_len: c_int) -> ApiResult;
-    pub fn arctracker_edit_create_pattern(handle: *mut ArctrackerHandle, pattern_length: c_int, new_pattern_no: *mut c_int) -> ApiResult;
-    pub fn arctracker_edit_delete_pattern(handle: *mut ArctrackerHandle, pattern_no: c_int) -> ApiResult;
-    pub fn arctracker_edit_set_pattern_length(handle: *mut ArctrackerHandle, pattern_no: c_int, new_length: c_int) -> ApiResult;
-    pub fn arctracker_edit_set_instrument(handle: *mut ArctrackerHandle, slot: u8, new_instrument: UiInstrumentUpdate) -> ApiResult;
-    pub fn arctracker_edit_load_sample(handle: *mut ArctrackerHandle, filename: *const c_char, sample_info: *mut UiSampleInfo) -> ApiResult;
-    pub fn arctracker_edit_set_module_title(handle: *mut ArctrackerHandle, name: *const c_char, author: *const c_char, default_pattern_length: c_int) -> ApiResult;
-    pub fn arctracker_edit_set_num_tracks(handle: *mut ArctrackerHandle, num_tracks: c_int) -> ApiResult;
-    pub fn arctracker_edit_set_tempo(handle: *mut ArctrackerHandle, lines_per_beat: u8, beats_per_minute: u8) -> ApiResult;
+    pub fn arctracker_edit_get_event(
+        handle: *mut ArctrackerHandle,
+        pattern_no: c_int,
+        pattern_index: c_int,
+        track: c_int,
+        event: *mut UiPatternEvent,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_event(
+        handle: *mut ArctrackerHandle,
+        pattern_no: c_int,
+        pattern_index: c_int,
+        track: c_int,
+        event: *mut UiPatternEvent,
+    ) -> ApiResult;
+    pub fn arctracker_edit_get_sequence(
+        handle: *mut ArctrackerHandle,
+        sequence: *mut c_int,
+        expected_sequence_len: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_sequence(
+        handle: *mut ArctrackerHandle,
+        new_sequence: *const c_int,
+        new_sequence_len: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_create_pattern(
+        handle: *mut ArctrackerHandle,
+        pattern_length: c_int,
+        new_pattern_no: *mut c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_delete_pattern(
+        handle: *mut ArctrackerHandle,
+        pattern_no: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_pattern_length(
+        handle: *mut ArctrackerHandle,
+        pattern_no: c_int,
+        new_length: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_instrument(
+        handle: *mut ArctrackerHandle,
+        slot: u8,
+        new_instrument: UiInstrumentUpdate,
+    ) -> ApiResult;
+    pub fn arctracker_edit_load_sample(
+        handle: *mut ArctrackerHandle,
+        filename: *const c_char,
+        sample_info: *mut UiSampleInfo,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_module_title(
+        handle: *mut ArctrackerHandle,
+        name: *const c_char,
+        author: *const c_char,
+        default_pattern_length: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_num_tracks(
+        handle: *mut ArctrackerHandle,
+        num_tracks: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_edit_set_tempo(
+        handle: *mut ArctrackerHandle,
+        lines_per_beat: u8,
+        beats_per_minute: u8,
+    ) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
 }

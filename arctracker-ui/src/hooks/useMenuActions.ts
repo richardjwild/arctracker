@@ -8,6 +8,7 @@ type MenuAction = {
 };
 
 const menuActions: MenuAction[] = [
+  { eventId: "open-settings-requested", action: commands.editAppConfig },
   { eventId: "new-module-requested", action: commands.createModule },
   { eventId: "open-module-requested", action: commands.loadFile },
   { eventId: "save-module-requested", action: commands.saveModule },
@@ -21,6 +22,7 @@ const menuActions: MenuAction[] = [
   { eventId: "set-tempo-requested", action: commands.editTempo },
   { eventId: "undo-requested", action: commands.undoEdit },
   { eventId: "redo-requested", action: commands.redoEdit },
+  { eventId: "toggle-edit-requested", action: commands.toggleEdit },
   { eventId: "cut-events-requested", action: commands.cutPatternEvents },
   { eventId: "copy-events-requested", action: commands.copyPatternEvents },
   { eventId: "paste-events-requested", action: commands.pastePatternEvents },

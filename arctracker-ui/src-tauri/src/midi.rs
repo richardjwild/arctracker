@@ -1,12 +1,10 @@
-use std::sync::{Arc};
-use midir::{Ignore, MidiInput};
 use arctracker_ui_lib::AppState;
+use midir::{Ignore, MidiInput};
+use std::sync::Arc;
 
 const MIDI_CHAN_1_NOTE_ON: u8 = 144;
 
-pub fn start_midi_thread(
-    state: Arc<AppState>
-) {
+pub fn start_midi_thread(state: Arc<AppState>) {
     // TODO: 1. Don't panic if MIDI unavailable.
     // TODO: 2. Allow MIDI devices to be configured by the user.
     let mut midi_in = MidiInput::new("arctracker-midi").expect("failed to create midi input");
@@ -16,16 +14,22 @@ pub fn start_midi_thread(
         println!("No MIDI ports found");
         return;
     }
+    for n in 0..ports.len() {
+        println!("{}: {}", n, midi_in.port_name(&ports[n]).unwrap());
+    }
     let port = &ports[0];
     let _connection = midi_in
-        .connect(port, "arctracker-input", move |_timestamp, message, _| {
-            handle_midi_message(message, &state);
-        }, /* data */ ())
+        .connect(
+            port,
+            "arctracker-input",
+            move |_timestamp, message, _| {
+                handle_midi_message(message, &state);
+            },
+            /* data */ (),
+        )
         .expect("failed to connect midi");
     loop {
-        std::thread::sleep(
-            std::time::Duration::from_secs(1)
-        );
+        std::thread::sleep(std::time::Duration::from_secs(1));
     }
 }
 
@@ -46,9 +50,9 @@ fn handle_midi_message(message: &[u8], state: &AppState) {
                 editor.selected_instrument,
                 editor.selected_channel,
             );
-        // TODO: Implement note-off only when sample repeats.
-        // } else {
-        //     tracker.midi_note_off(editor.selected_channel);
+            // TODO: Implement note-off only when sample repeats.
+            // } else {
+            //     tracker.midi_note_off(editor.selected_channel);
         }
     }
 }

@@ -1,6 +1,7 @@
-project('arctracker', 'c', version: '0.4.2')
+project('arctracker', ['c', 'cpp'], version: '0.4.2')
 
 portaudio = dependency('portaudio-2.0')
+rtmidi = dependency('rtmidi')
 
 add_project_arguments(
   '-Wall',
@@ -11,8 +12,8 @@ add_project_arguments(
 )
 
 if get_option('asan')
-  add_project_arguments('-fsanitize=address', language: 'c')
-  add_project_link_arguments('-fsanitize=address', language: 'c')
+  add_project_arguments('-fsanitize=address', language: ['c', 'cpp'])
+  add_project_link_arguments('-fsanitize=address', language: ['c', 'cpp'])
 endif
 
 subdir('src')
@@ -20,14 +21,14 @@ project_includes = include_directories('src')
 
 libarctracker = static_library('arctracker',
   libarctracker_sources,
-  dependencies: portaudio,
+  dependencies: [portaudio, rtmidi],
   include_directories: project_includes,
 )
 
 executable('arctracker-console',
   arctracker_console_sources,
   link_with: libarctracker,
-  dependencies: portaudio,
+  dependencies: [portaudio, rtmidi],
   include_directories: project_includes,
   install: true
 )

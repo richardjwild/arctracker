@@ -2,10 +2,13 @@
 #define ARCTRACKER_ARCTRACKER_H
 
 #include <pthread.h>
+
+#include "midi/midi.h"
 #include "player/player.h"
 #include "ui/player_event_queue.h"
 
 typedef struct {
+    bool initialised;
     player_t *player;
     player_event_queue_t *event_queue;
     bool thread_active;
@@ -18,8 +21,10 @@ typedef enum {
 
 typedef struct arctracker_handle {
     module_t *module;
+    audio_api_t playback_audio_api;
     audio_subsystem_t playback;
     audio_subsystem_t export;
+    midi_subsystem_t midi;
     export_state_t export_state;
 } arctracker_t;
 

@@ -6,20 +6,17 @@
 #include "io/error.h"
 
 #define FRAME_SIZE (NUM_CHANNELS * sizeof(int16_t))
-#define MAX_FILE_PATH_LENGTH 4096
 
 static const uint16_t NUM_CHANNELS = 2;
-
 static int16_t *audio_data = NULL;
 static int frames_written = 0;
 static int data_capacity = 0;
-static char file_name[MAX_FILE_PATH_LENGTH];
 
-static audio_api_result_t init_wav(void);
-static audio_api_result_t collect_audio(const stereo_frame_t *, int);
+static bool init_wav(const audio_api_info_t *);
+static bool collect_audio(const stereo_frame_t *, int);
 static bool ensure_capacity(int);
 static int16_t clamp_to_pcm16(float);
-static void create_structure_and_write(bool);
+static void create_structure_and_write(const audio_api_info_t *info);
 
 audio_api_t initialise_wav(const char *output_filename)
 {
@@ -29,28 +26,30 @@ audio_api_t initialise_wav(const char *output_filename)
         error("File path is too long");
         return audio_api;
     }
-    snprintf(file_name, MAX_FILE_PATH_LENGTH, "%s", output_filename);
     frames_written = 0;
     data_capacity = 0;
-    audio_api.buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES;
-    audio_api.sample_rate = SAMPLE_RATE;
-    audio_api.bouncing = true;
+    audio_api.info.buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES;
+    audio_api.info.sample_rate = SAMPLE_RATE;
+    audio_api.info.bouncing = true;
+    audio_api.info.healthy = true;
+    snprintf(audio_api.info.config.wav.output_filename, MAX_FILE_PATH_LENGTH, "%s", output_filename);
     audio_api.init = init_wav;
     audio_api.write = collect_audio;
     audio_api.finish = create_structure_and_write;
     return audio_api;
 }
 
-static audio_api_result_t init_wav(void)
+static bool init_wav(const audio_api_info_t *info)
 {
-    return AUDIO_API_SUCCESS;
+    return true;
 }
 
-static audio_api_result_t collect_audio(const stereo_frame_t *audio_buffer, int frames_in_buffer)
+static bool collect_audio(const stereo_frame_t *audio_buffer, int frames_in_buffer)
 {
     if (!ensure_capacity(frames_written + frames_in_buffer))
     {
-        return audio_api_failure(get_error_message());
+        error(get_error_message());
+        return false;
     }
     int16_t *data_ptr = audio_data + frames_written * NUM_CHANNELS;
     while (frames_in_buffer > 0)
@@ -62,7 +61,7 @@ static audio_api_result_t collect_audio(const stereo_frame_t *audio_buffer, int 
         frames_written++;
         frames_in_buffer--;
     }
-    return AUDIO_API_SUCCESS;
+    return true;
 }
 
 static bool ensure_capacity(const int required_frames)
@@ -89,9 +88,9 @@ static int16_t clamp_to_pcm16(const float sample)
     return (int16_t)(sample * INT16_MAX);
 }
 
-static void create_structure_and_write(const bool healthy)
+static void create_structure_and_write(const audio_api_info_t *info)
 {
-    if (healthy)
+    if (info->healthy)
     {
         const wav_pcm16_t wav = {
             .sample_rate = SAMPLE_RATE,
@@ -100,9 +99,8 @@ static void create_structure_and_write(const bool healthy)
             .frames = frames_written,
             .pcm16 = audio_data,
         };
-        wav_write_pcm16(file_name, &wav);
+        wav_write_pcm16(info->config.wav.output_filename, &wav);
     }
     free(audio_data);
     audio_data = NULL;
-    file_name[0] = '\0';
 }

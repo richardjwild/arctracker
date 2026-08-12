@@ -2,8 +2,6 @@
 #define ARCTRACKER_WRITE_AUDIO_H
 
 #include <stdatomic.h>
-
-#include "mix.h"
 #include "voice.h"
 #include "audio_api/api.h"
 
@@ -20,7 +18,6 @@ typedef struct
     atomic_uint peak_l;
     atomic_uint peak_r;
     audio_api_t api;
-    bool healthy;
 } audio_out_t;
 
 typedef struct {
@@ -28,9 +25,9 @@ typedef struct {
     const char *error_message;
 } audio_out_result_t;
 
-audio_out_result_t initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain);
+bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain);
 
-audio_out_result_t write_audio_data(audio_out_t *, voice_t *, int);
+bool write_audio_data(audio_out_t *, voice_t *, int);
 
 void send_remaining_audio(audio_out_t *);
 

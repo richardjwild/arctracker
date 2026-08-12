@@ -13,6 +13,7 @@ export type Track = {
 
 export type PlayerSnapshot = {
   playing: boolean;
+  playbackAvailable: boolean;
   looping: boolean;
   currentBpm: number;
   sequencePos: number;
@@ -49,6 +50,7 @@ export const player = {
       const displayedPatternNo = useStore.getState().currentPattern?.patternNo;
       const snapshot = await engine.getPlayerSnapshot(displayedPatternNo, numTracks);
       useStore.getState().setTransportState({
+        playbackAvailable: snapshot.playbackAvailable,
         playing: snapshot.playing,
         looping: snapshot.looping,
         sequencePos: snapshot.sequencePos,

@@ -65,6 +65,7 @@ typedef struct ui_pattern_event {
 
 typedef struct ui_transport_state {
     bool playing;
+    bool playback_available;
     bool looping;
     int sequence_pos;
     int pattern_index;
