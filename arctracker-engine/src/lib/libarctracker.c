@@ -33,6 +33,16 @@ static void remove_module(arctracker_t *);
 static api_result_t failure(char *);
 static void count_resources(resource_group_t, char *);
 
+arctracker_init_result_t arctracker_init(void)
+{
+    arctracker_t *arctracker = arctracker_create();
+    midi_subsystem_t *midi = midi_initialise(arctracker);
+    return (arctracker_init_result_t) {
+        .arctracker_handle = arctracker,
+        .midi_handle = midi,
+    };
+}
+
 arctracker_t *arctracker_create(void)
 {
     arctracker_t *arctracker = allocate_array(MAIN, 1, sizeof(arctracker_t));
@@ -55,23 +65,8 @@ arctracker_t *arctracker_create(void)
     if (!arctracker->playback.initialised)
     {
         fprintf(stderr, "%s\n", get_error_message());
+        clear_error_state();
     }
-    arctracker->midi = midi_initialise();
-    // TODO: Remove this when the GUI starts querying the MIDI input devices.
-    unsigned int midi_device_count;
-    if (midi_get_device_count(&arctracker->midi, &midi_device_count))
-    {
-        if (midi_device_count > 0)
-        {
-            midi_device_info_t *devices = malloc(sizeof(midi_device_info_t) * midi_device_count);
-            midi_get_devices(&arctracker->midi, devices, midi_device_count);
-            printf("MIDI devices:\n");
-            for (unsigned int i = 0; i < midi_device_count; i++)
-                printf("%d %s\n", i, devices[i].name);
-            free(devices);
-        }
-    }
-    // End TODO.
     return arctracker;
 }
 
@@ -82,15 +77,28 @@ int arctracker_get_available_output_count(arctracker_t *arctracker)
     return get_available_output_count();
 }
 
-api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, audio_device_info_t *output_devices, int requested_outputs)
+api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, ui_audio_device_info_t *output_devices, int requested_outputs)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     if (!arctracker->playback.initialised)
         return failure(AUDIO_SYSTEM_NOT_INITIALISED);
-    if (!get_available_outputs(output_devices, requested_outputs))
-        return failure(FAILED_TO_GET_AVAILABLE_OUTPUTS);
-    return SUCCESS;
+    audio_device_info_t *devices = allocate_array(MAIN, sizeof(audio_device_info_t), requested_outputs);
+    api_result_t result;
+    if (!get_available_outputs(devices, requested_outputs))
+        result = failure(FAILED_TO_GET_AVAILABLE_OUTPUTS);
+    else
+    {
+        for (int i = 0; i < requested_outputs; i++)
+        {
+            output_devices[i].device_index = devices[i].device_index;
+            snprintf(output_devices[i].name, sizeof(output_devices[i].name), "%s", devices[i].name);
+            snprintf(output_devices[i].host_api_name, sizeof(output_devices[i].name), "%s", devices[i].host_api_name);
+        }
+        result = SUCCESS;
+    }
+    deallocate(MAIN, devices);
+    return result;
 }
 
 static api_result_t use_output(arctracker_t *arctracker, audio_api_t audio_api)
@@ -119,6 +127,54 @@ api_result_t arctracker_use_default_output(arctracker_t *arctracker)
         return failure(BAD_ARCTRACKER_HANDLE);
     const audio_api_t audio_api = get_default_output();
     return use_output(arctracker, audio_api);
+}
+
+int arctracker_get_available_midi_count(midi_subsystem_t *midi)
+{
+    if (midi == NULL)
+        return 0;
+    unsigned int count = 0;
+    midi_get_device_count(midi, &count);
+    return (int) count;
+}
+
+api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *midi, ui_midi_device_info_t *devices_out, int requested_count)
+{
+    if (midi == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    midi_device_info_t *devices = allocate_array(MAIN, sizeof(midi_device_info_t), requested_count);
+    if (devices == NULL)
+        return failure(MEMORY_ALLOCATION_FAILED);
+    api_result_t result;
+    if (!midi_get_devices(midi, devices, requested_count))
+        result = failure(FAILED_TO_GET_AVAILABLE_MIDI_DEVICES);
+    else
+    {
+        for (int i = 0; i < requested_count; i++)
+            snprintf(devices_out[i].name, sizeof(devices_out[i].name), "%s", devices[i].name);
+        result = SUCCESS;
+    }
+    deallocate(MAIN, devices);
+    return result;
+}
+
+api_result_t arctracker_use_midi_device(midi_subsystem_t *midi, const char *name)
+{
+    if (midi == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (!midi_use_device(midi, name))
+        return failure(FAILED_TO_USE_MIDI_DEVICE);
+    return SUCCESS;
+}
+
+void arctracker_midi_set_playback_channel(midi_subsystem_t *midi, const int channel)
+{
+    midi_set_playback_channel(midi, channel);
+}
+
+void arctracker_midi_set_playback_instrument(midi_subsystem_t *midi, const uint8_t instrument)
+{
+    midi_set_playback_instrument(midi, instrument);
 }
 
 api_result_t arctracker_get_current_module(arctracker_t *arctracker, ui_module_info_t *module_info)
@@ -178,14 +234,15 @@ api_result_t arctracker_get_instrument_info(arctracker_t *arctracker, uint8_t sl
     return SUCCESS;
 }
 
-api_result_t arctracker_module_create(arctracker_t *arctracker, int num_tracks, ui_module_info_t *module_info)
+api_result_t arctracker_module_create(arctracker_t *arctracker, const new_module_params_t params, ui_module_info_t *module_info)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    module_t *module = module_create(num_tracks, 1, 1, 0);
-    if (module == NULL || !module_init(module))
+    module_t *module = module_create(params.num_tracks, 1, 1, 0);
+    if (module == NULL || !module_init(module, params.default_pattern_length, params.lines_per_beat, params.beats_per_minute))
         return failure(MODULE_CREATE_FAILED);
-    strcpy(module->name, NEW_MODULE_TITLE);
+    strncpy(module->name, NEW_MODULE_TITLE, MAX_LEN_TUNENAME);
+    strncpy(module->author, params.author, MAX_LEN_AUTHOR);
     if (arctracker->playback.thread_active)
         arctracker_player_shutdown(arctracker);
     if (arctracker->module != NULL)
@@ -221,6 +278,8 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
         return failure(AUDIO_SYSTEM_NOT_INITIALISED);
     if (arctracker->playback.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
+    if (arctracker->playback_audio_api.init == NULL)
+        return failure(AUDIO_OUTPUT_NOT_CONFIGURED);
     if (has_error())
     {
         return failure(AUDIO_INIT_FAILED);
@@ -294,16 +353,11 @@ void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *trac
     if (track < 0 || track >= arctracker->module->num_tracks)
         return;
     track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
-    if (arctracker->playback.thread_active)
-    {
-        track_state->muted = arctracker->playback.player->voices[track].muted;
+    track_state->muted = arctracker->module->tracks[track].muted;
+    if (arctracker->playback.thread_active && arctracker->playback.player->running)
         track_state->panning = arctracker->playback.player->voices[track].panning;
-    }
     else
-    {
-        track_state->muted = arctracker->module->tracks[track].muted;
         track_state->panning = arctracker->module->tracks[track].panning;
-    }
 }
 
 void arctracker_toggle_mute_state(arctracker_t *arctracker, const int track)
@@ -742,7 +796,11 @@ api_result_t arctracker_destroy(arctracker_t *arctracker)
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->playback.thread_active)
-        return failure(PLAYER_STILL_RUNNING);
+    {
+        const api_result_t result = arctracker_player_shutdown(arctracker);
+        if (!result.success)
+            fprintf(stderr, "%s\n", result.error_message);
+    }
     if (arctracker->module != NULL)
         remove_module(arctracker);
     event_queue_destroy(arctracker->playback.event_queue);
@@ -753,13 +811,17 @@ api_result_t arctracker_destroy(arctracker_t *arctracker)
         // that it might indicate a bug in Arctracker. It is not worth reporting to the user.
         fprintf(stderr, "%s\n", get_error_message());
     }
-    midi_destroy(&arctracker->midi);
     deallocate(MAIN, arctracker);
     count_resources(MAIN, "main");
     count_resources(MODULE, "module");
     count_resources(PLAYER, "player");
     count_resources(AUDIO, "audio");
     return SUCCESS;
+}
+
+void arctracker_midi_destroy(midi_subsystem_t *midi)
+{
+    midi_destroy(midi);
 }
 
 static void remove_module(arctracker_t *arctracker)

@@ -2,8 +2,7 @@
 #define ARCTRACKER_LIBARCTRACKER_H
 
 #include <stdint.h>
-
-#include "audio_api/api_portaudio.h"
+#include "midi/midi.h"
 #include "ui/ui.h"
 #include "player/player_command.h"
 #include "ui/player_event.h"
@@ -11,22 +10,48 @@
 #define ERROR_MESSAGE_BUFFER_SIZE 256
 
 typedef struct arctracker_handle arctracker_t;
+
 typedef struct {
     bool success;
     char error_message[ERROR_MESSAGE_BUFFER_SIZE];
 } api_result_t;
 
+typedef struct {
+    arctracker_t *arctracker_handle;
+    midi_subsystem_t *midi_handle;
+} arctracker_init_result_t;
+
+typedef struct {
+    int num_tracks;
+    int default_pattern_length;
+    int lines_per_beat;
+    int beats_per_minute;
+    char *author;
+} new_module_params_t;
+
 static const int FORMAT_ARCTRACKER = 0;
+
+arctracker_init_result_t arctracker_init(void);
 
 arctracker_t *arctracker_create(void);
 
 int arctracker_get_available_output_count(arctracker_t *handle);
 
-api_result_t arctracker_get_available_outputs(arctracker_t *handle, audio_device_info_t *output_devices, int requested_outputs);
+api_result_t arctracker_get_available_outputs(arctracker_t *handle, ui_audio_device_info_t *output_devices, int requested_outputs);
 
 api_result_t arctracker_use_output(arctracker_t *handle, int device_index, const char *name, const char *host_api_name);
 
-api_result_t arctracker_use_default_output(arctracker_t *arctracker);
+api_result_t arctracker_use_default_output(arctracker_t *handle);
+
+int arctracker_get_available_midi_count(midi_subsystem_t *handle);
+
+api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *handle, ui_midi_device_info_t *devices, int requested_count);
+
+api_result_t arctracker_use_midi_device(midi_subsystem_t *handle, const char *name);
+
+void arctracker_midi_set_playback_channel(midi_subsystem_t *midi, int channel);
+
+void arctracker_midi_set_playback_instrument(midi_subsystem_t *midi, uint8_t instrument);
 
 api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_t *module_info);
 
@@ -38,7 +63,7 @@ api_result_t arctracker_get_instrument_info(arctracker_t *handle, uint8_t slot, 
 
 api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_lengths, int num_patterns);
 
-api_result_t arctracker_module_create(arctracker_t *handle, int num_tracks, ui_module_info_t *module_info);
+api_result_t arctracker_module_create(arctracker_t *handle, new_module_params_t params, ui_module_info_t *module_info);
 
 api_result_t arctracker_player_start(arctracker_t *handle);
 
@@ -93,5 +118,7 @@ api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, int num_tracks
 api_result_t arctracker_edit_set_tempo(arctracker_t *handle, uint8_t lines_per_beat, uint8_t beats_per_minute);
 
 api_result_t arctracker_destroy(arctracker_t *handle);
+
+void arctracker_midi_destroy(midi_subsystem_t *midi);
 
 #endif //ARCTRACKER_LIBARCTRACKER_H

@@ -89,10 +89,10 @@ bool player_run(player_t *player)
         send_remaining_audio(&player->audio_out);
     else
         event_queue_add(player->player_event_queue, create_error_event(player->error_message));
-    destroy_audio_resources(&player->audio_out);
-    deallocate(PLAYER, player->voices);
     player->running = false;
     player->playing = false;
+    destroy_audio_resources(&player->audio_out);
+    deallocate(PLAYER, player->voices);
     return healthy;
 }
 

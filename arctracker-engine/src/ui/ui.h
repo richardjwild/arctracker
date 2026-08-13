@@ -84,4 +84,14 @@ typedef struct ui_peak_level {
     float right;
 } ui_peak_level_t;
 
+typedef struct ui_audio_device_info {
+    int device_index;
+    char name[256];
+    char host_api_name[256];
+} ui_audio_device_info_t;
+
+typedef struct ui_midi_device_info {
+    char name[128];
+} ui_midi_device_info_t;
+
 #endif //ARCTRACKER_UI_H

@@ -59,11 +59,11 @@ fail:
     return NULL;
 }
 
-bool module_init(module_t *module)
+bool module_init(module_t *module, const int default_pattern_length, const int lines_per_beat, const int beats_per_minute)
 {
     module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
-    module->default_pattern_length = 64;
+    module->default_pattern_length = default_pattern_length;
     for (int i = 0; i < module->num_tracks; i++)
     {
         module->tracks[i].panning = 0x80; // Centre
@@ -74,8 +74,8 @@ bool module_init(module_t *module)
         module->instruments[i].assigned = false;
     if (!module_create_pattern(module, 0, module->default_pattern_length))
         return false;
-    module_set_lines_per_beat(module, 4);
-    module_set_initial_bpm(module, 120);
+    module_set_lines_per_beat(module, lines_per_beat);
+    module_set_initial_bpm(module, beats_per_minute);
     return true;
 }
 

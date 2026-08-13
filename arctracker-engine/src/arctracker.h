@@ -2,8 +2,6 @@
 #define ARCTRACKER_ARCTRACKER_H
 
 #include <pthread.h>
-
-#include "midi/midi.h"
 #include "player/player.h"
 #include "ui/player_event_queue.h"
 
@@ -24,7 +22,6 @@ typedef struct arctracker_handle {
     audio_api_t playback_audio_api;
     audio_subsystem_t playback;
     audio_subsystem_t export;
-    midi_subsystem_t midi;
     export_state_t export_state;
 } arctracker_t;
 

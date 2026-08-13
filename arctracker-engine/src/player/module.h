@@ -112,7 +112,7 @@ typedef struct
 
 module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);
 
-bool module_init(module_t *module);
+bool module_init(module_t *module, int default_pattern_length, int lines_per_beat, int beats_per_minute);
 
 tempo_t module_get_initial_tempo(const module_t *module);
 

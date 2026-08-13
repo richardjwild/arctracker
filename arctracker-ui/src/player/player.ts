@@ -2,7 +2,6 @@ import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
 import { AppPoller } from "../polling/poller.ts";
 import { commands } from "../control/commands.ts";
-import { alerting } from "../alerting/alert.ts";
 import { PatternLine } from "../editing/patternEvents.ts";
 
 export type Track = {
@@ -30,13 +29,10 @@ export type PlayerEvent =
   | { eventType: "audioOverflowed" };
 
 function handlePlayerError(errorMessage: string) {
-  alerting
-    .showError(
-      `Audio subsystem encountered error and will attempt restart. Error details: ${errorMessage}`,
-    )
-    .then(() => {
-      engine.startPlayer();
-    });
+  console.error(
+    `Audio subsystem encountered error and will attempt restart. Error details: ${errorMessage}`,
+  );
+  void engine.startPlayer();
 }
 
 let snapshotPolling = false;
@@ -48,7 +44,10 @@ export const player = {
     try {
       const numTracks = useStore.getState().module.numTracks;
       const displayedPatternNo = useStore.getState().currentPattern?.patternNo;
-      const snapshot = await engine.getPlayerSnapshot(displayedPatternNo, numTracks);
+      const snapshot = await engine.getPlayerSnapshot(
+        displayedPatternNo,
+        numTracks,
+      );
       useStore.getState().setTransportState({
         playbackAvailable: snapshot.playbackAvailable,
         playing: snapshot.playing,
@@ -56,9 +55,17 @@ export const player = {
         sequencePos: snapshot.sequencePos,
         patternIndex: snapshot.patternIndex,
       });
-      useStore.getState().setTrackMuteState(snapshot.tracks.map((track) => track.muted));
-      useStore.getState().setEffectsDisplayed(snapshot.tracks.map((track) => track.effectsDisplayed));
-      useStore.getState().setTrackPanning(snapshot.tracks.map((track) => track.panning));
+      useStore
+        .getState()
+        .setTrackMuteState(snapshot.tracks.map((track) => track.muted));
+      useStore
+        .getState()
+        .setEffectsDisplayed(
+          snapshot.tracks.map((track) => track.effectsDisplayed),
+        );
+      useStore
+        .getState()
+        .setTrackPanning(snapshot.tracks.map((track) => track.panning));
       if (snapshot.playing && snapshot.newPattern !== null) {
         useStore.getState().setCurrentPattern({
           patternNo: snapshot.patternNo,
@@ -89,4 +96,4 @@ export const player = {
       }
     });
   }) as AppPoller,
-}
+};

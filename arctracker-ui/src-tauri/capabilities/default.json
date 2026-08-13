@@ -18,6 +18,10 @@
     {
       "identifier": "fs:allow-read-text-file",
       "allow": [{ "path": "$APPDATA/*" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$APPDATA/*" }]
     }
   ]
 }

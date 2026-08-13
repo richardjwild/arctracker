@@ -2,7 +2,7 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use crate::arctracker::{AudioDeviceInfo, UiPlayerSnapshot};
+use crate::arctracker::{default_module_params, AudioDeviceInfo, MidiDeviceInfo, NewModuleParams, UiPlayerSnapshot};
 use crate::arctracker::{
     InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
     UiPeakLevels,
@@ -32,6 +32,41 @@ fn use_default_output(state: tauri::State<Arc<AppState>>) -> Result<(), String> 
 }
 
 #[tauri::command]
+fn get_available_midi_devices(state: tauri::State<Arc<AppState>>) -> Result<Vec<MidiDeviceInfo>, String> {
+    let mut midi = state.midi.lock().unwrap();
+    if let Some(midi) = midi.as_mut() {
+        let midi_devices = midi.get_available_midi_devices().map_err(|e| e)?;
+        return Ok(midi_devices);
+    }
+    Ok(vec![])
+}
+
+#[tauri::command]
+fn use_midi_device(state: tauri::State<Arc<AppState>>, device_name: String) -> Result<(), String> {
+    let mut midi = state.midi.lock().unwrap();
+    if let Some(midi) = midi.as_mut() {
+        midi.use_midi_device(&device_name).map_err(|e| e)?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn set_midi_playback_channel(state: tauri::State<Arc<AppState>>, channel: i32) {
+    let mut midi = state.midi.lock().unwrap();
+    if let Some(midi) = midi.as_mut() {
+        midi.set_playback_channel(channel);
+    }
+}
+
+#[tauri::command]
+fn set_midi_playback_instrument(state: tauri::State<Arc<AppState>>, instrument: u8) {
+    let mut midi = state.midi.lock().unwrap();
+    if let Some(midi) = midi.as_mut() {
+        midi.set_playback_instrument(instrument);
+    }
+}
+
+#[tauri::command]
 fn current_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.current_module()
@@ -46,9 +81,17 @@ fn load_module(path: String, state: tauri::State<Arc<AppState>>) -> Result<Modul
 }
 
 #[tauri::command]
-fn create_module(num_tracks: i32, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+fn create_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let info = tracker.create_module(num_tracks).map_err(|e| e.message)?;
+    let info = tracker.create_module(default_module_params()).map_err(|e| e.message)?;
+    tracker.start().map_err(|e| e.message)?;
+    Ok(info)
+}
+
+#[tauri::command]
+fn create_module_using_defaults(params: NewModuleParams, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    let info = tracker.create_module(params).map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
     Ok(info)
 }
@@ -161,18 +204,6 @@ fn get_pattern(
 }
 
 #[tauri::command]
-fn set_selected_instrument(instrument_no: u8, state: tauri::State<Arc<AppState>>) {
-    let mut editor = state.editor.lock().unwrap();
-    editor.selected_instrument = instrument_no;
-}
-
-#[tauri::command]
-fn set_selected_channel(channel_no: i32, state: tauri::State<Arc<AppState>>) {
-    let mut editor = state.editor.lock().unwrap();
-    editor.selected_channel = channel_no;
-}
-
-#[tauri::command]
 fn default_save_path(module_path: String) -> String {
     std::path::Path::new(&module_path)
         .with_extension("arctm")
@@ -211,15 +242,14 @@ fn export_cleanup(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 #[tauri::command]
 fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let editor = state.editor.lock().unwrap();
-    tracker.keyboard_note_on(note, editor.selected_instrument, editor.selected_channel);
+    // TODO: Fix this. I think it probably needs to go in the midi class instead.
+    // tracker.keyboard_note_on(note, editor.selected_instrument, editor.selected_channel);
     Ok(())
 }
 
 #[tauri::command]
 fn set_master_gain(state: tauri::State<Arc<AppState>>, master_gain: f32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let editor = state.editor.lock().unwrap();
     tracker.set_master_gain(master_gain);
     Ok(())
 }
@@ -387,10 +417,15 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             get_available_outputs,
             use_output,
             use_default_output,
+            get_available_midi_devices,
+            use_midi_device,
+            set_midi_playback_channel,
+            set_midi_playback_instrument,
             current_module,
             load_module,
             save_module,
             create_module,
+            create_module_using_defaults,
             restart_player,
             poll_playback_events,
             poll_export_events,
@@ -402,8 +437,6 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             get_player_snapshot,
             get_and_reset_peak_levels,
             get_pattern,
-            set_selected_instrument,
-            set_selected_channel,
             default_save_path,
             default_export_path,
             export_audio,

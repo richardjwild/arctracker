@@ -3,7 +3,18 @@ import { useEffect } from "react";
 import { editor } from "../editing/editor.ts";
 import { engine } from "../engine/engine.ts";
 import { alerting } from "../alerting/alert.ts";
-import { message } from "../language/messages.ts";
+import { message, messageFn } from "../language/messages.ts";
+import { appConfig } from "../config/appConfig.ts";
+
+async function saveConfigAndExit() {
+  try {
+    await appConfig.save();
+  } catch (err) {
+    await alerting.showError(messageFn("errorSavingConfig")(err as string));
+  } finally {
+    await engine.exitSuccessfully();
+  }
+}
 
 export function useExitGuard() {
   useEffect(() => {
@@ -16,12 +27,12 @@ export function useExitGuard() {
       exiting = true;
       try {
         if (!editor.hasUnsavedChanges()) {
-          await engine.exitSuccessfully();
+          await saveConfigAndExit();
           return;
         }
         const proceed = await alerting.askConfirmation(message("unsavedChanges"));
         if (proceed) {
-          await engine.exitSuccessfully();
+          await saveConfigAndExit();
           return;
         }
       } finally {

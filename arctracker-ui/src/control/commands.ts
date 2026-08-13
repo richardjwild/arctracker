@@ -21,6 +21,7 @@ export enum CommandType {
   SAVE_MODULE,
   EXPORT_AUDIO,
   CREATE_MODULE,
+  CREATE_MODULE_USING_DEFAULTS,
   TOGGLE_PLAY,
   TOGGLE_LOOP,
   TOGGLE_EDIT,
@@ -92,6 +93,7 @@ export type Command =
   | { type: CommandType.SAVE_MODULE }
   | { type: CommandType.EXPORT_AUDIO }
   | { type: CommandType.CREATE_MODULE }
+  | { type: CommandType.CREATE_MODULE_USING_DEFAULTS }
   | { type: CommandType.TOGGLE_PLAY }
   | { type: CommandType.TOGGLE_LOOP }
   | { type: CommandType.TOGGLE_EDIT }
@@ -198,13 +200,12 @@ export const commandQueue = {
 
 export const commands = {
   editAppConfig: () => commandQueue.push({ type: CommandType.EDIT_APP_CONFIG }),
-  setAppConfig: (newConfig: AppConfig) =>
-    commandQueue.push({ type: CommandType.SET_APP_CONFIG, newConfig }),
   loadFile: () => commandQueue.push({ type: CommandType.LOAD_FILE }),
   saveModuleAs: () => commandQueue.push({ type: CommandType.SAVE_MODULE_AS }),
   saveModule: () => commandQueue.push({ type: CommandType.SAVE_MODULE }),
   exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
   createModule: () => commandQueue.push({ type: CommandType.CREATE_MODULE }),
+  createModuleUsingDefaults: () => commandQueue.push({ type: CommandType.CREATE_MODULE_USING_DEFAULTS }),
   togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
   toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
   toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),

@@ -21,6 +21,7 @@ typedef struct player_command {
     int new_pattern_pos;
     int track;
     int note;
+    uint8_t velocity;
     uint8_t instrument_no;
     float master_gain;
 } player_command_t;

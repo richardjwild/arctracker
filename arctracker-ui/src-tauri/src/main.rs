@@ -1,16 +1,14 @@
-mod midi;
-
-use arctracker_ui_lib::arctracker::Arctracker;
-use arctracker_ui_lib::state::EditorState;
+use arctracker_ui_lib::arctracker::{default_module_params, initialise, NewModuleParams};
 use arctracker_ui_lib::AppState;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{App, AppHandle, Emitter, RunEvent, Runtime, WindowEvent};
+use tauri::{App, AppHandle, Emitter, Manager, RunEvent, Runtime, WindowEvent};
 
 const OPEN_SETTINGS_MENU_ID: &str = "open_settings";
 const QUIT_MENU_ID: &str = "quit-arctracker";
 const NEW_MODULE_MENU_ID: &str = "new-module";
+const NEW_MODULE_USING_DEFAULTS_MENU_ID: &str = "new-module-using-defaults";
 const OPEN_MODULE_MENU_ID: &str = "open-module";
 const SAVE_MODULE_MENU_ID: &str = "save-module";
 const SAVE_MODULE_AS_MENU_ID: &str = "save-module-as";
@@ -39,6 +37,7 @@ const SET_PATTERN_LENGTH_MENU_ID: &str = "set-pattern-length";
 const OPEN_SETTINGS_REQUESTED_EVENT: &str = "open-settings-requested";
 const EXIT_REQUESTED_EVENT: &str = "exit-requested";
 const NEW_MODULE_REQUESTED_EVENT: &str = "new-module-requested";
+const NEW_MODULE_USING_DEFAULTS_REQUESTED_EVENT: &str = "new-module-using-defaults-requested";
 const OPEN_MODULE_REQUESTED_EVENT: &str = "open-module-requested";
 const SAVE_MODULE_REQUESTED_EVENT: &str = "save-module-requested";
 const SAVE_MODULE_AS_REQUESTED_EVENT: &str = "save-module-as-requested";
@@ -69,7 +68,6 @@ const SET_PATTERN_LENGTH_REQUESTED_EVENT: &str = "set-pattern-length-requested";
 
 fn main() {
     let app_state = create_app_state();
-    start_midi(app_state.clone());
     let app = arctracker_ui_lib::build_app(app_state)
         .setup(setup_app)
         .build(tauri::generate_context!())
@@ -78,23 +76,14 @@ fn main() {
 }
 
 fn create_app_state() -> Arc<AppState> {
-    let mut tracker = Arctracker::new().expect("failed to create tracker");
-    tracker
-        .create_module(8)
+    let mut init = initialise().expect("failed to initialize arctracker");
+    init.tracker
+        .create_module(default_module_params())
         .expect("failed to initialise module");
     Arc::new(AppState {
-        tracker: Arc::new(Mutex::new(tracker)),
-        editor: Mutex::new(EditorState {
-            selected_instrument: 0,
-            selected_channel: 0,
-        }),
+        tracker: Arc::new(Mutex::new(init.tracker)),
+        midi: Mutex::new(init.midi),
     })
-}
-
-fn start_midi(app_state: Arc<AppState>) {
-    std::thread::spawn(move || {
-        midi::start_midi_thread(app_state);
-    });
 }
 
 fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
@@ -103,6 +92,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         OPEN_SETTINGS_MENU_ID => request_event(app_handle, OPEN_SETTINGS_REQUESTED_EVENT),
         QUIT_MENU_ID => request_event(app_handle, EXIT_REQUESTED_EVENT),
         NEW_MODULE_MENU_ID => request_event(app_handle, NEW_MODULE_REQUESTED_EVENT),
+        NEW_MODULE_USING_DEFAULTS_MENU_ID => request_event(app_handle, NEW_MODULE_USING_DEFAULTS_REQUESTED_EVENT),
         OPEN_MODULE_MENU_ID => request_event(app_handle, OPEN_MODULE_REQUESTED_EVENT),
         SAVE_MODULE_MENU_ID => request_event(app_handle, SAVE_MODULE_REQUESTED_EVENT),
         SAVE_MODULE_AS_MENU_ID => request_event(app_handle, SAVE_MODULE_AS_REQUESTED_EVENT),
@@ -193,6 +183,13 @@ fn build_file_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("CmdOrCtrl+N"),
     )?;
+    let new_module_using_defaults = MenuItem::with_id(
+        app,
+        NEW_MODULE_USING_DEFAULTS_MENU_ID,
+        "New Module Using Defaults",
+        true,
+        Some("Shift+CmdOrCtrl+N"),
+    )?;
     let open_module = MenuItem::with_id(
         app,
         OPEN_MODULE_MENU_ID,
@@ -228,6 +225,7 @@ fn build_file_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         &[
             &new_module,
+            &new_module_using_defaults,
             &open_module,
             &save_module,
             &save_module_as,
@@ -424,6 +422,19 @@ fn handle_run_event<R: Runtime>(app_handle: &AppHandle<R>, event: RunEvent) {
         }
         RunEvent::ExitRequested { .. } => {
             // Programmatic exit or restart: allow it through.
+        }
+        RunEvent::Exit => {
+            let state = app_handle.state::<Arc<AppState>>();
+            {
+                let mut midi = state.midi.lock().unwrap();
+                if let Some(midi) = midi.as_mut() {
+                    midi.destroy();
+                }
+            }
+            {
+                let mut tracker = state.tracker.lock().unwrap();
+                tracker.destroy();
+            }
         }
         _ => {}
     }

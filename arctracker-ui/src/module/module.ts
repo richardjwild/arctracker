@@ -11,6 +11,7 @@ import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { Instrument } from "../editing/editInstrument.ts";
 import { message } from "../language/messages.ts";
+import { appConfig } from "../config/appConfig.ts";
 
 export type Module = {
   fileName: string | null;
@@ -26,6 +27,15 @@ export type Module = {
   linesPerBeat: number;
   beatsPerMinute: number;
 };
+
+export type NewModuleParams = {
+  numTracks: number;
+  defaultPatternLength: number;
+  linesPerBeat: number;
+  beatsPerMinute: number;
+  author: string;
+};
+
 
 const FormatArctracker = 0;
 
@@ -108,11 +118,20 @@ export const module = {
     }
   },
 
-  create: async (): Promise<boolean> => {
+  create: async (usingDefaults: boolean): Promise<boolean> => {
     if (!(await okToDiscardModule())) return false;
-    const numTracks = 8; // TODO: Make this a configuration option.
+    const config = appConfig.get();
+    const params: NewModuleParams = {
+      numTracks: config.defaultTrackCount,
+      defaultPatternLength: config.defaultPatternLength,
+      linesPerBeat: config.defaultLinesPerBeat,
+      beatsPerMinute: config.defaultBeatsPerMinute,
+      author: config.defaultAuthorName || "",
+    }
     try {
-      const newModule = await engine.createModule(numTracks);
+      const newModule = usingDefaults
+        ? await engine.createModuleUsingDefaults(params)
+        : await engine.createModule();
       if (newModule) {
         useStore.getState().replaceModule(newModule);
         editor.newModuleLoaded();

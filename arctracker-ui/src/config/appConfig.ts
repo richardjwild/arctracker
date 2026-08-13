@@ -2,16 +2,29 @@ import { BaseDirectory } from "@tauri-apps/api/path";
 import { exists, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { audioDevice } from "../audioDevice/audioDevice.ts";
 import { editor } from "../editing/editor.ts";
+import { midi, MidiDeviceInfo } from "../midi/midi.ts";
 
 export type SelectedAudioDevice = "default" | { name: string; hostApiName: string };
 
 export type AppConfig = {
   selectedAudioDevice: SelectedAudioDevice;
+  selectedMidiDevice: MidiDeviceInfo | null;
+  defaultAuthorName: string | null;
+  defaultPatternLength: number;
+  defaultTrackCount: number;
+  defaultLinesPerBeat: number;
+  defaultBeatsPerMinute: number;
 };
 
 const configFileName = "app-config.json";
 const defaultConfig: AppConfig = {
   selectedAudioDevice: "default",
+  selectedMidiDevice: null,
+  defaultAuthorName: null,
+  defaultPatternLength: 64,
+  defaultTrackCount: 8,
+  defaultLinesPerBeat: 4,
+  defaultBeatsPerMinute: 120,
 };
 
 let config: AppConfig | null = null;
@@ -26,6 +39,18 @@ function audioDeviceChanged(newDevice: SelectedAudioDevice) {
     config.selectedAudioDevice.name !== newDevice.name ||
     config.selectedAudioDevice.hostApiName !== newDevice.hostApiName
   );
+}
+
+function midiDeviceChanged(newDevice: MidiDeviceInfo | null) {
+  if (config === null) return true;
+  if (config.selectedMidiDevice === null) return newDevice !== null;
+  if (newDevice === null) return true;
+  return config.selectedMidiDevice.name !== newDevice.name;
+}
+
+async function applyMidiDeviceConfig(selectedMidiDevice: MidiDeviceInfo | null) {
+  if (selectedMidiDevice === null) return;
+  await midi.useInputDevice({ name: selectedMidiDevice.name });
 }
 
 async function applyAudioDeviceConfig(
@@ -78,12 +103,13 @@ export const appConfig = {
     if (audioDeviceChanged(newConfig.selectedAudioDevice)) {
       await applyAudioDeviceConfig(newConfig.selectedAudioDevice);
     }
+    if (midiDeviceChanged(newConfig.selectedMidiDevice)) {
+      await applyMidiDeviceConfig(newConfig.selectedMidiDevice);
+    }
     config = newConfig;
-    console.log("config is now", config);
   },
 
   get: (): AppConfig => {
-    console.log('returning config', config || defaultConfig);
     return config || defaultConfig;
   },
 };

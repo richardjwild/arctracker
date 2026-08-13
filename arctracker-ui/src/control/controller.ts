@@ -29,7 +29,12 @@ async function processCommands() {
         void appConfig.apply(command.newConfig);
         break;
       case CommandType.CREATE_MODULE:
-        void module.create().then((success) => {
+        void module.create(false).then((success) => {
+          if (success) editor.newModuleLoaded();
+        });
+        return; // Don't execute any more commands if we have created a new module.
+      case CommandType.CREATE_MODULE_USING_DEFAULTS:
+        void module.create(true).then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have created a new module.

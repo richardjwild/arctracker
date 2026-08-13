@@ -39,7 +39,7 @@ export default function EditTempo() {
     if (
       Number.isInteger(linesPerBeat) &&
       linesPerBeat >= 0 &&
-      linesPerBeat <= 255
+      linesPerBeat <= 256
     ) {
       setDraftTempo({
         linesPerBeat,

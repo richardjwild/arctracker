@@ -142,7 +142,12 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "KeyL",
     [{ modifiers: "primary", execute: commands.editCurrentPatternLength }],
   ],
-  ["KeyN", [{ modifiers: "primary", execute: () => commands.createModule() }]],
+  ["KeyN",
+    [
+      { modifiers: "primary", execute: () => commands.createModule() },
+      { modifiers: "primary+secondary", execute: () => commands.createModuleUsingDefaults() }
+    ]
+  ],
   ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
   ["KeyR", [{ modifiers: "primary", execute: commands.toggleLoop }]],
   [

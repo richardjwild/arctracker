@@ -4,16 +4,34 @@ import "./EditAppConfig.css";
 import { useStore } from "../store/useStore.ts";
 import { audioDevice, AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
 import { useEffect, useState } from "react";
-import { appConfig, SelectedAudioDevice } from "../config/appConfig.ts";
+import {
+  AppConfig,
+  appConfig,
+  SelectedAudioDevice,
+} from "../config/appConfig.ts";
 import { alerting } from "../alerting/alert.ts";
+import { midi, MidiDeviceInfo } from "../midi/midi.ts";
+import { editor } from "../editing/editor.ts";
 
 type DraftAppConfig = {
   selectedAudioDevice: "default" | AudioDeviceInfo;
+  selectedMidiDevice: MidiDeviceInfo | null;
+  defaultAuthorName: string | null;
+  defaultPatternLength: number;
+  defaultTrackCount: number;
+  defaultLinesPerBeat: number;
+  defaultBeatsPerMinute: number;
 };
 
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
   selectedAudioDevice: "default",
+  selectedMidiDevice: null,
+  defaultAuthorName: null,
+  defaultPatternLength: 64,
+  defaultTrackCount: 8,
+  defaultLinesPerBeat: 4,
+  defaultBeatsPerMinute: 120,
 };
 
 function deviceSelected(
@@ -38,25 +56,53 @@ export default function EditAppConfig() {
   const editing =
     useStore((state) => state.editorState.editMode) === "appConfig";
   const [draftConfig, setDraftConfig] = useState<DraftAppConfig>(defaultConfig);
+  const [inputPatternLength, setInputPatternLength] = useState("");
+  const [inputTrackCount, setInputTrackCount] = useState("");
+  const [inputLinesPerBeat, setInputLinesPerBeat] = useState("");
+  const [inputBeatsPerMinute, setInputBeatsPerMinute] = useState("");
   const [availableOutputs, setAvailableOutputs] = useState<AudioDeviceInfo[]>(
     [],
   );
+  const [availableMidiInputs, setAvailableMidiInputs] = useState<
+    MidiDeviceInfo[]
+  >([]);
+
+  const syncDraftConfigWithCurrent = async (currentConfig: AppConfig) => {
+    const audioOutputs = await audioDevice.getAvailableOutputs();
+    const midiInputs = await midi.getAvailableInputs();
+    setAvailableOutputs(audioOutputs);
+    setAvailableMidiInputs(midiInputs);
+    const selectedAudioDevice =
+      currentConfig.selectedAudioDevice === "default"
+        ? "default"
+        : (audioOutputs.find((output) =>
+            deviceSelected(output, currentConfig.selectedAudioDevice),
+          ) ?? "default");
+    const selectedMidiDevice =
+      currentConfig.selectedMidiDevice === null
+        ? null
+        : (midiInputs.find(
+            (input) => input.name === currentConfig.selectedMidiDevice?.name,
+          ) ?? null);
+    setDraftConfig({
+      selectedAudioDevice,
+      selectedMidiDevice,
+      defaultAuthorName: currentConfig.defaultAuthorName,
+      defaultPatternLength: currentConfig.defaultPatternLength,
+      defaultTrackCount: currentConfig.defaultTrackCount,
+      defaultLinesPerBeat: currentConfig.defaultLinesPerBeat,
+      defaultBeatsPerMinute: currentConfig.defaultBeatsPerMinute,
+    });
+    setInputPatternLength(currentConfig.defaultPatternLength.toString());
+    setInputTrackCount(currentConfig.defaultTrackCount.toString());
+    setInputLinesPerBeat(currentConfig.defaultLinesPerBeat.toString());
+    setInputBeatsPerMinute(currentConfig.defaultBeatsPerMinute.toString());
+  };
 
   useEffect(() => {
     if (!editing) return;
     const currentConfig = appConfig.get();
-    audioDevice.getAvailableOutputs().then((outputs) => {
-      setAvailableOutputs(outputs);
-      const selectedAudioDevice =
-        currentConfig.selectedAudioDevice === "default"
-          ? "default"
-          : (outputs.find((output) =>
-              deviceSelected(output, currentConfig.selectedAudioDevice),
-            ) ?? "default");
-      setDraftConfig({
-        selectedAudioDevice,
-      });
-    });
+    void syncDraftConfigWithCurrent(currentConfig);
   }, [editing]);
 
   if (!editing) return null;
@@ -80,10 +126,29 @@ export default function EditAppConfig() {
     }
   };
 
+  const setSelectedMidiDevice = (deviceName: string) => {
+    if (deviceName === "")
+      setDraftConfig({
+        ...draftConfig,
+        selectedMidiDevice: null,
+      });
+    else
+      setDraftConfig({
+        ...draftConfig,
+        selectedMidiDevice: { name: deviceName },
+      });
+  };
+
   const applyConfig = async () => {
     try {
       await appConfig.apply({
         selectedAudioDevice: draftConfig.selectedAudioDevice,
+        selectedMidiDevice: draftConfig.selectedMidiDevice,
+        defaultAuthorName: draftConfig.defaultAuthorName,
+        defaultPatternLength: draftConfig.defaultPatternLength,
+        defaultTrackCount: draftConfig.defaultTrackCount,
+        defaultLinesPerBeat: draftConfig.defaultLinesPerBeat,
+        defaultBeatsPerMinute: draftConfig.defaultBeatsPerMinute,
       });
       appConfig.hideDialog();
     } catch (e) {
@@ -91,6 +156,82 @@ export default function EditAppConfig() {
         message("appSettingsFailed"),
         e as string,
       );
+    }
+  };
+
+  const validateDefaultPatternLength = (): boolean => {
+    const patternLength = Number(inputPatternLength);
+    if (
+      Number.isInteger(patternLength) &&
+      patternLength >= 1 &&
+      patternLength <= 1000
+    ) {
+      setDraftConfig({
+        ...draftConfig,
+        defaultPatternLength: patternLength,
+      })
+      return true;
+    } else {
+      void alerting.showInfo(message("invalidDefaultPatternLength"));
+      setInputPatternLength(draftConfig.defaultPatternLength.toString());
+      return false;
+    }
+  };
+
+  const validateDefaultTrackCount = (): boolean => {
+    const trackCount = Number(inputTrackCount);
+    if (
+      Number.isInteger(trackCount) &&
+      trackCount >= 1 &&
+      trackCount <= 256
+    ) {
+      setDraftConfig({
+        ...draftConfig,
+        defaultTrackCount: trackCount,
+      })
+      return true;
+    } else {
+      void alerting.showInfo(message("invalidTrackCount"));
+      setInputTrackCount(draftConfig.defaultTrackCount.toString());
+      return false;
+    }
+  };
+
+  const validateDefaultLinesPerBeat = (): boolean => {
+    const linesPerBeat = Number(inputLinesPerBeat);
+    if (
+      Number.isInteger(linesPerBeat) &&
+      linesPerBeat >= 1 &&
+      linesPerBeat <= 256
+    ) {
+      setDraftConfig({
+        ...draftConfig,
+        defaultLinesPerBeat: linesPerBeat,
+      })
+      return true;
+    } else {
+      void alerting.showInfo(message("invalidLinesPerBeat"));
+      setInputLinesPerBeat(draftConfig.defaultLinesPerBeat.toString());
+      return false;
+    }
+  };
+
+  const validateDefaultBeatsPerMinute = (): boolean => {
+    const beatsPerMinute = Number(inputBeatsPerMinute);
+    if (
+      Number.isInteger(beatsPerMinute) &&
+      beatsPerMinute >= 1 &&
+      beatsPerMinute <= 256
+    ) {
+      setDraftConfig({
+        ...draftConfig,
+        defaultBeatsPerMinute: beatsPerMinute,
+      })
+      return true;
+    } else {
+      void alerting.showInfo(message("invalidTempo"));
+      setInputBeatsPerMinute(draftConfig.defaultBeatsPerMinute.toString());
+      return false;
     }
   };
 
@@ -117,6 +258,123 @@ export default function EditAppConfig() {
             </option>
           ))}
         </select>
+      </div>
+      <div className="midiInputDeviceLabel">
+        <label htmlFor="midiInputDeviceSelect">
+          {message("midiInputDeviceLabel")}
+        </label>
+      </div>
+      <div className="midiInputDeviceEdit uiArea padded rounded">
+        <select
+          id="midiInputDeviceSelect"
+          name="midiInputDevice"
+          onChange={(e) => setSelectedMidiDevice(e.target.value)}
+          value={draftConfig.selectedMidiDevice?.name || ""}
+        >
+          <option value={""}>{message("noMidiInputDevice")}</option>
+          {availableMidiInputs.map((input, i) => (
+            <option key={i} value={input.name}>
+              {input.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="defaultAuthorNameLabel">
+        <label htmlFor="defaultAuthorNameInput">
+          {message("defaultAuthorNameLabel")}
+        </label>
+      </div>
+      <div className="defaultAuthorNameEdit uiArea padded rounded">
+        <input
+          type="text"
+          id="defaultAuthorNameInput"
+          maxLength={65}
+          value={draftConfig.defaultAuthorName || ""}
+          onFocus={editor.startTextInput}
+          onBlur={editor.stopTextInput}
+          onChange={(e) =>
+            setDraftConfig({
+              ...draftConfig,
+              defaultAuthorName: e.target.value,
+            })
+          }
+        />
+      </div>
+      <div className="defaultPatternLengthLabel">
+        <label htmlFor="defaultPatternLengthInput">
+          {message("defaultPatternLengthLabel")}
+        </label>
+      </div>
+      <div className="defaultPatternLengthEdit uiArea padded rounded">
+        <input
+          type="text"
+          id="defaultPatternLengthInput"
+          maxLength={4}
+          value={inputPatternLength}
+          onChange={(e) => setInputPatternLength(e.target.value)}
+          onFocus={editor.startTextInput}
+          onBlur={() => {
+            validateDefaultPatternLength();
+            editor.stopTextInput();
+          }}
+        />
+      </div>
+      <div className="defaultTrackCountLabel">
+        <label htmlFor="defaultTrackCountInput">
+          {message("defaultTrackCountLabel")}
+        </label>
+      </div>
+      <div className="defaultTrackCountEdit uiArea padded rounded">
+        <input
+          type="text"
+          id="defaultTrackCountInput"
+          maxLength={3}
+          value={inputTrackCount}
+          onChange={(e) => setInputTrackCount(e.target.value)}
+          onFocus={editor.startTextInput}
+          onBlur={() => {
+            validateDefaultTrackCount();
+            editor.stopTextInput();
+          }}
+        />
+      </div>
+      <div className="defaultLinesPerBeatLabel">
+        <label htmlFor="defaultLinesPerBeatInput">
+          {message("defaultLinesPerBeatLabel")}
+        </label>
+      </div>
+      <div className="defaultLinesPerBeatEdit uiArea padded rounded">
+        <input
+          type="text"
+          id="defaultLinesPerBeatInput"
+          maxLength={3}
+          value={inputLinesPerBeat}
+          onChange={(e) => setInputLinesPerBeat(e.target.value)}
+          onFocus={editor.startTextInput}
+          onBlur={() => {
+            validateDefaultLinesPerBeat();
+            editor.stopTextInput();
+          }}
+        />
+      </div>
+      <div className="defaultBeatsPerMinuteLabel">
+        <label htmlFor="defaultBeatsPerMinuteInput">
+          {message("defaultBeatsPerMinuteLabel")}
+        </label>
+      </div>
+      <div className="defaultBeatsPerMinuteEdit uiArea padded rounded">
+        <input
+          type="text"
+          id="defaultBeatsPerMinuteInput"
+          maxLength={3}
+          value={inputBeatsPerMinute}
+          onChange={(e) => setInputBeatsPerMinute(e.target.value)}
+          onFocus={editor.startTextInput}
+          onBlur={() => {
+            validateDefaultBeatsPerMinute();
+            editor.stopTextInput();
+          }}
+        />
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={applyConfig}>

@@ -7,6 +7,9 @@
 #define FAILED_TO_READ_DEVICE_INFO "Failed to read device info"
 #define FAILED_TO_READ_HOST_API_INFO "Failed to read host API info"
 #define AUDIO_DEVICE_MISMATCH "The audio device does not match the selection"
+#define FAILED_TO_INITIALISE_MIDI "Failed to initialise MIDI"
+#define FAILED_TO_GET_AVAILABLE_MIDI_DEVICES "Failed to read available MIDI input devices"
+#define FAILED_TO_USE_MIDI_DEVICE "Failed to use specified MIDI device"
 #define BAD_FILENAME "Bad filename"
 #define FILE_OPEN_FAILED "Could not open file"
 #define FILE_EMPTY "File is empty"
@@ -22,6 +25,7 @@
 #define NO_MODULE_LOADED "No module loaded"
 #define NO_PATTERN_DATA "No pattern data in module"
 #define BAD_INSTRUMENT_INDEX "Instrument slot not filled"
+#define AUDIO_OUTPUT_NOT_CONFIGURED "Audio output is not configured"
 #define PLAYER_ALREADY_RUNNING "Player is already running"
 #define PLAYER_PLAYING "Player is currently playing"
 #define PLAYER_NOT_RUNNING "Player is not running"
@@ -106,5 +110,6 @@
 #define MODFILE_INVALID_SAMPLE_INDEX "Instrument references non existent sample"
 #define PATTERN_ALREADY_EXISTS "Cannot create pattern because it already exists"
 #define TEMPO_UNDEFINED "Tempo cannot be set because lines per beat is not set"
+#define MIDI_DEVICE_UNAVAILABLE "MIDI device is unavailable"
 
 #endif //ARCTRACKER_ENGINE_MESSAGES_H

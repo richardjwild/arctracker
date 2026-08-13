@@ -10,6 +10,7 @@ type MenuAction = {
 const menuActions: MenuAction[] = [
   { eventId: "open-settings-requested", action: commands.editAppConfig },
   { eventId: "new-module-requested", action: commands.createModule },
+  { eventId: "new-module-using-defaults-requested", action: commands.createModuleUsingDefaults },
   { eventId: "open-module-requested", action: commands.loadFile },
   { eventId: "save-module-requested", action: commands.saveModule },
   { eventId: "save-module-as-requested", action: commands.saveModuleAs },

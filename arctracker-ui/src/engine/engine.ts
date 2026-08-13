@@ -1,11 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
-import { message } from "@tauri-apps/plugin-dialog";
 import { PlayerEvent, PlayerSnapshot, Track } from "../player/player.ts";
 import { Sample } from "../editing/editInstrument.ts";
-import { Module } from "../module/module.ts";
+import { Module, NewModuleParams } from "../module/module.ts";
 import { Effect, PatternEvent, PatternLine } from "../editing/patternEvents.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
 import { AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
+import { MidiDeviceInfo } from "../midi/midi.ts";
+import { alerting } from "../alerting/alert.ts";
+import { messageFn } from "../language/messages.ts";
 
 export type InstrumentUpdate = {
   assigned: boolean;
@@ -74,10 +76,6 @@ function toEffectCode(charCode: number): string {
   return String.fromCharCode(charCode);
 }
 
-function exitUnsuccessfully() {
-  invoke("exit_unsuccessfully").then(() => {});
-}
-
 export const engine = {
   getCurrentModule: async () => {
     return await invoke<Module>("current_module");
@@ -99,6 +97,14 @@ export const engine = {
     return await invoke("use_default_output");
   },
 
+  getAvailableMidiDevices: async (): Promise<MidiDeviceInfo[]> => {
+    return await invoke<MidiDeviceInfo[]>("get_available_midi_devices");
+  },
+
+  useMidiDevice: async (deviceName: string) => {
+    await invoke("use_midi_device", { deviceName });
+  },
+
   loadModule: async (fileName: string) => {
     return await invoke<Module>("load_module", {
       path: fileName,
@@ -112,33 +118,31 @@ export const engine = {
     });
   },
 
-  createModule: async (numTracks: number) => {
-    return await invoke<Module>("create_module", {
-      numTracks,
+  createModule: async () => {
+    return await invoke<Module>("create_module");
+  },
+
+  createModuleUsingDefaults: async (params: NewModuleParams) => {
+    return await invoke<Module>("create_module_using_defaults", {
+      params,
     });
   },
 
   startPlayer: () => {
     invoke("restart_player").catch((error) => {
-      message(
-        `Could not restart audio subsystem. Arctracker must now shut down. Error details: ${error}`,
-        {
-          title: "Arctracker",
-          kind: "error",
-        },
-      ).then(() => exitUnsuccessfully());
+      void alerting.showError(messageFn("audioSubsystemFailure")(error));
     });
   },
 
-  setSelectedInstrument: (instrumentNo: number) => {
-    void invoke("set_selected_instrument", {
-      instrumentNo,
+  setSelectedInstrument: (instrument: number) => {
+    void invoke("set_midi_playback_instrument", {
+      instrument,
     });
   },
 
-  setSelectedChannel: (channelNo: number) => {
-    void invoke("set_selected_channel", {
-      channelNo,
+  setSelectedChannel: (channel: number) => {
+    void invoke("set_midi_playback_channel", {
+      channel,
     });
   },
 
@@ -194,7 +198,9 @@ export const engine = {
       patternNo: packedSnapshot.patternNo,
       patternLength: packedSnapshot.patternLength,
       tracks: packedSnapshot.tracks,
-      newPattern: packedSnapshot.newPattern ? packedSnapshot.newPattern.map(toPatternLine) : null,
+      newPattern: packedSnapshot.newPattern
+        ? packedSnapshot.newPattern.map(toPatternLine)
+        : null,
     };
   },
 
@@ -330,7 +336,11 @@ export const engine = {
     });
   },
 
-  setModuleTitle: async (name: String, author: String, defaultPatternLength: number) => {
+  setModuleTitle: async (
+    name: String,
+    author: String,
+    defaultPatternLength: number,
+  ) => {
     return await invoke("edit_set_module_title", {
       name,
       author,
@@ -348,7 +358,7 @@ export const engine = {
     await invoke("edit_set_tempo", {
       linesPerBeat,
       beatsPerMinute,
-    })
+    });
   },
 
   exitSuccessfully: async () => {

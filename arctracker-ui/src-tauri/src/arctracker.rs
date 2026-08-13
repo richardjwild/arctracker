@@ -1,10 +1,17 @@
 use crate::ffi;
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
+use crate::ffi::{AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
 
 pub struct Arctracker {
     handle: *mut ffi::ArctrackerHandle,
 }
+
+pub struct ArctrackerMidi {
+    handle: *mut ffi::MidiHandle,
+}
+
+unsafe impl Send for ArctrackerMidi {}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,6 +28,40 @@ impl From<ffi::AudioDeviceInfo> for AudioDeviceInfo {
             name: c_string_to_rust(&audio_device_info.name),
             host_api_name: c_string_to_rust(&audio_device_info.host_api_name),
         }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MidiDeviceInfo {
+    pub name: String,
+}
+
+impl From<ffi::MidiDeviceInfo> for MidiDeviceInfo {
+    fn from(midi_device_info: ffi::MidiDeviceInfo) -> Self {
+        Self {
+            name: c_string_to_rust(&midi_device_info.name),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewModuleParams {
+    pub num_tracks: i32,
+    pub default_pattern_length: i32,
+    pub lines_per_beat: i32,
+    pub beats_per_minute: i32,
+    pub author: String,
+}
+
+pub fn default_module_params() -> NewModuleParams {
+    NewModuleParams {
+        num_tracks: 4,
+        default_pattern_length: 64,
+        lines_per_beat: 0,
+        beats_per_minute: 0,
+        author: "".to_string(),
     }
 }
 
@@ -265,16 +306,36 @@ fn rust_string_to_c_buffer(s: &str, buffer: &mut [c_char]) {
     }
 }
 
+pub struct ArctrackerInit {
+    pub tracker: Arctracker,
+    pub midi: Option<ArctrackerMidi>,
+}
+
+pub fn initialise() -> Result<ArctrackerInit, ArctrackerError> {
+    let result = unsafe { ffi::arctracker_init() };
+    if result.arctracker_handle.is_null() {
+        return Err(ArctrackerError {
+            message: "Failed to create Arctracker".into(),
+        });
+    }
+    let tracker = Arctracker {
+        handle: result.arctracker_handle,
+    };
+    let midi = if result.midi_handle.is_null() {
+        None
+    } else {
+        Some(ArctrackerMidi {
+            handle: result.midi_handle,
+        })
+    };
+    Ok(ArctrackerInit { tracker, midi })
+}
+
 impl Arctracker {
-    pub fn new() -> Result<Self, ArctrackerError> {
-        let handle = unsafe { ffi::arctracker_create() };
-        if handle.is_null() {
-            Err(ArctrackerError {
-                message: "Failed to create Arctracker".into(),
-            })
-        } else {
-            Ok(Self { handle })
-        }
+    pub fn from_handle(
+        handle: *mut ffi::ArctrackerHandle,
+    ) -> Self {
+        Self { handle }
     }
 
     pub fn get_available_outputs(&mut self) -> Result<Vec<AudioDeviceInfo>, String> {
@@ -284,8 +345,8 @@ impl Arctracker {
         }
         let empty_device = ffi::AudioDeviceInfo {
             device_index: 0,
-            name: [0; 256],
-            host_api_name: [0; 256],
+            name: [0; AUDIO_DEVICE_NAME_LEN],
+            host_api_name: [0; HOST_API_NAME_LEN],
         };
         let mut devices = vec![empty_device; output_count as usize];
         let result = unsafe {
@@ -300,7 +361,7 @@ impl Arctracker {
         }
         Ok(devices.into_iter().map(AudioDeviceInfo::from).collect())
     }
-    
+
     pub fn use_output(&mut self, device_index: i32, name: &str, host_api_name: &str) -> Result<(), String> {
         let c_name = CString::new(name).map_err(|_| "Invalid device name".to_string())?;
         let c_host_api_name = CString::new(host_api_name).map_err(|_| "Invalid device name".to_string())?;
@@ -310,7 +371,7 @@ impl Arctracker {
         }
         Ok(())
     }
-    
+
     pub fn use_default_output(&mut self) -> Result<(), String> {
         let result = unsafe { ffi::arctracker_use_default_output(self.handle) };
         if !result.success {
@@ -487,10 +548,18 @@ impl Arctracker {
         [note_and_instrument, effect_codes, effect_data]
     }
 
-    pub fn create_module(&mut self, num_tracks: i32) -> Result<Module, ArctrackerError> {
+    pub fn create_module(&mut self, params: NewModuleParams) -> Result<Module, ArctrackerError> {
         let mut module_info = std::mem::MaybeUninit::<ffi::UiModuleInfo>::uninit();
+        let author = CString::new(params.author).unwrap();
+        let params = ffi::NewModuleParams {
+            num_tracks: params.num_tracks,
+            default_pattern_length: params.default_pattern_length,
+            lines_per_beat: params.lines_per_beat,
+            beats_per_minute: params.beats_per_minute,
+            author: author.as_ptr(),
+        };
         let result = unsafe {
-            ffi::arctracker_module_create(self.handle, num_tracks, module_info.as_mut_ptr())
+            ffi::arctracker_module_create(self.handle, params, module_info.as_mut_ptr())
         };
         if !result.success {
             return Err(ArctrackerError {
@@ -1038,12 +1107,81 @@ impl Arctracker {
             })
         }
     }
+
+    pub fn destroy(&mut self) {
+        if !self.handle.is_null() {
+            unsafe {
+                ffi::arctracker_destroy(self.handle);
+            }
+            self.handle = std::ptr::null_mut();
+        }
+    }
 }
 
 impl Drop for Arctracker {
     fn drop(&mut self) {
-        unsafe {
-            ffi::arctracker_destroy(self.handle);
+        self.destroy();
+    }
+}
+
+impl ArctrackerMidi {
+    pub fn from_handle(handle: *mut ffi::MidiHandle) -> Self {
+        Self { handle }
+    }
+
+    pub fn destroy(&mut self) {
+        if !self.handle.is_null() {
+            unsafe {
+                ffi::arctracker_midi_destroy(self.handle);
+            }
+            self.handle = std::ptr::null_mut();
         }
+    }
+
+    pub fn get_available_midi_devices(&mut self) -> Result<Vec<MidiDeviceInfo>, String> {
+        let device_count = unsafe { ffi::arctracker_get_available_midi_count(self.handle) };
+        if device_count < 0 {
+            return Err("Invalid number of available devices".to_string());
+        }
+        let empty_device = ffi::MidiDeviceInfo {
+            name: [0; MIDI_DEVICE_NAME_LEN],
+        };
+        let mut devices = vec![empty_device; device_count as usize];
+        let result = unsafe {
+            ffi::arctracker_get_available_midi_devices(self.handle, devices.as_mut_ptr(), device_count)
+        };
+        if !result.success {
+            return Err(c_string_to_rust(&result.error_message))
+        }
+        Ok(devices.into_iter().map(MidiDeviceInfo::from).collect())
+    }
+
+    pub fn use_midi_device(&mut self, name: &str) -> Result<(), String> {
+        let c_device_name = CString::new(name).map_err(|_| "Invalid device name")?;
+        let result = unsafe {
+            ffi::arctracker_use_midi_device(self.handle, c_device_name.as_ptr())
+        };
+        if !result.success {
+            return Err(c_string_to_rust(&result.error_message))
+        }
+        Ok(())
+    }
+
+    pub fn set_playback_channel(&mut self, channel: i32) {
+        unsafe {
+            ffi::arctracker_midi_set_playback_channel(self.handle, channel as c_int);
+        }
+    }
+
+    pub fn set_playback_instrument(&mut self, instrument: u8) {
+        unsafe {
+            ffi::arctracker_midi_set_playback_instrument(self.handle, instrument);
+        }
+    }
+}
+
+impl Drop for ArctrackerMidi {
+    fn drop(&mut self) {
+        self.destroy();
     }
 }

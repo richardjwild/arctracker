@@ -1,5 +1,8 @@
 use std::os::raw::{c_char, c_int};
-use std::sync::Arc;
+
+pub const AUDIO_DEVICE_NAME_LEN: usize = 256;
+pub const HOST_API_NAME_LEN: usize = 256;
+pub const MIDI_DEVICE_NAME_LEN: usize = 128;
 
 #[repr(C)]
 pub struct ArctrackerHandle {
@@ -7,11 +10,39 @@ pub struct ArctrackerHandle {
 }
 
 #[repr(C)]
+pub struct MidiHandle {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ArctrackerInitResult {
+    pub arctracker_handle: *mut ArctrackerHandle,
+    pub midi_handle: *mut MidiHandle,
+}
+
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct AudioDeviceInfo {
     pub device_index: c_int,
-    pub name: [c_char; 256],
-    pub host_api_name: [c_char; 256],
+    pub name: [c_char; AUDIO_DEVICE_NAME_LEN],
+    pub host_api_name: [c_char; HOST_API_NAME_LEN],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MidiDeviceInfo {
+    pub name: [c_char; MIDI_DEVICE_NAME_LEN],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct NewModuleParams {
+    pub num_tracks: c_int,
+    pub default_pattern_length: c_int,
+    pub lines_per_beat: c_int,
+    pub beats_per_minute: c_int,
+    pub author: *const c_char,
 }
 
 #[derive(Copy, Clone)]
@@ -150,6 +181,7 @@ pub struct ApiResult {
 
 #[link(name = "arctracker")]
 extern "C" {
+    pub fn arctracker_init() -> ArctrackerInitResult;
     pub fn arctracker_create() -> *mut ArctrackerHandle;
     pub fn arctracker_get_available_output_count(handle: *mut ArctrackerHandle) -> c_int;
     pub fn arctracker_get_available_outputs(
@@ -164,6 +196,15 @@ extern "C" {
         host_api_name: *const c_char,
     ) -> ApiResult;
     pub fn arctracker_use_default_output(handle: *mut ArctrackerHandle) -> ApiResult;
+    pub fn arctracker_get_available_midi_count(handle: *mut MidiHandle) -> c_int;
+    pub fn arctracker_get_available_midi_devices(
+        handle: *mut MidiHandle,
+        devices: *mut MidiDeviceInfo,
+        requested_count: c_int,
+    ) -> ApiResult;
+    pub fn arctracker_use_midi_device(handle: *mut MidiHandle, name: *const c_char) -> ApiResult;
+    pub fn arctracker_midi_set_playback_channel(handle: *mut MidiHandle, channel: c_int);
+    pub fn arctracker_midi_set_playback_instrument(handle: *mut MidiHandle, instrument: u8);
     pub fn arctracker_get_current_module(
         handle: *mut ArctrackerHandle,
         module_info: *mut UiModuleInfo,
@@ -180,7 +221,7 @@ extern "C" {
     ) -> ApiResult;
     pub fn arctracker_module_create(
         handle: *mut ArctrackerHandle,
-        num_tracks: c_int,
+        params: NewModuleParams,
         module_info: *mut UiModuleInfo,
     ) -> ApiResult;
     pub fn arctracker_get_instrument_info(
@@ -306,4 +347,5 @@ extern "C" {
     ) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
+    pub fn arctracker_midi_destroy(handle: *mut MidiHandle);
 }

@@ -62,9 +62,15 @@ const messages = {
     saveButtonLabel: "Save",
     cancelButtonLabel: "Cancel",
     failedToLoadConfig: "Failed to load config",
-    outputDeviceLabel: "Output Device:",
+    outputDeviceLabel: "Audio Output Device:",
+    midiInputDeviceLabel: "MIDI Input Device:",
     defaultOutputDevice: "Default",
+    noMidiInputDevice: "None",
     appSettingsFailed: "Could not apply settings",
+    defaultAuthorNameLabel: "Default Author Name:",
+    defaultTrackCountLabel: "Default Track Count:",
+    defaultLinesPerBeatLabel: "Default Lines per Beat:",
+    defaultBeatsPerMinuteLabel: "Default Tempo (bpm):",
     yes: "Yes",
     no: "No",
   },
@@ -74,6 +80,8 @@ const messageFns = {
   en: {
     instrumentTitle: (p: string) => `Instrument ${p}`,
     jumpToSequencePositionHintText: (p: string) => `Jump to position ${p}`,
+    audioSubsystemFailure: (p: string) => `Audio subsystem failure. Error details: ${p}`,
+    errorSavingConfig: (p: string) => `Error saving config: ${p}`,
   },
 } as const;
 
