@@ -26,22 +26,27 @@ static void handle_message(double, const unsigned char *, size_t, void *);
 
 midi_subsystem_t *midi_initialise(arctracker_t *arctracker)
 {
+    midi_subsystem_t *midi = allocate_array(MAIN, sizeof(midi_subsystem_t), 1);
+    if (midi == NULL)
+    {
+        error(MEMORY_ALLOCATION_FAILED);
+        return NULL;
+    }
     // ReSharper disable once CppLocalVariableMayBeConst
     RtMidiInPtr midi_in = rtmidi_in_create_default();
     if (midi_in == NULL || !midi_in->ok)
     {
         if (midi_in)
         {
-            error_with_detail(FAILED_TO_INITIALISE_MIDI, midi_in->msg);
+            fprintf(stderr, "Failed to initialise MIDI: %s\n", midi_in->msg);
             rtmidi_in_free(midi_in);
+            midi_in = NULL;
         }
         else
         {
-            error(FAILED_TO_INITIALISE_MIDI);
+            fprintf(stderr, "Failed to initialise MIDI\n");
         }
-        return NULL;
     }
-    midi_subsystem_t *midi = allocate_array(MAIN, sizeof(midi_subsystem_t), 1);
     midi->midi_in = midi_in;
     midi->arctracker = arctracker;
     return midi;
@@ -88,7 +93,7 @@ bool midi_get_devices(const midi_subsystem_t *midi, midi_device_info_t *device_i
 
 bool midi_use_device(const midi_subsystem_t *midi, const char *requested_name)
 {
-    if (midi == NULL) return true;
+    if (midi->midi_in == NULL) return true;
     const unsigned int device_count = rtmidi_get_port_count(midi->midi_in);
     if (!midi->midi_in->ok)
     {
@@ -141,10 +146,14 @@ static void handle_message(const double timestamp, const unsigned char *message,
     {
         player_command_t command = (player_command_t) {
             .cmd_type = MIDI_NOTE_ON,
-            .track = atomic_load(&midi->note_input.selected_channel),
-            .instrument_no = atomic_load(&midi->note_input.selected_instrument),
-            .note = note - 47,
-            .velocity = velocity,
+            .data = (player_command_data_t) {
+                .midi_note_on = (midi_note_on_command_t) {
+                    .track = atomic_load(&midi->note_input.selected_channel),
+                    .instrument_no = atomic_load(&midi->note_input.selected_instrument),
+                    .note = note - 47,
+                    .velocity = velocity,
+                }
+            }
         };
         arctracker_player_cmd(midi->arctracker, &command);
     }
@@ -152,7 +161,11 @@ static void handle_message(const double timestamp, const unsigned char *message,
     {
         player_command_t command = (player_command_t) {
             .cmd_type = MIDI_NOTE_OFF,
-            .track = atomic_load(&midi->note_input.selected_channel),
+            .data = (player_command_data_t) {
+                .note_off = (note_off_command_t) {
+                    .track = atomic_load(&midi->note_input.selected_channel),
+                }
+            }
         };
         arctracker_player_cmd(midi->arctracker, &command);
     }
@@ -160,14 +173,27 @@ static void handle_message(const double timestamp, const unsigned char *message,
 
 void midi_set_playback_channel(midi_subsystem_t *midi, const int channel)
 {
-    if (midi != NULL)
-        atomic_store(&midi->note_input.selected_channel, channel);
+    atomic_store(&midi->note_input.selected_channel, channel);
 }
 
 void midi_set_playback_instrument(midi_subsystem_t *midi, const uint8_t instrument)
 {
-    if (midi != NULL)
-        atomic_store(&midi->note_input.selected_instrument, instrument);
+    atomic_store(&midi->note_input.selected_instrument, instrument);
+}
+
+void keyboard_note_on(const midi_subsystem_t *midi, const int note)
+{
+    player_command_t command = (player_command_t){
+        .cmd_type = KEYBOARD_NOTE_ON,
+        .data = (player_command_data_t){
+            .keyboard_note_on = (keyboard_note_on_command_t){
+                .track = atomic_load(&midi->note_input.selected_channel),
+                .instrument_no = atomic_load(&midi->note_input.selected_instrument),
+                .note = note,
+            }
+        }
+    };
+    arctracker_player_cmd(midi->arctracker, &command);
 }
 
 void midi_destroy(midi_subsystem_t *midi)

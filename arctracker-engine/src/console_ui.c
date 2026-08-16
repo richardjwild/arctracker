@@ -155,8 +155,12 @@ static void seek(arctracker_t *arctracker_handle, ui_transport_state_t ui_state,
 {
     player_command_t command = {
         .cmd_type = SEEK,
-        .new_pattern_pos = new_pattern_pos,
-        .new_sequence_pos = new_sequence_pos,
+        .data = (player_command_data_t) {
+            .seek = (seek_command_t) {
+                .new_pattern_pos = new_pattern_pos,
+                .new_sequence_pos = new_sequence_pos,
+            }
+        }
     };
     arctracker_player_cmd(arctracker_handle, &command);
     if (!ui_state.playing)
@@ -170,7 +174,7 @@ static bool handle_playback_events(arctracker_t *arctracker_handle)
     {
         if (event.type == PLAYER_ERROR)
         {
-            fprintf(stderr, "Player error occurred: %s\n", event.error_message);
+            fprintf(stderr, "Player error occurred: %s\n", event.data.player_error.error_message);
             return false;
         }
     }
@@ -184,7 +188,7 @@ static bool handle_export_events(arctracker_t *arctracker_handle)
     {
         if (event.type == PLAYER_ERROR)
         {
-            fprintf(stderr, "Export error occurred: %s\n", event.error_message);
+            fprintf(stderr, "Export error occurred: %s\n", event.data.player_error.error_message);
             return false;
         }
     }

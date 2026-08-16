@@ -24,7 +24,7 @@ export const audioExport = {
   start: async () => {
     const defaultExportPath = await getDefaultExportPath();
     const filePath = await filePicker.chooseFileToSave(
-      "Export audio",
+      message("exportAudioTitle"),
       defaultExportPath,
       [AUDIO_EXPORT_EXTENSION],
       message("audioFileFilterDescription")
@@ -52,7 +52,7 @@ export const audioExport = {
       for (const event of events) {
         switch (event.eventType) {
           case "playerError":
-            handleExportError(event.errorMessage);
+            handleExportError(event.data.errorMessage);
             return; // No point trying to handle any other events.
         }
       }

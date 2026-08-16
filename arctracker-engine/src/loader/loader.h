@@ -37,4 +37,6 @@ bool save_module(const module_t *module, const char *filename, format_t format);
 
 load_sample_result_t load_sample(const char *filename);
 
+bool export_sample(const module_t *module, int instrument_index, const char *filename);
+
 #endif //ARCTRACKER_READ_MOD_H

@@ -24,6 +24,8 @@ void midi_set_playback_channel(midi_subsystem_t *midi, int channel);
 
 void midi_set_playback_instrument(midi_subsystem_t *midi, uint8_t instrument);
 
+void keyboard_note_on(const midi_subsystem_t *midi, int note);
+
 void midi_destroy(midi_subsystem_t *midi);
 
 #endif //ARCTRACKER_ENGINE_MIDI_H

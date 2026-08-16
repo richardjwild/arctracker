@@ -227,6 +227,13 @@ fn export_audio(export_path: String, state: tauri::State<Arc<AppState>>) -> Resu
 }
 
 #[tauri::command]
+fn export_sample(instrument_no: i32, export_path: String, state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.export_sample(instrument_no, &export_path).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn get_export_state(state: tauri::State<Arc<AppState>>) -> UiExportState {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_export_state()
@@ -241,9 +248,10 @@ fn export_cleanup(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 
 #[tauri::command]
 fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(), String> {
-    let mut tracker = state.tracker.lock().unwrap();
-    // TODO: Fix this. I think it probably needs to go in the midi class instead.
-    // tracker.keyboard_note_on(note, editor.selected_instrument, editor.selected_channel);
+    let mut midi = state.midi.lock().unwrap();
+    if let Some(midi) = midi.as_mut() {
+        midi.keyboard_note_on(note);
+    }
     Ok(())
 }
 
@@ -440,6 +448,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             default_save_path,
             default_export_path,
             export_audio,
+            export_sample,
             get_export_state,
             export_cleanup,
             keyboard_note_on,

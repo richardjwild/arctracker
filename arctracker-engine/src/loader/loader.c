@@ -57,6 +57,7 @@ static const int OFFSET = 0;
 static mapped_file_t load_file(FILE *);
 static size_t file_size(int);
 static format_t *known_formats(void);
+static int16_t clamp_to_pcm16(float sample);
 
 load_module_result_t load_module(const char *filename)
 {
@@ -84,28 +85,6 @@ load_module_result_t load_module(const char *filename)
     }
     munmap(file.addr, file.size);
     return UNRECOGNISED_MODULE_FORMAT;
-}
-
-load_sample_result_t load_sample(const char *filename)
-{
-    FILE *file_pointer = fopen(filename, READONLY);
-    if (file_pointer == NULL)
-    {
-        return FAILED_TO_READ_SAMPLE_FILE;
-    }
-    const mapped_file_t file = load_file(file_pointer);
-    fclose(file_pointer);
-    if (has_error())
-    {
-        return FAILED_TO_READ_SAMPLE_FILE;
-    }
-    const audio_t audio_data = wav_read_audio(file.addr, file.size);
-    munmap(file.addr, file.size);
-    if (has_error())
-    {
-        return FAILED_TO_READ_SAMPLE_FILE;
-    }
-    return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, audio_data.audio_data);
 }
 
 bool save_module(const module_t *module, const char *filename, const format_t format)
@@ -137,6 +116,57 @@ bool save_module(const module_t *module, const char *filename, const format_t fo
         remove(tmp_filename);
         return false;
     }
+    return ok;
+}
+
+load_sample_result_t load_sample(const char *filename)
+{
+    FILE *file_pointer = fopen(filename, READONLY);
+    if (file_pointer == NULL)
+    {
+        return FAILED_TO_READ_SAMPLE_FILE;
+    }
+    const mapped_file_t file = load_file(file_pointer);
+    fclose(file_pointer);
+    if (has_error())
+    {
+        return FAILED_TO_READ_SAMPLE_FILE;
+    }
+    const audio_t audio_data = wav_read_audio(file.addr, file.size);
+    munmap(file.addr, file.size);
+    if (has_error())
+    {
+        return FAILED_TO_READ_SAMPLE_FILE;
+    }
+    return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, audio_data.audio_data);
+}
+
+bool export_sample(const module_t *module, const int instrument_index, const char *filename)
+{
+    const int sample_index = module->instruments[instrument_index].sample_index;
+    const sample_t sample = module->samples[sample_index];
+    uint8_t *sample_data_pcm16 = allocate_array(MAIN, sizeof(uint8_t) * 2, sample.sample_length);
+    if (sample_data_pcm16 == NULL)
+    {
+        error(MEMORY_ALLOCATION_FAILED);
+        return false;
+    }
+    int byte_offset = 0;
+    for (int frame = 0; frame < sample.sample_length; frame++)
+    {
+        const int16_t pcm = clamp_to_pcm16(sample.sample_data[frame]);
+        sample_data_pcm16[byte_offset++] = pcm & 0xff;
+        sample_data_pcm16[byte_offset++] = pcm >> 8;
+    }
+    const wav_pcm16_t to_write = {
+        .sample_rate = 44100,
+        .channels = 1,
+        .bits_per_sample = 16,
+        .frames = sample.sample_length,
+        .pcm16 = (int16_t *) sample_data_pcm16,
+    };
+    const bool ok = wav_write_pcm16(filename, &to_write);
+    deallocate(MAIN, sample_data_pcm16);
     return ok;
 }
 
@@ -188,3 +218,11 @@ static format_t *known_formats(void)
     formats[2] = desktop_tracker_format();
     return formats;
 }
+
+static int16_t clamp_to_pcm16(const float sample)
+{
+    if (sample <= -1.0f) return INT16_MIN;
+    if (sample >= 1.0f) return INT16_MAX;
+    return (int16_t)(sample * INT16_MAX);
+}
+

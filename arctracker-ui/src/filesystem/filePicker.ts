@@ -6,7 +6,10 @@ export const ARCTRACKER_MODFILE_EXTENSION = "arctm";
 export const AUDIO_EXPORT_EXTENSION = "wav";
 
 export const filePicker = {
-  chooseFileToOpen: async (filteredExtensions: string[], filterName: string) => {
+  chooseFileToOpen: async (
+    filteredExtensions: string[],
+    filterName: string,
+  ) => {
     const selected = await open({
       multiple: false,
       filters: [
@@ -48,4 +51,7 @@ export const filePicker = {
         ?.replace(/\.[^.]+$/, "") ?? ""
     );
   },
+
+  sanitiseFilename: (filename: string): string =>
+    filename.replace(/[<>:"/\\|?*\x00-\x1F]+/g, "_").replace(/[ .]+$/, ""),
 };

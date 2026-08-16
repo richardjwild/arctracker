@@ -69,11 +69,13 @@ export enum CommandType {
   INSERT_SEQUENCE_POSITION_BEFORE,
   INSERT_SEQUENCE_POSITION_AFTER,
   DELETE_SEQUENCE_POSITION,
+  ADD_INSTRUMENT,
   OPEN_INSTRUMENT_EDITOR,
   SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
   RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
   LOAD_SAMPLE,
   DELETE_SAMPLE,
+  EXPORT_SAMPLE,
   EDIT_CURRENT_PATTERN_LENGTH,
   SET_CURRENT_PATTERN_LENGTH,
   EDIT_MODULE_TITLE,
@@ -168,11 +170,13 @@ export type Command =
       createNewPattern: boolean;
     }
   | { type: CommandType.DELETE_SEQUENCE_POSITION }
+  | { type: CommandType.ADD_INSTRUMENT }
   | { type: CommandType.OPEN_INSTRUMENT_EDITOR }
   | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
   | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR }
   | { type: CommandType.LOAD_SAMPLE }
   | { type: CommandType.DELETE_SAMPLE }
+  | { type: CommandType.EXPORT_SAMPLE }
   | { type: CommandType.EDIT_CURRENT_PATTERN_LENGTH }
   | {
       type: CommandType.SET_CURRENT_PATTERN_LENGTH;
@@ -327,6 +331,7 @@ export const commands = {
     }),
   deleteSequencePosition: () =>
     commandQueue.push({ type: CommandType.DELETE_SEQUENCE_POSITION }),
+  addInstrument: () => commandQueue.push({ type: CommandType.ADD_INSTRUMENT }),
   openInstrumentEditor: () =>
     commandQueue.push({ type: CommandType.OPEN_INSTRUMENT_EDITOR }),
   saveAndCloseInstrumentEditor: () =>
@@ -337,6 +342,7 @@ export const commands = {
     }),
   loadSample: () => commandQueue.push({ type: CommandType.LOAD_SAMPLE }),
   deleteSample: () => commandQueue.push({ type: CommandType.DELETE_SAMPLE }),
+  exportSample: () => commandQueue.push({ type: CommandType.EXPORT_SAMPLE }),
   editCurrentPatternLength: () =>
     commandQueue.push({ type: CommandType.EDIT_CURRENT_PATTERN_LENGTH }),
   setCurrentPatternLength: (newLength: number) =>

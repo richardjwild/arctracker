@@ -1,17 +1,16 @@
 #ifndef ARCTRACKER_ENGINE_UI_EVENT_QUEUE_H
 #define ARCTRACKER_ENGINE_UI_EVENT_QUEUE_H
 
+#include <stdatomic.h>
 #include <stdbool.h>
-#include <sys/_pthread/_pthread_mutex_t.h>
 #include "player_event.h"
 
 #define EVENT_QUEUE_SIZE 20
 
 typedef struct {
     player_event_t buffer[EVENT_QUEUE_SIZE];
-    volatile int head;
-    volatile int tail;
-    pthread_mutex_t mutex;
+    atomic_uint head;
+    atomic_uint tail;
 } player_event_queue_t;
 
 player_event_queue_t *event_queue_init(void);

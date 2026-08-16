@@ -53,10 +53,28 @@ pub enum PlayerEventType {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PlayerErrorEventData {
+    pub error_message: [c_char; 256],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PlayerMidiNoteEventData {
+    pub midi_note: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union PlayerEventData {
+    pub player_error: PlayerErrorEventData,
+    pub midi_note: PlayerMidiNoteEventData,
+}
+
+#[repr(C)]
 pub struct PlayerEvent {
     pub event_type: PlayerEventType,
-    pub error_message: [c_char; 256],
-    pub midi_note: c_int,
+    pub data: PlayerEventData,
 }
 
 #[derive(Copy, Clone)]
@@ -74,14 +92,70 @@ pub enum PlayerCommandType {
 }
 
 #[repr(C)]
-pub struct PlayerCommand {
-    pub cmd_type: PlayerCommandType,
+#[derive(Copy, Clone)]
+pub struct SeekCommand {
     pub new_sequence_pos: c_int,
     pub new_pattern_pos: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MidiNoteOnCommand {
     pub track: c_int,
-    pub note: c_int,
     pub instrument_no: u8,
+    pub note: c_int,
+    pub velocity: u8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct KeyboardNoteOnCommand {
+    pub track: c_int,
+    pub instrument_no: u8,
+    pub note: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct NoteOffCommand {
+    pub track: c_int,
+    pub instrument_no: u8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MasterGainCommand {
     pub master_gain: f32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct TrackMuteCommand {
+    pub track: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct NoDataCommand {
+    pub unused: u8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union PlayerCommandData {
+    pub no_data_command: NoDataCommand,
+    pub seek: SeekCommand,
+    pub midi_note_on: MidiNoteOnCommand,
+    pub keyboard_note_on: KeyboardNoteOnCommand,
+    pub note_off: NoteOffCommand,
+    pub master_gain: MasterGainCommand,
+    pub track_mute: TrackMuteCommand,
+}
+
+#[repr(C)]
+pub struct PlayerCommand {
+    pub cmd_type: PlayerCommandType,
+    pub data: PlayerCommandData,
 }
 
 #[repr(C)]
@@ -205,6 +279,7 @@ extern "C" {
     pub fn arctracker_use_midi_device(handle: *mut MidiHandle, name: *const c_char) -> ApiResult;
     pub fn arctracker_midi_set_playback_channel(handle: *mut MidiHandle, channel: c_int);
     pub fn arctracker_midi_set_playback_instrument(handle: *mut MidiHandle, instrument: u8);
+    pub fn arctracker_midi_keyboard_note_on(handle: *mut MidiHandle, note: c_int);
     pub fn arctracker_get_current_module(
         handle: *mut ArctrackerHandle,
         module_info: *mut UiModuleInfo,
@@ -275,6 +350,11 @@ extern "C" {
     );
     pub fn arctracker_export_audio(
         handle: *mut ArctrackerHandle,
+        output_filename: *const c_char,
+    ) -> ApiResult;
+    pub fn arctracker_export_sample(
+        handle: *mut ArctrackerHandle,
+        instrument_no: c_int,
         output_filename: *const c_char,
     ) -> ApiResult;
     pub fn arctracker_get_export_state(

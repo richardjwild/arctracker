@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { appConfig } from "../config/appConfig.ts";
-import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
 
 let readConfig = false;
@@ -11,12 +10,10 @@ export default function useAppConfig() {
     appConfig
       .load()
       .then((config) => appConfig.apply(config))
-      .catch((e) =>
-        alerting.showErrorWithContext(
-          message("failedToLoadConfig"),
-          e as string,
-        ),
-      );
+      .catch((e) => {
+        console.error(message("failedToLoadConfig"), e as string);
+        appConfig.setToDefault();
+      });
     readConfig = true;
   }, []);
 }

@@ -16,6 +16,7 @@ import { moduleTitle } from "../editing/moduleTitle.ts";
 import { engine } from "../engine/engine.ts";
 import { tempo } from "../editing/tempo.ts";
 import { appConfig } from "../config/appConfig.ts";
+import { useStore } from "../store/useStore.ts";
 
 async function processCommands() {
   const commands = commandQueue.consume();
@@ -51,6 +52,9 @@ async function processCommands() {
         break;
       case CommandType.EXPORT_AUDIO:
         void audioExport.start();
+        break;
+      case CommandType.EXPORT_SAMPLE:
+        void editInstrument.exportSample();
         break;
       case CommandType.TOGGLE_PLAY:
         if (editInstrument.instrumentEditing()) break;
@@ -241,6 +245,13 @@ async function processCommands() {
       case CommandType.DELETE_SEQUENCE_POSITION:
         selection.clearPatternSelection();
         void sequence.delete();
+        break;
+      case CommandType.ADD_INSTRUMENT:
+        const instruments = useStore.getState().module.instruments;
+        const setSelectedInstrument = useStore.getState().setSelectedInstrument;
+        setSelectedInstrument(instruments.length);
+        if (transport.playing()) transport.togglePlay();
+        editInstrument.showDialog();
         break;
       case CommandType.OPEN_INSTRUMENT_EDITOR:
         if (transport.playing()) transport.togglePlay();

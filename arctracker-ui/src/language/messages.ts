@@ -20,6 +20,9 @@ const messages = {
     tempoUndefinedWithoutLinesPerBeat:
       "Lines per beat must be set for tempo to be valid.",
     moduleNameLabel: "Module Name:",
+    saveModuleTitle: "Save module",
+    exportAudioTitle: "Export audio",
+    exportSampleTitle: "Export sample",
     authorNameLabel: "Author:",
     patternLengthLabel: "Pattern Length:",
     linesPerBeatLabel: "Lines per Beat:",
@@ -44,6 +47,7 @@ const messages = {
     instrumentLoopEndLabel: "Loop End:",
     loadSampleButtonLabel: "Load Sample",
     deleteSampleButtonLabel: "Delete Sample",
+    exportSampleButtonLabel: "Export Sample",
     insertSequencePositionBeforeCurrentHintText: "Insert new sequence position before current (shift-click to create new pattern)",
     insertSequencePositionAfterCurrentHintText: "Insert new sequence position after current (shift-click to create new pattern)",
     deleteSequencePositionHintText: "Delete sequence position at current",

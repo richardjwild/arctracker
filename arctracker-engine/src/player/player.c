@@ -13,12 +13,13 @@ static bool player_tick(player_t *);
 static void process_commands(player_t *player);
 static void process_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
-static void process_seek_command(player_t *player, player_command_t command);
-static void process_note_on_command(const player_t *player, player_command_t command, bool from_midi);
-static void process_note_off_command(const player_t *player, player_command_t command);
+static void process_seek_command(player_t *player, seek_command_t data);
+static void process_midi_note_on_command(const player_t *player, midi_note_on_command_t data);
+static void process_keyboard_note_on_command(const player_t *player, keyboard_note_on_command_t data);
+static void process_note_off_command(const player_t *player, note_off_command_t data);
 static void process_toggle_loop_command(player_t *player);
-static void process_set_master_gain_command(player_t *player, player_command_t command);
-static void process_track_mute_state_changed_command(const player_t *player, player_command_t command);
+static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
+static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(const player_t *);
@@ -175,27 +176,27 @@ static void process_command(player_t *player, const player_command_t command)
             process_toggle_play_command(player);
             break;
         case SEEK:
-            process_seek_command(player, command);
+            process_seek_command(player, command.data.seek);
             break;
         case MIDI_NOTE_ON:
-            process_note_on_command(player, command, true);
+            process_midi_note_on_command(player, command.data.midi_note_on);
             break;
         case KEYBOARD_NOTE_ON:
-            process_note_on_command(player, command, false);
+            process_keyboard_note_on_command(player, command.data.keyboard_note_on);
             break;
         case MIDI_NOTE_OFF:
             /* fall through */
         case KEYBOARD_NOTE_OFF:
-            process_note_off_command(player, command);
+            process_note_off_command(player, command.data.note_off);
             break;
         case TOGGLE_LOOP:
             process_toggle_loop_command(player);
             break;
         case SET_MASTER_GAIN:
-            process_set_master_gain_command(player, command);
+            process_set_master_gain_command(player, command.data.master_gain);
             break;
         case TRACK_MUTE_STATE_CHANGED:
-            process_track_mute_state_changed_command(player, command);
+            process_track_mute_state_changed_command(player, command.data.track_mute);
             break;
         default:
             break;
@@ -210,32 +211,42 @@ static void process_toggle_play_command(player_t *player)
         player_start(player);
 }
 
-static void process_seek_command(player_t *player, const player_command_t command)
+static void process_seek_command(player_t *player, const seek_command_t data)
 {
-    player_seek(player, command.new_sequence_pos, command.new_pattern_pos);
+    player_seek(player, data.new_sequence_pos, data.new_pattern_pos);
 }
 
-static void process_note_on_command(const player_t *player, const player_command_t command, const bool from_midi)
+static void process_midi_note_on_command(const player_t *player, const midi_note_on_command_t data)
 {
-    if (from_midi)
-    {
-        event_queue_add(player->player_event_queue, create_user_midi_event(command.note));
-    }
-    voice_t *voice = player->voices + command.track;
-    const instrument_t instrument = player->module->instruments[command.instrument_no];
+    event_queue_add(player->player_event_queue, create_user_midi_event(data.note));
+    voice_t *voice = player->voices + data.track;
+    const instrument_t instrument = player->module->instruments[data.instrument_no];
     if (!instrument.assigned)
     {
         note_off(voice);
         return;
     }
     const sample_t *sample = player->module->samples + instrument.sample_index;
-    note_on(command.note, &instrument, sample, voice);
+    note_on(data.note, &instrument, sample, voice);
 }
 
-static void process_note_off_command(const player_t *player, const player_command_t command)
+static void process_keyboard_note_on_command(const player_t *player, const keyboard_note_on_command_t data)
 {
-    voice_t *voice = player->voices + command.track;
-    const instrument_t instrument = player->module->instruments[command.instrument_no];
+    voice_t *voice = player->voices + data.track;
+    const instrument_t instrument = player->module->instruments[data.instrument_no];
+    if (!instrument.assigned)
+    {
+        note_off(voice);
+        return;
+    }
+    const sample_t *sample = player->module->samples + instrument.sample_index;
+    note_on(data.note, &instrument, sample, voice);
+}
+
+static void process_note_off_command(const player_t *player, const note_off_command_t data)
+{
+    voice_t *voice = player->voices + data.track;
+    const instrument_t instrument = player->module->instruments[data.instrument_no];
     if (instrument.assigned && instrument.repeats)
         note_off(voice);
 }
@@ -248,15 +259,15 @@ static void process_toggle_loop_command(player_t *player)
         set_pattern_loop(&player->sequence);
 }
 
-static void process_set_master_gain_command(player_t *player, const player_command_t command)
+static void process_set_master_gain_command(player_t *player, const master_gain_command_t data)
 {
-    player->audio_out.master_gain = command.master_gain;
-    player->module->master_gain = command.master_gain;
+    player->audio_out.master_gain = data.master_gain;
+    player->module->master_gain = data.master_gain;
 }
 
-static void process_track_mute_state_changed_command(const player_t *player, const player_command_t command)
+static void process_track_mute_state_changed_command(const player_t *player, const track_mute_command_t data)
 {
-    const int track = command.track;
+    const int track = data.track;
     if (track < 0 || track >= player->module->num_tracks)
         return;
     const bool new_state = player->module->tracks[track].muted;
@@ -402,16 +413,21 @@ static void player_seek(player_t *player, const int new_sequence_pos, const int 
 
 static player_event_t create_user_midi_event(const int note)
 {
-    player_event_t event = {0};
-    event.type = USER_MIDI_NOTE_ON;
-    event.midi_note = note;
-    return event;
+    return (player_event_t) {
+        .type = USER_MIDI_NOTE_ON,
+        .data = (player_event_data_t) {
+            .midi_note = (player_midi_note_event_t) {
+                .midi_note = note,
+            }
+        }
+    };
 }
 
 static player_event_t create_error_event(const char *error_message)
 {
-    player_event_t event = {0};
-    event.type = PLAYER_ERROR;
-    snprintf(event.error_message, ERROR_MESSAGE_MAX_LENGTH, "%s", error_message);
+    player_event_t event = {
+        .type = PLAYER_ERROR,
+    };
+    snprintf(event.data.player_error.error_message, ERROR_MESSAGE_MAX_LENGTH, "%s", error_message);
     return event;
 }

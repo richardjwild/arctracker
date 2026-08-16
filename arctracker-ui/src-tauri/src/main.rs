@@ -1,6 +1,7 @@
 use arctracker_ui_lib::arctracker::{default_module_params, initialise, NewModuleParams};
 use arctracker_ui_lib::AppState;
 use std::error::Error;
+use std::ops::Sub;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{App, AppHandle, Emitter, Manager, RunEvent, Runtime, WindowEvent};
@@ -34,6 +35,11 @@ const INSERT_SEQUENCE_BEFORE_WITH_NEW_MENU_ID: &str = "insert-sequence-before-wi
 const INSERT_SEQUENCE_AFTER_WITH_NEW_MENU_ID: &str = "insert-sequence-after-with-new";
 const DELETE_SEQUENCE_POSITION_MENU_ID: &str = "delete-sequence-position";
 const SET_PATTERN_LENGTH_MENU_ID: &str = "set-pattern-length";
+const ADD_INSTRUMENT_MENU_ID: &str = "add-instrument";
+const EDIT_INSTRUMENT_MENU_ID: &str = "edit-instrument";
+const LOAD_SAMPLE_MENU_ID: &str = "load-sample";
+const DELETE_SAMPLE_MENU_ID: &str = "delete-sample";
+const EXPORT_SAMPLE_MENU_ID: &str = "export-sample";
 const OPEN_SETTINGS_REQUESTED_EVENT: &str = "open-settings-requested";
 const EXIT_REQUESTED_EVENT: &str = "exit-requested";
 const NEW_MODULE_REQUESTED_EVENT: &str = "new-module-requested";
@@ -65,6 +71,11 @@ const INSERT_SEQUENCE_AFTER_WITH_NEW_REQUESTED_EVENT: &str =
     "insert-sequence-after-with-new-requested";
 const DELETE_SEQUENCE_POSITION_REQUESTED_EVENT: &str = "delete-sequence-position-requested";
 const SET_PATTERN_LENGTH_REQUESTED_EVENT: &str = "set-pattern-length-requested";
+const EDIT_INSTRUMENT_REQUESTED_EVENT: &str = "edit-instrument-requested";
+const ADD_INSTRUMENT_REQUESTED_EVENT: &str = "add-instrument-requested";
+const LOAD_SAMPLE_REQUESTED_EVENT: &str = "load-sample-requested";
+const DELETE_SAMPLE_REQUESTED_EVENT: &str = "delete-sample-requested";
+const EXPORT_SAMPLE_REQUESTED_EVENT: &str = "export-sample-requested";
 
 fn main() {
     let app_state = create_app_state();
@@ -114,21 +125,26 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         PASTE_PATTERN_MENU_ID => request_event(app_handle, PASTE_PATTERN_REQUESTED_EVENT),
         INSERT_SEQUENCE_BEFORE_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_BEFORE_REQUESTED_EVENT)
-        }
+        },
         INSERT_SEQUENCE_AFTER_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_AFTER_REQUESTED_EVENT)
-        }
+        },
         INSERT_SEQUENCE_BEFORE_WITH_NEW_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_BEFORE_WITH_NEW_REQUESTED_EVENT)
-        }
+        },
         INSERT_SEQUENCE_AFTER_WITH_NEW_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_AFTER_WITH_NEW_REQUESTED_EVENT)
-        }
+        },
         DELETE_SEQUENCE_POSITION_MENU_ID => {
             request_event(app_handle, DELETE_SEQUENCE_POSITION_REQUESTED_EVENT)
-        }
+        },
         SET_PATTERN_LENGTH_MENU_ID => request_event(app_handle, SET_PATTERN_LENGTH_REQUESTED_EVENT),
-        _ => {}
+        ADD_INSTRUMENT_MENU_ID => request_event(app_handle, ADD_INSTRUMENT_REQUESTED_EVENT),
+        EDIT_INSTRUMENT_MENU_ID => request_event(app_handle, EDIT_INSTRUMENT_REQUESTED_EVENT),
+        LOAD_SAMPLE_MENU_ID => request_event(app_handle, LOAD_SAMPLE_REQUESTED_EVENT),
+        DELETE_SAMPLE_MENU_ID => request_event(app_handle, DELETE_SAMPLE_REQUESTED_EVENT),
+        EXPORT_SAMPLE_MENU_ID => request_event(app_handle, EXPORT_SAMPLE_REQUESTED_EVENT),
+        _ => {},
     });
     Ok(())
 }
@@ -140,6 +156,7 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
     let module_menu = build_module_menu(app)?;
     let sequence_menu = build_sequence_menu(app)?;
     let pattern_menu = build_pattern_menu(app)?;
+    let instrument_menu = build_instrument_menu(app)?;
     let menu = Menu::with_items(
         app,
         &[
@@ -149,6 +166,7 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
             &module_menu,
             &sequence_menu,
             &pattern_menu,
+            &instrument_menu,
         ],
     )?;
     app.set_menu(menu)?;
@@ -326,14 +344,14 @@ fn build_module_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
     let edit_details = MenuItem::with_id(
         app,
         EDIT_DETAILS_MENU_ID,
-        "Edit Details",
+        "Edit Module Details...",
         true,
         None::<String>,
     )?;
     let set_track_count = MenuItem::with_id(
         app,
         SET_TRACK_COUNT_MENU_ID,
-        "Set Track Count",
+        "Set Track Count...",
         true,
         Some("CmdOrCtrl+T"),
     )?;
@@ -400,11 +418,51 @@ fn build_pattern_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
     let set_length = MenuItem::with_id(
         app,
         SET_PATTERN_LENGTH_MENU_ID,
-        "Set Length",
+        "Set Pattern Length...",
         true,
         Some("CmdOrCtrl+L"),
     )?;
     Submenu::with_items(app, "Pattern", true, &[&set_length])
+}
+
+fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
+    let add_instrument = MenuItem::with_id(
+        app,
+        ADD_INSTRUMENT_MENU_ID,
+        "Add Instrument...",
+        true,
+        None::<String>,
+    )?;
+    let edit_instrument = MenuItem::with_id(
+        app,
+        EDIT_INSTRUMENT_MENU_ID,
+        "Edit Instrument...",
+        true,
+        Some("CmdOrCtrl+I"),
+    )?;
+    let load_sample = MenuItem::with_id(
+        app,
+        LOAD_SAMPLE_MENU_ID,
+        "Load Sample",
+        true,
+        None::<String>,
+    )?;
+    let delete_sample = MenuItem::with_id(
+        app,
+        DELETE_SAMPLE_MENU_ID,
+        "Delete Sample",
+        true,
+        None::<String>,
+    )?;
+    let export_sample = MenuItem::with_id(
+        app,
+        EXPORT_SAMPLE_MENU_ID,
+        "Export Sample",
+        true,
+        None::<String>,
+    )?;
+    let separator = PredefinedMenuItem::separator(app)?;
+    Submenu::with_items(app, "Instrument", true, &[&add_instrument, &edit_instrument, &separator, &load_sample, &delete_sample, &export_sample])
 }
 
 fn handle_run_event<R: Runtime>(app_handle: &AppHandle<R>, event: RunEvent) {

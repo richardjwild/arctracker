@@ -103,7 +103,7 @@ export const module = {
       module.fileName || module.name,
     );
     const filePath = await filePicker.chooseFileToSave(
-      "Save module",
+      message("saveModuleTitle"),
       defaultPath,
       [ARCTRACKER_MODFILE_EXTENSION],
       message("moduleFileFilterDescription")

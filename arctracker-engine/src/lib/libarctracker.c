@@ -169,12 +169,20 @@ api_result_t arctracker_use_midi_device(midi_subsystem_t *midi, const char *name
 
 void arctracker_midi_set_playback_channel(midi_subsystem_t *midi, const int channel)
 {
-    midi_set_playback_channel(midi, channel);
+    if (midi != NULL)
+        midi_set_playback_channel(midi, channel);
 }
 
 void arctracker_midi_set_playback_instrument(midi_subsystem_t *midi, const uint8_t instrument)
 {
-    midi_set_playback_instrument(midi, instrument);
+    if (midi != NULL)
+        midi_set_playback_instrument(midi, instrument);
+}
+
+void arctracker_midi_keyboard_note_on(const midi_subsystem_t *midi, const int note)
+{
+    if (midi != NULL)
+        keyboard_note_on(midi, note);
 }
 
 api_result_t arctracker_get_current_module(arctracker_t *arctracker, ui_module_info_t *module_info)
@@ -514,6 +522,22 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
     arctracker->export.thread_active = true;
     arctracker->export.audio_thread = export_thread;
     arctracker->export_state = RUNNING;
+    return SUCCESS;
+}
+
+api_result_t arctracker_export_sample(arctracker_t *arctracker, int instrument_no, char *output_filename)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (instrument_no < 0 || instrument_no >= NUM_INSTRUMENT_SLOTS)
+        return failure(INVALID_INSTRUMENT_INDEX);
+    const instrument_t instrument = arctracker->module->instruments[instrument_no];
+    if (!instrument.assigned)
+        return failure(BAD_INSTRUMENT_INDEX);
+    if (!export_sample(arctracker->module, instrument_no, output_filename))
+        return failure(EXPORT_SAMPLE_FAILED);
     return SUCCESS;
 }
 

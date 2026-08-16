@@ -8,6 +8,7 @@ import { Instrument } from "../editing/editInstrument.ts";
 import { Module } from "../module/module.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
 import { ModuleTempo } from "../editing/tempo.ts";
+import { DraftAppConfig } from "../config/appConfig.ts";
 
 interface AppStore {
   moduleId: number;
@@ -27,6 +28,7 @@ interface AppStore {
   exportState: ExportState | null;
   currentPattern: CurrentPattern;
   selectedInstrument: number | null;
+  draftAppConfig: DraftAppConfig | null;
   draftInstrument: Instrument;
   draftModuleTitle: ModuleTitle | null;
   draftTempo: ModuleTempo;
@@ -40,6 +42,7 @@ interface AppStore {
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
   setSequence: (sequence: number[]) => void;
   setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
+  setDraftAppConfig: (draftAppConfig: DraftAppConfig) => void;
   setDraftInstrument: (instrument: Instrument) => void;
   setDraftModuleTitle: (moduleTitle: ModuleTitle) => void;
   setDraftTempo: (tempo: ModuleTempo) => void;
@@ -161,6 +164,7 @@ export const useStore = create<AppStore>((set) => ({
   exportState: null,
   currentPattern: initialPattern,
   selectedInstrument: null,
+  draftAppConfig: null,
   draftInstrument: initialInstrument,
   draftModuleTitle: null,
   draftTempo: { linesPerBeat: 0, beatsPerMinute: 0 },
@@ -271,6 +275,8 @@ export const useStore = create<AppStore>((set) => ({
         },
       };
     }),
+
+  setDraftAppConfig: (draftAppConfig) => set({ draftAppConfig }),
 
   setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
 

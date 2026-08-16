@@ -7,6 +7,7 @@ import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
 import { moduleTitle } from "./moduleTitle.ts";
 import { tempo } from "./tempo.ts";
+import { appConfig } from "../config/appConfig.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
@@ -14,6 +15,7 @@ export const editorKeyHandlers: {
   handleInstrumentEditorInput: KeyHandler,
   handleModuleTitleInput: KeyHandler,
   handleTempoInput: KeyHandler,
+  handleAppConfigInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -89,4 +91,17 @@ export const editorKeyHandlers: {
     }
     return false;
   },
+
+  handleAppConfigInput: (e) => {
+    if (!appConfig.editing())
+      return false;
+    if (e.code === 'Escape') {
+      appConfig.hideDialog();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      void appConfig.update();
+      return true;
+    }
+    return false;
+  }
 };

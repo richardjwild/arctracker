@@ -24,9 +24,8 @@ export type PlayerSnapshot = {
 };
 
 export type PlayerEvent =
-  | { eventType: "playerError"; errorMessage: string }
-  | { eventType: "userMidiNoteOn"; midiNote: number }
-  | { eventType: "audioOverflowed" };
+  | { eventType: "playerError"; data: { errorMessage: string } }
+  | { eventType: "userMidiNoteOn"; data: { midiNote: number } };
 
 function handlePlayerError(errorMessage: string) {
   console.error(
@@ -87,10 +86,10 @@ export const player = {
       for (const event of events) {
         switch (event.eventType) {
           case "playerError":
-            handlePlayerError(event.errorMessage);
+            handlePlayerError(event.data.errorMessage);
             return; // No point trying to handle any other events in this case.
           case "userMidiNoteOn":
-            commands.editNoteField(event.midiNote);
+            commands.editNoteField(event.data.midiNote);
             break;
         }
       }

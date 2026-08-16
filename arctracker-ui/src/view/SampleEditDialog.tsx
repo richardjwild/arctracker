@@ -289,6 +289,9 @@ export default function SampleEditDialog() {
         <button type="button" onClick={commands.deleteSample}>
           {message("deleteSampleButtonLabel")}
         </button>
+        <button type="button" onClick={commands.exportSample}>
+          {message("exportSampleButtonLabel")}
+        </button>
         <button type="button" onClick={commands.saveAndCloseInstrumentEditor}>
           {message("saveButtonLabel")}
         </button>

@@ -10,7 +10,10 @@ type MenuAction = {
 const menuActions: MenuAction[] = [
   { eventId: "open-settings-requested", action: commands.editAppConfig },
   { eventId: "new-module-requested", action: commands.createModule },
-  { eventId: "new-module-using-defaults-requested", action: commands.createModuleUsingDefaults },
+  {
+    eventId: "new-module-using-defaults-requested",
+    action: commands.createModuleUsingDefaults,
+  },
   { eventId: "open-module-requested", action: commands.loadFile },
   { eventId: "save-module-requested", action: commands.saveModule },
   { eventId: "save-module-as-requested", action: commands.saveModuleAs },
@@ -57,6 +60,14 @@ const menuActions: MenuAction[] = [
     eventId: "set-pattern-length-requested",
     action: commands.editCurrentPatternLength,
   },
+  { eventId: "add-instrument-requested", action: commands.addInstrument },
+  {
+    eventId: "edit-instrument-requested",
+    action: commands.openInstrumentEditor,
+  },
+  { eventId: "load-sample-requested", action: commands.loadSample },
+  { eventId: "delete-sample-requested", action: commands.deleteSample },
+  { eventId: "export-sample-requested", action: commands.exportSample },
 ];
 
 export function useMenuActions() {

@@ -1,7 +1,7 @@
 import { useStore } from "../store/useStore";
 import { engine, InstrumentUpdate } from "../engine/engine.ts";
 import { EditCommand, editor } from "./editor.ts";
-import { filePicker } from "../filesystem/filePicker.ts";
+import { AUDIO_EXPORT_EXTENSION, filePicker } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
 
@@ -196,6 +196,25 @@ export const editInstrument = {
     if (!editInstrument.instrumentEditing()) return;
     const { setDraftInstrument } = useStore.getState();
     setDraftInstrument(emptyInstrument());
+  },
+
+  exportSample: async () => {
+    const selectedInstrument = useStore.getState().selectedInstrument;
+    if (selectedInstrument == null) return;
+    const module = useStore.getState().module;
+    const proposedFilename = filePicker.sanitiseFilename(module.instruments[selectedInstrument].name);
+    const filePath = await filePicker.chooseFileToSave(
+      message("exportSampleTitle"),
+      proposedFilename,
+      [AUDIO_EXPORT_EXTENSION],
+      message("audioFileFilterDescription")
+    );
+    if (!filePath) return;
+    try {
+      await engine.exportSample(selectedInstrument, filePath);
+    } catch (err) {
+      void alerting.showError(err as string);
+    }
   },
 
   closeDialog: () => {

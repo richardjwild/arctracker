@@ -82,19 +82,34 @@ impl From<ffi::PlayerEventType> for PlayerEventType {
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PlayerEvent {
-    pub event_type: PlayerEventType,
-    pub error_message: String,
-    pub midi_note: i32,
+#[serde(tag = "eventType", content = "data")]
+pub enum PlayerEvent {
+    PlayerError {
+        error_message: String,
+    },
+    UserMidiNoteOn {
+        midi_note: i32,
+    },
 }
 
 impl From<ffi::PlayerEvent> for PlayerEvent {
     fn from(event: ffi::PlayerEvent) -> Self {
-        Self {
-            event_type: event.event_type.into(),
-            error_message: c_string_to_rust(&event.error_message),
-            midi_note: event.midi_note,
+        unsafe {
+            match event.event_type {
+                ffi::PlayerEventType::PlayerError => {
+                    Self::PlayerError {
+                        error_message: c_string_to_rust(
+                            &event.data.player_error.error_message,
+                        ),
+                    }
+                }
+
+                ffi::PlayerEventType::UserMidiNoteOn => {
+                    Self::UserMidiNoteOn {
+                        midi_note: event.data.midi_note.midi_note,
+                    }
+                }
+            }
         }
     }
 }
@@ -722,22 +737,21 @@ impl Arctracker {
             return None;
         }
         let event = unsafe { event.assume_init() };
-        Some(PlayerEvent {
-            event_type: PlayerEventType::PlayerError,
-            error_message: c_string_to_rust(&event.error_message),
-            midi_note: 0, // All but error events are filtered out.
-        })
+        unsafe {
+            Some(PlayerEvent::PlayerError {
+                error_message: c_string_to_rust(&event.data.player_error.error_message),
+            })
+        }
     }
 
     pub fn toggle_play(&mut self) {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::TogglePlay,
-            new_sequence_pos: 0,
-            new_pattern_pos: 0,
-            track: 0,
-            note: 0,
-            instrument_no: 0,
-            master_gain: 0.0,
+            data: ffi::PlayerCommandData {
+                no_data_command: ffi::NoDataCommand {
+                    unused: 0,
+                },
+            }
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -747,12 +761,11 @@ impl Arctracker {
     pub fn toggle_loop(&mut self) {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::ToggleLoop,
-            new_sequence_pos: 0,
-            new_pattern_pos: 0,
-            track: 0,
-            note: 0,
-            instrument_no: 0,
-            master_gain: 0.0,
+            data: ffi::PlayerCommandData {
+                no_data_command: ffi::NoDataCommand {
+                    unused: 0,
+                },
+            }
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -762,42 +775,12 @@ impl Arctracker {
     pub fn seek(&mut self, new_sequence_pos: i32, new_pattern_pos: i32) {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::Seek,
-            new_sequence_pos,
-            new_pattern_pos,
-            track: 0,
-            note: 0,
-            instrument_no: 0,
-            master_gain: 0.0,
-        };
-        unsafe {
-            ffi::arctracker_player_cmd(self.handle, &command);
-        }
-    }
-
-    pub fn midi_note_on(&mut self, note: i32, instrument_no: u8, track: i32) {
-        let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::MidiNoteOn,
-            new_sequence_pos: 0,
-            new_pattern_pos: 0,
-            track: track,
-            note,
-            instrument_no,
-            master_gain: 0.0,
-        };
-        unsafe {
-            ffi::arctracker_player_cmd(self.handle, &command);
-        }
-    }
-
-    pub fn keyboard_note_on(&mut self, note: i32, instrument_no: u8, track: i32) {
-        let command = ffi::PlayerCommand {
-            cmd_type: ffi::PlayerCommandType::KeyboardNoteOn,
-            new_sequence_pos: 0,
-            new_pattern_pos: 0,
-            track: track,
-            note,
-            instrument_no,
-            master_gain: 0.0,
+            data: ffi::PlayerCommandData {
+                seek: ffi::SeekCommand {
+                    new_sequence_pos,
+                    new_pattern_pos,
+                },
+            },
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -807,12 +790,11 @@ impl Arctracker {
     pub fn set_master_gain(&mut self, master_gain: f32) {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::SetMasterGain,
-            new_sequence_pos: 0,
-            new_pattern_pos: 0,
-            track: 0,
-            note: 0,
-            instrument_no: 0,
-            master_gain,
+            data: ffi::PlayerCommandData {
+                master_gain: ffi::MasterGainCommand {
+                    master_gain,
+                }
+            }
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -822,12 +804,11 @@ impl Arctracker {
     pub fn toggle_track_mute(&mut self, track: i32) {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::TrackMuteStateChanged,
-            new_sequence_pos: 0,
-            new_pattern_pos: 0,
-            track,
-            note: 0,
-            instrument_no: 0,
-            master_gain: 0.0,
+            data: ffi::PlayerCommandData {
+                track_mute: ffi::TrackMuteCommand {
+                    track,
+                }
+            },
         };
         unsafe {
             ffi::arctracker_toggle_mute_state(self.handle, track);
@@ -844,6 +825,18 @@ impl Arctracker {
     pub fn export_audio(&mut self, path: &str) -> Result<(), ArctrackerError> {
         let c_filename = CString::new(path).unwrap();
         let result = unsafe { ffi::arctracker_export_audio(self.handle, c_filename.as_ptr()) };
+        if result.success {
+            Ok(())
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
+    }
+    
+    pub fn export_sample(&mut self, instrument_no: i32, path: &str) -> Result<(), ArctrackerError> {
+        let c_filename = CString::new(path).unwrap();
+        let result = unsafe { ffi::arctracker_export_sample(self.handle, instrument_no, c_filename.as_ptr()) };
         if result.success {
             Ok(())
         } else {
@@ -1176,6 +1169,12 @@ impl ArctrackerMidi {
     pub fn set_playback_instrument(&mut self, instrument: u8) {
         unsafe {
             ffi::arctracker_midi_set_playback_instrument(self.handle, instrument);
+        }
+    }
+
+    pub fn keyboard_note_on(&mut self, note: i32) {
+        unsafe {
+            ffi::arctracker_midi_keyboard_note_on(self.handle, note);
         }
     }
 }

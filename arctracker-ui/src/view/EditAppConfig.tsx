@@ -6,22 +6,12 @@ import { audioDevice, AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
 import { useEffect, useState } from "react";
 import {
   AppConfig,
-  appConfig,
-  SelectedAudioDevice,
+  appConfig, DraftAppConfig,
+  SelectedAudioDevice
 } from "../config/appConfig.ts";
 import { alerting } from "../alerting/alert.ts";
 import { midi, MidiDeviceInfo } from "../midi/midi.ts";
 import { editor } from "../editing/editor.ts";
-
-type DraftAppConfig = {
-  selectedAudioDevice: "default" | AudioDeviceInfo;
-  selectedMidiDevice: MidiDeviceInfo | null;
-  defaultAuthorName: string | null;
-  defaultPatternLength: number;
-  defaultTrackCount: number;
-  defaultLinesPerBeat: number;
-  defaultBeatsPerMinute: number;
-};
 
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
@@ -53,9 +43,10 @@ function getDeviceIndex(device: AudioDeviceInfo | "default") {
 }
 
 export default function EditAppConfig() {
-  const editing =
-    useStore((state) => state.editorState.editMode) === "appConfig";
-  const [draftConfig, setDraftConfig] = useState<DraftAppConfig>(defaultConfig);
+  const editMode = useStore((state) => state.editorState.editMode);
+  const editing = editMode === "appConfig";
+  const draftAppConfig = useStore((state) => state).draftAppConfig || defaultConfig;
+  const setDraftAppConfig = useStore((state) => state.setDraftAppConfig);
   const [inputPatternLength, setInputPatternLength] = useState("");
   const [inputTrackCount, setInputTrackCount] = useState("");
   const [inputLinesPerBeat, setInputLinesPerBeat] = useState("");
@@ -84,7 +75,7 @@ export default function EditAppConfig() {
         : (midiInputs.find(
             (input) => input.name === currentConfig.selectedMidiDevice?.name,
           ) ?? null);
-    setDraftConfig({
+    setDraftAppConfig({
       selectedAudioDevice,
       selectedMidiDevice,
       defaultAuthorName: currentConfig.defaultAuthorName,
@@ -109,8 +100,8 @@ export default function EditAppConfig() {
 
   const setSelectedAudioDevice = (deviceIndex: number) => {
     if (deviceIndex === defaultOutputDeviceIndex) {
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         selectedAudioDevice: "default",
       });
       return;
@@ -119,8 +110,8 @@ export default function EditAppConfig() {
       (output) => output.deviceIndex === deviceIndex,
     );
     if (selectedOutput) {
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         selectedAudioDevice: selectedOutput,
       });
     }
@@ -128,35 +119,15 @@ export default function EditAppConfig() {
 
   const setSelectedMidiDevice = (deviceName: string) => {
     if (deviceName === "")
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         selectedMidiDevice: null,
       });
     else
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         selectedMidiDevice: { name: deviceName },
       });
-  };
-
-  const applyConfig = async () => {
-    try {
-      await appConfig.apply({
-        selectedAudioDevice: draftConfig.selectedAudioDevice,
-        selectedMidiDevice: draftConfig.selectedMidiDevice,
-        defaultAuthorName: draftConfig.defaultAuthorName,
-        defaultPatternLength: draftConfig.defaultPatternLength,
-        defaultTrackCount: draftConfig.defaultTrackCount,
-        defaultLinesPerBeat: draftConfig.defaultLinesPerBeat,
-        defaultBeatsPerMinute: draftConfig.defaultBeatsPerMinute,
-      });
-      appConfig.hideDialog();
-    } catch (e) {
-      void alerting.showErrorWithContext(
-        message("appSettingsFailed"),
-        e as string,
-      );
-    }
   };
 
   const validateDefaultPatternLength = (): boolean => {
@@ -166,14 +137,14 @@ export default function EditAppConfig() {
       patternLength >= 1 &&
       patternLength <= 1000
     ) {
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         defaultPatternLength: patternLength,
       })
       return true;
     } else {
       void alerting.showInfo(message("invalidDefaultPatternLength"));
-      setInputPatternLength(draftConfig.defaultPatternLength.toString());
+      setInputPatternLength(draftAppConfig.defaultPatternLength.toString());
       return false;
     }
   };
@@ -185,14 +156,14 @@ export default function EditAppConfig() {
       trackCount >= 1 &&
       trackCount <= 256
     ) {
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         defaultTrackCount: trackCount,
       })
       return true;
     } else {
       void alerting.showInfo(message("invalidTrackCount"));
-      setInputTrackCount(draftConfig.defaultTrackCount.toString());
+      setInputTrackCount(draftAppConfig.defaultTrackCount.toString());
       return false;
     }
   };
@@ -204,14 +175,14 @@ export default function EditAppConfig() {
       linesPerBeat >= 1 &&
       linesPerBeat <= 256
     ) {
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         defaultLinesPerBeat: linesPerBeat,
       })
       return true;
     } else {
       void alerting.showInfo(message("invalidLinesPerBeat"));
-      setInputLinesPerBeat(draftConfig.defaultLinesPerBeat.toString());
+      setInputLinesPerBeat(draftAppConfig.defaultLinesPerBeat.toString());
       return false;
     }
   };
@@ -223,14 +194,14 @@ export default function EditAppConfig() {
       beatsPerMinute >= 1 &&
       beatsPerMinute <= 256
     ) {
-      setDraftConfig({
-        ...draftConfig,
+      setDraftAppConfig({
+        ...draftAppConfig,
         defaultBeatsPerMinute: beatsPerMinute,
       })
       return true;
     } else {
       void alerting.showInfo(message("invalidTempo"));
-      setInputBeatsPerMinute(draftConfig.defaultBeatsPerMinute.toString());
+      setInputBeatsPerMinute(draftAppConfig.defaultBeatsPerMinute.toString());
       return false;
     }
   };
@@ -247,7 +218,7 @@ export default function EditAppConfig() {
           id="outputDeviceSelect"
           name="outputDevice"
           onChange={(e) => setSelectedAudioDevice(Number(e.target.value))}
-          value={getDeviceIndex(draftConfig.selectedAudioDevice)}
+          value={getDeviceIndex(draftAppConfig.selectedAudioDevice)}
         >
           <option value={defaultOutputDeviceIndex}>
             {message("defaultOutputDevice")}
@@ -269,7 +240,7 @@ export default function EditAppConfig() {
           id="midiInputDeviceSelect"
           name="midiInputDevice"
           onChange={(e) => setSelectedMidiDevice(e.target.value)}
-          value={draftConfig.selectedMidiDevice?.name || ""}
+          value={draftAppConfig.selectedMidiDevice?.name || ""}
         >
           <option value={""}>{message("noMidiInputDevice")}</option>
           {availableMidiInputs.map((input, i) => (
@@ -289,12 +260,12 @@ export default function EditAppConfig() {
           type="text"
           id="defaultAuthorNameInput"
           maxLength={65}
-          value={draftConfig.defaultAuthorName || ""}
+          value={draftAppConfig.defaultAuthorName || ""}
           onFocus={editor.startTextInput}
           onBlur={editor.stopTextInput}
           onChange={(e) =>
-            setDraftConfig({
-              ...draftConfig,
+            setDraftAppConfig({
+              ...draftAppConfig,
               defaultAuthorName: e.target.value,
             })
           }
@@ -377,7 +348,7 @@ export default function EditAppConfig() {
         />
       </div>
       <div className="saveCloseButtons uiArea padded rounded">
-        <button type="button" onClick={applyConfig}>
+        <button type="button" onClick={appConfig.update}>
           {message("saveButtonLabel")}
         </button>
         <button type="button" onClick={appConfig.hideDialog}>

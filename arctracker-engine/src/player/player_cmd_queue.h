@@ -1,6 +1,7 @@
 #ifndef ARCTRACKER_QUEUE_H
 #define ARCTRACKER_QUEUE_H
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <sys/_pthread/_pthread_mutex_t.h>
 #include "player_command.h"
@@ -9,9 +10,9 @@
 
 typedef struct {
     player_command_t buffer[CMD_QUEUE_SIZE];
-    volatile int head;
-    volatile int tail;
-    pthread_mutex_t mutex;
+    atomic_int head;
+    atomic_int tail;
+    pthread_mutex_t producer_mutex;
 } player_command_queue_t;
 
 player_command_queue_t *command_queue_init(void);

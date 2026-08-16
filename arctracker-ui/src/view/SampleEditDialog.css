@@ -128,7 +128,7 @@
 
 .saveCloseButtons button {
     height: 30px;
-    width: 100px;
+    width: 90px;
     border-radius: 5px;
     padding: 0;
     background: var(--colour-button-save-sample-bg);

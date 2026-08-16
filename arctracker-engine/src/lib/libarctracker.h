@@ -53,6 +53,8 @@ void arctracker_midi_set_playback_channel(midi_subsystem_t *midi, int channel);
 
 void arctracker_midi_set_playback_instrument(midi_subsystem_t *midi, uint8_t instrument);
 
+void arctracker_midi_keyboard_note_on(const midi_subsystem_t *midi, int note);
+
 api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_t *module_info);
 
 api_result_t arctracker_module_load(arctracker_t *handle, char *mod_filename, ui_module_info_t *module_info);
@@ -88,6 +90,8 @@ void arctracker_get_export_state(arctracker_t *handle, ui_export_state_t *export
 void arctracker_get_pattern(arctracker_t *handle, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_tracks);
 
 api_result_t arctracker_export_audio(arctracker_t *handle, char *output_filename);
+
+api_result_t arctracker_export_sample(arctracker_t *handle, int instrument_no, char *output_filename);
 
 api_result_t arctracker_player_shutdown(arctracker_t *handle);
 

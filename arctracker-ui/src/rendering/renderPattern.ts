@@ -175,13 +175,17 @@ export class PatternRenderer {
 
   private renderBeatLines(playheadIndex: number) {
     let y = this.patternLayout.trackHeaderHeight;
+    let width = this.patternLayout.leftPadding + this.patternLayout.rowNumberWidth - this.patternLayout.glyphWidth;
+    for (let track = this.gridViewportFit.firstVisibleTrack; track <= this.gridViewportFit.lastVisibleTrack; track++) {
+      width += this.patternLayout.getEventWidth(track);
+    }
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
       const atPlayhead = (patternIndex === playheadIndex);
       if (patternIndex >= 0 && patternIndex < this.pattern.lines.length && patternIndex % this.linesPerBeat === 0) {
         const lineY = atPlayhead ? y + this.patternLayout.playheadPadding : y;
         this.withFillStyle(this.colours().beatLine)
-          .fillRect(0, lineY, this.viewportSize.width, this.patternLayout.rowHeight);
+          .fillRect(0, lineY, width, this.patternLayout.rowHeight);
       }
       y += atPlayhead
         ? this.patternLayout.rowHeight + 2 * this.patternLayout.playheadPadding
@@ -457,11 +461,19 @@ export class PatternRenderer {
       colour = this.colours(atPlayhead).text;
     else
       colour = this.colours(atPlayhead).note;
-    this.withFillStyle(colour)
-      .renderGlyph(noteStr.charAt(0), x, y)
-      .renderGlyph(noteStr.charAt(1), x + this.patternLayout.glyphWidth, y);
-    if (noteStr.length > 2)
-      this.renderGlyph(noteStr.charAt(2), x + this.patternLayout.glyphWidth * 2, y);
+    if (noteStr === "–––") {
+      this.withFillStyle(colour).renderGlyph(noteStr, x, y)
+      return this.patternLayout.glyphWidth * 4;
+    }
+    if (noteStr.length === 2)
+      this.withFillStyle(colour)
+        .renderGlyph(noteStr.charAt(0), x, y)
+        .renderGlyph(noteStr.charAt(1), x + this.patternLayout.glyphWidth, y);
+    else if (noteStr.length === 3)
+      this.withFillStyle(colour)
+        .renderGlyph(noteStr.charAt(0), x, y)
+        .renderGlyph(noteStr.charAt(1), x - 2 + this.patternLayout.glyphWidth, y)
+        .renderGlyph(noteStr.charAt(2), x - 4 + this.patternLayout.glyphWidth * 2, y);
     return this.patternLayout.glyphWidth * 4;
   }
 

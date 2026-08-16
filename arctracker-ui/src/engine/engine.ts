@@ -249,6 +249,13 @@ export const engine = {
     });
   },
 
+  exportSample: async (instrumentNo: number, exportPath: string) => {
+    return await invoke("export_sample", {
+      instrumentNo,
+      exportPath,
+    });
+  },
+
   getExportState: async (): Promise<ExportState> => {
     return await invoke("get_export_state");
   },

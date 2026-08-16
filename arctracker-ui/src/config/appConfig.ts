@@ -1,13 +1,26 @@
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { exists, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { audioDevice } from "../audioDevice/audioDevice.ts";
+import { audioDevice, AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
 import { editor } from "../editing/editor.ts";
 import { midi, MidiDeviceInfo } from "../midi/midi.ts";
+import { useStore } from "../store/useStore.ts";
+import { alerting } from "../alerting/alert.ts";
+import { message } from "../language/messages.ts";
 
 export type SelectedAudioDevice = "default" | { name: string; hostApiName: string };
 
 export type AppConfig = {
   selectedAudioDevice: SelectedAudioDevice;
+  selectedMidiDevice: MidiDeviceInfo | null;
+  defaultAuthorName: string | null;
+  defaultPatternLength: number;
+  defaultTrackCount: number;
+  defaultLinesPerBeat: number;
+  defaultBeatsPerMinute: number;
+};
+
+export type DraftAppConfig = {
+  selectedAudioDevice: "default" | AudioDeviceInfo;
   selectedMidiDevice: MidiDeviceInfo | null;
   defaultAuthorName: string | null;
   defaultPatternLength: number;
@@ -41,24 +54,12 @@ function audioDeviceChanged(newDevice: SelectedAudioDevice) {
   );
 }
 
-function midiDeviceChanged(newDevice: MidiDeviceInfo | null) {
-  if (config === null) return true;
-  if (config.selectedMidiDevice === null) return newDevice !== null;
-  if (newDevice === null) return true;
-  return config.selectedMidiDevice.name !== newDevice.name;
-}
-
-async function applyMidiDeviceConfig(selectedMidiDevice: MidiDeviceInfo | null) {
-  if (selectedMidiDevice === null) return;
-  await midi.useInputDevice({ name: selectedMidiDevice.name });
-}
-
 async function applyAudioDeviceConfig(
   selectedAudioDevice: SelectedAudioDevice,
 ) {
   if (selectedAudioDevice === "default") {
     await audioDevice.useDefaultOutputDevice();
-    return;
+    return true;
   }
   let foundMatchingDevice = false;
   const availableOutputs = await audioDevice.getAvailableOutputs();
@@ -75,9 +76,32 @@ async function applyAudioDeviceConfig(
   if (!foundMatchingDevice) {
     await audioDevice.useDefaultOutputDevice();
   }
+  return foundMatchingDevice;
+}
+
+function midiDeviceChanged(newDevice: MidiDeviceInfo | null) {
+  if (config === null) return true;
+  if (config.selectedMidiDevice === null) return newDevice !== null;
+  if (newDevice === null) return true;
+  return config.selectedMidiDevice.name !== newDevice.name;
+}
+
+async function applyMidiDeviceConfig(selectedMidiDevice: MidiDeviceInfo | null) {
+  if (selectedMidiDevice === null) return true;
+  const availableInputs = await midi.getAvailableInputs();
+  for (const input of availableInputs) {
+    if (input.name === selectedMidiDevice.name) {
+      await midi.useInputDevice(input);
+      return true;
+    }
+  }
+  // None of the available inputs matched that selected, or none are available.
+  return false;
 }
 
 export const appConfig = {
+  editing: () => useStore.getState().editorState.editMode === "appConfig",
+
   showDialog: () => editor.setEditMode("appConfig"),
 
   hideDialog: () => editor.setEditMode("none"),
@@ -101,15 +125,43 @@ export const appConfig = {
 
   apply: async (newConfig: AppConfig) => {
     if (audioDeviceChanged(newConfig.selectedAudioDevice)) {
-      await applyAudioDeviceConfig(newConfig.selectedAudioDevice);
+      const ok = await applyAudioDeviceConfig(newConfig.selectedAudioDevice);
+      if (!ok) newConfig.selectedAudioDevice = "default";
     }
     if (midiDeviceChanged(newConfig.selectedMidiDevice)) {
-      await applyMidiDeviceConfig(newConfig.selectedMidiDevice);
+      const ok = await applyMidiDeviceConfig(newConfig.selectedMidiDevice);
+      if (!ok) newConfig.selectedMidiDevice = null;
     }
     config = newConfig;
   },
 
   get: (): AppConfig => {
     return config || defaultConfig;
+  },
+
+  update: async () => {
+    const draftAppConfig = useStore.getState().draftAppConfig;
+    if (!draftAppConfig) return;
+    try {
+      await appConfig.apply({
+        selectedAudioDevice: draftAppConfig.selectedAudioDevice,
+        selectedMidiDevice: draftAppConfig.selectedMidiDevice,
+        defaultAuthorName: draftAppConfig.defaultAuthorName,
+        defaultPatternLength: draftAppConfig.defaultPatternLength,
+        defaultTrackCount: draftAppConfig.defaultTrackCount,
+        defaultLinesPerBeat: draftAppConfig.defaultLinesPerBeat,
+        defaultBeatsPerMinute: draftAppConfig.defaultBeatsPerMinute,
+      });
+      appConfig.hideDialog();
+    } catch (e) {
+      void alerting.showErrorWithContext(
+        message("appSettingsFailed"),
+        e as string,
+      );
+    }
+  },
+
+  setToDefault: () => {
+    void appConfig.apply(defaultConfig);
   },
 };

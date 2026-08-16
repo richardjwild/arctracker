@@ -86,8 +86,7 @@ export default function InstrumentList() {
         ref={cellRef}
         onClick={(e) => {
           e.preventDefault();
-          setSelectedInstrument(instruments.length);
-          commands.openInstrumentEditor();
+          commands.addInstrument();
         }}
       >
         {message("addInstrumentButtonLabel")}
