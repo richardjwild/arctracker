@@ -51,8 +51,8 @@ export const audioExport = {
     engine.pollExportEvents().then((events) => {
       for (const event of events) {
         switch (event.eventType) {
-          case "playerError":
-            handleExportError(event.data.errorMessage);
+          case "PlayerError":
+            handleExportError(event.data.error_message);
             return; // No point trying to handle any other events.
         }
       }

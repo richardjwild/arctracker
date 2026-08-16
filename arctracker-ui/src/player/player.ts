@@ -24,8 +24,11 @@ export type PlayerSnapshot = {
 };
 
 export type PlayerEvent =
-  | { eventType: "playerError"; data: { errorMessage: string } }
-  | { eventType: "userMidiNoteOn"; data: { midiNote: number } };
+  | {
+      eventType: "PlayerError";
+      data: { error_message: string };
+    }
+  | { eventType: "UserMidiNoteOn"; data: { midi_note: number } };
 
 function handlePlayerError(errorMessage: string) {
   console.error(
@@ -84,12 +87,13 @@ export const player = {
   eventsPoller: (() => {
     engine.pollPlaybackEvents().then((events) => {
       for (const event of events) {
+        console.log('event', event);
         switch (event.eventType) {
-          case "playerError":
-            handlePlayerError(event.data.errorMessage);
+          case "PlayerError":
+            handlePlayerError(event.data.error_message);
             return; // No point trying to handle any other events in this case.
-          case "userMidiNoteOn":
-            commands.editNoteField(event.data.midiNote);
+          case "UserMidiNoteOn":
+            commands.editNoteField(event.data.midi_note);
             break;
         }
       }
