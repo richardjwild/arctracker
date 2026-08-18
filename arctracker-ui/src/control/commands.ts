@@ -84,6 +84,7 @@ export enum CommandType {
   SET_TRACK_COUNT,
   EDIT_TEMPO,
   SET_TEMPO,
+  TOGGLE_CURRENT_TRACK_MUTE,
   TOGGLE_TRACK_MUTE,
 }
 
@@ -188,6 +189,7 @@ export type Command =
   | { type: CommandType.SET_TRACK_COUNT; trackCount: number }
   | { type: CommandType.EDIT_TEMPO }
   | { type: CommandType.SET_TEMPO }
+  | { type: CommandType.TOGGLE_CURRENT_TRACK_MUTE }
   | { type: CommandType.TOGGLE_TRACK_MUTE; track: number };
 
 const queue: Command[] = [];
@@ -209,7 +211,8 @@ export const commands = {
   saveModule: () => commandQueue.push({ type: CommandType.SAVE_MODULE }),
   exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
   createModule: () => commandQueue.push({ type: CommandType.CREATE_MODULE }),
-  createModuleUsingDefaults: () => commandQueue.push({ type: CommandType.CREATE_MODULE_USING_DEFAULTS }),
+  createModuleUsingDefaults: () =>
+    commandQueue.push({ type: CommandType.CREATE_MODULE_USING_DEFAULTS }),
   togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
   toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
   toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),
@@ -360,6 +363,8 @@ export const commands = {
     commandQueue.push({ type: CommandType.SET_TRACK_COUNT, trackCount }),
   editTempo: () => commandQueue.push({ type: CommandType.EDIT_TEMPO }),
   setTempo: () => commandQueue.push({ type: CommandType.SET_TEMPO }),
+  toggleCurrentTrackMute: () =>
+    commandQueue.push({ type: CommandType.TOGGLE_CURRENT_TRACK_MUTE }),
   toggleTrackMute: (track: number) =>
     commandQueue.push({ type: CommandType.TOGGLE_TRACK_MUTE, track }),
 };

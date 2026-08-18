@@ -299,6 +299,10 @@ async function processCommands() {
       case CommandType.SET_TEMPO:
         void tempo.setTempo();
         break;
+      case CommandType.TOGGLE_CURRENT_TRACK_MUTE:
+        const track = cursor.currentPosition().track;
+        void engine.toggleTrackMute(track);
+        break;
       case CommandType.TOGGLE_TRACK_MUTE:
         void engine.toggleTrackMute(command.track);
         break;

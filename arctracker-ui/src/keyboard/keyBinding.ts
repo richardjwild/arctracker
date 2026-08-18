@@ -129,7 +129,12 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "BracketLeft",
     [{ modifiers: "secondary", execute: commands.decreaseEffectsDisplayed }],
   ],
-  ["Delete", [{ modifiers: "none", execute: commands.clearPatternEvent }]],
+  ["Delete",
+    [
+      { modifiers: "none", execute: commands.clearPatternEvent },
+      { modifiers: "primary", execute: commands.deleteSequencePosition },
+    ]
+  ],
   [
     "Backspace",
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
@@ -142,6 +147,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "KeyL",
     [{ modifiers: "primary", execute: commands.editCurrentPatternLength }],
   ],
+  ["KeyM", [{ modifiers: "primary", execute: commands.toggleCurrentTrackMute }]],
   ["KeyN",
     [
       { modifiers: "primary", execute: () => commands.createModule() },

@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { engine } from "../engine/engine.ts";
 import { animation } from "../rendering/animation.ts";
 import {
+  Colours,
   getPatternContentDimensions,
   PatternRenderer,
 } from "../rendering/renderPattern.ts";
@@ -12,6 +13,12 @@ import { patternGrid } from "../editing/patternGrid.ts";
 import useSequencePosition from "../hooks/useSequencePosition.ts";
 import { commands } from "../control/commands.ts";
 import { patternLayout } from "../rendering/patternLayout.ts";
+
+function cssProperty(name: string): string {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+}
 
 function normalisedWheelDelta(event: React.WheelEvent): number {
   switch (event.deltaMode) {
@@ -31,14 +38,72 @@ export default function PatternView() {
   const moduleId = useStore((state) => state.moduleId);
   const moduleVersion = useStore((state) => state.patternRevision);
   const numTracks = useStore((state) => state.module.numTracks);
+  const linesPerBeat = useStore((state) => state.module.linesPerBeat);
+  const currentPattern = useStore((state) => state.currentPattern);
   const setCurrentPattern = useStore((state) => state.setCurrentPattern);
   const playing = useStore((state) => state.transportState.playing);
+  const trackMuteState = useStore((state) => state.trackMuteState);
+  const trackPanning = useStore((state) => state.trackPanning);
+  const editorState = useStore((state) => state.editorState);
+  const effectsDisplayed = useStore((state) => state.effectsDisplayed);
+  const patternSelection = useStore((state) => state.patternSelection);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const viewportSizeRef = useRef({ width: 0, height: 0 });
   const wheelDeltaRef = useRef(0);
   const { patternNo, patternLength } = useSequencePosition();
+
+  const coloursAtPlayhead: Colours = {
+    background: cssProperty("--colour-panel-bg"),
+    beatLine: cssProperty("--colour-beat-line"),
+    trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
+    trackHeaderMutedFg: cssProperty("--colour-track-header-muted-fg"),
+    trackHeaderMutedBg: cssProperty("--colour-track-header-muted-bg"),
+    trackHeaderNotMutedFg: cssProperty("--colour-track-header-not-muted-fg"),
+    trackHeaderNotMutedBg: cssProperty("--colour-track-header-not-muted-bg"),
+    trackFooterMutedFg: cssProperty("--colour-track-footer-muted-fg"),
+    trackFooterMutedBg: cssProperty("--colour-track-footer-muted-bg"),
+    trackFooterNotMutedFg: cssProperty("--colour-track-footer-not-muted-fg"),
+    trackFooterNotMutedBg: cssProperty("--colour-track-footer-not-muted-bg"),
+    playheadBackground: cssProperty("--colour-playhead"),
+    text: cssProperty("--colour-pattern-text-bright"),
+    channelMuted: cssProperty("--colour-pattern-text-channel-muted"),
+    cursor: cssProperty("--colour-cursor"),
+    cursorText: cssProperty("--colour-cursor-text"),
+    note: cssProperty("--colour-note-at-playhead"),
+    sample: cssProperty("--colour-sample-at-playhead"),
+    effect: cssProperty("--colour-effect-at-playhead"),
+    selectionBox: cssProperty("--colour-selection-fill"),
+    selectionBoxOutline: cssProperty("--colour-selection-outline"),
+  };
+
+  const coloursOffPlayhead: Colours = {
+    background: cssProperty("--colour-panel-bg"),
+    beatLine: cssProperty("--colour-beat-line"),
+    trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
+    trackHeaderMutedFg: cssProperty("--colour-track-header-muted-fg"),
+    trackHeaderMutedBg: cssProperty("--colour-track-header-muted-bg"),
+    trackHeaderNotMutedFg: cssProperty("--colour-track-header-not-muted-fg"),
+    trackHeaderNotMutedBg: cssProperty("--colour-track-header-not-muted-bg"),
+    trackFooterMutedFg: cssProperty("--colour-track-footer-muted-fg"),
+    trackFooterMutedBg: cssProperty("--colour-track-footer-muted-bg"),
+    trackFooterNotMutedFg: cssProperty("--colour-track-footer-not-muted-fg"),
+    trackFooterNotMutedBg: cssProperty("--colour-track-footer-not-muted-bg"),
+    playheadBackground: cssProperty("--colour-playhead"),
+    text: cssProperty("--colour-pattern-text-muted"),
+    channelMuted: cssProperty("--colour-pattern-text-channel-muted"),
+    cursor: cssProperty("--colour-cursor"),
+    cursorText: cssProperty("--colour-cursor-text"),
+    note: cssProperty("--colour-note"),
+    sample: cssProperty("--colour-sample"),
+    effect: cssProperty("--colour-effect"),
+    selectionBox: cssProperty("--colour-selection-fill"),
+    selectionBoxOutline: cssProperty("--colour-selection-outline"),
+  };
+
+  const fontTrackHeader: string = cssProperty("--font-track-header");
+  const fontPatternData: string = cssProperty("--font-pattern-data");
 
   const resizeCanvas = (
     canvas: HTMLCanvasElement,
@@ -78,20 +143,27 @@ export default function PatternView() {
       : patternGrid.currentPosition().patternIndex;
   };
 
-  const getPatternViewRenderer = (
-    ctx: CanvasRenderingContext2D,
-    numChannels: number,
-  ) => {
+  const getPatternViewRenderer = (ctx: CanvasRenderingContext2D) => {
     return () => {
-      const currentPattern = useStore.getState().currentPattern;
-      const patternIndex = getPatternIndex();
       const patternRenderer = new PatternRenderer(
-        currentPattern,
         ctx,
-        viewportSizeRef.current,
-        numChannels,
+        coloursAtPlayhead,
+        coloursOffPlayhead,
+        fontTrackHeader,
+        fontPatternData,
       );
-      patternRenderer.renderPattern(patternIndex);
+      patternRenderer.renderPattern({
+        playheadIndex: getPatternIndex(),
+        pattern: currentPattern,
+        viewportSize: viewportSizeRef.current,
+        numTracks,
+        linesPerBeat,
+        trackMuteState,
+        trackPanning,
+        editorState,
+        effectsDisplayed,
+        patternSelection,
+      });
     };
   };
 
@@ -152,12 +224,24 @@ export default function PatternView() {
     if (!container) return;
     const viewportWidth = container.clientWidth;
     const viewportHeight = container.clientHeight;
-    const { contentWidth } = getPatternContentDimensions({ width: viewportWidth, height: viewportHeight }, numTracks);
+    const { contentWidth } = getPatternContentDimensions(
+      { width: viewportWidth, height: viewportHeight },
+      numTracks,
+    );
     const logicalWidth = Math.max(contentWidth, viewportWidth);
     ensureCanvasSize(canvas, logicalWidth * 1.5, viewportHeight * 1.5);
-    const renderPatternView = getPatternViewRenderer(ctx, numTracks);
+    const renderPatternView = getPatternViewRenderer(ctx);
     return animation.registerRenderer(() => renderPatternView());
-  }, [numTracks]);
+  }, [
+    numTracks,
+    linesPerBeat,
+    trackMuteState,
+    trackPanning,
+    editorState,
+    effectsDisplayed,
+    patternSelection,
+    currentPattern,
+  ]);
 
   useEffect(() => {
     // Keep updated with the current width/height of the viewport.
@@ -170,7 +254,10 @@ export default function PatternView() {
       };
       const canvas = canvasRef.current;
       if (canvas) {
-        const { contentWidth } = getPatternContentDimensions(viewportSizeRef.current, numTracks);
+        const { contentWidth } = getPatternContentDimensions(
+          viewportSizeRef.current,
+          numTracks,
+        );
         const width = Math.max(contentWidth, entry.contentRect.width);
         const height = entry.contentRect.height;
         ensureCanvasSize(canvas, width, height);
