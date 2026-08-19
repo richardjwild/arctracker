@@ -31,8 +31,7 @@ const glyphHeight = 20;
 const glyphWidth = 10;
 
 export const patternLayout = {
-  getPatternLayout: (viewportSize: { width: number; height: number }): PatternLayout => {
-    const effectsDisplayed = useStore.getState().effectsDisplayed;
+  getPatternLayout: (viewportSize: { width: number; height: number }, effectsDisplayed: number[]): PatternLayout => {
     const getEffectsDisplayed = (track: number) =>
       track >= 0 && track < effectsDisplayed.length
         ? effectsDisplayed[track]
@@ -55,8 +54,9 @@ export const patternLayout = {
   calculateGridViewportFit: (
     viewportSize: { width: number; height: number },
     numTracks: number,
+    effectsDisplayed: number[],
   ): GridViewportFit => {
-    const layout = patternLayout.getPatternLayout(viewportSize);
+    const layout = patternLayout.getPatternLayout(viewportSize, effectsDisplayed);
     const editorState = useStore.getState().editorState;
     const playheadRowHeight = layout.rowHeight + 2 * layout.playheadPadding;
     const availableHeight = viewportSize.height - layout.trackHeaderHeight - layout.trackFooterHeight - playheadRowHeight;
@@ -98,12 +98,14 @@ export const patternLayout = {
     viewportSize: { width: number; height: number },
     playheadIndex: number,
     numTracks: number,
+    effectsDisplayed: number[],
     patternLength: number,
   ): PointerClickHit | null => {
-    const layout = patternLayout.getPatternLayout(viewportSize);
+    const layout = patternLayout.getPatternLayout(viewportSize, effectsDisplayed);
     const gridViewportFit = patternLayout.calculateGridViewportFit(
       viewportSize,
       numTracks,
+      effectsDisplayed,
     );
     let x = layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
     if (pointerX <= x) return null;
