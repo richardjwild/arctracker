@@ -8,7 +8,7 @@ import ExportDialog from "./view/ExportDialog.tsx";
 import Sequence from "./view/Sequence.tsx";
 import SampleEditDialog from "./view/SampleEditDialog.tsx";
 import EditPatternLength from "./view/EditPatternLength.tsx";
-import EditModuleTitle from "./view/EditModuleTitle.tsx";
+import EditModuleMetaData from "./view/EditModuleMetaData.tsx";
 import EditTrackCount from "./view/EditTrackCount.tsx";
 import MasterGain from "./view/MasterGain.tsx";
 import EditTempo from "./view/EditTempo.tsx";
@@ -26,7 +26,7 @@ export default function AppLayout() {
       <SampleEditDialog />
       <ExportDialog />
       <EditPatternLength />
-      <EditModuleTitle />
+      <EditModuleMetaData />
       <EditTrackCount />
       <EditTempo />
       <EditAppConfig />

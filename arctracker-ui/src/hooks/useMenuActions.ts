@@ -20,7 +20,7 @@ const menuActions: MenuAction[] = [
   { eventId: "export-audio-requested", action: commands.exportAudio },
   {
     eventId: "edit-module-details-requested",
-    action: commands.editModuleTitle,
+    action: commands.editModuleMetaData,
   },
   { eventId: "set-track-count-requested", action: commands.editTrackCount },
   { eventId: "set-tempo-requested", action: commands.editTempo },

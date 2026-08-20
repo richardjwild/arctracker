@@ -22,16 +22,22 @@ export type GridViewportFit = {
 };
 
 export type PointerClickHit =
-  | { objectType: "patternEvent", event: { track: number; patternIndex: number } }
-  | { objectType: "trackHeader", track: number }
-  | { objectType: "trackFooter", track: number };
+  | {
+      objectType: "patternEvent";
+      event: { track: number; patternIndex: number };
+    }
+  | { objectType: "trackHeader"; track: number }
+  | { objectType: "trackFooter"; track: number };
 
 const leftPadding = 10;
 const glyphHeight = 20;
 const glyphWidth = 10;
 
 export const patternLayout = {
-  getPatternLayout: (viewportSize: { width: number; height: number }, effectsDisplayed: number[]): PatternLayout => {
+  getPatternLayout: (
+    viewportSize: { width: number; height: number },
+    effectsDisplayed: number[],
+  ): PatternLayout => {
     const getEffectsDisplayed = (track: number) =>
       track >= 0 && track < effectsDisplayed.length
         ? effectsDisplayed[track]
@@ -53,30 +59,45 @@ export const patternLayout = {
 
   calculateGridViewportFit: (
     viewportSize: { width: number; height: number },
+    layout: PatternLayout,
     numTracks: number,
-    effectsDisplayed: number[],
   ): GridViewportFit => {
-    const layout = patternLayout.getPatternLayout(viewportSize, effectsDisplayed);
-    const editorState = useStore.getState().editorState;
+    //
+    // Calculate lines to show (always centred on playhead).
+    //
     const playheadRowHeight = layout.rowHeight + 2 * layout.playheadPadding;
-    const availableHeight = viewportSize.height - layout.trackHeaderHeight - layout.trackFooterHeight - playheadRowHeight;
+    const availableHeight =
+      viewportSize.height -
+      layout.trackHeaderHeight -
+      layout.trackFooterHeight -
+      playheadRowHeight;
     const linesToShow = 1 + Math.floor(availableHeight / layout.rowHeight);
+    //
+    // Calculate tracks to show, with the constraint that the cursor must always be visible.
+    //
     let displayedWidth =
       layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
     displayedWidth += layout.getEventWidth(0);
     let firstVisibleTrack = 0;
     let lastVisibleTrack = 0;
-    const cursorTrack = editorState.cursorPosition.track;
+    const cursorTrack = useStore.getState().editorState.cursorPosition.track;
     for (let track = 1; track < numTracks; track++) {
       displayedWidth += layout.getEventWidth(track);
       if (displayedWidth > viewportSize.width) {
         if (cursorTrack <= lastVisibleTrack) {
+          //
           // Cursor is visible, we have our answer now.
+          //
           break;
         }
-        // Cursor is not visible, so progressively cut off the leftmost track
-        // until everything fits within the viewport again.
-        while (displayedWidth > viewportSize.width && firstVisibleTrack <= lastVisibleTrack) {
+        //
+        // Cursor is not visible, so repeatedly cut the leftmost track
+        // until everything fits fully within the viewport again.
+        //
+        while (
+          displayedWidth > viewportSize.width &&
+          firstVisibleTrack <= lastVisibleTrack
+        ) {
           displayedWidth -= layout.getEventWidth(firstVisibleTrack);
           firstVisibleTrack++;
         }
@@ -101,11 +122,14 @@ export const patternLayout = {
     effectsDisplayed: number[],
     patternLength: number,
   ): PointerClickHit | null => {
-    const layout = patternLayout.getPatternLayout(viewportSize, effectsDisplayed);
+    const layout = patternLayout.getPatternLayout(
+      viewportSize,
+      effectsDisplayed,
+    );
     const gridViewportFit = patternLayout.calculateGridViewportFit(
       viewportSize,
+      layout,
       numTracks,
-      effectsDisplayed,
     );
     let x = layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
     if (pointerX <= x) return null;
@@ -129,9 +153,16 @@ export const patternLayout = {
       };
     }
     let patternIndex = null;
-    const playheadY = layout.trackHeaderHeight + gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
-    const relativeLine = Math.floor((pointerY - playheadY - layout.playheadPadding) / layout.rowHeight);
-    if (playheadIndex + relativeLine >= 0 && playheadIndex + relativeLine < patternLength) {
+    const playheadY =
+      layout.trackHeaderHeight +
+      gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
+    const relativeLine = Math.floor(
+      (pointerY - playheadY - layout.playheadPadding) / layout.rowHeight,
+    );
+    if (
+      playheadIndex + relativeLine >= 0 &&
+      playheadIndex + relativeLine < patternLength
+    ) {
       patternIndex = playheadIndex + relativeLine;
     }
     if (patternIndex === null) return null;

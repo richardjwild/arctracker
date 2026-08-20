@@ -2,6 +2,7 @@
 #define ARCTRACKER_AUDIO_API_H
 
 #include <stdbool.h>
+#include "audio/interpolation_type.h"
 
 #define AUDIO_DEVICE_NAME_SIZE 256
 #define HOST_API_NAME_SIZE 256
@@ -10,8 +11,7 @@
 static const int SAMPLE_RATE = 44100;
 static const int AUDIO_BUFFER_SIZE_FRAMES = 512;
 
-typedef struct
-{
+typedef struct {
     float l;
     float r;
 } stereo_frame_t;
@@ -36,6 +36,7 @@ typedef struct {
     int sample_rate;
     bool bouncing;
     bool healthy;
+    interpolation_type_t interpolation_type;
     audio_backend_config_t config;
 } audio_api_info_t;
 

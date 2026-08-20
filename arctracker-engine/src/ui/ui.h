@@ -40,6 +40,10 @@ typedef struct ui_track_state {
     int effects_displayed;
 } ui_track_state_t;
 
+typedef enum ui_interpolation_type {
+    ARCTRACKER = 0, ARCHIMEDES = 1,
+} ui_interpolation_type_t;
+
 typedef struct ui_module_info {
     char name[TUNE_NAME_MAX_LEN];
     char author[AUTHOR_NAME_MAX_LEN];
@@ -50,6 +54,7 @@ typedef struct ui_module_info {
     int default_pattern_length;
     int lines_per_beat;
     int initial_bpm;
+    ui_interpolation_type_t interpolation_type;
 } ui_module_info_t;
 
 typedef struct ui_effect {

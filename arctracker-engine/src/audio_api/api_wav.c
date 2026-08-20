@@ -18,7 +18,7 @@ static bool ensure_capacity(int);
 static int16_t clamp_to_pcm16(float);
 static void create_structure_and_write(const audio_api_info_t *info);
 
-audio_api_t initialise_wav(const char *output_filename)
+audio_api_t initialise_wav(const char *output_filename, const interpolation_type_t interpolation_type)
 {
     audio_api_t audio_api = {0};
     if (strlen(output_filename) > MAX_FILE_PATH_LENGTH)
@@ -32,6 +32,7 @@ audio_api_t initialise_wav(const char *output_filename)
     audio_api.info.sample_rate = SAMPLE_RATE;
     audio_api.info.bouncing = true;
     audio_api.info.healthy = true;
+    audio_api.info.interpolation_type = interpolation_type;
     snprintf(audio_api.info.config.wav.output_filename, MAX_FILE_PATH_LENGTH, "%s", output_filename);
     audio_api.init = init_wav;
     audio_api.write = collect_audio;

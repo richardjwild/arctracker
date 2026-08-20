@@ -3,7 +3,7 @@ import { CurrentPattern, TransportState } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
-import { ModuleTitle } from "../editing/moduleTitle.ts";
+import { InterpolationType, ModuleMetaData } from "../editing/moduleMetaData.ts";
 import { Instrument } from "../editing/editInstrument.ts";
 import { Module } from "../module/module.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
@@ -30,13 +30,13 @@ interface AppStore {
   selectedInstrument: number | null;
   draftAppConfig: DraftAppConfig | null;
   draftInstrument: Instrument;
-  draftModuleTitle: ModuleTitle | null;
+  draftModuleMetaData: ModuleMetaData | null;
   draftTempo: ModuleTempo;
   isLoadingModule: boolean;
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
-  setModuleTitle: (name: string, author: string, defaultPatternLength: number) => void;
+  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType) => void;
   updateTempo: (linesPerBeat: number, beatsPerMinute: number) => void;
   updateTracks: (numTracks: number) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
@@ -44,7 +44,7 @@ interface AppStore {
   setInstrument: (instrumentIndex: number, instrument: Instrument) => void;
   setDraftAppConfig: (draftAppConfig: DraftAppConfig) => void;
   setDraftInstrument: (instrument: Instrument) => void;
-  setDraftModuleTitle: (moduleTitle: ModuleTitle) => void;
+  setDraftModuleMetaData: (moduleTitle: ModuleMetaData) => void;
   setDraftTempo: (tempo: ModuleTempo) => void;
   setPianoKeyboardTranspose: (octave: number) => void;
   patternRevised: () => void;
@@ -76,6 +76,7 @@ const initialModule: Module = {
   defaultPatternLength: 64,
   linesPerBeat: 0,
   beatsPerMinute: 0,
+  interpolationType: "arctracker",
 };
 
 const initialTransportState: TransportState = {
@@ -166,7 +167,7 @@ export const useStore = create<AppStore>((set) => ({
   selectedInstrument: null,
   draftAppConfig: null,
   draftInstrument: initialInstrument,
-  draftModuleTitle: null,
+  draftModuleMetaData: null,
   draftTempo: { linesPerBeat: 0, beatsPerMinute: 0 },
   isLoadingModule: false,
 
@@ -206,13 +207,14 @@ export const useStore = create<AppStore>((set) => ({
       },
     })),
 
-  setModuleTitle: (name: string, author: string, defaultPatternLength: number) =>
+  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType) =>
     set((state) => ({
       module: {
         ...state.module,
         name,
         author,
         defaultPatternLength,
+        interpolationType,
       },
     })),
 
@@ -280,7 +282,7 @@ export const useStore = create<AppStore>((set) => ({
 
   setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
 
-  setDraftModuleTitle: (draftModuleTitle) => set({ draftModuleTitle }),
+  setDraftModuleMetaData: (draftModuleTitle) => set({ draftModuleMetaData: draftModuleTitle }),
 
   setDraftTempo: (draftTempo) => set({ draftTempo }),
 

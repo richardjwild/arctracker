@@ -9,7 +9,7 @@ export type EditMode =
   | "patternEvents"
   | "instrument"
   | "patternLength"
-  | "nameAndAuthor"
+  | "moduleMetaData"
   | "trackCount"
   | "tempo"
   | "appConfig";

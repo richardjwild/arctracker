@@ -245,10 +245,11 @@ bool stop_portaudio(void)
     return true;
 }
 
-audio_api_t get_output(const int device_index, const char *name, const char *host_api_name)
+audio_api_t get_output(const int device_index, const char *name, const char *host_api_name, const interpolation_type_t interpolation_type)
 {
     audio_api_t audio_api_out = {
         .info = (audio_api_info_t) {
+            .interpolation_type = interpolation_type,
             .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
             .sample_rate = SAMPLE_RATE,
             .bouncing = false,
@@ -268,10 +269,11 @@ audio_api_t get_output(const int device_index, const char *name, const char *hos
     return audio_api_out;
 }
 
-audio_api_t get_default_output(void)
+audio_api_t get_default_output(const interpolation_type_t interpolation_type)
 {
     return (audio_api_t) {
         .info = (audio_api_info_t) {
+            .interpolation_type = interpolation_type,
             .buffer_size_frames = AUDIO_BUFFER_SIZE_FRAMES,
             .sample_rate = SAMPLE_RATE,
             .bouncing = false,

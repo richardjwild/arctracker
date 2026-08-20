@@ -21,6 +21,7 @@ bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_cha
     audio_out->api = audio_api;
     audio_out->num_channels = num_channels;
     audio_out->master_gain = master_gain;
+    audio_out->interpolation_type = audio_api.info.interpolation_type;
     audio_out->phase_increments = calculate_phase_increments(audio_api.info.sample_rate);
     audio_out->resample_buffer = allocate_resample_buffer(audio_api.info.buffer_size_frames);
     audio_out->mix_buffer = allocate_array(AUDIO, audio_api.info.buffer_size_frames * num_channels, sizeof(stereo_frame_t));
@@ -84,7 +85,7 @@ static bool fill_audio_buffer(audio_out_t *audio_out, voice_t *voices, const int
 static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, const int channel, const int frames_to_fill)
 {
     voice_t *voice = voices + channel;
-    resample(voice, audio_out->resample_buffer, audio_out->phase_increments, frames_to_fill);
+    resample(voice, audio_out->resample_buffer, audio_out->phase_increments, frames_to_fill, audio_out->interpolation_type);
     const float voice_gain = audio_out->gain_curve[voice->volume];
     const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
     const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;

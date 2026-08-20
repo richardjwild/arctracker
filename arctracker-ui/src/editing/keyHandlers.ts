@@ -5,7 +5,7 @@ import { KeyHandler } from "../keyboard/keyHandler.ts";
 import { editInstrument } from "./editInstrument.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
-import { moduleTitle } from "./moduleTitle.ts";
+import { moduleMetaData } from "./moduleMetaData.ts";
 import { tempo } from "./tempo.ts";
 import { appConfig } from "../config/appConfig.ts";
 
@@ -67,13 +67,13 @@ export const editorKeyHandlers: {
   },
 
   handleModuleTitleInput: (e) => {
-    if (!moduleTitle.editing())
+    if (!moduleMetaData.editing())
       return false;
     if (e.code === 'Escape') {
-      moduleTitle.hideDialog();
+      moduleMetaData.hideDialog();
       return true;
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
-      commands.setModuleTitle();
+      commands.setModuleMetaData();
       return true;
     }
     return false;

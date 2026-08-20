@@ -12,6 +12,7 @@ import { commands } from "../control/commands.ts";
 import { Instrument } from "../editing/editInstrument.ts";
 import { message } from "../language/messages.ts";
 import { appConfig } from "../config/appConfig.ts";
+import { InterpolationType } from "../editing/moduleMetaData.ts";
 
 export type Module = {
   fileName: string | null;
@@ -26,6 +27,7 @@ export type Module = {
   defaultPatternLength: number;
   linesPerBeat: number;
   beatsPerMinute: number;
+  interpolationType: InterpolationType;
 };
 
 export type NewModuleParams = {

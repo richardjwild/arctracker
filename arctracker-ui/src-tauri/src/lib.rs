@@ -2,7 +2,7 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use crate::arctracker::{default_module_params, AudioDeviceInfo, MidiDeviceInfo, NewModuleParams, UiPlayerSnapshot};
+use crate::arctracker::{default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams, UiPlayerSnapshot};
 use crate::arctracker::{
     InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
     UiPeakLevels,
@@ -370,15 +370,16 @@ fn edit_load_sample(state: tauri::State<Arc<AppState>>, path: String) -> Result<
 }
 
 #[tauri::command]
-fn edit_set_module_title(
+fn edit_set_module_meta_data(
     state: tauri::State<Arc<AppState>>,
     name: String,
     author: String,
     default_pattern_length: u16,
+    interpolation_type: InterpolationType,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .edit_set_module_title(name, author, default_pattern_length)
+        .edit_set_module_title(name, author, default_pattern_length, interpolation_type)
         .map_err(|e| e.message)?;
     Ok(())
 }
@@ -462,7 +463,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_set_pattern_length,
             edit_update_instrument,
             edit_load_sample,
-            edit_set_module_title,
+            edit_set_module_meta_data,
             edit_set_num_tracks,
             edit_set_tempo,
             exit_successfully,

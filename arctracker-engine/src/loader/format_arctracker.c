@@ -70,7 +70,7 @@
  *   - u8 initial tempo (beats per minute: 1-255)                            *
  *   - u8 lines per beat (0-255: 0=undefined)                                *
  *   - u16 default pattern length (1-1000)                                   *
- *   - u8 reserved for future use                                            *
+ *   - u8 interpolation type (0=native, 1=archimedes)                        *
  *   - u8 reserved for future use                                            *
  *                                                                           *
  * Track chunk                                                               *
@@ -387,7 +387,14 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         error(MODFILE_INVALID_DEFAULT_PATTERN_LENGTH);
         goto read_module_metadata_failed;
     }
+    const uint8_t interpolation_type = read_u8(meta_data + 10 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    if (interpolation_type != 0 && interpolation_type != 1)
+    {
+        error(MODFILE_INVALID_INTERPOLATION_TYPE);
+        goto read_module_metadata_failed;
+    }
     module->default_pattern_length = default_pattern_length;
+    module->interpolation_type = interpolation_type == 0 ? LINEAR : NONE;
     return module;
 
 read_module_metadata_failed:
@@ -707,7 +714,7 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u8(fp, module->initial_bpm)) return false;
     if (!write_u8(fp, module->lines_per_beat)) return false;
     if (!write_u16_le(fp, module->default_pattern_length)) return false;
-    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, module->interpolation_type == LINEAR ? 0 : 1)) return false;
     if (!write_u8(fp, 0)) return false;
     return true;
 }

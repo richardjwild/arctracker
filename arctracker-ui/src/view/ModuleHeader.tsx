@@ -119,7 +119,7 @@ export default function ModuleHeader() {
       <button
         title={message("editModuleDetailsHintText")}
         className="editNameAuthorButton"
-        onClick={commands.editModuleTitle}
+        onClick={commands.editModuleMetaData}
       >
         <EditNameIcon />
       </button>

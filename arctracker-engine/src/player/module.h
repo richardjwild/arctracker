@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "tempo.h"
+#include "audio/interpolation_type.h"
 #include "ui/ui.h"
 
 #define MAX_LEN_TUNENAME 65
@@ -108,6 +109,7 @@ typedef struct
     tempo_t *tempo_lookup;
     float master_gain;
     uint16_t default_pattern_length;
+    interpolation_type_t interpolation_type;
 } module_t;
 
 module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);

@@ -87,6 +87,7 @@
 #define MODFILE_INVALID_MASTER_GAIN "File corrupt: invalid master gain"
 #define MODFILE_INVALID_INITIAL_SPEED "File corrupt: invalid initial speed"
 #define MODFILE_INVALID_DEFAULT_PATTERN_LENGTH "File corrupt: invalid default pattern length"
+#define MODFILE_INVALID_INTERPOLATION_TYPE "File corrupt: invalid interpolation type"
 #define INVALID_SEQUENCE_CHUNK_LENGTH "File corrupt: sequence data size does not match tune length"
 #define FAILED_TO_SET_SEQUENCE "Failed to set sequence"
 #define INVALID_TRACK_CHUNK_LENGTH "File corrupt: invalid track data size"

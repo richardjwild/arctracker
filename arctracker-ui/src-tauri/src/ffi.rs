@@ -189,6 +189,12 @@ pub struct UiInstrumentUpdate {
 }
 
 #[repr(C)]
+pub enum UiInterpolationType {
+    ARCTRACKER = 0,
+    ARCHIMEDES = 1,
+}
+
+#[repr(C)]
 pub struct UiModuleInfo {
     pub name: [c_char; 65],
     pub author: [c_char; 65],
@@ -199,6 +205,7 @@ pub struct UiModuleInfo {
     pub default_pattern_length: c_int,
     pub lines_per_beat: c_int,
     pub initial_bpm: c_int,
+    pub interpolation_type: UiInterpolationType,
 }
 
 #[repr(C)]
@@ -410,11 +417,12 @@ extern "C" {
         filename: *const c_char,
         sample_info: *mut UiSampleInfo,
     ) -> ApiResult;
-    pub fn arctracker_edit_set_module_title(
+    pub fn arctracker_edit_set_module_meta_data(
         handle: *mut ArctrackerHandle,
         name: *const c_char,
         author: *const c_char,
         default_pattern_length: c_int,
+        interpolation_type: UiInterpolationType,
     ) -> ApiResult;
     pub fn arctracker_edit_set_num_tracks(
         handle: *mut ArctrackerHandle,

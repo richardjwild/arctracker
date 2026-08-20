@@ -1,7 +1,7 @@
 use crate::ffi;
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
-use crate::ffi::{AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
+use crate::ffi::{UiInterpolationType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
 
 pub struct Arctracker {
     handle: *mut ffi::ArctrackerHandle,
@@ -168,6 +168,22 @@ pub struct InstrumentUpdate {
     pub repeat_length: i32,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum InterpolationType {
+    Arctracker,
+    Archimedes,
+}
+
+impl From<ffi::UiInterpolationType> for InterpolationType {
+    fn from(value: ffi::UiInterpolationType) -> Self {
+        match value {
+            ffi::UiInterpolationType::ARCTRACKER => InterpolationType::Arctracker,
+            ffi::UiInterpolationType::ARCHIMEDES => InterpolationType::Archimedes,
+        }
+    }
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Module {
@@ -182,6 +198,7 @@ pub struct Module {
     pub num_patterns: i32,
     pub pattern_lengths: Vec<i32>,
     pub instruments: Vec<Instrument>,
+    pub interpolation_type: InterpolationType,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -434,6 +451,7 @@ impl Arctracker {
             num_patterns: module.num_patterns,
             pattern_lengths,
             instruments,
+            interpolation_type: InterpolationType::from(module.interpolation_type),
         })
     }
 
@@ -500,6 +518,7 @@ impl Arctracker {
             num_patterns: module.num_patterns,
             pattern_lengths,
             instruments,
+            interpolation_type: InterpolationType::from(module.interpolation_type),
         })
     }
 
@@ -597,6 +616,7 @@ impl Arctracker {
             num_patterns: module_info.num_patterns,
             pattern_lengths,
             instruments: Vec::new(),
+            interpolation_type: InterpolationType::from(module_info.interpolation_type),
         })
     }
 
@@ -1051,6 +1071,7 @@ impl Arctracker {
         name: String,
         author: String,
         default_pattern_length: u16,
+        interpolation_type: InterpolationType,
     ) -> Result<(), ArctrackerError> {
         let c_name = CString::new(name).map_err(|_| ArctrackerError {
             message: "Invalid module name".parse().unwrap(),
@@ -1058,12 +1079,17 @@ impl Arctracker {
         let c_author = CString::new(author).map_err(|_| ArctrackerError {
             message: "Invalid author".parse().unwrap(),
         })?;
+        let ui_interpolation_type = match interpolation_type {
+            InterpolationType::Arctracker => UiInterpolationType::ARCTRACKER,
+            InterpolationType::Archimedes => UiInterpolationType::ARCHIMEDES,
+        };
         let result = unsafe {
-            ffi::arctracker_edit_set_module_title(
+            ffi::arctracker_edit_set_module_meta_data(
                 self.handle,
                 c_name.as_ptr(),
                 c_author.as_ptr(),
                 default_pattern_length as c_int,
+                ui_interpolation_type,
             )
         };
         if !result.success {

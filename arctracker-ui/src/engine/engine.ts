@@ -8,6 +8,7 @@ import { AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
 import { MidiDeviceInfo } from "../midi/midi.ts";
 import { alerting } from "../alerting/alert.ts";
 import { messageFn } from "../language/messages.ts";
+import { InterpolationType } from "../editing/moduleMetaData.ts";
 
 export type InstrumentUpdate = {
   assigned: boolean;
@@ -343,15 +344,17 @@ export const engine = {
     });
   },
 
-  setModuleTitle: async (
+  setModuleMetaData: async (
     name: String,
     author: String,
     defaultPatternLength: number,
+    interpolationType: InterpolationType,
   ) => {
-    return await invoke("edit_set_module_title", {
+    return await invoke("edit_set_module_meta_data", {
       name,
       author,
       defaultPatternLength,
+      interpolationType,
     });
   },
 

@@ -110,7 +110,7 @@
 }
 
 .sampleEditField input[type='radio'] {
-    accent-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-radio-button-selected);
 }
 
 .sampleEditField input:focus {

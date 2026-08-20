@@ -1,0 +1,90 @@
+.editModuleTitle {
+    width: 835px;
+    height: 285px;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: 50px 50px 50px 50px 50px;
+    gap: 10px;
+    grid-template-areas:
+        "moduleNameLabel moduleNameEdit"
+        "authorLabel authorEdit"
+        "defaultPatternLengthLabel defaultPatternLengthEdit"
+        "interpolationTypeLabel interpolationTypeEdit"
+        "saveCloseButtons saveCloseButtons"
+}
+
+.moduleNameLabel {
+    grid-area: moduleNameLabel;
+}
+
+.moduleNameEdit {
+    grid-area: moduleNameEdit;
+}
+
+.defaultPatternLengthLabel {
+    grid-area: defaultPatternLengthLabel;
+}
+
+.defaultPatternLengthEdit {
+    grid-area: defaultPatternLengthEdit;
+}
+
+.interpolationTypeLabel {
+    grid-area: interpolationTypeLabel;
+}
+
+.interpolationTypeEdit {
+    grid-area: interpolationTypeEdit;
+}
+
+.saveCloseButtons {
+    grid-area: saveCloseButtons;
+}
+
+.editModuleTitle label {
+    display: block;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-label);
+    padding-top: 13px;
+}
+
+.editModuleTitle input[type='text'] {
+    width: 100%;
+    height: 28px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    color: var(--colour-sample-edit-input-text);
+    caret-shape: block;
+    caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.editModuleTitle input[type='radio'] {
+    accent-color: var(--colour-radio-button-selected);
+}
+
+.interpolationTypeEdit {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.interpolationTypeEdit label {
+    display: inline;
+    font-family: SplineSansMono, monospace;
+    font-size: 16px;
+    color: var(--colour-sample-edit-input-text);
+    margin-bottom: 11px;
+    margin-right: 10px;
+}
+
+.editModuleTitle input:focus {
+    outline: none;
+}
+
+.defaultPatternLengthEdit .uiArea {
+    width: 35px;
+}

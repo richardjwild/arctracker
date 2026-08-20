@@ -106,7 +106,7 @@ export class PatternRenderer {
     this.effectsDisplayed = effectsDisplayed;
     this.viewportSize = viewportSize;
     this.layout = patternLayout.getPatternLayout(viewportSize, effectsDisplayed);
-    this.gridViewportFit = patternLayout.calculateGridViewportFit(viewportSize, numTracks, effectsDisplayed);
+    this.gridViewportFit = patternLayout.calculateGridViewportFit(viewportSize, this.layout, numTracks);
     this.ctx.textBaseline = "hanging";
   }
 
@@ -115,12 +115,12 @@ export class PatternRenderer {
       this.clearCanvas();
       if (view.linesPerBeat > 0) this.renderBeatLines(view);
       this.renderTrackLanes();
-      this.renderTrackHeaders(view);
-      this.renderTrackFooters(view);
       this.renderPlayhead();
       if (view.patternSelection) this.renderSelection(view);
       this.renderCursor(view);
       this.renderPatternLines(view);
+      this.renderTrackHeaders(view);
+      this.renderTrackFooters(view);
     } catch (err) {
       this.renderError(err);
     }

@@ -15,6 +15,7 @@ typedef struct
     stereo_frame_t *mix_buffer;
     stereo_frame_t *output_buffer;
     int frames_filled;
+    interpolation_type_t interpolation_type;
     atomic_uint peak_l;
     atomic_uint peak_r;
     audio_api_t api;

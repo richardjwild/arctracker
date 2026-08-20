@@ -9,9 +9,9 @@ typedef struct {
     char host_api_name[HOST_API_NAME_SIZE];
 } audio_device_info_t;
 
-audio_api_t get_output(int device_index, const char *name, const char *host_api_name);
+audio_api_t get_output(int device_index, const char *name, const char *host_api_name, interpolation_type_t interpolation_type);
 
-audio_api_t get_default_output(void);
+audio_api_t get_default_output(interpolation_type_t interpolation_type);
 
 bool start_portaudio(void);
 

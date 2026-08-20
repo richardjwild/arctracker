@@ -117,7 +117,7 @@ api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_in
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    const audio_api_t audio_api = get_output(device_index, name, host_api_name);
+    const audio_api_t audio_api = get_output(device_index, name, host_api_name, arctracker->module->interpolation_type);
     return use_output(arctracker, audio_api);
 }
 
@@ -125,7 +125,7 @@ api_result_t arctracker_use_default_output(arctracker_t *arctracker)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    const audio_api_t audio_api = get_default_output();
+    const audio_api_t audio_api = get_default_output(arctracker->module->interpolation_type);
     return use_output(arctracker, audio_api);
 }
 
@@ -211,6 +211,8 @@ api_result_t arctracker_module_load(arctracker_t *arctracker, char *mod_filename
     if (arctracker->module != NULL)
         remove_module(arctracker);
     arctracker->module = load_result.module;
+    if (arctracker->playback.initialised)
+        arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
     module_get_info(arctracker->module, module_info);
     return SUCCESS;
 }
@@ -508,7 +510,7 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
         return failure(NO_MODULE_LOADED);
     if (arctracker->export.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
-    audio_api_t audio_api = initialise_wav(output_filename);
+    audio_api_t audio_api = initialise_wav(output_filename, arctracker->module->interpolation_type);
     arctracker->export.player = player_create(arctracker->module, audio_api, arctracker->export.event_queue);
     if (arctracker->export.player == NULL)
         return failure(EXPORT_INIT_FAILED);
@@ -754,7 +756,12 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, const char *name, const char *author, const int default_pattern_length)
+api_result_t arctracker_edit_set_module_meta_data(
+    arctracker_t *arctracker,
+    const char *name,
+    const char *author,
+    const int default_pattern_length,
+    const enum ui_interpolation_type interpolation_type)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -773,6 +780,29 @@ api_result_t arctracker_edit_set_module_title(const arctracker_t *arctracker, co
     const edit_result_t result = editor_set_module_title(arctracker->module, name, author, default_pattern_length);
     if (!result.success)
         return failure(result.error_message);
+    bool interpolation_type_changed = false;
+    if (interpolation_type == ARCTRACKER && arctracker->module->interpolation_type == NONE)
+    {
+        arctracker->module->interpolation_type = LINEAR;
+        interpolation_type_changed = true;
+    }
+    else if (interpolation_type == ARCHIMEDES && arctracker->module->interpolation_type == LINEAR)
+    {
+        arctracker->module->interpolation_type = NONE;
+        interpolation_type_changed = true;
+    }
+    if (interpolation_type_changed)
+    {
+        api_result_t player_result = SUCCESS;
+        if (arctracker->playback.thread_active)
+            player_result = arctracker_player_shutdown(arctracker);
+        if (player_result.success)
+        {
+            arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
+            player_result = arctracker_player_start(arctracker);
+        }
+        return player_result;
+    }
     return SUCCESS;
 }
 
