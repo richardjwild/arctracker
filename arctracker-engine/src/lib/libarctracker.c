@@ -104,13 +104,20 @@ api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, ui_audio
 static api_result_t use_output(arctracker_t *arctracker, audio_api_t audio_api)
 {
     arctracker->playback_audio_api = audio_api;
+    sequence_t sequence = {0};
+    bool restore = false;
     if (arctracker->playback.thread_active)
     {
+        sequence = arctracker->playback.player->sequence;
+        restore = true;
         const api_result_t result = arctracker_player_shutdown(arctracker);
         if (!result.success)
             return result;
     }
-    return arctracker_player_start(arctracker);
+    const api_result_t result =  arctracker_player_start(arctracker);
+    if (restore && result.success)
+        player_sequence_restore(arctracker->playback.player, sequence);
+    return result;
 }
 
 api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_index, const char *name, const char *host_api_name)
@@ -794,13 +801,20 @@ api_result_t arctracker_edit_set_module_meta_data(
     if (interpolation_type_changed)
     {
         api_result_t player_result = SUCCESS;
+        sequence_t sequence = {0};
+        bool restore = false;
         if (arctracker->playback.thread_active)
-            player_result = arctracker_player_shutdown(arctracker);
-        if (player_result.success)
         {
-            arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
-            player_result = arctracker_player_start(arctracker);
+            sequence = arctracker->playback.player->sequence;
+            restore = true;
+            player_result = arctracker_player_shutdown(arctracker);
         }
+        if (!player_result.success)
+            return player_result;
+        arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
+        player_result = arctracker_player_start(arctracker);
+        if (restore && player_result.success)
+            player_sequence_restore(arctracker->playback.player, sequence);
         return player_result;
     }
     return SUCCESS;

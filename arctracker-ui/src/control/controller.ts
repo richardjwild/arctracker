@@ -1,4 +1,4 @@
-import { commandQueue, CommandType } from "./commands.ts";
+import { commandQueue } from "./commands.ts";
 import { transport } from "../transport/transport.ts";
 import { module } from "../module/module.ts";
 import { editor } from "../editing/editor.ts";
@@ -17,143 +17,145 @@ import { engine } from "../engine/engine.ts";
 import { tempo } from "../editing/tempo.ts";
 import { appConfig } from "../config/appConfig.ts";
 import { useStore } from "../store/useStore.ts";
+import { pianoKeys } from "../keyboard/pianoKeys.ts";
 
 async function processCommands() {
   const commands = commandQueue.consume();
   for (const command of commands) {
+    console.log("command", JSON.stringify(command)); // TODO: Add an event log for this.
     switch (command.type) {
-      case CommandType.EDIT_APP_CONFIG:
+      case "Edit application config":
         if (transport.playing()) transport.togglePlay();
         appConfig.showDialog();
         break;
-      case CommandType.SET_APP_CONFIG:
+      case "Set application config":
         void appConfig.apply(command.newConfig);
         break;
-      case CommandType.CREATE_MODULE:
+      case "Create module":
         void module.create(false).then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have created a new module.
-      case CommandType.CREATE_MODULE_USING_DEFAULTS:
+      case "Create module using defaults":
         void module.create(true).then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have created a new module.
-      case CommandType.LOAD_FILE:
+      case "Load module":
         void module.load().then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have loaded a new module.
-      case CommandType.SAVE_MODULE_AS:
+      case "Save module as":
         void module.saveAs();
         break;
-      case CommandType.SAVE_MODULE:
+      case "Save module":
         void module.save();
         break;
-      case CommandType.EXPORT_AUDIO:
+      case "Export audio":
         void audioExport.start();
         break;
-      case CommandType.EXPORT_SAMPLE:
+      case "Export sample":
         void editInstrument.exportSample();
         break;
-      case CommandType.TOGGLE_PLAY:
+      case "Toggle play":
         if (editInstrument.instrumentEditing()) break;
         selection.clearPatternSelection();
         editor.cancelPatternEdit();
         transport.togglePlay();
         break;
-      case CommandType.TOGGLE_LOOP:
+      case "Toggle loop mode":
         transport.toggleLoop();
         break;
-      case CommandType.TOGGLE_EDIT:
+      case "Toggle pattern edit mode":
         editor.togglePatternEdit();
         break;
-      case CommandType.SEQUENCE_SEEK:
+      case "Sequence seek":
         selection.clearPatternSelection();
         transport.sequenceSeek(command.position);
         sequence.updatePosition(command.position);
         break;
-      case CommandType.SEQUENCE_SEEK_FORWARDS:
+      case "Sequence seek forwards":
         selection.clearPatternSelection();
         transport.sequenceSeekForwards();
         sequence.advance();
         break;
-      case CommandType.SEQUENCE_SEEK_BACKWARDS:
+      case "Sequence seek backwards":
         selection.clearPatternSelection();
         transport.sequenceSeekBackwards();
         sequence.reverse();
         break;
-      case CommandType.SEQUENCE_SEEK_TO_START:
+      case "Sequence seek to start":
         selection.clearPatternSelection();
         transport.sequenceSeekToStart();
         sequence.goToStart();
         break;
-      case CommandType.SEQUENCE_SEEK_TO_END:
+      case "Sequence seek to end":
         selection.clearPatternSelection();
         transport.sequenceSeekToEnd();
         sequence.goToEnd();
         break;
-      case CommandType.NEXT_INSTRUMENT:
+      case "Next instrument":
         editInstrument.nextInstrument();
         break;
-      case CommandType.PREVIOUS_INSTRUMENT:
+      case "Previous instrument":
         editInstrument.previousInstrument();
         break;
-      case CommandType.FIRST_INSTRUMENT:
+      case "First instrument":
         editInstrument.firstInstrument();
         break;
-      case CommandType.LAST_INSTRUMENT:
+      case "Last instrument":
         editInstrument.lastInstrument();
         break;
-      case CommandType.PATTERN_GRID_DOWN:
+      case "Pattern grid down":
         selection.navigateGrid(
           () => patternGrid.moveDown(command.wrap),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_UP:
+      case "Pattern grid up":
         selection.navigateGrid(
           () => patternGrid.moveUp(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_LEFT:
+      case "Pattern grid left":
         selection.navigateGrid(
           () => patternGrid.moveLeft(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_RIGHT:
+      case "Pattern grid right":
         selection.navigateGrid(
           () => patternGrid.moveRight(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_STRIDE_DOWN:
+      case "Pattern grid stride down":
         selection.navigateGrid(
           () => patternGrid.strideDown(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_STRIDE_UP:
+      case "Pattern grid stride up":
         selection.navigateGrid(
           () => patternGrid.strideUp(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_JUMP_TO_TOP:
+      case "Pattern grid jump to top":
         selection.navigateGrid(
           () => patternGrid.jumpToTop(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_JUMP_TO_BOTTOM:
+      case "Pattern grid jump to bottom":
         selection.navigateGrid(
           () => patternGrid.jumpToBottom(),
           command.extendSelection,
         );
         break;
-      case CommandType.PATTERN_GRID_JUMP_TO_LOCATION:
+      case "Pattern grid jump to location":
         selection.navigateGrid(
           () =>
             patternGrid.moveTo({
@@ -163,148 +165,154 @@ async function processCommands() {
           command.extendSelection,
         );
         break;
-      case CommandType.CURSOR_FIELD_LEFT:
+      case "Cursor field left":
         cursor.moveFieldLeft();
         break;
-      case CommandType.CURSOR_FIELD_RIGHT:
+      case "Cursor field right":
         cursor.moveFieldRight();
         break;
-      case CommandType.INCREASE_EFFECTS_DISPLAYED:
+      case "Increase effects displayed":
         editor.increaseEffectsDisplayed();
         break;
-      case CommandType.DECREASE_EFFECTS_DISPLAYED:
+      case "Decrease effects displayed":
         editor.decreaseEffectsDisplayed();
         break;
-      case CommandType.EDIT_NOTE_FIELD:
+      case "Edit note field":
         void patternEvents.setEventNote(command.note);
         break;
-      case CommandType.EDIT_SAMPLE_FIELD:
+      case "Edit sample field":
         void patternEvents.setEventSample(command.field, command.value);
         break;
-      case CommandType.EDIT_EFFECT_CODE:
+      case "Edit effect code":
         void patternEvents.setEventEffectCode(command.field, command.value);
         break;
-      case CommandType.EDIT_EFFECT_DATA:
+      case "Edit effect data":
         void patternEvents.setEventEffectData(command.field, command.value);
         break;
-      case CommandType.CLEAR_PATTERN_EVENT_FIELD:
+      case "Clear pattern event field":
         void patternEvents.clearEventField();
         break;
-      case CommandType.CLEAR_PATTERN_EVENT:
+      case "Clear pattern event":
         void patternEvents.clearEvent();
         break;
-      case CommandType.COPY_PATTERN_EVENTS:
+      case "Copy pattern events":
         void copyPaste.copyPatternEvents(null);
         break;
-      case CommandType.CUT_PATTERN_EVENTS:
+      case "Cut pattern events":
         void copyPaste.cutPatternEvents();
         break;
-      case CommandType.PASTE_PATTERN_EVENTS:
+      case "Paste pattern events":
         void copyPaste.pastePatternEvents(null);
         break;
-      case CommandType.COPY_TRACK:
+      case "Copy track":
         void copyPaste.copyTrack();
         break;
-      case CommandType.CUT_TRACK:
+      case "Cut track":
         void copyPaste.cutTrack();
         break;
-      case CommandType.PASTE_TRACK:
+      case "Paste track":
         void copyPaste.pasteTrack();
         break;
-      case CommandType.COPY_PATTERN:
+      case "Copy pattern":
         void copyPaste.copyPattern();
         break;
-      case CommandType.CUT_PATTERN:
+      case "Cut pattern":
         void copyPaste.cutPattern();
         break;
-      case CommandType.PASTE_PATTERN:
+      case "Paste pattern":
         void copyPaste.pastePattern();
         break;
-      case CommandType.UNDO_EDIT:
+      case "Undo edit":
         void editor.undoEdit();
         break;
-      case CommandType.REDO_EDIT:
+      case "Redo edit":
         void editor.redoEdit();
         break;
-      case CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION:
+      case "Increment pattern at current position":
         selection.clearPatternSelection();
         sequence.incrementPatternAtCurrentPosition();
         break;
-      case CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION:
+      case "Decrement pattern at current position":
         selection.clearPatternSelection();
         sequence.decrementPatternAtCurrentPosition();
         break;
-      case CommandType.INSERT_SEQUENCE_POSITION_BEFORE:
+      case "Insert sequence position before":
         selection.clearPatternSelection();
         void sequence.insertBefore(command.createNewPattern);
         break;
-      case CommandType.INSERT_SEQUENCE_POSITION_AFTER:
+      case "Insert sequence position after":
         selection.clearPatternSelection();
         void sequence.insertAfter(command.createNewPattern);
         break;
-      case CommandType.DELETE_SEQUENCE_POSITION:
+      case "Delete sequence position":
         selection.clearPatternSelection();
         void sequence.delete();
         break;
-      case CommandType.ADD_INSTRUMENT:
+      case "Add instrument":
         const instruments = useStore.getState().module.instruments;
         const setSelectedInstrument = useStore.getState().setSelectedInstrument;
         setSelectedInstrument(instruments.length);
         if (transport.playing()) transport.togglePlay();
         editInstrument.showDialog();
         break;
-      case CommandType.OPEN_INSTRUMENT_EDITOR:
+      case "Open instrument editor":
         if (transport.playing()) transport.togglePlay();
         editInstrument.showDialog();
         break;
-      case CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR:
+      case "Save and close instrument editor":
         void editInstrument.updateInstrument();
         editInstrument.closeDialog();
         break;
-      case CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR:
+      case "Restore and close instrument editor":
         void editInstrument.restoreInstrument();
         editInstrument.closeDialog();
         break;
-      case CommandType.LOAD_SAMPLE:
+      case "Load sample":
         void editInstrument.loadSample();
         break;
-      case CommandType.DELETE_SAMPLE:
+      case "Delete sample":
         editInstrument.deleteSample();
         break;
-      case CommandType.EDIT_CURRENT_PATTERN_LENGTH:
+      case "Edit current pattern length":
         if (transport.playing()) transport.togglePlay();
         pattern.editCurrentPatternLength();
         break;
-      case CommandType.SET_CURRENT_PATTERN_LENGTH:
+      case "Set current pattern length":
         void pattern.setCurrentPatternLength(command.newLength);
         break;
-      case CommandType.EDIT_MODULE_META_DATA:
+      case "Edit module metadata":
         moduleMetaData.showDialog();
         break;
-      case CommandType.SET_MODULE_META_DATA:
+      case "Set module metadata":
         void moduleMetaData.setModuleMetaData();
         moduleMetaData.hideDialog();
         break;
-      case CommandType.EDIT_TRACK_COUNT:
+      case "Edit track count":
         if (transport.playing()) transport.togglePlay();
         module.editTrackCount();
         break;
-      case CommandType.SET_TRACK_COUNT:
+      case "Set track count":
         void module.setTrackCount(command.trackCount);
         break;
-      case CommandType.EDIT_TEMPO:
+      case "Edit tempo":
         if (transport.playing()) transport.togglePlay();
         tempo.showDialog();
         break;
-      case CommandType.SET_TEMPO:
+      case "Set tempo":
         void tempo.setTempo();
         break;
-      case CommandType.TOGGLE_CURRENT_TRACK_MUTE:
+      case "Toggle current track mute":
         const track = cursor.currentPosition().track;
         void engine.toggleTrackMute(track);
         break;
-      case CommandType.TOGGLE_TRACK_MUTE:
+      case "Toggle track mute":
         void engine.toggleTrackMute(command.track);
+        break;
+      case "Shift keyboard octave up":
+        pianoKeys.shiftOctave(1);
+        break;
+      case "Shift keyboard octave down":
+        pianoKeys.shiftOctave(-1);
         break;
     }
   }

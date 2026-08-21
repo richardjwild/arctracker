@@ -66,4 +66,6 @@ export const notes = {
   toString(note: number) {
     return (note < 0 || note >= noteStrings.length) ? "!!!" : noteStrings[note];
   },
+
+  inRange: (note: number) => note >= 0 && note < noteStrings.length,
 }

@@ -109,12 +109,32 @@
     accent-color: var(--colour-sample-edit-input-text);
 }
 
-.sampleEditField input[type='radio'] {
-    accent-color: var(--colour-radio-button-selected);
+.defaultVolumeValue {
+    width: 35px;
+    font-family: SplineSansMono, monospace;
+    font-size: 12px;
+    text-align: center;
+    color: var(--colour-sample-edit-input-text);
 }
 
 .sampleEditField input:focus {
     outline: none;
+}
+
+.sampleRepeatsEdit {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.sampleRepeatsEdit label {
+    display: inline;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    color: var(--colour-sample-edit-input-text);
+    margin-right: 10px;
 }
 
 .saveCloseButtons {

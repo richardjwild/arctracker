@@ -28,9 +28,9 @@ const messages = {
     linesPerBeatLabel: "Lines per Beat:",
     beatsPerMinuteLabel: "Tempo (bpm):",
     defaultPatternLengthLabel: "Default Pattern Length:",
-    interpolationTypeLabel: "Interpolation Type:",
-    arctrackerInterpolationType: "Native (smooth)",
-    archimedesInterpolationType: "Archimedes (fizzy)",
+    interpolationTypeLabel: "Sample Interpolation:",
+    arctrackerInterpolationType: "Arctracker (linear)",
+    archimedesInterpolationType: "Archimedes (none)",
     trackCountLabel: "Number of Tracks:",
     moduleFileFilterDescription: "Arctracker Module Files",
     audioFileFilterDescription: "Audio Samples",
@@ -80,6 +80,8 @@ const messages = {
     defaultBeatsPerMinuteLabel: "Default Tempo (bpm):",
     yes: "Yes",
     no: "No",
+    shiftKeyboardOctaveDown: "Shift keyboard 1 octave down",
+    shiftKeyboardOctaveUp: "Shift keyboard 1 octave up",
   },
 } as const;
 

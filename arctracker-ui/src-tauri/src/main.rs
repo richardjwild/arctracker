@@ -57,6 +57,8 @@ const EDIT_INSTRUMENT_MENU_ID: &str = "edit-instrument";
 const LOAD_SAMPLE_MENU_ID: &str = "load-sample";
 const DELETE_SAMPLE_MENU_ID: &str = "delete-sample";
 const EXPORT_SAMPLE_MENU_ID: &str = "export-sample";
+const OCTAVE_UP_MENU_ID: &str = "octave-up";
+const OCTAVE_DOWN_MENU_ID: &str = "octave-down";
 const OPEN_SETTINGS_REQUESTED_EVENT: &str = "open-settings-requested";
 const EXIT_REQUESTED_EVENT: &str = "exit-requested";
 const NEW_MODULE_REQUESTED_EVENT: &str = "new-module-requested";
@@ -110,6 +112,8 @@ const ADD_INSTRUMENT_REQUESTED_EVENT: &str = "add-instrument-requested";
 const LOAD_SAMPLE_REQUESTED_EVENT: &str = "load-sample-requested";
 const DELETE_SAMPLE_REQUESTED_EVENT: &str = "delete-sample-requested";
 const EXPORT_SAMPLE_REQUESTED_EVENT: &str = "export-sample-requested";
+const OCTAVE_UP_REQUESTED_EVENT: &str = "octave-up-requested";
+const OCTAVE_DOWN_REQUESTED_EVENT: &str = "octave-down-requested";
 
 fn main() {
     let app_state = create_app_state();
@@ -195,6 +199,8 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         LOAD_SAMPLE_MENU_ID => request_event(app_handle, LOAD_SAMPLE_REQUESTED_EVENT),
         DELETE_SAMPLE_MENU_ID => request_event(app_handle, DELETE_SAMPLE_REQUESTED_EVENT),
         EXPORT_SAMPLE_MENU_ID => request_event(app_handle, EXPORT_SAMPLE_REQUESTED_EVENT),
+        OCTAVE_UP_MENU_ID => request_event(app_handle, OCTAVE_UP_REQUESTED_EVENT),
+        OCTAVE_DOWN_MENU_ID => request_event(app_handle, OCTAVE_DOWN_REQUESTED_EVENT),
         _ => {},
     });
     Ok(())
@@ -210,6 +216,7 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
     let sequence_menu = build_sequence_menu(app)?;
     let pattern_menu = build_pattern_menu(app)?;
     let instrument_menu = build_instrument_menu(app)?;
+    let keyboard_menu = build_keyboard_menu(app)?;
     let menu = Menu::with_items(
         app,
         &[
@@ -222,6 +229,7 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
             &sequence_menu,
             &pattern_menu,
             &instrument_menu,
+            &keyboard_menu,
         ],
     )?;
     app.set_menu(menu)?;
@@ -669,6 +677,24 @@ fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> 
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(app, "Instrument", true, &[&next_instrument, &previous_instrument, &first_instrument, &last_instrument, &separator, &add_instrument, &edit_instrument, &separator, &load_sample, &delete_sample, &export_sample])
+}
+
+fn build_keyboard_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
+    let octave_up = MenuItem::with_id(
+        app,
+        OCTAVE_UP_MENU_ID,
+        "Octave Up",
+        true,
+        Some("Shift+.")
+    )?;
+    let octave_down = MenuItem::with_id(
+        app,
+        OCTAVE_DOWN_MENU_ID,
+        "Octave Down",
+        true,
+        Some("Shift+,")
+    )?;
+    Submenu::with_items(app, "Keyboard", true, &[&octave_up, &octave_down])
 }
 
 fn handle_run_event<R: Runtime>(app_handle: &AppHandle<R>, event: RunEvent) {

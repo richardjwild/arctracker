@@ -15,6 +15,7 @@
     --colour-effect: #aa7700;
     --colour-effect-at-playhead: #ffbb00;
     --colour-cursor: #00ff00;
+    --colour-cursor-non-edit: #555555;
     --colour-cursor-text: #003300;
     --colour-selection-fill: rgba(80, 140, 255, 0.25);
     --colour-selection-outline: rgba(80, 140, 255, 0.5);
@@ -63,4 +64,8 @@
     --colour-track-footer-not-muted-bg: #1c1c1c;
     --font-track-header: 12px SplineSansMono, monospace;
     --font-pattern-data: bold 16px SplineSansMono, monospace;
+    --colour-keyboard-octave-button-fg: #cccc22;
+    --colour-piano-key-white: #cccccc;
+    --colour-piano-key-black: #111111;
+    --colour-piano-octave-highlight: red;
 }

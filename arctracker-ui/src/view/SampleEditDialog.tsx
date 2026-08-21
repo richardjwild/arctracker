@@ -28,7 +28,8 @@ const emptyInputState: InputState = {
 export default function SampleEditDialog() {
   const instrumentIndex = useStore((state) => state.selectedInstrument);
   const instruments = useStore((state) => state.module.instruments);
-  const instrumentEditing = useStore((state) => state.editorState.editMode) === "instrument";
+  const instrumentEditing =
+    useStore((state) => state.editorState.editMode) === "instrument";
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -122,8 +123,7 @@ export default function SampleEditDialog() {
       syncInputStateWithDraft();
       if (draftInstrument.repeatLength === 0)
         void alerting.showInfo(message("invalidRepeatStartWithoutRepeatEnd"));
-      else
-        void alerting.showInfo(message("invalidRepeatStartWithRepeatEnd"));
+      else void alerting.showInfo(message("invalidRepeatStartWithRepeatEnd"));
     }
     loseFocus();
   };
@@ -149,10 +149,14 @@ export default function SampleEditDialog() {
   return (
     <Modal ref={modalRef} className="sampleEdit">
       <h1 className="instrumentEditTitle padded">
-        {messageFn("instrumentTitle")(hexadecimal.toHex(instrumentIndex + 1, 2))}
+        {messageFn("instrumentTitle")(
+          hexadecimal.toHex(instrumentIndex + 1, 2),
+        )}
       </h1>
       <div className="sampleNameLabel padded sampleEditLabel">
-        <label htmlFor="sampleNameInput">{message("instrumentNameLabel")}</label>
+        <label htmlFor="sampleNameInput">
+          {message("instrumentNameLabel")}
+        </label>
       </div>
       <div className="sampleNameEdit uiArea padded rounded sampleEditField">
         <input
@@ -168,7 +172,9 @@ export default function SampleEditDialog() {
         />
       </div>
       <div className="defaultVolumeLabel padded sampleEditLabel">
-        <label htmlFor="defaultVolumeInput">{message("instrumentDefaultVolumeLabel")}</label>
+        <label htmlFor="defaultVolumeInput">
+          {message("instrumentDefaultVolumeLabel")}
+        </label>
       </div>
       <div className="defaultVolumeEdit uiArea padded rounded sampleEditField">
         <input
@@ -184,9 +190,12 @@ export default function SampleEditDialog() {
             });
           }}
         />
+        <span className="defaultVolumeValue">{Math.round(100 * draftInstrument.defaultVolume / 255) + "%"}</span>
       </div>
       <div className="transposeLabel padded sampleEditLabel">
-        <label htmlFor="transposeInput">{message("instrumentTransposeLabel")}</label>
+        <label htmlFor="transposeInput">
+          {message("instrumentTransposeLabel")}
+        </label>
       </div>
       <div className="transposeEdit uiArea padded rounded sampleEditField">
         <input
@@ -238,50 +247,58 @@ export default function SampleEditDialog() {
         />
         <label htmlFor="sampleRepeatsNo">{message("no")}</label>
       </div>
-      <div className="repeatStartLabel padded sampleEditLabel">
-        <label htmlFor="repeatStartInput">{message("instrumentLoopStartLabel")}</label>
-      </div>
-      <div className="repeatStartEdit uiArea padded rounded sampleEditField">
-        <input
-          type="text"
-          id="repeatStartInput"
-          value={inputState.repeatStart}
-          onFocus={editor.startTextInput}
-          onChange={(e) =>
-            setInputState({
-              ...inputState,
-              repeatStart: e.target.value,
-            })
-          }
-          onBlur={(e) => {
-            e.preventDefault();
-            editor.stopTextInput();
-            updateRepeatStart();
-          }}
-        />
-      </div>
-      <div className="repeatEndLabel padded sampleEditLabel">
-        <label htmlFor="repeatEndInput">{message("instrumentLoopEndLabel")}</label>
-      </div>
-      <div className="repeatEndEdit uiArea padded rounded sampleEditField">
-        <input
-          type="text"
-          id="repeatEndInput"
-          value={inputState.repeatEnd}
-          onFocus={editor.startTextInput}
-          onChange={(e) =>
-            setInputState({
-              ...inputState,
-              repeatEnd: e.target.value,
-            })
-          }
-          onBlur={(e) => {
-            e.preventDefault();
-            editor.stopTextInput();
-            updateRepeatEnd();
-          }}
-        />
-      </div>
+      {draftInstrument.repeats && (
+        <>
+          <div className="repeatStartLabel padded sampleEditLabel">
+            <label htmlFor="repeatStartInput">
+              {message("instrumentLoopStartLabel")}
+            </label>
+          </div>
+          <div className="repeatStartEdit uiArea padded rounded sampleEditField">
+            <input
+              type="text"
+              id="repeatStartInput"
+              value={inputState.repeatStart}
+              onFocus={editor.startTextInput}
+              onChange={(e) =>
+                setInputState({
+                  ...inputState,
+                  repeatStart: e.target.value,
+                })
+              }
+              onBlur={(e) => {
+                e.preventDefault();
+                editor.stopTextInput();
+                updateRepeatStart();
+              }}
+            />
+          </div>
+          <div className="repeatEndLabel padded sampleEditLabel">
+            <label htmlFor="repeatEndInput">
+              {message("instrumentLoopEndLabel")}
+            </label>
+          </div>
+          <div className="repeatEndEdit uiArea padded rounded sampleEditField">
+            <input
+              type="text"
+              id="repeatEndInput"
+              value={inputState.repeatEnd}
+              onFocus={editor.startTextInput}
+              onChange={(e) =>
+                setInputState({
+                  ...inputState,
+                  repeatEnd: e.target.value,
+                })
+              }
+              onBlur={(e) => {
+                e.preventDefault();
+                editor.stopTextInput();
+                updateRepeatEnd();
+              }}
+            />
+          </div>
+        </>
+      )}
       <div className="saveCloseButtons uiArea padded rounded">
         <button type="button" onClick={commands.loadSample}>
           {message("loadSampleButtonLabel")}

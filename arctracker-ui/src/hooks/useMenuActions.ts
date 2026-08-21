@@ -85,6 +85,8 @@ const menuActions: MenuAction[] = [
   { eventId: "load-sample-requested", action: commands.loadSample },
   { eventId: "delete-sample-requested", action: commands.deleteSample },
   { eventId: "export-sample-requested", action: commands.exportSample },
+  { eventId: "octave-up-requested", action: commands.shiftKeyboardOctaveUp },
+  { eventId: "octave-down-requested", action: commands.shiftKeyboardOctaveDown },
 ];
 
 export function useMenuActions() {

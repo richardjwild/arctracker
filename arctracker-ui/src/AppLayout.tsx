@@ -13,6 +13,8 @@ import EditTrackCount from "./view/EditTrackCount.tsx";
 import MasterGain from "./view/MasterGain.tsx";
 import EditTempo from "./view/EditTempo.tsx";
 import EditAppConfig from "./view/EditAppConfig.tsx";
+import KeyboardOctave from "./view/KeyboardOctave.tsx";
+import UserMessages from "./view/UserMessages.tsx";
 
 export default function AppLayout() {
   return (
@@ -23,6 +25,8 @@ export default function AppLayout() {
       <TransportBar />
       <PatternView />
       <InstrumentList />
+      <UserMessages />
+      <KeyboardOctave />
       <SampleEditDialog />
       <ExportDialog />
       <EditPatternLength />

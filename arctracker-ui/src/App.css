@@ -37,11 +37,12 @@
   display: grid;
   gap: 1px;
   grid-template-columns: 1fr 300px;
-  grid-template-rows: 50px 50px minmax(0, 1fr);
+  grid-template-rows: 50px 50px minmax(0, 1fr) 50px;
   grid-template-areas:
     "moduleHeader masterGain"
     "sequenceView transport"
-    "patternView sampleList";
+    "patternView sampleList"
+    "userMessages keyboardOctave";
 }
 
 .uiArea {
@@ -70,6 +71,12 @@ input[type="text"] {
   font-family: SplineSansMono, monospace;
   font-weight: bold;
   font-size: 16px;
+}
+
+input[type='radio'] {
+  accent-color: var(--colour-radio-button-selected);
+  width: 20px;
+  height: 20px;
 }
 
 label {

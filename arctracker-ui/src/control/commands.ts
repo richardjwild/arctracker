@@ -13,184 +13,111 @@ type EffectDataCursorField = Extract<
   { field: "effectData1" | "effectData2" }
 >;
 
-export enum CommandType {
-  EDIT_APP_CONFIG,
-  SET_APP_CONFIG,
-  LOAD_FILE,
-  SAVE_MODULE_AS,
-  SAVE_MODULE,
-  EXPORT_AUDIO,
-  CREATE_MODULE,
-  CREATE_MODULE_USING_DEFAULTS,
-  TOGGLE_PLAY,
-  TOGGLE_LOOP,
-  TOGGLE_EDIT,
-  CURSOR_FIELD_LEFT,
-  CURSOR_FIELD_RIGHT,
-  PATTERN_GRID_LEFT,
-  PATTERN_GRID_RIGHT,
-  PATTERN_GRID_UP,
-  PATTERN_GRID_DOWN,
-  INCREASE_EFFECTS_DISPLAYED,
-  DECREASE_EFFECTS_DISPLAYED,
-  SEQUENCE_SEEK,
-  SEQUENCE_SEEK_FORWARDS,
-  SEQUENCE_SEEK_BACKWARDS,
-  SEQUENCE_SEEK_TO_START,
-  SEQUENCE_SEEK_TO_END,
-  NEXT_INSTRUMENT,
-  PREVIOUS_INSTRUMENT,
-  FIRST_INSTRUMENT,
-  LAST_INSTRUMENT,
-  PATTERN_GRID_STRIDE_DOWN,
-  PATTERN_GRID_STRIDE_UP,
-  PATTERN_GRID_JUMP_TO_TOP,
-  PATTERN_GRID_JUMP_TO_BOTTOM,
-  PATTERN_GRID_JUMP_TO_LOCATION,
-  EDIT_NOTE_FIELD,
-  EDIT_SAMPLE_FIELD,
-  EDIT_EFFECT_CODE,
-  EDIT_EFFECT_DATA,
-  CLEAR_PATTERN_EVENT_FIELD,
-  CLEAR_PATTERN_EVENT,
-  COPY_PATTERN_EVENTS,
-  CUT_PATTERN_EVENTS,
-  PASTE_PATTERN_EVENTS,
-  COPY_TRACK,
-  CUT_TRACK,
-  PASTE_TRACK,
-  COPY_PATTERN,
-  CUT_PATTERN,
-  PASTE_PATTERN,
-  UNDO_EDIT,
-  REDO_EDIT,
-  INCREMENT_PATTERN_AT_CURRENT_POSITION,
-  DECREMENT_PATTERN_AT_CURRENT_POSITION,
-  INSERT_SEQUENCE_POSITION_BEFORE,
-  INSERT_SEQUENCE_POSITION_AFTER,
-  DELETE_SEQUENCE_POSITION,
-  ADD_INSTRUMENT,
-  OPEN_INSTRUMENT_EDITOR,
-  SAVE_AND_CLOSE_INSTRUMENT_EDITOR,
-  RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
-  LOAD_SAMPLE,
-  DELETE_SAMPLE,
-  EXPORT_SAMPLE,
-  EDIT_CURRENT_PATTERN_LENGTH,
-  SET_CURRENT_PATTERN_LENGTH,
-  EDIT_MODULE_META_DATA,
-  SET_MODULE_META_DATA,
-  EDIT_TRACK_COUNT,
-  SET_TRACK_COUNT,
-  EDIT_TEMPO,
-  SET_TEMPO,
-  TOGGLE_CURRENT_TRACK_MUTE,
-  TOGGLE_TRACK_MUTE,
-}
-
 export type Command =
-  | { type: CommandType.EDIT_APP_CONFIG }
-  | { type: CommandType.SET_APP_CONFIG; newConfig: AppConfig }
-  | { type: CommandType.LOAD_FILE }
-  | { type: CommandType.SAVE_MODULE_AS }
-  | { type: CommandType.SAVE_MODULE }
-  | { type: CommandType.EXPORT_AUDIO }
-  | { type: CommandType.CREATE_MODULE }
-  | { type: CommandType.CREATE_MODULE_USING_DEFAULTS }
-  | { type: CommandType.TOGGLE_PLAY }
-  | { type: CommandType.TOGGLE_LOOP }
-  | { type: CommandType.TOGGLE_EDIT }
-  | { type: CommandType.SEQUENCE_SEEK; position: number }
-  | { type: CommandType.SEQUENCE_SEEK_FORWARDS }
-  | { type: CommandType.SEQUENCE_SEEK_BACKWARDS }
-  | { type: CommandType.SEQUENCE_SEEK_TO_START }
-  | { type: CommandType.SEQUENCE_SEEK_TO_END }
-  | { type: CommandType.NEXT_INSTRUMENT }
-  | { type: CommandType.PREVIOUS_INSTRUMENT }
-  | { type: CommandType.FIRST_INSTRUMENT }
-  | { type: CommandType.LAST_INSTRUMENT }
-  | { type: CommandType.PATTERN_GRID_LEFT; extendSelection: boolean }
-  | { type: CommandType.PATTERN_GRID_RIGHT; extendSelection: boolean }
+  | { type: "Edit application config" }
+  | { type: "Set application config"; newConfig: AppConfig } // TODO: Verify this one, it seems not to be used.
+  | { type: "Load module" }
+  | { type: "Save module as" }
+  | { type: "Save module" }
+  | { type: "Export audio" }
+  | { type: "Create module" }
+  | { type: "Create module using defaults" }
+  | { type: "Toggle play" }
+  | { type: "Toggle loop mode" }
+  | { type: "Toggle pattern edit mode" }
+  | { type: "Sequence seek"; position: number }
+  | { type: "Sequence seek forwards" }
+  | { type: "Sequence seek backwards" }
+  | { type: "Sequence seek to start" }
+  | { type: "Sequence seek to end" }
+  | { type: "Next instrument" }
+  | { type: "Previous instrument" }
+  | { type: "First instrument" }
+  | { type: "Last instrument" }
+  | { type: "Pattern grid left"; extendSelection: boolean }
+  | { type: "Pattern grid right"; extendSelection: boolean }
   | {
-      type: CommandType.PATTERN_GRID_DOWN;
+      type: "Pattern grid down";
       extendSelection: boolean;
       wrap: boolean;
     }
-  | { type: CommandType.PATTERN_GRID_UP; extendSelection: boolean }
-  | { type: CommandType.PATTERN_GRID_STRIDE_DOWN; extendSelection: boolean }
-  | { type: CommandType.PATTERN_GRID_STRIDE_UP; extendSelection: boolean }
-  | { type: CommandType.PATTERN_GRID_JUMP_TO_TOP; extendSelection: boolean }
-  | { type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM; extendSelection: boolean }
+  | { type: "Pattern grid up"; extendSelection: boolean }
+  | { type: "Pattern grid stride down"; extendSelection: boolean }
+  | { type: "Pattern grid stride up"; extendSelection: boolean }
+  | { type: "Pattern grid jump to top"; extendSelection: boolean }
+  | { type: "Pattern grid jump to bottom"; extendSelection: boolean }
   | {
-      type: CommandType.PATTERN_GRID_JUMP_TO_LOCATION;
+      type: "Pattern grid jump to location";
       track: number;
       patternIndex: number;
       extendSelection: boolean;
     }
-  | { type: CommandType.CURSOR_FIELD_LEFT }
-  | { type: CommandType.CURSOR_FIELD_RIGHT }
-  | { type: CommandType.INCREASE_EFFECTS_DISPLAYED }
-  | { type: CommandType.DECREASE_EFFECTS_DISPLAYED }
-  | { type: CommandType.EDIT_NOTE_FIELD; note: number }
+  | { type: "Cursor field left" }
+  | { type: "Cursor field right" }
+  | { type: "Increase effects displayed" }
+  | { type: "Decrease effects displayed" }
+  | { type: "Edit note field"; note: number }
   | {
-      type: CommandType.EDIT_SAMPLE_FIELD;
+      type: "Edit sample field";
       field: SampleCursorField;
       value: string;
     }
   | {
-      type: CommandType.EDIT_EFFECT_CODE;
+      type: "Edit effect code";
       field: EffectCodeCursorField;
       value: string;
     }
   | {
-      type: CommandType.EDIT_EFFECT_DATA;
+      type: "Edit effect data";
       field: EffectDataCursorField;
       value: string;
     }
-  | { type: CommandType.CLEAR_PATTERN_EVENT_FIELD }
-  | { type: CommandType.CLEAR_PATTERN_EVENT }
-  | { type: CommandType.COPY_PATTERN_EVENTS }
-  | { type: CommandType.CUT_PATTERN_EVENTS }
-  | { type: CommandType.PASTE_PATTERN_EVENTS }
-  | { type: CommandType.COPY_TRACK }
-  | { type: CommandType.CUT_TRACK }
-  | { type: CommandType.PASTE_TRACK }
-  | { type: CommandType.COPY_PATTERN }
-  | { type: CommandType.CUT_PATTERN }
-  | { type: CommandType.PASTE_PATTERN }
-  | { type: CommandType.UNDO_EDIT }
-  | { type: CommandType.REDO_EDIT }
-  | { type: CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION }
-  | { type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION }
+  | { type: "Clear pattern event field" }
+  | { type: "Clear pattern event" }
+  | { type: "Copy pattern events" }
+  | { type: "Cut pattern events" }
+  | { type: "Paste pattern events" }
+  | { type: "Copy track" }
+  | { type: "Cut track" }
+  | { type: "Paste track" }
+  | { type: "Copy pattern" }
+  | { type: "Cut pattern" }
+  | { type: "Paste pattern" }
+  | { type: "Undo edit" }
+  | { type: "Redo edit" }
+  | { type: "Increment pattern at current position" }
+  | { type: "Decrement pattern at current position" }
   | {
-      type: CommandType.INSERT_SEQUENCE_POSITION_BEFORE;
+      type: "Insert sequence position before";
       createNewPattern: boolean;
     }
   | {
-      type: CommandType.INSERT_SEQUENCE_POSITION_AFTER;
+      type: "Insert sequence position after";
       createNewPattern: boolean;
     }
-  | { type: CommandType.DELETE_SEQUENCE_POSITION }
-  | { type: CommandType.ADD_INSTRUMENT }
-  | { type: CommandType.OPEN_INSTRUMENT_EDITOR }
-  | { type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }
-  | { type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR }
-  | { type: CommandType.LOAD_SAMPLE }
-  | { type: CommandType.DELETE_SAMPLE }
-  | { type: CommandType.EXPORT_SAMPLE }
-  | { type: CommandType.EDIT_CURRENT_PATTERN_LENGTH }
+  | { type: "Delete sequence position" }
+  | { type: "Add instrument" }
+  | { type: "Open instrument editor" }
+  | { type: "Save and close instrument editor" }
+  | { type: "Restore and close instrument editor" }
+  | { type: "Load sample" }
+  | { type: "Delete sample" }
+  | { type: "Export sample" }
+  | { type: "Edit current pattern length" }
   | {
-      type: CommandType.SET_CURRENT_PATTERN_LENGTH;
+      type: "Set current pattern length";
       newLength: number;
     }
-  | { type: CommandType.EDIT_MODULE_META_DATA }
-  | { type: CommandType.SET_MODULE_META_DATA }
-  | { type: CommandType.EDIT_TRACK_COUNT }
-  | { type: CommandType.SET_TRACK_COUNT; trackCount: number }
-  | { type: CommandType.EDIT_TEMPO }
-  | { type: CommandType.SET_TEMPO }
-  | { type: CommandType.TOGGLE_CURRENT_TRACK_MUTE }
-  | { type: CommandType.TOGGLE_TRACK_MUTE; track: number };
+  | { type: "Edit module metadata" }
+  | { type: "Set module metadata" }
+  | { type: "Edit track count" }
+  | { type: "Set track count"; trackCount: number }
+  | { type: "Edit tempo" }
+  | { type: "Set tempo" }
+  | { type: "Toggle current track mute" }
+  | { type: "Toggle track mute"; track: number }
+  | { type: "Shift keyboard octave up" }
+  | { type: "Shift keyboard octave down" };
 
 const queue: Command[] = [];
 
@@ -205,68 +132,68 @@ export const commandQueue = {
 };
 
 export const commands = {
-  editAppConfig: () => commandQueue.push({ type: CommandType.EDIT_APP_CONFIG }),
-  loadFile: () => commandQueue.push({ type: CommandType.LOAD_FILE }),
-  saveModuleAs: () => commandQueue.push({ type: CommandType.SAVE_MODULE_AS }),
-  saveModule: () => commandQueue.push({ type: CommandType.SAVE_MODULE }),
-  exportAudio: () => commandQueue.push({ type: CommandType.EXPORT_AUDIO }),
-  createModule: () => commandQueue.push({ type: CommandType.CREATE_MODULE }),
+  editAppConfig: () => commandQueue.push({ type: "Edit application config" }),
+  loadFile: () => commandQueue.push({ type: "Load module" }),
+  saveModuleAs: () => commandQueue.push({ type: "Save module as" }),
+  saveModule: () => commandQueue.push({ type: "Save module" }),
+  exportAudio: () => commandQueue.push({ type: "Export audio" }),
+  createModule: () => commandQueue.push({ type: "Create module" }),
   createModuleUsingDefaults: () =>
-    commandQueue.push({ type: CommandType.CREATE_MODULE_USING_DEFAULTS }),
-  togglePlay: () => commandQueue.push({ type: CommandType.TOGGLE_PLAY }),
-  toggleLoop: () => commandQueue.push({ type: CommandType.TOGGLE_LOOP }),
-  toggleEdit: () => commandQueue.push({ type: CommandType.TOGGLE_EDIT }),
+    commandQueue.push({ type: "Create module using defaults" }),
+  togglePlay: () => commandQueue.push({ type: "Toggle play" }),
+  toggleLoop: () => commandQueue.push({ type: "Toggle loop mode" }),
+  toggleEdit: () => commandQueue.push({ type: "Toggle pattern edit mode" }),
   sequenceSeek: (position: number) =>
-    commandQueue.push({ type: CommandType.SEQUENCE_SEEK, position }),
+    commandQueue.push({ type: "Sequence seek", position }),
   sequenceSeekForwards: () =>
-    commandQueue.push({ type: CommandType.SEQUENCE_SEEK_FORWARDS }),
+    commandQueue.push({ type: "Sequence seek forwards" }),
   sequenceSeekBackwards: () =>
-    commandQueue.push({ type: CommandType.SEQUENCE_SEEK_BACKWARDS }),
+    commandQueue.push({ type: "Sequence seek backwards" }),
   sequenceSeekToStart: () =>
-    commandQueue.push({ type: CommandType.SEQUENCE_SEEK_TO_START }),
+    commandQueue.push({ type: "Sequence seek to start" }),
   sequenceSeekToEnd: () =>
-    commandQueue.push({ type: CommandType.SEQUENCE_SEEK_TO_END }),
+    commandQueue.push({ type: "Sequence seek to end" }),
   nextInstrument: () =>
-    commandQueue.push({ type: CommandType.NEXT_INSTRUMENT }),
+    commandQueue.push({ type: "Next instrument" }),
   previousInstrument: () =>
-    commandQueue.push({ type: CommandType.PREVIOUS_INSTRUMENT }),
+    commandQueue.push({ type: "Previous instrument" }),
   firstInstrument: () =>
-    commandQueue.push({ type: CommandType.FIRST_INSTRUMENT }),
+    commandQueue.push({ type: "First instrument" }),
   lastInstrument: () =>
-    commandQueue.push({ type: CommandType.LAST_INSTRUMENT }),
+    commandQueue.push({ type: "Last instrument" }),
   patternGridLeft: (extendSelection: boolean) =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_LEFT, extendSelection }),
+    commandQueue.push({ type: "Pattern grid left", extendSelection }),
   patternGridRight: (extendSelection: boolean) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_RIGHT,
+      type: "Pattern grid right",
       extendSelection,
     }),
   patternGridDown: (extendSelection: boolean, wrap: boolean = false) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_DOWN,
+      type: "Pattern grid down",
       extendSelection,
       wrap,
     }),
   patternGridUp: (extendSelection: boolean) =>
-    commandQueue.push({ type: CommandType.PATTERN_GRID_UP, extendSelection }),
+    commandQueue.push({ type: "Pattern grid up", extendSelection }),
   patternGridStrideDown: (extendSelection: boolean) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_STRIDE_DOWN,
+      type: "Pattern grid stride down",
       extendSelection,
     }),
   patternGridStrideUp: (extendSelection: boolean) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_STRIDE_UP,
+      type: "Pattern grid stride up",
       extendSelection,
     }),
   patternGridJumpToTop: (extendSelection: boolean) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_JUMP_TO_TOP,
+      type: "Pattern grid jump to top",
       extendSelection,
     }),
   patternGridJumpToBottom: (extendSelection: boolean) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_JUMP_TO_BOTTOM,
+      type: "Pattern grid jump to bottom",
       extendSelection,
     }),
   patternGridJumpToLocation: (
@@ -275,96 +202,100 @@ export const commands = {
     extendSelection: boolean,
   ) =>
     commandQueue.push({
-      type: CommandType.PATTERN_GRID_JUMP_TO_LOCATION,
+      type: "Pattern grid jump to location",
       track,
       patternIndex,
       extendSelection,
     }),
   cursorFieldLeft: () =>
-    commandQueue.push({ type: CommandType.CURSOR_FIELD_LEFT }),
+    commandQueue.push({ type: "Cursor field left" }),
   cursorFieldRight: () =>
-    commandQueue.push({ type: CommandType.CURSOR_FIELD_RIGHT }),
+    commandQueue.push({ type: "Cursor field right" }),
   increaseEffectsDisplayed: () =>
-    commandQueue.push({ type: CommandType.INCREASE_EFFECTS_DISPLAYED }),
+    commandQueue.push({ type: "Increase effects displayed" }),
   decreaseEffectsDisplayed: () =>
-    commandQueue.push({ type: CommandType.DECREASE_EFFECTS_DISPLAYED }),
+    commandQueue.push({ type: "Decrease effects displayed" }),
   editNoteField: (note: number) =>
-    commandQueue.push({ type: CommandType.EDIT_NOTE_FIELD, note }),
+    commandQueue.push({ type: "Edit note field", note }),
   editSampleField: (field: SampleCursorField, value: string) =>
-    commandQueue.push({ type: CommandType.EDIT_SAMPLE_FIELD, field, value }),
+    commandQueue.push({ type: "Edit sample field", field, value }),
   editEffectCode: (field: EffectCodeCursorField, value: string) =>
-    commandQueue.push({ type: CommandType.EDIT_EFFECT_CODE, field, value }),
+    commandQueue.push({ type: "Edit effect code", field, value }),
   editEffectData: (field: EffectDataCursorField, value: string) =>
-    commandQueue.push({ type: CommandType.EDIT_EFFECT_DATA, field, value }),
+    commandQueue.push({ type: "Edit effect data", field, value }),
   clearPatternEventField: () =>
-    commandQueue.push({ type: CommandType.CLEAR_PATTERN_EVENT_FIELD }),
+    commandQueue.push({ type: "Clear pattern event field" }),
   clearPatternEvent: () =>
-    commandQueue.push({ type: CommandType.CLEAR_PATTERN_EVENT }),
+    commandQueue.push({ type: "Clear pattern event" }),
   copyPatternEvents: () =>
-    commandQueue.push({ type: CommandType.COPY_PATTERN_EVENTS }),
+    commandQueue.push({ type: "Copy pattern events" }),
   cutPatternEvents: () =>
-    commandQueue.push({ type: CommandType.CUT_PATTERN_EVENTS }),
+    commandQueue.push({ type: "Cut pattern events" }),
   pastePatternEvents: () =>
-    commandQueue.push({ type: CommandType.PASTE_PATTERN_EVENTS }),
-  copyTrack: () => commandQueue.push({ type: CommandType.COPY_TRACK }),
-  cutTrack: () => commandQueue.push({ type: CommandType.CUT_TRACK }),
-  pasteTrack: () => commandQueue.push({ type: CommandType.PASTE_TRACK }),
-  copyPattern: () => commandQueue.push({ type: CommandType.COPY_PATTERN }),
-  cutPattern: () => commandQueue.push({ type: CommandType.CUT_PATTERN }),
-  pastePattern: () => commandQueue.push({ type: CommandType.PASTE_PATTERN }),
-  undoEdit: () => commandQueue.push({ type: CommandType.UNDO_EDIT }),
-  redoEdit: () => commandQueue.push({ type: CommandType.REDO_EDIT }),
+    commandQueue.push({ type: "Paste pattern events" }),
+  copyTrack: () => commandQueue.push({ type: "Copy track" }),
+  cutTrack: () => commandQueue.push({ type: "Cut track" }),
+  pasteTrack: () => commandQueue.push({ type: "Paste track" }),
+  copyPattern: () => commandQueue.push({ type: "Copy pattern" }),
+  cutPattern: () => commandQueue.push({ type: "Cut pattern" }),
+  pastePattern: () => commandQueue.push({ type: "Paste pattern" }),
+  undoEdit: () => commandQueue.push({ type: "Undo edit" }),
+  redoEdit: () => commandQueue.push({ type: "Redo edit" }),
   incrementPatternAtCurrentPosition: () =>
     commandQueue.push({
-      type: CommandType.INCREMENT_PATTERN_AT_CURRENT_POSITION,
+      type: "Increment pattern at current position",
     }),
   decrementPatternAtCurrentPosition: () =>
     commandQueue.push({
-      type: CommandType.DECREMENT_PATTERN_AT_CURRENT_POSITION,
+      type: "Decrement pattern at current position",
     }),
   insertSequencePositionBefore: (createNewPattern: boolean = false) =>
     commandQueue.push({
-      type: CommandType.INSERT_SEQUENCE_POSITION_BEFORE,
+      type: "Insert sequence position before",
       createNewPattern,
     }),
   insertSequencePositionAfter: (createNewPattern: boolean = false) =>
     commandQueue.push({
-      type: CommandType.INSERT_SEQUENCE_POSITION_AFTER,
+      type: "Insert sequence position after",
       createNewPattern,
     }),
   deleteSequencePosition: () =>
-    commandQueue.push({ type: CommandType.DELETE_SEQUENCE_POSITION }),
-  addInstrument: () => commandQueue.push({ type: CommandType.ADD_INSTRUMENT }),
+    commandQueue.push({ type: "Delete sequence position" }),
+  addInstrument: () => commandQueue.push({ type: "Add instrument" }),
   openInstrumentEditor: () =>
-    commandQueue.push({ type: CommandType.OPEN_INSTRUMENT_EDITOR }),
+    commandQueue.push({ type: "Open instrument editor" }),
   saveAndCloseInstrumentEditor: () =>
-    commandQueue.push({ type: CommandType.SAVE_AND_CLOSE_INSTRUMENT_EDITOR }),
+    commandQueue.push({ type: "Save and close instrument editor" }),
   restoreAndCloseInstrumentEditor: () =>
     commandQueue.push({
-      type: CommandType.RESTORE_AND_CLOSE_INSTRUMENT_EDITOR,
+      type: "Restore and close instrument editor",
     }),
-  loadSample: () => commandQueue.push({ type: CommandType.LOAD_SAMPLE }),
-  deleteSample: () => commandQueue.push({ type: CommandType.DELETE_SAMPLE }),
-  exportSample: () => commandQueue.push({ type: CommandType.EXPORT_SAMPLE }),
+  loadSample: () => commandQueue.push({ type: "Load sample" }),
+  deleteSample: () => commandQueue.push({ type: "Delete sample" }),
+  exportSample: () => commandQueue.push({ type: "Export sample" }),
   editCurrentPatternLength: () =>
-    commandQueue.push({ type: CommandType.EDIT_CURRENT_PATTERN_LENGTH }),
+    commandQueue.push({ type: "Edit current pattern length" }),
   setCurrentPatternLength: (newLength: number) =>
     commandQueue.push({
-      type: CommandType.SET_CURRENT_PATTERN_LENGTH,
+      type: "Set current pattern length",
       newLength,
     }),
   editModuleMetaData: () =>
-    commandQueue.push({ type: CommandType.EDIT_MODULE_META_DATA }),
+    commandQueue.push({ type: "Edit module metadata" }),
   setModuleMetaData: () =>
-    commandQueue.push({ type: CommandType.SET_MODULE_META_DATA }),
+    commandQueue.push({ type: "Set module metadata" }),
   editTrackCount: () =>
-    commandQueue.push({ type: CommandType.EDIT_TRACK_COUNT }),
+    commandQueue.push({ type: "Edit track count" }),
   setTrackCount: (trackCount: number) =>
-    commandQueue.push({ type: CommandType.SET_TRACK_COUNT, trackCount }),
-  editTempo: () => commandQueue.push({ type: CommandType.EDIT_TEMPO }),
-  setTempo: () => commandQueue.push({ type: CommandType.SET_TEMPO }),
+    commandQueue.push({ type: "Set track count", trackCount }),
+  editTempo: () => commandQueue.push({ type: "Edit tempo" }),
+  setTempo: () => commandQueue.push({ type: "Set tempo" }),
   toggleCurrentTrackMute: () =>
-    commandQueue.push({ type: CommandType.TOGGLE_CURRENT_TRACK_MUTE }),
+    commandQueue.push({ type: "Toggle current track mute" }),
   toggleTrackMute: (track: number) =>
-    commandQueue.push({ type: CommandType.TOGGLE_TRACK_MUTE, track }),
+    commandQueue.push({ type: "Toggle track mute", track }),
+  shiftKeyboardOctaveUp: () =>
+    commandQueue.push({ type: "Shift keyboard octave up" }),
+  shiftKeyboardOctaveDown: () =>
+    commandQueue.push({ type: "Shift keyboard octave down" }),
 };

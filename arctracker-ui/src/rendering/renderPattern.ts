@@ -52,6 +52,7 @@ export type Colours = {
   text: string;
   channelMuted: string;
   cursor: string;
+  cursorNonEdit: string;
   cursorText: string;
   note: string;
   sample: string;
@@ -158,7 +159,7 @@ export class PatternRenderer {
   }
 
   private renderTrackHeaders(view: RenderPatternView) {
-    this.ctx.font = this.trackHeaderFont;
+    this.withFont(this.trackHeaderFont);
     let x = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackHeader(x, track, view.trackMuteState[track]);
@@ -166,7 +167,7 @@ export class PatternRenderer {
   }
 
   private renderTrackFooters(view: RenderPatternView) {
-    this.ctx.font = this.trackHeaderFont;
+    this.withFont(this.trackHeaderFont);
     let x = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackFooter(view, x, track, view.trackMuteState[track]);
@@ -177,7 +178,7 @@ export class PatternRenderer {
     const y = this.layout.trackHeaderHeight
       + this.gridViewportFit.playheadLocationOnScreen * this.layout.rowHeight;
     this.withFillStyle(this.colours().playheadBackground)
-      .fillRect(0, y + this.layout.playheadPadding, this.viewportSize.width, this.layout.rowHeight);
+      .fillRect(0, y, this.viewportSize.width, this.layout.rowHeight + this.layout.playheadPadding * 2);
   }
 
   private renderSelection(view: RenderPatternView) {
@@ -213,20 +214,20 @@ export class PatternRenderer {
   }
 
   private renderNonEditCursor(x: number, y: number, cursorTrack: number) {
-    this.withStrokeStyle(this.colours().playheadBackground).withLineWidth(2).strokeRect(
-      x - 1,
-      y - 1,
-      2 + this.layout.getEventWidth(cursorTrack) - (this.layout.glyphWidth * 2),
-      2 + this.layout.rowHeight
+    this.withFillStyle(this.colours().cursorNonEdit).fillRect(
+      x - this.layout.glyphWidth + 1,
+      y - this.layout.playheadPadding,
+      this.layout.getEventWidth(cursorTrack) - 2,
+      this.layout.rowHeight + this.layout.playheadPadding * 2
     );
   }
 
   private renderEditCursor(x: number, y: number, cursorTrack: number) {
     this.withStrokeStyle(this.colours().cursor).withLineWidth(2).strokeRect(
-      x - 1,
-      y - 1,
-      2 + this.layout.getEventWidth(cursorTrack) - (this.layout.glyphWidth * 2),
-      2 + this.layout.rowHeight
+      x - this.layout.glyphWidth + 1,
+      y - this.layout.playheadPadding,
+      this.layout.getEventWidth(cursorTrack) - 2,
+      this.layout.rowHeight + this.layout.playheadPadding * 2
     );
     let cursorX = this.layout.leftPadding + x - this.layout.glyphWidth;
     let cursorWidth = this.layout.glyphWidth;
@@ -250,7 +251,7 @@ export class PatternRenderer {
   }
 
   private renderPatternLines(view: RenderPatternView) {
-    this.ctx.font = this.patternDataFont;
+    this.withFont(this.patternDataFont);
     let y = this.layout.trackHeaderHeight;
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = view.playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
@@ -264,9 +265,16 @@ export class PatternRenderer {
   }
 
   private renderRowNumberLane(): number {
-    const laneWidth = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
-    this.withStrokeStyle(this.colours().trackLaneSeparator).withLineWidth(1)
-      .renderLine(laneWidth, 0, laneWidth, this.viewportSize.height);
+    const laneWidth =
+      this.layout.leftPadding +
+      this.layout.rowNumberWidth -
+      this.layout.glyphWidth;
+    this.withStrokeStyle(this.colours().trackLaneSeparator)
+      .withLineWidth(1)
+      .strokePath([
+        { x: laneWidth, y: 0 },
+        { x: laneWidth, y: this.viewportSize.height },
+      ]);
     return laneWidth;
   }
 
@@ -274,8 +282,12 @@ export class PatternRenderer {
     const trackWidth = this.layout.getEventWidth(track);
     if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
       return 0;
-    this.withStrokeStyle(this.colours().trackLaneSeparator).withLineWidth(1)
-      .renderLine(trackX + trackWidth, 0, trackX + trackWidth, this.viewportSize.height);
+    this.withStrokeStyle(this.colours().trackLaneSeparator)
+      .withLineWidth(1)
+      .strokePath([
+        { x: trackX + trackWidth, y: 0 },
+        { x: trackX + trackWidth, y: this.viewportSize.height },
+      ]);
     return trackWidth;
   }
 
@@ -303,70 +315,61 @@ export class PatternRenderer {
     const trackWidth = this.layout.getEventWidth(track);
     if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
       return 0;
-    this.withFillStyle(bgColour)
-      .fillRect(trackX + 1, this.layout.viewportSize.height - this.layout.trackFooterHeight, trackWidth - 2, this.layout.trackFooterHeight);
-    this.withFillStyle(fgColour).renderGlyph(
-      "L",
-      trackX + this.layout.glyphWidth,
-      this.layout.viewportSize.height - this.layout.trackFooterHeight + 2,
-    );
-    this.withFillStyle(fgColour).renderGlyph(
-      "R",
-      trackX + trackWidth - this.layout.glyphWidth * 2 + 1,
-      this.layout.viewportSize.height - this.layout.trackFooterHeight + 2,
-    );
     const centreX = trackX - 1 + trackWidth / 2;
     const sliderThrow = (trackWidth - this.layout.glyphWidth * 5) / 2;
-    this.ctx.lineWidth = 1;
-    this.withStrokeStyle(fgColour);
-    this.ctx.beginPath();
-    this.ctx.moveTo(centreX - sliderThrow, this.layout.viewportSize.height - this.layout.trackFooterHeight / 2);
-    this.ctx.lineTo(centreX + sliderThrow, this.layout.viewportSize.height - this.layout.trackFooterHeight / 2);
-    this.ctx.closePath();
-    this.ctx.stroke();
-    this.ctx.beginPath();
-    this.ctx.moveTo(centreX, this.layout.viewportSize.height - this.layout.trackFooterHeight + 4);
-    this.ctx.lineTo(centreX, this.layout.viewportSize.height - 4);
-    this.ctx.closePath();
-    this.ctx.stroke();
     const trackPanning =
       track >= 0 && track < view.trackPanning.length
         ? view.trackPanning[track] - 128
         : 0;
     const deflection = sliderThrow * trackPanning / 127;
-    this.ctx.beginPath();
-    this.ctx.arc(centreX + deflection, this.layout.viewportSize.height - this.layout.trackFooterHeight / 2, 5, 0, FULL_CIRCLE);
-    this.ctx.fill();
+    this.withFillStyle(bgColour)
+      .fillRect(trackX + 1, this.layout.viewportSize.height - this.layout.trackFooterHeight, trackWidth - 2, this.layout.trackFooterHeight);
+    this.withStrokeStyle(fgColour).withLineWidth(1)
+      .strokePath([
+        {x: centreX - sliderThrow, y: this.layout.viewportSize.height - this.layout.trackFooterHeight / 2},
+        {x: centreX + sliderThrow, y: this.layout.viewportSize.height - this.layout.trackFooterHeight / 2},
+      ])
+      .strokePath([
+        {x: centreX, y: this.layout.viewportSize.height - this.layout.trackFooterHeight + 4},
+        {x: centreX, y: this.layout.viewportSize.height - 4},
+      ]);
+    this.withFillStyle(fgColour)
+      .renderGlyph(
+        "L",
+        trackX + this.layout.glyphWidth,
+        this.layout.viewportSize.height - this.layout.trackFooterHeight + 2,
+      )
+      .renderGlyph(
+        "R",
+        trackX + trackWidth - this.layout.glyphWidth * 2 + 1,
+        this.layout.viewportSize.height - this.layout.trackFooterHeight + 2,
+      )
+      .fillCircle(centreX + deflection, this.layout.viewportSize.height - this.layout.trackFooterHeight / 2, 5);
     return trackWidth;
   }
 
   private renderMutedIcon(x: number, y: number) {
-    this.ctx.lineWidth = 1;
-    this.withStrokeStyle(this.colours().trackHeaderMutedFg);
-    this.ctx.beginPath();
-    this.ctx.moveTo(x, y + 2);
-    this.ctx.lineTo(x + 10, y + 12);
-    this.ctx.closePath();
-    this.ctx.stroke();
-    this.ctx.beginPath();
-    this.ctx.moveTo(x + 10, y + 2);
-    this.ctx.lineTo(x, y + 12);
-    this.ctx.closePath();
-    this.ctx.stroke();
+    this.withStrokeStyle(this.colours().trackHeaderMutedFg).withLineWidth(2)
+      .strokePath([
+        {x: x, y: y + 2},
+        {x: x + 10, y: y + 12},
+      ])
+      .strokePath([
+        {x: x + 10, y: y + 2},
+        {x: x, y: y + 12},
+      ])
   }
 
   private renderNotMutedIcon(x: number, y: number) {
-    this.withStrokeStyle(this.colours().trackHeaderNotMutedFg);
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-    this.ctx.moveTo(x, y + 2);
-    this.ctx.lineTo(x + 4, y + 5);
-    this.ctx.lineTo(x + 8, y + 5);
-    this.ctx.lineTo(x + 8, y + 10);
-    this.ctx.lineTo(x + 4, y + 10);
-    this.ctx.lineTo(x, y + 13);
-    this.ctx.closePath();
-    this.ctx.stroke();
+    this.withStrokeStyle(this.colours().trackHeaderNotMutedFg).withLineWidth(1)
+      .strokePath([
+        {x: x, y: y + 2},
+        {x: x + 4, y: y + 5},
+        {x: x + 8, y: y + 5},
+        {x: x + 8, y: y + 10},
+        {x: x + 4, y: y + 10},
+        {x: x, y: y + 13},
+      ]);
   }
 
   private renderPatternLine(view: RenderPatternView, line: PatternLine | null, y: number, atPlayhead: boolean): number {
@@ -489,6 +492,11 @@ export class PatternRenderer {
     return atPlayhead ? this.coloursAtPlayhead : this.coloursOffPlayhead;
   }
 
+  private withFont(font: string): PatternRenderer {
+    this.ctx.font = font;
+    return this;
+  }
+
   private withFillStyle(fillStyle: string): PatternRenderer {
     this.ctx.fillStyle = fillStyle;
     return this;
@@ -514,11 +522,21 @@ export class PatternRenderer {
     return this;
   }
 
-  private renderLine(startX: number, startY: number, endX: number, endY: number): PatternRenderer {
+  private strokePath(points: { x: number, y: number }[]): PatternRenderer {
     this.ctx.beginPath();
-    this.ctx.moveTo(startX, startY);
-    this.ctx.lineTo(endX, endY);
+    this.ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      this.ctx.lineTo(points[i].x, points[i].y);
+    }
+    this.ctx.closePath();
     this.ctx.stroke();
+    return this;
+  }
+
+  private fillCircle(x: number, y: number, radius: number): PatternRenderer {
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, FULL_CIRCLE);
+    this.ctx.fill();
     return this;
   }
 

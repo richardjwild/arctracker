@@ -121,6 +121,8 @@ const keyBindings = new Map<string, KeyBinding[]>([
       },
     ],
   ],
+  [ "Comma", [{ modifiers: "secondary", execute: commands.shiftKeyboardOctaveDown }] ],
+  [ "Period", [{ modifiers: "secondary", execute: commands.shiftKeyboardOctaveUp }] ],
   [
     "BracketRight",
     [{ modifiers: "secondary", execute: commands.increaseEffectsDisplayed }],

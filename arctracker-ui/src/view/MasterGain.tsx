@@ -8,10 +8,6 @@ import {
   VuMeterRenderer,
 } from "../rendering/renderVuMeters.ts";
 
-function toText(value: number) {
-  return `${Math.round(value * 100)}%`;
-}
-
 function cssColour(name: string): string {
   return getComputedStyle(document.documentElement)
     .getPropertyValue(name)
@@ -63,7 +59,7 @@ export default function MasterGain() {
         value={masterGain}
         onChange={(e) => updateMasterGain(Number(e.target.value))}
       />
-      <span className="gainValue">{toText(masterGain)}</span>
+      <span className="gainValue">{Math.round(masterGain * 100) + "%"}</span>
       <canvas
         className="vuMeter"
         ref={canvasRef}

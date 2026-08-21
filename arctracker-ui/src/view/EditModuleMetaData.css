@@ -61,10 +61,6 @@
     accent-color: var(--colour-sample-edit-input-text);
 }
 
-.editModuleTitle input[type='radio'] {
-    accent-color: var(--colour-radio-button-selected);
-}
-
 .interpolationTypeEdit {
     display: flex;
     flex-direction: row;
@@ -74,7 +70,7 @@
 
 .interpolationTypeEdit label {
     display: inline;
-    font-family: SplineSansMono, monospace;
+    font-family: sans-serif;
     font-size: 16px;
     color: var(--colour-sample-edit-input-text);
     margin-bottom: 11px;

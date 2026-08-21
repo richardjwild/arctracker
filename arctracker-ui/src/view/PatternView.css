@@ -3,7 +3,6 @@
     min-height: 0;
     overflow: hidden;
     padding: 0;
-    border-bottom-left-radius: 10px;
 }
 
 .patternView canvas {
