@@ -104,11 +104,11 @@ api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, ui_audio
 static api_result_t use_output(arctracker_t *arctracker, audio_api_t audio_api)
 {
     arctracker->playback_audio_api = audio_api;
-    sequence_t sequence = {0};
+    player_restore_state_t player_state = {0};
     bool restore = false;
     if (arctracker->playback.thread_active)
     {
-        sequence = arctracker->playback.player->sequence;
+        player_state = player_get_restore_state(arctracker->playback.player);
         restore = true;
         const api_result_t result = arctracker_player_shutdown(arctracker);
         if (!result.success)
@@ -116,7 +116,7 @@ static api_result_t use_output(arctracker_t *arctracker, audio_api_t audio_api)
     }
     const api_result_t result =  arctracker_player_start(arctracker);
     if (restore && result.success)
-        player_sequence_restore(arctracker->playback.player, sequence);
+        player_restore_state(arctracker->playback.player, player_state);
     return result;
 }
 
@@ -801,11 +801,11 @@ api_result_t arctracker_edit_set_module_meta_data(
     if (interpolation_type_changed)
     {
         api_result_t player_result = SUCCESS;
-        sequence_t sequence = {0};
+        player_restore_state_t player_state = {0};
         bool restore = false;
         if (arctracker->playback.thread_active)
         {
-            sequence = arctracker->playback.player->sequence;
+            player_state = player_get_restore_state(arctracker->playback.player);
             restore = true;
             player_result = arctracker_player_shutdown(arctracker);
         }
@@ -814,7 +814,7 @@ api_result_t arctracker_edit_set_module_meta_data(
         arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
         player_result = arctracker_player_start(arctracker);
         if (restore && player_result.success)
-            player_sequence_restore(arctracker->playback.player, sequence);
+            player_restore_state(arctracker->playback.player, player_state);
         return player_result;
     }
     return SUCCESS;
@@ -830,14 +830,14 @@ api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int 
         return failure(PLAYER_PLAYING);
     if (num_tracks < 1 || num_tracks > MAX_TRACKS)
         return failure(INVALID_TRACK_COUNT);
-    const sequence_t sequence = arctracker->playback.player->sequence;
+    const player_restore_state_t player_state = player_get_restore_state(arctracker->playback.player);
     if (arctracker->playback.thread_active)
         arctracker_player_shutdown(arctracker);
     const edit_result_t edit_result = editor_set_num_tracks(arctracker->module, num_tracks);
     if (!edit_result.success)
         return failure(edit_result.error_message);
     api_result_t restart_result = arctracker_player_start(arctracker);
-    player_sequence_restore(arctracker->playback.player, sequence);
+    player_restore_state(arctracker->playback.player, player_state);
     if (!restart_result.success)
         return failure(restart_result.error_message);
     return SUCCESS;

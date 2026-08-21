@@ -39,6 +39,11 @@ typedef struct player {
     const char *error_message;
 } player_t;
 
+typedef struct {
+    sequence_t sequence;
+    tick_scheduler_t tick_scheduler;
+} player_restore_state_t;
+
 player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue);
 
 bool player_run(player_t *);
@@ -49,7 +54,9 @@ void player_shutdown(player_t *);
 
 void player_sequence_changed(player_t *, const module_t *);
 
-void player_sequence_restore(player_t *player, sequence_t sequence);
+player_restore_state_t player_get_restore_state(const player_t *);
+
+void player_restore_state(player_t *player, player_restore_state_t state);
 
 void player_destroy(player_t *);
 

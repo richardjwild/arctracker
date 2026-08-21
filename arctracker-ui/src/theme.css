@@ -60,12 +60,16 @@
     --colour-track-header-not-muted-bg: #aaaaaa;
     --colour-track-footer-muted-fg: #444444;
     --colour-track-footer-muted-bg: #1c1c1c;
-    --colour-track-footer-not-muted-fg: #aaaaaa;
-    --colour-track-footer-not-muted-bg: #1c1c1c;
-    --font-track-header: 12px SplineSansMono, monospace;
+    --colour-track-footer-pan-guide: #555555;
+    --colour-track-footer-pan-marker: #ff7733;
+    --colour-track-footer-left-label: #777777;
+    --colour-track-footer-right-label: #777777;
+    --colour-track-footer-not-muted-bg: #282828;
+    --font-track-header: bold 12px SplineSansMono, monospace;
     --font-pattern-data: bold 16px SplineSansMono, monospace;
     --colour-keyboard-octave-button-fg: #cccc22;
-    --colour-piano-key-white: #cccccc;
+    --colour-piano-key-white-not-selected: #888888;
+    --colour-piano-key-white-selected: #cccccc;
     --colour-piano-key-black: #111111;
-    --colour-piano-octave-highlight: red;
+    --colour-user-message: #999999;
 }

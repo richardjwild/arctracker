@@ -156,7 +156,7 @@ static void arpeggiate(voice_t *voice, const uint8_t data)
             voice->current_note + LOW_NYBBLE(data)
     };
     int arpeggio_note = chord[voice->arpeggio_counter % 3];
-    if (NOTE_OUT_OF_RANGE(arpeggio_note))
+    if (note_out_of_range(arpeggio_note))
     {
         arpeggio_note = voice->current_note;
     }

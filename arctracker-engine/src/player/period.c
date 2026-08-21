@@ -1,4 +1,8 @@
 #include "period.h"
+
+#include <stdio.h>
+
+#include "messages.h"
 #include "io/error.h"
 
 static
@@ -10,13 +14,15 @@ const int periods[] = {
         0x006B, 0x0065, 0x005F, 0x005A, 0x0055, 0x0050, 0x004C, 0x0047, 0x0043, 0x0040, 0x003C, 0x0039,
         0x0035, 0x0032};
 
-int period_for_note(int note)
+bool note_out_of_range(const int note)
 {
-    if (NOTE_OUT_OF_RANGE(note))
-    {
-        error("Note out of range");
-        return 0;
-    }
-    else
-        return periods[note];
+    const bool out_of_range = note < LOWEST_NOTE || note > HIGHEST_NOTE;
+    if (out_of_range) fprintf(stderr, "note out of range: %d\n", note);
+    return out_of_range;
+}
+
+int period_for_note(const int note)
+{
+    if (note_out_of_range(note)) return 0;
+    return periods[note];
 }

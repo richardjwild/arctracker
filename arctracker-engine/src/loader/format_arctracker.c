@@ -535,7 +535,7 @@ static event_t read_pattern_event(const uint8_t *data)
     event_t event = {0};
     const uint8_t instrument_no = read_u8(data);
     const uint8_t note = read_u8(data + 1);
-    if (!NOTE_OUT_OF_RANGE(note)) event.note = note;
+    if (!note_out_of_range(note)) event.note = note;
     event.instrument_no = instrument_no;
     for (int effect = 0; effect < 4; effect++)
     {

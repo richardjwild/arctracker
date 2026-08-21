@@ -10,6 +10,17 @@ function cssProperty(name: string): string {
     .trim();
 }
 
+const CanvasWidth = 210;
+const CanvasHeight = 50;
+const KeyboardTop = 10;
+const WhiteKeySpacing = 6;
+const WhiteKeyWidth = WhiteKeySpacing - 1;
+const WhiteKeyHeight = 30;
+const BlackKeyOffset = 3.5;
+const BlackKeyWidth = 4;
+const BlackKeyHeight = 20;
+const OctaveWidth = WhiteKeySpacing * 7;
+
 export default function KeyboardOctave() {
   const ArrowLeftIcon = () => (
     <svg
@@ -36,44 +47,52 @@ export default function KeyboardOctave() {
   );
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const GraphicWidth = 210;
-  const GraphicHeight = 50;
   const pianoKeyboardTranspose = useStore(
     (state) => state.pianoKeyboardTranspose,
   );
   const currentOctave = (pianoKeyboardTranspose - 1) / 12;
-  const whiteKeyColor = cssProperty("--colour-piano-key-white");
+  const whiteKeySelectedColor = cssProperty(
+    "--colour-piano-key-white-selected",
+  );
+  const whiteKeyNotSelectedColor = cssProperty(
+    "--colour-piano-key-white-not-selected",
+  );
   const blackKeyColor = cssProperty("--colour-piano-key-black");
-  const octaveHighlight = cssProperty("--colour-piano-octave-highlight");
 
-  const renderOctave = (ctx: CanvasRenderingContext2D, x: number) => {
-    ctx.fillStyle = whiteKeyColor;
+  const isSelected = (octave: number) =>
+    octave === currentOctave || octave === currentOctave + 1;
+
+  const renderOctave = (ctx: CanvasRenderingContext2D, octave: number) => {
+    ctx.fillStyle = isSelected(octave)
+      ? whiteKeySelectedColor
+      : whiteKeyNotSelectedColor;
+    const x = octave * OctaveWidth;
     for (let whiteNote = 0; whiteNote < 7; whiteNote++) {
-      ctx.fillRect(x + whiteNote * 6, 10, 5, GraphicHeight - 20);
+      ctx.fillRect(
+        x + whiteNote * WhiteKeySpacing,
+        KeyboardTop,
+        WhiteKeyWidth,
+        WhiteKeyHeight,
+      );
     }
     ctx.fillStyle = blackKeyColor;
-    ctx.fillRect(x + 3.5, 10, 4, GraphicHeight - 30);
-    ctx.fillRect(x + 9.5, 10, 4, GraphicHeight - 30);
-    ctx.fillRect(x + 21.5, 10, 4, GraphicHeight - 30);
-    ctx.fillRect(x + 27.5, 10, 4, GraphicHeight - 30);
-    ctx.fillRect(x + 33.5, 10, 4, GraphicHeight - 30);
-  }
-
-  const renderOctaveHighlight = (ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = octaveHighlight;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1 + currentOctave * 42, 9, 82, GraphicHeight - 18);
-  }
+    [0, 1, 3, 4, 5].forEach((blackNote) =>
+      ctx.fillRect(
+        x + BlackKeyOffset + blackNote * WhiteKeySpacing,
+        KeyboardTop,
+        BlackKeyWidth,
+        BlackKeyHeight,
+      ),
+    );
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.clearRect(0, 0, GraphicWidth, GraphicHeight);
-    for (let octave = 0; octave < 5; octave++)
-      renderOctave(ctx, octave * 42);
-    renderOctaveHighlight(ctx);
+    ctx.clearRect(0, 0, CanvasWidth, CanvasHeight);
+    for (let octave = 0; octave < 5; octave++) renderOctave(ctx, octave);
   }, [currentOctave]);
 
   return (
@@ -89,8 +108,8 @@ export default function KeyboardOctave() {
         <canvas
           className="keyboardGraphic"
           ref={canvasRef}
-          width={GraphicWidth}
-          height={GraphicHeight}
+          width={CanvasWidth}
+          height={CanvasHeight}
         ></canvas>
         <button
           type="button"

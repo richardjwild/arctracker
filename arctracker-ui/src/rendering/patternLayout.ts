@@ -48,7 +48,7 @@ export const patternLayout = {
       glyphWidth,
       rowHeight: glyphHeight,
       trackHeaderHeight: glyphHeight + 1,
-      trackFooterHeight: glyphHeight + 1,
+      trackFooterHeight: glyphHeight + 5,
       playheadPadding: 2,
       rowNumberWidth: glyphWidth * 5,
       getEventWidth: (track: number) =>

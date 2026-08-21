@@ -46,7 +46,10 @@ export type Colours = {
   trackHeaderNotMutedBg: string;
   trackFooterMutedFg: string;
   trackFooterMutedBg: string;
-  trackFooterNotMutedFg: string;
+  trackFooterPanGuide: string;
+  trackFooterLeftLabel: string;
+  trackFooterRightLabel: string;
+  trackFooterPanMarker: string;
   trackFooterNotMutedBg: string;
   playheadBackground: string;
   text: string;
@@ -310,8 +313,6 @@ export class PatternRenderer {
   }
 
   private renderTrackFooter(view: RenderPatternView, trackX: number, track: number, muted: boolean): number {
-    const fgColour = muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterNotMutedFg;
-    const bgColour = muted ? this.colours().trackFooterMutedBg : this.colours().trackFooterNotMutedBg;
     const trackWidth = this.layout.getEventWidth(track);
     if (track < this.gridViewportFit.firstVisibleTrack || track > this.gridViewportFit.lastVisibleTrack)
       return 0;
@@ -322,28 +323,30 @@ export class PatternRenderer {
         ? view.trackPanning[track] - 128
         : 0;
     const deflection = sliderThrow * trackPanning / 127;
-    this.withFillStyle(bgColour)
+    this.withFillStyle(muted ? this.colours().trackFooterMutedBg : this.colours().trackFooterNotMutedBg)
       .fillRect(trackX + 1, this.layout.viewportSize.height - this.layout.trackFooterHeight, trackWidth - 2, this.layout.trackFooterHeight);
-    this.withStrokeStyle(fgColour).withLineWidth(1)
+    this.withStrokeStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterPanGuide).withLineWidth(1)
       .strokePath([
         {x: centreX - sliderThrow, y: this.layout.viewportSize.height - this.layout.trackFooterHeight / 2},
         {x: centreX + sliderThrow, y: this.layout.viewportSize.height - this.layout.trackFooterHeight / 2},
       ])
       .strokePath([
-        {x: centreX, y: this.layout.viewportSize.height - this.layout.trackFooterHeight + 4},
-        {x: centreX, y: this.layout.viewportSize.height - 4},
+        {x: centreX, y: this.layout.viewportSize.height - this.layout.trackFooterHeight + 5},
+        {x: centreX, y: this.layout.viewportSize.height - 5},
       ]);
-    this.withFillStyle(fgColour)
+    this.withFillStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterLeftLabel)
       .renderGlyph(
         "L",
         trackX + this.layout.glyphWidth,
-        this.layout.viewportSize.height - this.layout.trackFooterHeight + 2,
-      )
+        this.layout.viewportSize.height - this.layout.trackFooterHeight + 4,
+      );
+    this.withFillStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterRightLabel)
       .renderGlyph(
         "R",
         trackX + trackWidth - this.layout.glyphWidth * 2 + 1,
-        this.layout.viewportSize.height - this.layout.trackFooterHeight + 2,
-      )
+        this.layout.viewportSize.height - this.layout.trackFooterHeight + 4,
+      );
+    this.withFillStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterPanMarker)
       .fillCircle(centreX + deflection, this.layout.viewportSize.height - this.layout.trackFooterHeight / 2, 5);
     return trackWidth;
   }
@@ -376,20 +379,21 @@ export class PatternRenderer {
     if (line) {
       const rowNumber = Number(line.row).toString().padStart(3, " ");
       const eventY = atPlayhead ? y + this.layout.playheadPadding : y;
-      let x = this.layout.leftPadding;
-      x += this.renderRowNumber(rowNumber, x, eventY, atPlayhead);
+      let x = this.layout.leftPadding + this.layout.rowNumberWidth;
       let track = 0;
       for (const event of line.events) {
         x += this.renderEvent(view, track, event, x, eventY, atPlayhead);
         track++;
       }
+      this.renderRowNumber(rowNumber, eventY, atPlayhead);
     }
     return atPlayhead
       ? this.layout.rowHeight + 2 * this.layout.playheadPadding
       : this.layout.rowHeight;
   }
 
-  private renderRowNumber(rowNumber: string, x: number, y: number, atPlayhead: boolean): number {
+  private renderRowNumber(rowNumber: string, y: number, atPlayhead: boolean): number {
+    const x = this.layout.leftPadding;
     this.withFillStyle(this.colours(atPlayhead).text)
       .renderGlyph(rowNumber.charAt(0), x, y)
       .renderGlyph(rowNumber.charAt(1), x + this.layout.glyphWidth, y)

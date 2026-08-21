@@ -112,9 +112,18 @@ void player_sequence_changed(player_t *player, const module_t *module)
     player->sequence = reinitialise_sequence(module, &player->sequence, false);
 }
 
-void player_sequence_restore(player_t *player, const sequence_t sequence)
+player_restore_state_t player_get_restore_state(const player_t *player)
 {
-    player->sequence = sequence;
+    return (player_restore_state_t) {
+        .sequence = player->sequence,
+        .tick_scheduler = player->tick_scheduler,
+    };
+}
+
+void player_restore_state(player_t *player, const player_restore_state_t state)
+{
+    player->sequence = state.sequence;
+    player->tick_scheduler = state.tick_scheduler;
 }
 
 void player_destroy(player_t *player)
