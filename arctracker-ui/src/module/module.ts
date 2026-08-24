@@ -10,9 +10,10 @@ import { alerting } from "../alerting/alert.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { Instrument } from "../editing/editInstrument.ts";
-import { message } from "../language/messages.ts";
+import { message, messageFn } from "../language/messages.ts";
 import { appConfig } from "../config/appConfig.ts";
 import { InterpolationType } from "../editing/moduleMetaData.ts";
+import { userMessages } from "../messages/userMessages.ts";
 
 export type Module = {
   fileName: string | null;
@@ -71,6 +72,10 @@ export const module = {
         if (module) {
           module.fileName = selected;
           replaceModule(module);
+          userMessages.logMessage({
+            type: "info",
+            message: messageFn("moduleLoadedSuccessfully")(module.fileName),
+          });
         }
       }
       return true;
@@ -91,6 +96,10 @@ export const module = {
       try {
         await engine.saveModule(module.fileName, FormatArctracker);
         editor.allChangesSaved();
+        userMessages.logMessage({
+          type: "info",
+          message: messageFn("moduleSavedSuccessfully")(module.fileName),
+        });
       } catch (err) {
         void alerting.showError(err as string);
       }
@@ -115,6 +124,10 @@ export const module = {
       await engine.saveModule(filePath, FormatArctracker);
       useStore.getState().setModuleFilename(filePath);
       editor.allChangesSaved();
+      userMessages.logMessage({
+        type: "info",
+        message: messageFn("moduleSavedSuccessfully")(filePath),
+      });
     } catch (err) {
       void alerting.showError(err as string);
     }
@@ -137,6 +150,10 @@ export const module = {
       if (newModule) {
         useStore.getState().replaceModule(newModule);
         editor.newModuleLoaded();
+        userMessages.logMessage({
+          type: "info",
+          message: message("moduleCreatedSuccessfully"),
+        });
       }
       return true;
     } catch (err) {
@@ -158,6 +175,7 @@ export const module = {
           return true;
         },
         undo: async () => {
+          // TODO: Don't clear the new tracks if the undo operation increases the track count.
           await engine.setNumTracks(currentTracks);
           useStore.getState().updateTracks(currentTracks);
         },

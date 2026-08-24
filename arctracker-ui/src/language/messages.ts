@@ -68,7 +68,6 @@ const messages = {
     setTempoButtonLabel: "Set tempo",
     saveButtonLabel: "Save",
     cancelButtonLabel: "Cancel",
-    failedToLoadConfig: "Failed to load config",
     outputDeviceLabel: "Audio Output Device:",
     midiInputDeviceLabel: "MIDI Input Device:",
     defaultOutputDevice: "Default",
@@ -82,6 +81,9 @@ const messages = {
     no: "No",
     shiftKeyboardOctaveDown: "Shift keyboard 1 octave down",
     shiftKeyboardOctaveUp: "Shift keyboard 1 octave up",
+    moduleCreatedSuccessfully: "Module created successfully.",
+    audioExportComplete: "Audio export completed successfully.",
+    welcomeMessage: "Welcome to Arctracker!",
   },
 } as const;
 
@@ -89,8 +91,22 @@ const messageFns = {
   en: {
     instrumentTitle: (p: string) => `Instrument ${p}`,
     jumpToSequencePositionHintText: (p: string) => `Jump to position ${p}`,
+    moduleLoadedSuccessfully: (p: string) => `Modfile ${p} loaded successfully.`,
+    moduleSavedSuccessfully: (p: string) => `Modfile ${p} saved successfully.`,
     audioSubsystemFailure: (p: string) => `Audio subsystem failure. Error details: ${p}`,
     errorSavingConfig: (p: string) => `Error saving config: ${p}`,
+    failedToLoadConfig: (p: string) => `Failed to load config. Error details: ${p}`,
+    audioSystemError: (p: string) => `Audio subsystem encountered error and will attempt restart. Error details: ${p}`,
+    menuListenersFailed: (p: string) => `Failed to install menu listeners. Error details: ${p}`,
+    copiedEvents: (p: string) => p === "1" ? "Copied 1 event to clipboard." : `Copied ${p} events to clipboard.`,
+    copiedPattern: (p: string) => `Copied pattern ${p} to clipboard.`,
+  },
+} as const;
+
+const messageFns2 = {
+  en: {
+    menuActionFailed: (eventId: string, errorMessage: string) => `Menu action failed: ${eventId}. Error details: ${errorMessage}`,
+    copiedTrack: (trackIndex: string, patternNo: string) => `Copied pattern ${patternNo} track ${trackIndex} to clipboard.`,
   },
 } as const;
 
@@ -104,4 +120,10 @@ export function messageFn(
   key: keyof typeof messageFns.en,
 ): (p: string) => string {
   return messageFns[currentLanguage][key];
+}
+
+export function messageFn2(
+  key: keyof typeof messageFns2.en,
+): (p1: string, p2: string) => string {
+  return messageFns2[currentLanguage][key];
 }

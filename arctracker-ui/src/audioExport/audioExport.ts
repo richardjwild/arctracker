@@ -6,6 +6,7 @@ import {
 } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
+import { userMessages } from "../messages/userMessages.ts";
 
 export type ExportState = {
   completed: boolean;
@@ -33,6 +34,10 @@ export const audioExport = {
     setExportMonitoring(true);
     try {
       await engine.exportAudio(filePath);
+      userMessages.logMessage({
+        type: "info",
+        message: message("audioExportComplete"),
+      });
     } catch (err) {
       setExportMonitoring(false);
       await alerting.showError(err as string);

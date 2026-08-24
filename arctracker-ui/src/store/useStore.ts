@@ -9,6 +9,7 @@ import { Module } from "../module/module.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
 import { ModuleTempo } from "../editing/tempo.ts";
 import { DraftAppConfig } from "../config/appConfig.ts";
+import { UserMessage } from "../messages/userMessages.ts";
 
 interface AppStore {
   moduleId: number;
@@ -33,6 +34,7 @@ interface AppStore {
   draftModuleMetaData: ModuleMetaData | null;
   draftTempo: ModuleTempo;
   isLoadingModule: boolean;
+  userMessages: UserMessage[];
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
@@ -61,6 +63,7 @@ interface AppStore {
   setCurrentPattern: (currentPattern: CurrentPattern) => void;
   setSelectedInstrument: (instrument: number) => void;
   setLoadingModule: (loading: boolean) => void;
+  logMessage: (message: UserMessage) => void;
 }
 
 const initialModule: Module = {
@@ -170,6 +173,7 @@ export const useStore = create<AppStore>((set) => ({
   draftModuleMetaData: null,
   draftTempo: { linesPerBeat: 0, beatsPerMinute: 0 },
   isLoadingModule: false,
+  userMessages: [],
 
   replaceModule: (result) => {
     set((state) => ({
@@ -367,5 +371,15 @@ export const useStore = create<AppStore>((set) => ({
   setLoadingModule: (isLoadingModule) =>
     set({
       isLoadingModule,
+    }),
+
+  logMessage: (message: UserMessage) =>
+    set((state) => {
+      const userMessages = [...state.userMessages];
+      userMessages.push(message);
+      return {
+        ...state,
+        userMessages,
+      }
     }),
 }));

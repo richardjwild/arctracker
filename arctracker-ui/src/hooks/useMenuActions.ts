@@ -1,6 +1,8 @@
 import { commands } from "../control/commands.ts";
 import { useEffect } from "react";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { userMessages } from "../messages/userMessages.ts";
+import { messageFn, messageFn2 } from "../language/messages.ts";
 
 type MenuAction = {
   eventId: string;
@@ -97,7 +99,10 @@ export function useMenuActions() {
       menuActions.map(async ({ eventId, action }) => {
         const unlisten = await listen(eventId, () => {
           void Promise.resolve(action()).catch((error) => {
-            console.error(`Menu action failed: ${eventId}`, error);
+            userMessages.logMessage({
+              type: "warning",
+              message: messageFn2("menuActionFailed")(eventId, error as string),
+            });
           });
         });
         if (disposed) {
@@ -107,7 +112,10 @@ export function useMenuActions() {
         }
       }),
     ).catch((error) => {
-      console.error("Failed to install menu listeners", error);
+      userMessages.logMessage({
+        type: "warning",
+        message: messageFn("menuListenersFailed")(error as string),
+      });
     });
     return () => {
       disposed = true;

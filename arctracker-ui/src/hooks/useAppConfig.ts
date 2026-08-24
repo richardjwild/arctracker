@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { appConfig } from "../config/appConfig.ts";
-import { message } from "../language/messages.ts";
+import { messageFn } from "../language/messages.ts";
+import { userMessages } from "../messages/userMessages.ts";
 
 let readConfig = false;
 
@@ -11,7 +12,10 @@ export default function useAppConfig() {
       .load()
       .then((config) => appConfig.apply(config))
       .catch((e) => {
-        console.error(message("failedToLoadConfig"), e as string);
+        userMessages.logMessage({
+          type: "warning",
+          message: messageFn("failedToLoadConfig")(e as string),
+        });
         appConfig.setToDefault();
       });
     readConfig = true;

@@ -3,6 +3,8 @@ import { useStore } from "../store/useStore.ts";
 import { AppPoller } from "../polling/poller.ts";
 import { commands } from "../control/commands.ts";
 import { PatternLine } from "../editing/patternEvents.ts";
+import { userMessages } from "../messages/userMessages.ts";
+import { messageFn } from "../language/messages.ts";
 
 export type Track = {
   muted: boolean;
@@ -31,9 +33,10 @@ export type PlayerEvent =
   | { eventType: "UserMidiNoteOn"; data: { midi_note: number } };
 
 function handlePlayerError(errorMessage: string) {
-  console.error(
-    `Audio subsystem encountered error and will attempt restart. Error details: ${errorMessage}`,
-  );
+  userMessages.logMessage({
+    type: "warning",
+    message: messageFn("audioSystemError")(errorMessage),
+  });
   void engine.startPlayer();
 }
 

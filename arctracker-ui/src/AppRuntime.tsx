@@ -8,6 +8,7 @@ import useAnimation from "./hooks/useAnimation.ts";
 import { useExitGuard } from "./hooks/useExitGuard.ts";
 import { useMenuActions } from "./hooks/useMenuActions.ts";
 import useAppConfig from "./hooks/useAppConfig.ts";
+import useWelcomeMessage from "./hooks/useWelcomeMessage.ts";
 
 interface AppRuntimeProps {
   children: React.ReactNode;
@@ -23,5 +24,6 @@ export default function AppRuntime({ children }: AppRuntimeProps) {
   useKeyboardInput();
   useAnimation();
   useAppConfig();
+  useWelcomeMessage();
   return <>{children}</>;
 }
