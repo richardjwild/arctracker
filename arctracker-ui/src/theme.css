@@ -65,7 +65,7 @@
     --colour-track-footer-left-label: #777777;
     --colour-track-footer-right-label: #777777;
     --colour-track-footer-not-muted-bg: #282828;
-    --font-track-header: bold 12px SplineSansMono, monospace;
+    --font-track-header: 12px SplineSansMono, monospace;
     --font-pattern-data: bold 16px SplineSansMono, monospace;
     --colour-keyboard-octave-button-fg: #cccc22;
     --colour-piano-key-white-not-selected: #888888;

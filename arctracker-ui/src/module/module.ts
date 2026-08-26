@@ -4,7 +4,7 @@ import {
   filePicker,
   ARCTRACKER_MODFILE_EXTENSION,
   DESKTOP_TRACKER_MODFILE_EXTENSION,
-  TRACKER_MODFILE_EXTENSION,
+  TRACKER_MODFILE_EXTENSION, SOUNDTRACKER_MODFILE_EXTENSION
 } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
 import { editor } from "../editing/editor.ts";
@@ -64,6 +64,7 @@ export const module = {
           ARCTRACKER_MODFILE_EXTENSION,
           TRACKER_MODFILE_EXTENSION,
           DESKTOP_TRACKER_MODFILE_EXTENSION,
+          SOUNDTRACKER_MODFILE_EXTENSION,
         ],
         message("moduleFileFilterDescription"),
       );

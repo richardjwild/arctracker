@@ -35,6 +35,7 @@ typedef enum
     FINE_CRESCENDO = 'E',
     FINE_DECRESCENDO = 'F',
     SEQUENCE_JUMP = 'J',
+    USE_SAMPLE_SLICE = 'O',
     SET_PANNING = 'P',
     SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
@@ -67,10 +68,12 @@ typedef struct {
     char name[MAX_LEN_SAMPLENAME];
     uint8_t default_volume;
     int transpose;
+    int8_t finetune;
     bool repeats;
     int repeat_offset;
     int repeat_length;
     int sample_index;
+    uint32_t slice_offsets[256];
 } instrument_t;
 
 typedef struct

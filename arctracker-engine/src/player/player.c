@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include "player.h"
+
+#include <math.h>
+
 #include "sequencer.h"
 #include "effects.h"
 #include "period.h"
@@ -9,6 +12,9 @@
 
 #define DEFAULT_TICKS_PER_SECOND 50
 
+static double fine_tuning[16] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+static void calculate_fine_tuning(void);
 static bool player_tick(player_t *);
 static void process_commands(player_t *player);
 static void process_command(player_t *player, player_command_t command);
@@ -64,6 +70,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     }
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true);
+    calculate_fine_tuning();
     return player;
 
 init_failed:
@@ -148,6 +155,12 @@ void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
         const tempo_t tempo = player->module->tempo_lookup[beats_per_minute];
         tick_scheduler_set_tempo(&player->tick_scheduler, tempo);
     }
+}
+
+static void calculate_fine_tuning(void)
+{
+    for (int finetune = -8; finetune < 8; finetune++)
+        fine_tuning[finetune + 8] = pow(2.0, -(double) finetune / 96.0);
 }
 
 static bool player_tick(player_t *player)
@@ -357,22 +370,46 @@ static void update_voices(player_t *player)
 
 static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
 {
-    const instrument_t instrument = player->module->instruments[event->instrument_no - 1];
-    if (event->note && instrument.assigned)
+    if (event->note)
     {
-        const sample_t *sample = player->module->samples + instrument.sample_index;
-        if (portamento(event))
-            voice->tone_portamento_target_period = period_for_note(event->note + instrument.transpose);
+        const int note = event->note - 1;
+        if (event->instrument_no)
+        {
+            const bool instrument_changed = voice->instrument_no != event->instrument_no;
+            voice->instrument_no = event->instrument_no;
+            const instrument_t instrument = player->module->instruments[event->instrument_no - 1];
+            if (!instrument.assigned)
+                voice->channel_playing = false;
+            else
+            {
+                const sample_t *sample = player->module->samples + instrument.sample_index;
+                if (!instrument_changed && portamento(event))
+                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->fine_tuning);
+                else
+                    note_on(note, &instrument, sample, voice);
+            }
+        }
         else
-            note_on(event->note, &instrument, sample, voice);
+        {
+            const instrument_t instrument = player->module->instruments[voice->instrument_no - 1];
+            if (!instrument.assigned)
+                voice->channel_playing = false;
+            else
+            {
+                const sample_t *sample = player->module->samples + instrument.sample_index;
+                if (portamento(event))
+                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->fine_tuning);
+                else
+                    note_on(note, &instrument, sample, voice);
+            }
+        }
     }
-    else if (event->note && !instrument.assigned)
+    else if (event->instrument_no)
     {
-        voice->channel_playing = false;
-    }
-    else if (event->instrument_no && instrument.assigned)
-    {
-        voice->volume = instrument.default_volume;
+        voice->instrument_no = event->instrument_no;
+        const instrument_t instrument = player->module->instruments[event->instrument_no - 1];
+        if (instrument.assigned)
+            voice->volume = instrument.default_volume;
     }
     reset_arpeggiator(voice);
     handle_effects_on_event(event, voice, player);
@@ -385,7 +422,8 @@ static void note_on(const int note, const instrument_t *instrument, const sample
     voice->phase_accumulator = 0.0f;
     voice->arpeggiator_on = false;
     voice->current_note = note + instrument->transpose;
-    voice->period = period_for_note(voice->current_note);
+    voice->fine_tuning = fine_tuning[instrument->finetune + 8];
+    voice->period = period_for_note(voice->current_note, voice->fine_tuning);
     voice->tone_portamento_target_period = voice->period;
     voice->volume = instrument->default_volume;
     voice->sample_repeats = instrument->repeats;

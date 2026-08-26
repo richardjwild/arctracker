@@ -5,6 +5,7 @@
 #include "loader.h"
 #include "format_arctracker.h"
 #include "format_desktop_tracker.h"
+#include "format_soundtracker.h"
 #include "format_tracker.h"
 #include "messages.h"
 #include "audio_file/wav.h"
@@ -12,7 +13,7 @@
 #include "memory/heap.h"
 
 #define MAX_FILE_PATH_LENGTH 4096
-#define NUM_FORMATS 3
+#define NUM_FORMATS 4
 #define FAILED_TO_READ_MODULE_FILE (load_module_result_t) {\
     .file_read = false,\
     .recognised_format = false,\
@@ -216,6 +217,7 @@ static format_t *known_formats(void)
     formats[0] = arctracker_format();
     formats[1] = tracker_format();
     formats[2] = desktop_tracker_format();
+    formats[3] = soundtracker_format();
     return formats;
 }
 

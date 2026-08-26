@@ -3,6 +3,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 export const TRACKER_MODFILE_EXTENSION = "musx";
 export const DESKTOP_TRACKER_MODFILE_EXTENSION = "dskt";
 export const ARCTRACKER_MODFILE_EXTENSION = "arctm";
+export const SOUNDTRACKER_MODFILE_EXTENSION = "mod";
 export const AUDIO_EXPORT_EXTENSION = "wav";
 
 export const filePicker = {

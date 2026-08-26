@@ -155,7 +155,7 @@ export const useStore = create<AppStore>((set) => ({
   sequenceRevision: 0,
   module: initialModule,
   sequence: [],
-  pianoKeyboardTranspose: 13,
+  pianoKeyboardTranspose: 12,
   patternGridStrideLength: 8,
   transportState: initialTransportState,
   editorState: initialEditorState(),

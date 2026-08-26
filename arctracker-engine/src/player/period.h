@@ -9,6 +9,6 @@ static const int HIGHEST_NOTE = 61;
 
 bool note_out_of_range(int note);
 
-int period_for_note(int note);
+int period_for_note(int note, double fine_tuning);
 
 #endif //ARCTRACKER_PERIOD_H

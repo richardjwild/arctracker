@@ -7,7 +7,9 @@
 typedef struct {
     float phase_accumulator;
     int period;
+    double fine_tuning;
     int tone_portamento_target_period;
+    int instrument_no;
     bool sample_repeats;
     int sample_end;
     int repeat_length;

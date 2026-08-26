@@ -57,7 +57,7 @@ void tick_scheduler_advance_tick(event_scheduler_t *event_scheduler)
     int ticks = event_scheduler->ticks;
     ticks += 1;
     if (ticks >= ticks_per_event)
-        ticks -= ticks_per_event;
+        ticks = 0;
     event_scheduler->ticks = ticks;
 }
 

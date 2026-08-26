@@ -50,7 +50,7 @@ export default function KeyboardOctave() {
   const pianoKeyboardTranspose = useStore(
     (state) => state.pianoKeyboardTranspose,
   );
-  const currentOctave = (pianoKeyboardTranspose - 1) / 12;
+  const currentOctave = pianoKeyboardTranspose / 12;
   const whiteKeySelectedColor = cssProperty(
     "--colour-piano-key-white-selected",
   );

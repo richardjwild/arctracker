@@ -1,0 +1,8 @@
+#ifndef ARCTRACKER_ENGINE_FORMAT_SOUNDTRACKER_H
+#define ARCTRACKER_ENGINE_FORMAT_SOUNDTRACKER_H
+
+#include "loader.h"
+
+format_t soundtracker_format(void);
+
+#endif //ARCTRACKER_ENGINE_FORMAT_SOUNDTRACKER_H

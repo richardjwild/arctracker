@@ -30,7 +30,7 @@ const messages = {
     defaultPatternLengthLabel: "Default Pattern Length:",
     interpolationTypeLabel: "Sample Interpolation:",
     arctrackerInterpolationType: "Arctracker (linear)",
-    archimedesInterpolationType: "Archimedes (none)",
+    archimedesInterpolationType: "Archimedes/Amiga (none)",
     trackCountLabel: "Number of Tracks:",
     moduleFileFilterDescription: "Arctracker Module Files",
     audioFileFilterDescription: "Audio Samples",

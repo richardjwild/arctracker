@@ -9,7 +9,6 @@
 
 static const int NO_JUMP = -1;
 
-static void begin_new_pattern(sequence_t *);
 static bool end_of_sequence(const sequence_t *);
 static void advance_sequence_position(sequence_t *);
 static bool end_of_pattern(const sequence_t *);
@@ -25,6 +24,7 @@ sequence_t initialise_sequence(const module_t *module, const bool bouncing)
         .looping_state = NOT_LOOPING,
         .pattern_index = 0,
         .jump_target = NO_JUMP,
+        .jump_pattern_index = 0,
         .sequence = module->sequence,
         .tune_length = module->sequence_length,
         .patterns = module->patterns,
@@ -57,10 +57,13 @@ void pattern_step(sequence_t *sequence)
         go_to_jump_target(sequence);
 }
 
-void set_jump_target(const int next_position, sequence_t *sequence)
+void set_jump_target(const int next_position, const int jump_pattern_index, sequence_t *sequence)
 {
     if (jump_permitted(next_position, sequence))
+    {
         sequence->jump_target = next_position;
+        sequence->jump_pattern_index = jump_pattern_index;
+    }
 }
 
 void set_pattern_loop(sequence_t *sequence)
@@ -78,14 +81,14 @@ void clear_pattern_loop(sequence_t *sequence)
     sequence->looping_state = NOT_LOOPING;
 }
 
-void break_to_next_position(sequence_t *sequence)
+void break_to_next_position(sequence_t *sequence, const int jump_pattern_index)
 {
     if (sequence->looping_state.looping)
     {
         sequence->looping_state.loop_pattern_end = sequence->pattern_index;
         return;
     }
-    set_jump_target(sequence->sequence_pos + 1, sequence);
+    set_jump_target(sequence->sequence_pos + 1, jump_pattern_index, sequence);
 }
 
 void sequence_seek(sequence_t *sequence, const int new_sequence_pos, const int new_pattern_pos)
@@ -104,17 +107,12 @@ static void advance_sequence_position(sequence_t *sequence)
         else
             sequence->song_ended = true;
     }
-    begin_new_pattern(sequence);
+    sequence->pattern_index = 0;
 }
 
 static bool end_of_sequence(const sequence_t *sequence)
 {
     return sequence->sequence_pos == sequence->tune_length;
-}
-
-static void begin_new_pattern(sequence_t *sequence)
-{
-    sequence->pattern_index = 0;
 }
 
 static void advance_pattern_event(sequence_t *sequence)
@@ -144,8 +142,9 @@ static bool end_of_loop(const sequence_t *sequence)
 static void go_to_jump_target(sequence_t *sequence)
 {
     sequence->sequence_pos = sequence->jump_target;
+    sequence->pattern_index = sequence->jump_pattern_index;
     sequence->jump_target = NO_JUMP;
-    begin_new_pattern(sequence);
+    sequence->jump_pattern_index = 0;
 }
 
 static bool jump_permitted(const int next_position, const sequence_t *sequence)

@@ -1,4 +1,7 @@
 #include "write_audio.h"
+
+#include <math.h>
+
 #include "mix.h"
 #include "resample.h"
 #include "memory/heap.h"
@@ -11,7 +14,7 @@
 static const float PAN_HARD_LEFT = 1.0f;
 static const float PAN_HARD_RIGHT = 255.0f;
 
-static void calculate_gain_curve(float *gain_curve);
+static void calculate_gain_curve(float *);
 static bool fill_audio_buffer(audio_out_t *, voice_t *, int);
 static void write_audio_for_channel(audio_out_t *, voice_t *, int, int);
 static bool mix_and_send(audio_out_t *);

@@ -150,7 +150,7 @@ static void handle_message(const double timestamp, const unsigned char *message,
                 .midi_note_on = (midi_note_on_command_t) {
                     .track = atomic_load(&midi->note_input.selected_channel),
                     .instrument_no = atomic_load(&midi->note_input.selected_instrument),
-                    .note = note - 47,
+                    .note = note - 48,
                     .velocity = velocity,
                 }
             }

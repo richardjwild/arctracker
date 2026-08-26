@@ -1,5 +1,6 @@
 #include "period.h"
 
+#include <math.h>
 #include <stdio.h>
 
 #include "messages.h"
@@ -16,13 +17,11 @@ const int periods[] = {
 
 bool note_out_of_range(const int note)
 {
-    const bool out_of_range = note < LOWEST_NOTE || note > HIGHEST_NOTE;
-    if (out_of_range) fprintf(stderr, "note out of range: %d\n", note);
-    return out_of_range;
+    return note < LOWEST_NOTE || note > HIGHEST_NOTE;
 }
 
-int period_for_note(const int note)
+int period_for_note(const int note, const double fine_tuning)
 {
     if (note_out_of_range(note)) return 0;
-    return periods[note];
+    return (int) lround(periods[note] * fine_tuning);
 }
