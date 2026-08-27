@@ -14,6 +14,7 @@ typedef struct {
 typedef struct {
     int ticks;
     int ticks_per_event;
+    int event_delay;
 } event_scheduler_t;
 
 typedef struct {

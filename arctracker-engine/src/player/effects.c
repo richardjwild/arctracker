@@ -1,4 +1,7 @@
 #include "effects.h"
+
+#include <stdio.h>
+
 #include "sequencer.h"
 #include "period.h"
 #include "memory/bits.h"
@@ -8,6 +11,7 @@ static const uint8_t PAN_CENTRE = 0x80;
 
 static void volume_slide_up(voice_t *, uint8_t);
 static void volume_slide_down(voice_t *, uint8_t);
+static void combined_volume_side(voice_t *, uint8_t);
 static void portamento_up(voice_t *, uint8_t);
 static void portamento_down(voice_t *, uint8_t);
 static void start_tone_portamento(voice_t *, int, uint8_t);
@@ -20,6 +24,8 @@ static void set_sample_offset(const player_t *, voice_t *, uint8_t);
 static void set_voice_panning(voice_t *, uint8_t);
 static void pattern_break(sequence_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
+static void delay_next_event(tick_scheduler_t *, uint8_t);
+static void silence_voice(const tick_scheduler_t *tick_scheduler, voice_t *voice, uint8_t data);
 static void portamento_fine(voice_t *, uint8_t);
 
 void reset_arpeggiator(voice_t *voice)
@@ -36,7 +42,7 @@ bool portamento(const event_t *event)
     const effect_t *effects = event->effects;
     for (int i = 0; i < 4; i++, effects++)
     {
-        if (effects->command == PORTAMENTO)
+        if (effects->command == PORTAMENTO || effects->command == PORTAMENTO_PLUS_VOLUME_SIDE)
             return true;
     }
     return false;
@@ -49,6 +55,11 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
         const effect_t effect = event->effects[effect_no];
         if (effect.command == PORTAMENTO)
             start_tone_portamento(voice, effect_no, effect.data);
+        else if (effect.command == PORTAMENTO_PLUS_VOLUME_SIDE)
+        {
+            tone_portamento(voice, effect_no);
+            combined_volume_side(voice, effect.data);
+        }
         else if (effect.command == SET_VOLUME)
             set_volume(voice, effect.data);
         else if (effect.command == FINE_CRESCENDO)
@@ -67,6 +78,8 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             set_jump_target(effect.data, 0, &player->sequence);
         else if (effect.command == SET_TICKS_PER_SECOND)
             set_tempo_fine(&player->tick_scheduler, effect.data);
+        else if (effect.command == DELAY_NEXT_EVENT)
+            delay_next_event(&player->tick_scheduler, effect.data);
         else if (effect.command == FINE_PORTAMENTO)
             portamento_fine(voice, effect.data);
         else if (effect.command == ARPEGGIO)
@@ -74,7 +87,7 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
     }
 }
 
-void handle_effects_off_event(const event_t *event, voice_t *voice)
+void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *player)
 {
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
@@ -89,6 +102,13 @@ void handle_effects_off_event(const event_t *event, voice_t *voice)
             portamento_down(voice, effect.data);
         else if (effect.command == PORTAMENTO)
             tone_portamento(voice, effect_no);
+        else if (effect.command == PORTAMENTO_PLUS_VOLUME_SIDE)
+        {
+            tone_portamento(voice, effect_no);
+            combined_volume_side(voice, effect.data);
+        }
+        else if (effect.command == SILENCE_SAMPLE_AFTER_DELAY)
+            silence_voice(&player->tick_scheduler, voice, effect.data);
         else if (effect.command == ARPEGGIO)
             arpeggiate(voice, effect.data);
     }
@@ -107,6 +127,15 @@ static void volume_slide_down(voice_t *voice, const uint8_t data)
         voice->volume -= data;
     else
         voice->volume = 0;
+}
+
+static void combined_volume_side(voice_t *voice, const uint8_t data)
+{
+    const uint8_t up_amount = data >> 4;
+    const uint8_t down_amount = data & 0xf;
+    if (up_amount > 0 && down_amount > 0) return;
+    if (up_amount > 0) volume_slide_up(voice, up_amount);
+    if (down_amount > 0) volume_slide_down(voice, down_amount);
 }
 
 static void portamento_up(voice_t *voice, const uint8_t data)
@@ -203,7 +232,7 @@ static void set_tempo(player_t *player, const uint8_t data)
 static void set_sample_offset(const player_t *player, voice_t *voice, const uint8_t data)
 {
     if (!voice->channel_playing) return;
-    const instrument_t *instrument = &player->module->instruments[voice->instrument_no];
+    const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
     if (!instrument->assigned) return;
     const uint32_t sample_offset = instrument->slice_offsets[data];
     if (sample_offset < (uint32_t) player->module->samples[instrument->sample_index].sample_length)
@@ -214,4 +243,16 @@ static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
 {
     if (data > 0)
         tick_scheduler->audio_accumulator.ticks_per_second = data;
+}
+
+static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t data)
+{
+    if (data > 0)
+        tick_scheduler->event_scheduler.event_delay = data * tick_scheduler->event_scheduler.ticks_per_event;
+}
+
+static void silence_voice(const tick_scheduler_t *tick_scheduler, voice_t *voice, const uint8_t data)
+{
+    if (tick_scheduler->event_scheduler.ticks == data)
+        voice->volume = 0;
 }

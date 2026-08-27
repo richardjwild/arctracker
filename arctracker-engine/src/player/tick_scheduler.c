@@ -7,6 +7,7 @@ tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const int sample_rat
     if (tempo.actual_bpm > 0.0001) printf("Actual BPM: %0.3f\n", tempo.actual_bpm);
     event_scheduler_t event_scheduler = {
         .ticks = 0,
+        .event_delay = 0,
         .ticks_per_event = tempo.ticks_per_event,
     };
     audio_accumulator_t audio_accumulator = {
@@ -56,8 +57,11 @@ void tick_scheduler_advance_tick(event_scheduler_t *event_scheduler)
     const int ticks_per_event = event_scheduler->ticks_per_event;
     int ticks = event_scheduler->ticks;
     ticks += 1;
-    if (ticks >= ticks_per_event)
+    if (ticks >= ticks_per_event + event_scheduler->event_delay)
+    {
         ticks = 0;
+        event_scheduler->event_delay = 0;
+    }
     event_scheduler->ticks = ticks;
 }
 

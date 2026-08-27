@@ -250,6 +250,7 @@ static void process_midi_note_on_command(const player_t *player, const midi_note
     }
     const sample_t *sample = player->module->samples + instrument.sample_index;
     note_on(data.note, &instrument, sample, voice);
+    voice->volume = instrument.default_volume;
 }
 
 static void process_keyboard_note_on_command(const player_t *player, const keyboard_note_on_command_t data)
@@ -263,6 +264,7 @@ static void process_keyboard_note_on_command(const player_t *player, const keybo
     }
     const sample_t *sample = player->module->samples + instrument.sample_index;
     note_on(data.note, &instrument, sample, voice);
+    voice->volume = instrument.default_volume;
 }
 
 static void process_note_off_command(const player_t *player, const note_off_command_t data)
@@ -364,7 +366,7 @@ static void update_voices(player_t *player)
         if (current_frame->row_advanced)
             on_new_event(player, event, voice);
         else
-            handle_effects_off_event(event, voice);
+            handle_effects_off_event(event, voice, player);
     }
 }
 
@@ -386,7 +388,10 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
                 if (!instrument_changed && portamento(event))
                     voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->fine_tuning);
                 else
+                {
                     note_on(note, &instrument, sample, voice);
+                    voice->volume = instrument.default_volume;
+                }
             }
         }
         else
@@ -425,7 +430,6 @@ static void note_on(const int note, const instrument_t *instrument, const sample
     voice->fine_tuning = fine_tuning[instrument->finetune + 8];
     voice->period = period_for_note(voice->current_note, voice->fine_tuning);
     voice->tone_portamento_target_period = voice->period;
-    voice->volume = instrument->default_volume;
     voice->sample_repeats = instrument->repeats;
     voice->repeat_length = instrument->repeat_length;
     voice->sample_end = voice->sample_repeats

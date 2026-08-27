@@ -27,7 +27,8 @@ typedef enum
     PITCH_SLIDE_DOWN = '2',
     PORTAMENTO = '3',
     // TODO: Implement vibrato (4).
-    // TODO: Implement tremolo (5).
+    PORTAMENTO_PLUS_VOLUME_SIDE = '5',
+    // TODO: Implement tremolo (7).
     FINE_PORTAMENTO = '6',
     PATTERN_BREAK = 'B',
     CRESCENDO = 'C',
@@ -35,11 +36,13 @@ typedef enum
     FINE_CRESCENDO = 'E',
     FINE_DECRESCENDO = 'F',
     SEQUENCE_JUMP = 'J',
+    DELAY_NEXT_EVENT = 'L',
     USE_SAMPLE_SLICE = 'O',
     SET_PANNING = 'P',
     SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
     SET_VOLUME = 'V',
+    SILENCE_SAMPLE_AFTER_DELAY = 'X',
 } command_t;
 
 typedef struct

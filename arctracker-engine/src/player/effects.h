@@ -8,7 +8,7 @@ void reset_arpeggiator(voice_t *voice);
 
 bool portamento(const event_t *event);
 
-void handle_effects_off_event(const event_t *event, voice_t *voice);
+void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *);
 
 void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *);
 
