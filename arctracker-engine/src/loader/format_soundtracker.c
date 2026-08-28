@@ -765,7 +765,9 @@ static uint8_t scale_mod_volume(uint8_t volume)
     if (volume > 0x40)
         volume = 0x40;
 
-    return volume_mapping[volume];
+    // return volume_mapping[volume];
+    if (volume == 0) return 0;
+    return volume * 4 - 1;
 }
 
 
@@ -801,7 +803,7 @@ static void decode_effect(
 
         case 0x5:
             effect->command = PORTAMENTO_PLUS_VOLUME_SIDE;
-            effect->data = mod_data;
+            effect->data = mod_data * 4;
             break;
 
         case 0x8:
@@ -820,11 +822,11 @@ static void decode_effect(
         case 0xA:
             if ((mod_data & 0xf0) != 0) {
                 effect->command = CRESCENDO;
-                effect->data = 2 * (mod_data >> 4);
+                effect->data = 4 * (mod_data >> 4);
             }
             else if ((mod_data & 0x0f) != 0) {
                 effect->command = DECRESCENDO;
-                effect->data = 2 * (mod_data & 0xf);
+                effect->data = 4 * (mod_data & 0xf);
             }
             break;
 
@@ -850,11 +852,27 @@ static void decode_effect(
             {
                 const uint8_t e_cmd = mod_data >> 4;
                 const uint8_t e_cmd_data = mod_data & 0xf;
-                if (e_cmd == 10) effect->command = FINE_CRESCENDO;
-                if (e_cmd == 11) effect->command = FINE_DECRESCENDO;
-                if (e_cmd == 12) effect->command = SILENCE_SAMPLE_AFTER_DELAY;
-                if (e_cmd == 14) effect->command = DELAY_NEXT_EVENT;
-                if (effect->command) effect->data = e_cmd_data;
+                // TODO: E1x and E2x map to FINE_PORTAMENTO but that needs figuring out first.
+                if (e_cmd == 10)
+                {
+                    effect->command = FINE_CRESCENDO;
+                    effect->data = e_cmd_data * 4;
+                }
+                if (e_cmd == 11)
+                {
+                    effect->command = FINE_DECRESCENDO;
+                    effect->data = e_cmd_data * 4;
+                }
+                if (e_cmd == 12)
+                {
+                    effect->command = SILENCE_SAMPLE_AFTER_DELAY;
+                    effect->data = e_cmd_data;
+                }
+                if (e_cmd == 14)
+                {
+                    effect->command = DELAY_NEXT_EVENT;
+                    effect->data = e_cmd_data;
+                }
             }
             break;
 
@@ -1100,8 +1118,23 @@ static bool load_samples(
         /*
          * Set up the slice offsets to match what the 0x9 command requires.
          */
-        for (int offset = 0; offset < 256; offset++)
-            instrument->slice_offsets[offset] = 256 * offset;
+        for (int slice = 0; slice < 256; slice++)
+        {
+            uint32_t slice_offset = 256 * slice;
+            uint32_t slice_length;
+            if (slice_offset < (uint32_t) sample_length)
+                slice_length = sample_length - slice_offset;
+            else
+            {
+                slice_offset = 0;
+                slice_length = 0;
+            }
+            instrument->sample_slices[slice] = (sample_slice_t) {
+                .offset = slice_offset,
+                .length = slice_length,
+            };
+        }
+        printf("\n");
 
         /*
          * A loop length of one word (two bytes) conventionally means
@@ -1218,6 +1251,7 @@ static module_t *read_module(mapped_file_t file)
     module->default_pattern_length = MOD_PATTERN_LINES;
     module->master_gain = 0.25f;
     module->interpolation_type = NONE;
+    module->volume_mapping_type = VOLUME_AMIGA;
 
     for (int track = 0; track < module->num_tracks; track++)
     {

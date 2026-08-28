@@ -3,7 +3,7 @@ import { CurrentPattern, TransportState } from "../transport/transport.ts";
 import { EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
-import { InterpolationType, ModuleMetaData } from "../editing/moduleMetaData.ts";
+import { InterpolationType, ModuleMetaData, VolumeMappingType } from "../editing/moduleMetaData.ts";
 import { Instrument } from "../editing/editInstrument.ts";
 import { Module } from "../module/module.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
@@ -38,7 +38,7 @@ interface AppStore {
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
-  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType) => void;
+  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType, volumeMappingType: VolumeMappingType) => void;
   updateTempo: (linesPerBeat: number, beatsPerMinute: number) => void;
   updateTracks: (numTracks: number) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
@@ -79,7 +79,8 @@ const initialModule: Module = {
   defaultPatternLength: 64,
   linesPerBeat: 0,
   beatsPerMinute: 0,
-  interpolationType: "arctracker",
+  interpolationType: "ARCTRACKER",
+  volumeMapping: "ARCHIMEDES",
 };
 
 const initialTransportState: TransportState = {
@@ -176,6 +177,7 @@ export const useStore = create<AppStore>((set) => ({
   userMessages: [],
 
   replaceModule: (result) => {
+    console.log('volume mapping', result.volumeMapping);
     set((state) => ({
       moduleId: state.moduleId + 1,
       patternRevision: 0,
@@ -211,7 +213,7 @@ export const useStore = create<AppStore>((set) => ({
       },
     })),
 
-  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType) =>
+  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType, volumeMapping: VolumeMappingType) =>
     set((state) => ({
       module: {
         ...state.module,
@@ -219,6 +221,7 @@ export const useStore = create<AppStore>((set) => ({
         author,
         defaultPatternLength,
         interpolationType,
+        volumeMapping,
       },
     })),
 

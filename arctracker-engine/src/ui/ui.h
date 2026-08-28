@@ -44,6 +44,10 @@ typedef enum ui_interpolation_type {
     ARCTRACKER = 0, ARCHIMEDES = 1,
 } ui_interpolation_type_t;
 
+typedef enum ui_volume_mapping_type {
+    UI_VOLUME_ARCHIMEDES = 0, UI_VOLUME_AMIGA = 1,
+} ui_volume_mapping_type_t;
+
 typedef struct ui_module_info {
     char name[TUNE_NAME_MAX_LEN];
     char author[AUTHOR_NAME_MAX_LEN];
@@ -55,6 +59,7 @@ typedef struct ui_module_info {
     int lines_per_beat;
     int initial_bpm;
     ui_interpolation_type_t interpolation_type;
+    ui_volume_mapping_type_t volume_mapping_type;
 } ui_module_info_t;
 
 typedef struct ui_effect {

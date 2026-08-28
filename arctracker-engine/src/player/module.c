@@ -65,6 +65,7 @@ bool module_init(module_t *module, const int default_pattern_length, const int l
     module->master_gain = 0.25f;
     module->default_pattern_length = default_pattern_length;
     module->interpolation_type = LINEAR;
+    module->volume_mapping_type = VOLUME_ARCHIMEDES;
     for (int i = 0; i < module->num_tracks; i++)
     {
         module->tracks[i].panning = 0x80; // Centre
@@ -209,6 +210,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->lines_per_beat = module->lines_per_beat;
     module_info->initial_bpm = module->initial_bpm;
     module_info->interpolation_type = module->interpolation_type == LINEAR ? ARCTRACKER : ARCHIMEDES;
+    module_info->volume_mapping_type = module->volume_mapping_type == VOLUME_ARCHIMEDES ? UI_VOLUME_ARCHIMEDES : UI_VOLUME_AMIGA;
 }
 
 void module_get_instrument_info(const module_t *module, const int instrument_index, ui_instrument_info_t *instrument_info)

@@ -1,7 +1,7 @@
 use crate::ffi;
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
-use crate::ffi::{UiInterpolationType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
+use crate::ffi::{UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
 
 pub struct Arctracker {
     handle: *mut ffi::ArctrackerHandle,
@@ -169,7 +169,7 @@ pub struct InstrumentUpdate {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "UPPERCASE")]
 pub enum InterpolationType {
     Arctracker,
     Archimedes,
@@ -180,6 +180,22 @@ impl From<ffi::UiInterpolationType> for InterpolationType {
         match value {
             ffi::UiInterpolationType::ARCTRACKER => InterpolationType::Arctracker,
             ffi::UiInterpolationType::ARCHIMEDES => InterpolationType::Archimedes,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum VolumeMappingType {
+    ARCHIMEDES = 0,
+    AMIGA = 1,
+}
+
+impl From<ffi::UiVolumeMappingType> for VolumeMappingType {
+    fn from(value: ffi::UiVolumeMappingType) -> Self {
+        match value {
+            ffi::UiVolumeMappingType::AMIGA => VolumeMappingType::AMIGA,
+            ffi::UiVolumeMappingType::ARCHIMEDES => VolumeMappingType::ARCHIMEDES,
         }
     }
 }
@@ -199,6 +215,7 @@ pub struct Module {
     pub pattern_lengths: Vec<i32>,
     pub instruments: Vec<Instrument>,
     pub interpolation_type: InterpolationType,
+    pub volume_mapping: VolumeMappingType,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -452,6 +469,7 @@ impl Arctracker {
             pattern_lengths,
             instruments,
             interpolation_type: InterpolationType::from(module.interpolation_type),
+            volume_mapping: VolumeMappingType::from(module.volume_mapping_type),
         })
     }
 
@@ -519,6 +537,7 @@ impl Arctracker {
             pattern_lengths,
             instruments,
             interpolation_type: InterpolationType::from(module.interpolation_type),
+            volume_mapping: VolumeMappingType::from(module.volume_mapping_type),
         })
     }
 
@@ -617,6 +636,7 @@ impl Arctracker {
             pattern_lengths,
             instruments: Vec::new(),
             interpolation_type: InterpolationType::from(module_info.interpolation_type),
+            volume_mapping: VolumeMappingType::from(module_info.volume_mapping_type),
         })
     }
 
@@ -1066,12 +1086,13 @@ impl Arctracker {
         })
     }
 
-    pub fn edit_set_module_title(
+    pub fn edit_set_module_meta_data(
         &mut self,
         name: String,
         author: String,
         default_pattern_length: u16,
         interpolation_type: InterpolationType,
+        volume_mapping_type: VolumeMappingType,
     ) -> Result<(), ArctrackerError> {
         let c_name = CString::new(name).map_err(|_| ArctrackerError {
             message: "Invalid module name".parse().unwrap(),
@@ -1083,6 +1104,10 @@ impl Arctracker {
             InterpolationType::Arctracker => UiInterpolationType::ARCTRACKER,
             InterpolationType::Archimedes => UiInterpolationType::ARCHIMEDES,
         };
+        let ui_volume_mapping_type = match volume_mapping_type {
+            VolumeMappingType::ARCHIMEDES => UiVolumeMappingType::ARCHIMEDES,
+            VolumeMappingType::AMIGA => UiVolumeMappingType::AMIGA,
+        };
         let result = unsafe {
             ffi::arctracker_edit_set_module_meta_data(
                 self.handle,
@@ -1090,6 +1115,7 @@ impl Arctracker {
                 c_author.as_ptr(),
                 default_pattern_length as c_int,
                 ui_interpolation_type,
+                ui_volume_mapping_type,
             )
         };
         if !result.success {

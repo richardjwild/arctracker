@@ -2,7 +2,7 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use crate::arctracker::{default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams, UiPlayerSnapshot};
+use crate::arctracker::{default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams, UiPlayerSnapshot, VolumeMappingType};
 use crate::arctracker::{
     InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
     UiPeakLevels,
@@ -376,10 +376,11 @@ fn edit_set_module_meta_data(
     author: String,
     default_pattern_length: u16,
     interpolation_type: InterpolationType,
+    volume_mapping_type: VolumeMappingType,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .edit_set_module_title(name, author, default_pattern_length, interpolation_type)
+        .edit_set_module_meta_data(name, author, default_pattern_length, interpolation_type, volume_mapping_type)
         .map_err(|e| e.message)?;
     Ok(())
 }

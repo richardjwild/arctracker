@@ -128,6 +128,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;
     module->interpolation_type = NONE;
+    module->volume_mapping_type = VOLUME_ARCHIMEDES;
     strncpy(module->name, file_format->name, MAX_LEN_TUNENAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     for (int track = 0; track < module->num_tracks; track++)
@@ -236,6 +237,7 @@ static effect_t effect(const uint8_t code, const uint8_t data)
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
     }
+    // TODO: Find out whether Desktop Tracker uses the pattern break data or not.
     return (effect_t) {
         .data = effect_data,
         .command = command,

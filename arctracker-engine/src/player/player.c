@@ -62,7 +62,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->voices = initialise_voices(player);
     if (player->voices == NULL)
         goto init_failed;
-    const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain);
+    const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain, module->volume_mapping_type);
     if (!audio_init_result)
     {
         error_with_detail(AUDIO_INIT_FAILED, get_error_message());

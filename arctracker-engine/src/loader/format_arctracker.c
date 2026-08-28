@@ -70,8 +70,8 @@
  *   - u8 initial tempo (beats per minute: 1-255)                            *
  *   - u8 lines per beat (0-255: 0=undefined)                                *
  *   - u16 default pattern length (1-1000)                                   *
- *   - u8 interpolation type (0=native, 1=archimedes)                        *
- *   - u8 reserved for future use                                            *
+ *   - u8 interpolation type (0=native, 1=Archimedes)                        *
+ *   - u8 volume mapping (0=native/Archimedes, 1=Amiga                       *
  *                                                                           *
  * Track chunk                                                               *
  * -----------                                                               *
@@ -181,6 +181,22 @@
  *   - u32 sample index                                                      *
  *   - u32 sample length (no of frames)                                      *
  *   - f32 (array) sample data                                               *
+ *                                                                           *
+ * Sample slices chunk                                                       *
+ * -------------------                                                       *
+ * Sample slices. The file contains only the slices that are defined for a   *
+ * sample, where defined means the offset is greater than 0.                 *
+ *                                                                           *
+ *   Chunk id: SSLC                                                          *
+ *   Chunk contents:                                                         *
+ *   - u32 instrument index                                                  *
+ *   - u8 number of slices                                                   *
+ *   - (array) sample slices                                                 *
+ *                                                                           *
+ * Each sample slice is 9 bytes:                                             *
+ *   u8 slice index                                                          *
+ *   u32 offset into sample (frames)                                         *
+ *   u32 slice length (frames)                                               *
  *****************************************************************************/
 
 #define MODULE_NAME_LEN 256
@@ -200,6 +216,7 @@ static const char *PATTERN_CHUNK_ID = "PATT";
 static const char *EMPTY_PATTERN_CHUNK_ID = "EPAT";
 static const char *SAMPLE_CHUNK_ID = "SAMP";
 static const char *INSTRUMENT_CHUNK_ID = "INST";
+static const char *SAMPLE_SLICES_CHUNK_ID = "SSLC";
 static const uint32_t CHUNK_HEADER_SIZE = 8;
 static const uint32_t FORMAT_CHUNK_LEN = 4;
 static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 12;
@@ -226,6 +243,7 @@ static event_t read_pattern_event(const uint8_t *);
 static bool read_empty_pattern_chunk(const uint8_t *, size_t, module_t *);
 static bool read_instrument_chunk(const uint8_t *, size_t, module_t *);
 static bool read_sample_chunk(const uint8_t *, size_t, module_t *);
+static bool read_sample_slices_chunk(const uint8_t *, size_t, module_t *);
 static bool validate_module(const module_t *);
 static bool write_arctracker_module(const module_t *, FILE *);
 static bool write_format_chunk(FILE *);
@@ -245,6 +263,8 @@ static bool write_instrument_chunks(const module_t *, FILE *, bool *);
 static bool write_instrument_chunk(const module_t *, uint8_t, FILE *, bool *);
 static bool write_sample_chunks(const module_t *, const bool *, FILE *);
 static bool write_sample_chunk(const module_t *, uint32_t, FILE *);
+static bool write_sample_slices_chunks(const module_t *, FILE *);
+static bool write_sample_slices_chunk(const module_t *, uint8_t, uint8_t, FILE *);
 static uint32_t write_gain(float);
 static bool write_fourcc(FILE *, const char *);
 static bool write_cc(FILE *, const char *, size_t);
@@ -319,6 +339,8 @@ static module_t *read_arctracker_module(const mapped_file_t mapped_file)
             ok = read_instrument_chunk(data, data_size, module);
         if (chunk_is(SAMPLE_CHUNK_ID, chunk_addr))
             ok = read_sample_chunk(data, data_size, module);
+        if (chunk_is(SAMPLE_SLICES_CHUNK_ID, chunk_addr))
+            ok = read_sample_slices_chunk(data, data_size, module);
         if (!ok)
             goto read_arctracker_module_failed;
         chunk_addr = next_chunk_address(chunk_addr);
@@ -393,8 +415,15 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         error(MODFILE_INVALID_INTERPOLATION_TYPE);
         goto read_module_metadata_failed;
     }
+    const uint8_t volume_mapping = read_u8(meta_data + 11 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    if (volume_mapping != 0 && volume_mapping != 1)
+    {
+        error(MODFILE_INVALID_VOLUME_MAPPING);
+        goto read_module_metadata_failed;
+    }
     module->default_pattern_length = default_pattern_length;
     module->interpolation_type = interpolation_type == 0 ? LINEAR : NONE;
+    module->volume_mapping_type = volume_mapping == 0 ? VOLUME_ARCHIMEDES : VOLUME_AMIGA;
     return module;
 
 read_module_metadata_failed:
@@ -610,16 +639,15 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
     const uint32_t sample_index = read_u32_le(data + 8 + INSTRUMENT_NAME_LEN);
     const uint32_t sample_loop_start = read_u32_le(data + 12 + INSTRUMENT_NAME_LEN);
     const uint32_t sample_loop_length = read_u32_le(data + 16 + INSTRUMENT_NAME_LEN);
-    instrument_t instrument = {0};
-    instrument.assigned = true;
-    snprintf(instrument.name, sizeof instrument.name, "%s", instrument_name);
-    instrument.default_volume = instrument_volume;
-    instrument.transpose = transpose + 13;
-    instrument.repeats = sample_loop_flag == 1;
-    instrument.repeat_offset = sample_loop_start;
-    instrument.repeat_length = sample_loop_length;
-    instrument.sample_index = sample_index;
-    module_set_instrument(module, instrument_index, instrument);
+    instrument_t *instrument = &module->instruments[instrument_index];
+    instrument->assigned = true;
+    snprintf(instrument->name, sizeof instrument->name, "%s", instrument_name);
+    instrument->default_volume = instrument_volume;
+    instrument->transpose = transpose + 13;
+    instrument->repeats = sample_loop_flag == 1;
+    instrument->repeat_offset = (int) sample_loop_start;
+    instrument->repeat_length = (int) sample_loop_length;
+    instrument->sample_index = (int) sample_index;
     return true;
 }
 
@@ -639,6 +667,26 @@ static bool read_sample_chunk(const uint8_t *data, const size_t data_size, modul
     const bool ok = module_set_sample(module, copied_sample_data, sample_length, sample_index);
     if (!ok) deallocate(MODULE, copied_sample_data);
     return ok;
+}
+
+static bool read_sample_slices_chunk(const uint8_t *data, const size_t data_size, module_t *module)
+{
+    const uint32_t instrument_index = read_u32_le(data);
+    const uint8_t slice_count = read_u8(data + 4);
+    if (data_size != 5 + slice_count * 9)
+    {
+        error(MODFILE_INVALID_INVALID_SAMPLE_SLICE_LENGTH);
+        return false;
+    }
+    instrument_t *instrument = &module->instruments[instrument_index];
+    for (int slice = 0; slice < slice_count; slice++)
+    {
+        const uint8_t *slice_addr = data + 5 + slice * 9;
+        const uint8_t slice_index = read_u8(slice_addr);
+        instrument->sample_slices[slice_index].offset = read_u32_le(slice_addr + 1);
+        instrument->sample_slices[slice_index].length = read_u32_le(slice_addr + 5);
+    }
+    return true;
 }
 
 static bool validate_module(const module_t *module)
@@ -681,6 +729,7 @@ static bool write_arctracker_module(const module_t *module, FILE *fp)
     if (!write_sequence_chunk(module, fp)) goto write_failed;
     if (!write_pattern_chunks(module, fp)) goto write_failed;
     if (!write_instrument_chunks(module, fp, samples_used)) goto write_failed;
+    if (!write_sample_slices_chunks(module, fp)) goto write_failed;
     if (!write_sample_chunks(module, samples_used, fp)) goto write_failed;
     deallocate(MODULE, samples_used);
     return true;
@@ -715,7 +764,7 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u8(fp, module->lines_per_beat)) return false;
     if (!write_u16_le(fp, module->default_pattern_length)) return false;
     if (!write_u8(fp, module->interpolation_type == LINEAR ? 0 : 1)) return false;
-    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, module->volume_mapping_type == VOLUME_ARCHIMEDES ? 0 : 1)) return false;
     return true;
 }
 
@@ -890,6 +939,40 @@ static bool write_sample_chunk(const module_t *module, const uint32_t sample_ind
     if (!write_u32_le(fp, sample.sample_length)) return false;
     for (int i = 0; i < sample.sample_length; i++)
         if (!write_f32_le(fp, sample.sample_data[i])) return false;
+    return true;
+}
+
+static bool write_sample_slices_chunks(const module_t *module, FILE *fp)
+{
+    for (int instrument_index = 0; instrument_index <= 255; instrument_index++)
+    {
+        const instrument_t instrument = module->instruments[instrument_index];
+        if (!instrument.assigned) continue;
+        uint8_t slices_defined = 0;
+        for (int slice_index = 0; slice_index <= 255; slice_index++)
+            if (instrument.sample_slices[slice_index].length > 0) slices_defined++;
+        if (slices_defined == 0)
+            continue;
+        if (!write_sample_slices_chunk(module, instrument_index, slices_defined, fp)) return false;
+    }
+    return true;
+}
+
+static bool write_sample_slices_chunk(const module_t *module, const uint8_t instrument_index, const uint8_t slice_count, FILE *fp)
+{
+    const instrument_t instrument = module->instruments[instrument_index];
+    if (!write_fourcc(fp, SAMPLE_SLICES_CHUNK_ID)) return false;
+    if (!write_u32_le(fp, 5 + slice_count * 9)) return false;
+    if (!write_u32_le(fp, instrument_index)) return false;
+    if (!write_u8(fp, slice_count)) return false;
+    for (int slice_index = 0; slice_index < 256; slice_index++)
+    {
+        const sample_slice_t slice = instrument.sample_slices[slice_index];
+        if (slice.length == 0) continue;
+        if (!write_u8(fp, (uint8_t) slice_index)) return false;
+        if (!write_u32_le(fp, slice.offset)) return false;
+        if (!write_u32_le(fp, slice.length)) return false;
+    }
     return true;
 }
 

@@ -12,7 +12,7 @@ import { commands } from "../control/commands.ts";
 import { Instrument } from "../editing/editInstrument.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { appConfig } from "../config/appConfig.ts";
-import { InterpolationType } from "../editing/moduleMetaData.ts";
+import { InterpolationType, VolumeMappingType } from "../editing/moduleMetaData.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
 export type Module = {
@@ -29,6 +29,7 @@ export type Module = {
   linesPerBeat: number;
   beatsPerMinute: number;
   interpolationType: InterpolationType;
+  volumeMapping: VolumeMappingType;
 };
 
 export type NewModuleParams = {

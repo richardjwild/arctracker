@@ -768,7 +768,8 @@ api_result_t arctracker_edit_set_module_meta_data(
     const char *name,
     const char *author,
     const int default_pattern_length,
-    const enum ui_interpolation_type interpolation_type)
+    const ui_interpolation_type_t interpolation_type,
+    const ui_volume_mapping_type_t volume_mapping_type)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -787,18 +788,28 @@ api_result_t arctracker_edit_set_module_meta_data(
     const edit_result_t result = editor_set_module_title(arctracker->module, name, author, default_pattern_length);
     if (!result.success)
         return failure(result.error_message);
-    bool interpolation_type_changed = false;
+    bool restart_required = false;
     if (interpolation_type == ARCTRACKER && arctracker->module->interpolation_type == NONE)
     {
         arctracker->module->interpolation_type = LINEAR;
-        interpolation_type_changed = true;
+        restart_required = true;
     }
     else if (interpolation_type == ARCHIMEDES && arctracker->module->interpolation_type == LINEAR)
     {
         arctracker->module->interpolation_type = NONE;
-        interpolation_type_changed = true;
+        restart_required = true;
     }
-    if (interpolation_type_changed)
+    if (volume_mapping_type == UI_VOLUME_ARCHIMEDES && arctracker->module->volume_mapping_type == VOLUME_AMIGA)
+    {
+        arctracker->module->volume_mapping_type = VOLUME_ARCHIMEDES;
+        restart_required = true;
+    }
+    else if (volume_mapping_type == UI_VOLUME_AMIGA && arctracker->module->volume_mapping_type == VOLUME_ARCHIMEDES)
+    {
+        arctracker->module->volume_mapping_type = VOLUME_AMIGA;
+        restart_required = true;
+    }
+    if (restart_required)
     {
         api_result_t player_result = SUCCESS;
         player_restore_state_t player_state = {0};

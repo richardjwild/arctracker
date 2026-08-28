@@ -1,15 +1,16 @@
 .editModuleTitle {
     width: 835px;
-    height: 285px;
+    height: 345px;
     display: grid;
     grid-template-columns: 180px 1fr;
-    grid-template-rows: 50px 50px 50px 50px 50px;
+    grid-template-rows: 50px 50px 50px 50px 50px 50px;
     gap: 10px;
     grid-template-areas:
         "moduleNameLabel moduleNameEdit"
         "authorLabel authorEdit"
         "defaultPatternLengthLabel defaultPatternLengthEdit"
         "interpolationTypeLabel interpolationTypeEdit"
+        "volumeMappingTypeLabel volumeMappingTypeEdit"
         "saveCloseButtons saveCloseButtons"
 }
 
@@ -37,6 +38,14 @@
     grid-area: interpolationTypeEdit;
 }
 
+.volumeMappingTypeLabel {
+    grid-area: volumeMappingTypeLabel;
+}
+
+.volumeMappingTypeEdit {
+    grid-area: volumeMappingTypeEdit;
+}
+
 .saveCloseButtons {
     grid-area: saveCloseButtons;
 }
@@ -61,14 +70,14 @@
     accent-color: var(--colour-sample-edit-input-text);
 }
 
-.interpolationTypeEdit {
+.interpolationTypeEdit, .volumeMappingEdit {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 5px;
 }
 
-.interpolationTypeEdit label {
+.interpolationTypeEdit label, .volumeMappingEdit label {
     display: inline;
     font-family: sans-serif;
     font-size: 16px;

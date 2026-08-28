@@ -195,6 +195,12 @@ pub enum UiInterpolationType {
 }
 
 #[repr(C)]
+pub enum UiVolumeMappingType {
+    ARCHIMEDES = 0,
+    AMIGA = 1,
+}
+
+#[repr(C)]
 pub struct UiModuleInfo {
     pub name: [c_char; 65],
     pub author: [c_char; 65],
@@ -206,6 +212,7 @@ pub struct UiModuleInfo {
     pub lines_per_beat: c_int,
     pub initial_bpm: c_int,
     pub interpolation_type: UiInterpolationType,
+    pub volume_mapping_type: UiVolumeMappingType,
 }
 
 #[repr(C)]
@@ -423,6 +430,7 @@ extern "C" {
         author: *const c_char,
         default_pattern_length: c_int,
         interpolation_type: UiInterpolationType,
+        volume_mapping_type: UiVolumeMappingType,
     ) -> ApiResult;
     pub fn arctracker_edit_set_num_tracks(
         handle: *mut ArctrackerHandle,

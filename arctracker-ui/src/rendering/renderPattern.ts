@@ -337,14 +337,14 @@ export class PatternRenderer {
     this.withFillStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterLeftLabel)
       .renderGlyph(
         "L",
-        trackX + this.layout.glyphWidth,
-        this.layout.viewportSize.height - this.layout.trackFooterHeight + 4,
+        trackX + this.layout.glyphWidth + 1,
+        this.layout.viewportSize.height - this.layout.trackFooterHeight + 5,
       );
     this.withFillStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterRightLabel)
       .renderGlyph(
         "R",
-        trackX + trackWidth - this.layout.glyphWidth * 2 + 1,
-        this.layout.viewportSize.height - this.layout.trackFooterHeight + 4,
+        trackX + trackWidth - this.layout.glyphWidth * 2 + 2,
+        this.layout.viewportSize.height - this.layout.trackFooterHeight + 5,
       );
     this.withFillStyle(muted ? this.colours().trackFooterMutedFg : this.colours().trackFooterPanMarker)
       .fillCircle(1 + centreX + deflection, 1 + this.layout.viewportSize.height - this.layout.trackFooterHeight / 2, 5);

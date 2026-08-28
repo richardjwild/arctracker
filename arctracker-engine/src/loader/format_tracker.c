@@ -109,6 +109,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;
     module->interpolation_type = NONE;
+    module->volume_mapping_type = VOLUME_ARCHIMEDES;
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
     {
         error("Modfile corrupt - STER chunk not found");
@@ -256,6 +257,12 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     {
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
+    }
+    if (command == PATTERN_BREAK)
+    {
+        // Tracker always breaks to the next pattern at line 0, but Arctracker interprets the data as the line to begin
+        // the next pattern at, so zero it here.
+        effect_data = 0;
     }
     return (effect_t) {
         .data = effect_data,

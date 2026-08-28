@@ -204,6 +204,7 @@ static void set_volume(voice_t *voice, const uint8_t data)
 
 static void portamento_fine(voice_t *voice, const uint8_t data)
 {
+    // TODO: This looks wrong. Find out what the semantics of this command are.
     voice->period += data;
     if (voice->period > PERIOD_MAX)
         voice->period = PERIOD_MAX;
@@ -234,9 +235,12 @@ static void set_sample_offset(const player_t *player, voice_t *voice, const uint
     if (!voice->channel_playing) return;
     const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
     if (!instrument->assigned) return;
-    const uint32_t sample_offset = instrument->slice_offsets[data];
-    if (sample_offset < (uint32_t) player->module->samples[instrument->sample_index].sample_length)
-        voice->phase_accumulator = (float) sample_offset;
+    const uint32_t sample_length = (uint32_t) player->module->samples[instrument->sample_index].sample_length;
+    const sample_slice_t slice = instrument->sample_slices[data];
+    if (slice.length == 0 || slice.offset >= sample_length) return;
+    voice->phase_accumulator = (float) slice.offset;
+    if (slice.offset + slice.length < (uint32_t) voice->sample_end)
+        voice->sample_end = (int) (slice.offset + slice.length);
 }
 
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)

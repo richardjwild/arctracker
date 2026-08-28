@@ -3,7 +3,7 @@ import "./EditModuleMetaData.css";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
 import { useEffect, useState } from "react";
-import { InterpolationType, ModuleMetaData, moduleMetaData } from "../editing/moduleMetaData.ts";
+import { InterpolationType, ModuleMetaData, moduleMetaData, VolumeMappingType } from "../editing/moduleMetaData.ts";
 import { commands } from "../control/commands.ts";
 import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
@@ -15,7 +15,8 @@ const emptyDraft: ModuleMetaData = {
   moduleName: "",
   author: "",
   defaultPatternLength: 64,
-  interpolationType: "arctracker",
+  interpolationType: "ARCTRACKER",
+  volumeMappingType: "ARCHIMEDES",
 };
 
 export default function EditModuleMetaData() {
@@ -29,13 +30,13 @@ export default function EditModuleMetaData() {
 
   useEffect(() => {
     if (!editing) return;
-    console.log("module interpolation type", module.interpolationType);
     setDraftModuleMetaData({
       ...draftModuleMetaData,
       moduleName: module.name,
       author: module.author,
       defaultPatternLength: module.defaultPatternLength,
       interpolationType: module.interpolationType,
+      volumeMappingType: module.volumeMapping,
     });
     setDefaultPatternLengthInput(module.defaultPatternLength.toString());
   }, [module, editing]);
@@ -82,6 +83,13 @@ export default function EditModuleMetaData() {
       ...(draftModuleMetaData || emptyDraft),
       interpolationType,
     });
+  }
+
+  const setVolumeMappingType = (volumeMappingType: VolumeMappingType) => {
+    setDraftModuleMetaData({
+      ...(draftModuleMetaData || emptyDraft),
+      volumeMappingType,
+    })
   }
 
   if (!editing) return null;
@@ -148,8 +156,8 @@ export default function EditModuleMetaData() {
           name="interpolationTypeInput"
           id="interpolationTypeInputArctracker"
           value="arctracker"
-          checked={draftModuleMetaData?.interpolationType === "arctracker"}
-          onClick={() => setInterpolationType("arctracker")}
+          checked={draftModuleMetaData?.interpolationType === "ARCTRACKER"}
+          onClick={() => setInterpolationType("ARCTRACKER")}
           />
         <label htmlFor="interpolationTypeInputArctracker">
           {message("arctrackerInterpolationType")}
@@ -159,11 +167,40 @@ export default function EditModuleMetaData() {
           name="interpolationTypeInput"
           id="interpolationTypeInputArchimedes"
           value="archimedes"
-          checked={draftModuleMetaData?.interpolationType === "archimedes"}
-          onClick={() => setInterpolationType("archimedes")}
+          checked={draftModuleMetaData?.interpolationType === "ARCHIMEDES"}
+          onClick={() => setInterpolationType("ARCHIMEDES")}
           />
         <label htmlFor="interpolationTypeInputArchimedes">
           {message("archimedesInterpolationType")}
+        </label>
+      </div>
+      <div className="volumeMappingLabel">
+        <label htmlFor="volumeMappingInput">
+          {message("volumeMappingLabel")}
+        </label>
+      </div>
+      <div className="volumeMappingEdit">
+        <input
+          type="radio"
+          name="volumeMappingInput"
+          id="volumeMappingInputArctracker"
+          value="archimedes"
+          checked={draftModuleMetaData?.volumeMappingType === "ARCHIMEDES"}
+          onClick={() => setVolumeMappingType("ARCHIMEDES")}
+          />
+        <label htmlFor="volumeMappingInputArctracker">
+          {message("arctrackerVolumeMapping")}
+        </label>
+        <input
+          type="radio"
+          name="volumeMappingInput"
+          id="volumeMappingInputAmiga"
+          value="amiga"
+          checked={draftModuleMetaData?.volumeMappingType === "AMIGA"}
+          onClick={() => setVolumeMappingType("AMIGA")}
+          />
+        <label htmlFor="volumeMappingInputAmiga">
+          {message("amigaVolumeMapping")}
         </label>
       </div>
       <div className="saveCloseButtons uiArea padded rounded">

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "tempo.h"
 #include "audio/interpolation_type.h"
+#include "audio/volume_mapping_type.h"
 #include "ui/ui.h"
 
 #define MAX_LEN_TUNENAME 65
@@ -66,6 +67,11 @@ typedef struct
 } pattern_t;
 
 typedef struct {
+    uint32_t offset;
+    uint32_t length;
+} sample_slice_t;
+
+typedef struct {
     // TODO: Add instrument_type here when the time comes.
     bool assigned;
     char name[MAX_LEN_SAMPLENAME];
@@ -76,7 +82,7 @@ typedef struct {
     int repeat_offset;
     int repeat_length;
     int sample_index;
-    uint32_t slice_offsets[256];
+    sample_slice_t sample_slices[256];
 } instrument_t;
 
 typedef struct
@@ -116,6 +122,7 @@ typedef struct
     float master_gain;
     uint16_t default_pattern_length;
     interpolation_type_t interpolation_type;
+    volume_mapping_type_t volume_mapping_type;
 } module_t;
 
 module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);
