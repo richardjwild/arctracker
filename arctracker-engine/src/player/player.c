@@ -12,7 +12,7 @@
 
 #define DEFAULT_TICKS_PER_SECOND 50
 
-static double fine_tuning[16] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+static double fine_tuning[256] = {0};
 
 static void calculate_fine_tuning(void);
 static bool player_tick(player_t *);
@@ -20,17 +20,18 @@ static void process_commands(player_t *player);
 static void process_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
 static void process_seek_command(player_t *player, seek_command_t data);
-static void process_midi_note_on_command(const player_t *player, midi_note_on_command_t data);
-static void process_keyboard_note_on_command(const player_t *player, keyboard_note_on_command_t data);
+static void process_midi_note_on_command(player_t *player, midi_note_on_command_t data);
+static void process_keyboard_note_on_command(player_t *player, keyboard_note_on_command_t data);
 static void process_note_off_command(const player_t *player, note_off_command_t data);
 static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
+static void populate_player_samples(player_t *);
 static voice_t *initialise_voices(const player_t *);
 static event_t *get_events(const player_t *);
-static void note_on(int, const instrument_t *, const sample_t *, voice_t *);
+static void note_on(int, const instrument_t *, player_sample_t *, voice_t *);
 static void note_off(voice_t *voice);
 static bool audio_consume(player_t *);
 static void update_voices(player_t *player);
@@ -71,6 +72,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true);
     calculate_fine_tuning();
+    populate_player_samples(player);
     return player;
 
 init_failed:
@@ -159,8 +161,8 @@ void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
 
 static void calculate_fine_tuning(void)
 {
-    for (int finetune = -8; finetune < 8; finetune++)
-        fine_tuning[finetune + 8] = pow(2.0, -(double) finetune / 96.0);
+    for (int finetune = -128; finetune <= 127; finetune++)
+        fine_tuning[finetune + 128] = pow(2.0, -(double) finetune / (16.0 * 96.0));
 }
 
 static bool player_tick(player_t *player)
@@ -238,7 +240,7 @@ static void process_seek_command(player_t *player, const seek_command_t data)
     player_seek(player, data.new_sequence_pos, data.new_pattern_pos);
 }
 
-static void process_midi_note_on_command(const player_t *player, const midi_note_on_command_t data)
+static void process_midi_note_on_command(player_t *player, const midi_note_on_command_t data)
 {
     event_queue_add(player->player_event_queue, create_user_midi_event(data.note));
     voice_t *voice = player->voices + data.track;
@@ -248,12 +250,12 @@ static void process_midi_note_on_command(const player_t *player, const midi_note
         note_off(voice);
         return;
     }
-    const sample_t *sample = player->module->samples + instrument.sample_index;
+    player_sample_t *sample = &player->samples[data.instrument_no];
     note_on(data.note, &instrument, sample, voice);
     voice->volume = instrument.default_volume;
 }
 
-static void process_keyboard_note_on_command(const player_t *player, const keyboard_note_on_command_t data)
+static void process_keyboard_note_on_command(player_t *player, const keyboard_note_on_command_t data)
 {
     voice_t *voice = player->voices + data.track;
     const instrument_t instrument = player->module->instruments[data.instrument_no];
@@ -262,7 +264,7 @@ static void process_keyboard_note_on_command(const player_t *player, const keybo
         note_off(voice);
         return;
     }
-    const sample_t *sample = player->module->samples + instrument.sample_index;
+    player_sample_t *sample = &player->samples[data.instrument_no];
     note_on(data.note, &instrument, sample, voice);
     voice->volume = instrument.default_volume;
 }
@@ -297,6 +299,26 @@ static void process_track_mute_state_changed_command(const player_t *player, con
     const bool new_state = player->module->tracks[track].muted;
     voice_t *voice = player->voices + track;
     voice->muted = new_state;
+}
+
+static void populate_player_samples(player_t *player)
+{
+    const module_t *module = player->module;
+    for (int i = 0; i < 256; i++)
+    {
+        const instrument_t instrument = module->instruments[i];
+        if (!instrument.assigned) continue;
+        const sample_t sample = module->samples[instrument.sample_index];
+        const double ft = fine_tuning[sample.finetune + 128];
+        const float base_period = (float) period_for_note(sample.base_note, ft);
+        const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
+        player->samples[i].phase_increment_per_period = phase_increment_per_period;
+        player->samples[i].fine_tuning = fine_tuning[128 + sample.finetune];
+        player->samples[i].sample_repeats = instrument.repeats;
+        player->samples[i].sample_end = sample.sample_length;
+        player->samples[i].repeat_length = instrument.repeat_length;
+        player->samples[i].sample_pointer = sample.sample_data;
+    }
 }
 
 static voice_t *initialise_voices(const player_t *player)
@@ -384,9 +406,9 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
                 voice->channel_playing = false;
             else
             {
-                const sample_t *sample = player->module->samples + instrument.sample_index;
+                player_sample_t *sample = &player->samples[event->instrument_no - 1];
                 if (!instrument_changed && portamento(event))
-                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->fine_tuning);
+                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->sample->fine_tuning);
                 else
                 {
                     note_on(note, &instrument, sample, voice);
@@ -401,9 +423,9 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
                 voice->channel_playing = false;
             else
             {
-                const sample_t *sample = player->module->samples + instrument.sample_index;
+                player_sample_t *sample = &player->samples[voice->instrument_no - 1];
                 if (portamento(event))
-                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->fine_tuning);
+                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->sample->fine_tuning);
                 else
                     note_on(note, &instrument, sample, voice);
             }
@@ -420,21 +442,15 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
     handle_effects_on_event(event, voice, player);
 }
 
-static void note_on(const int note, const instrument_t *instrument, const sample_t *sample, voice_t *voice)
+static void note_on(const int note, const instrument_t *instrument, player_sample_t *sample, voice_t *voice)
 {
     voice->channel_playing = true;
-    voice->sample_pointer = sample->sample_data;
+    voice->sample = sample;
     voice->phase_accumulator = 0.0f;
     voice->arpeggiator_on = false;
     voice->current_note = note + instrument->transpose;
-    voice->fine_tuning = fine_tuning[instrument->finetune + 8];
-    voice->period = period_for_note(voice->current_note, voice->fine_tuning);
+    voice->period = period_for_note(voice->current_note, voice->sample->fine_tuning);
     voice->tone_portamento_target_period = voice->period;
-    voice->sample_repeats = instrument->repeats;
-    voice->repeat_length = instrument->repeat_length;
-    voice->sample_end = voice->sample_repeats
-            ? instrument->repeat_offset + instrument->repeat_length
-            : sample->sample_length;
 }
 
 static void note_off(voice_t *voice)

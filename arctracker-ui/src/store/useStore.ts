@@ -35,6 +35,7 @@ interface AppStore {
   draftTempo: ModuleTempo;
   isLoadingModule: boolean;
   userMessages: UserMessage[];
+  hexCalculatorActive: boolean;
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
@@ -64,6 +65,7 @@ interface AppStore {
   setSelectedInstrument: (instrument: number) => void;
   setLoadingModule: (loading: boolean) => void;
   logMessage: (message: UserMessage) => void;
+  setHexCalculatorActive: (active: boolean) => void;
 }
 
 const initialModule: Module = {
@@ -175,6 +177,7 @@ export const useStore = create<AppStore>((set) => ({
   draftTempo: { linesPerBeat: 0, beatsPerMinute: 0 },
   isLoadingModule: false,
   userMessages: [],
+  hexCalculatorActive: false,
 
   replaceModule: (result) => {
     console.log('volume mapping', result.volumeMapping);
@@ -384,5 +387,10 @@ export const useStore = create<AppStore>((set) => ({
         ...state,
         userMessages,
       }
+    }),
+
+  setHexCalculatorActive: (hexCalculatorActive: boolean) =>
+    set({
+      hexCalculatorActive,
     }),
 }));

@@ -36,13 +36,13 @@
   height: calc(100vh - 25px); /* because margin: 10px */
   display: grid;
   gap: 1px;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 50px 1fr 300px;
   grid-template-rows: 50px 50px minmax(0, 1fr) 50px;
   grid-template-areas:
-    "moduleHeader masterGain"
-    "sequenceView transport"
-    "patternView sampleList"
-    "userMessages keyboardOctave";
+    "moduleHeader moduleHeader masterGain"
+    "sequenceView sequenceView transport"
+    "patternView patternView sampleList"
+    "hexCalculator userMessages keyboardOctave";
 }
 
 .uiArea {

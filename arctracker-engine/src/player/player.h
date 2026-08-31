@@ -30,6 +30,7 @@ typedef struct player {
     voice_t *voices;
     module_t *module;
     sequence_t sequence;
+    player_sample_t samples[256];
     tick_scheduler_t tick_scheduler;
     audio_out_t audio_out;
     ui_event_consumer_t ui_event_consumer;

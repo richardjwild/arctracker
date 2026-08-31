@@ -11,7 +11,6 @@ typedef struct
     int num_channels;
     float master_gain;
     float gain_curve[256];
-    float *phase_increments;
     float *resample_buffer;
     stereo_frame_t *mix_buffer;
     stereo_frame_t *output_buffer;

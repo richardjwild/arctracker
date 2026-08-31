@@ -275,13 +275,16 @@ bool module_link_sample(module_t *module, const float *sample_data, const int sa
     return true;
 }
 
-bool module_set_sample(module_t *module, const float *sample_data, const int sample_length, const int sample_index)
+bool module_set_sample(module_t *module, const float *sample_data, const int sample_length, const float sample_rate, const uint8_t base_note, const int8_t finetune, const int sample_index)
 {
     if (!ensure_sample_capacity(module, sample_index))
         return false;
     module->samples[sample_index] = (sample_t) {
         .sample_data = sample_data,
         .sample_length = sample_length,
+        .sample_rate = sample_rate,
+        .base_note = base_note,
+        .finetune = finetune,
     };
     if (sample_index >= module->sample_slots)
         module->sample_slots = sample_index + 1;

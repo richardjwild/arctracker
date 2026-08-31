@@ -1,27 +1,17 @@
 #include "resample.h"
 #include <string.h>
 #include "memory/heap.h"
-
-const static int PITCH_QUANTA = 2047;
-const static float PHASE_INCREMENT_CONVERSION = 3546895.0f;
+#include <stdio.h>
 
 static float interpolate_linear(const float *, float);
 static float interpolate_none(const float *, float);
-
-float *calculate_phase_increments(const int sample_rate)
-{
-    float *phase_increments = allocate_array(AUDIO, PITCH_QUANTA, sizeof(float));
-    for (int period = 1; period <= PITCH_QUANTA; period++)
-        phase_increments[period - 1] = PHASE_INCREMENT_CONVERSION / (float) (period * sample_rate);
-    return phase_increments;
-}
 
 float *allocate_resample_buffer(const int no_of_frames)
 {
     return allocate_array(AUDIO, no_of_frames, sizeof(float));
 }
 
-void resample(voice_t *voice, float *resample_buffer, const float *phase_increments, int frames_to_write, const interpolation_type_t interpolation_type)
+void resample(voice_t *voice, float *resample_buffer, int frames_to_write, const interpolation_type_t interpolation_type)
 {
     if (!voice->channel_playing || voice->period == 0)
     {
@@ -30,11 +20,11 @@ void resample(voice_t *voice, float *resample_buffer, const float *phase_increme
         return;
     }
     float (*interpolate)(const float *, float) = interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
-    const float *sample = voice->sample_pointer;
-    const float phase_increment = phase_increments[voice->period - 1];
-    const float sample_end = (float) voice->sample_end;
-    const float repeat_length = (float) voice->repeat_length;
-    const bool sample_repeats = voice->sample_repeats;
+    const float *sample = voice->sample->sample_pointer;
+    const float phase_increment = voice->sample->phase_increment_per_period / (float) voice->period;
+    const float sample_end = (float) voice->sample->sample_end;
+    const float repeat_length = (float) voice->sample->repeat_length;
+    const bool sample_repeats = voice->sample->sample_repeats;
     float phase_accumulator = voice->phase_accumulator;
     int offset = 0;
     while (frames_to_write > 0)

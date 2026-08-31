@@ -12,6 +12,7 @@ const handlers: KeyHandler[] = [
   editorKeyHandlers.handleEffectFieldInput,
   editorKeyHandlers.handleTempoInput,
   editorKeyHandlers.handleAppConfigInput,
+  editorKeyHandlers.handleHexCalculatorInput,
   keyBinding.handleKey,
 ];
 

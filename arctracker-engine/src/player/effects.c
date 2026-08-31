@@ -32,7 +32,7 @@ void reset_arpeggiator(voice_t *voice)
 {
     if (voice->arpeggiator_on)
     {
-        voice->period = period_for_note(voice->current_note, voice->fine_tuning);
+        voice->period = period_for_note(voice->current_note, voice->sample->fine_tuning);
         voice->arpeggiator_on = false;
     }
 }
@@ -193,7 +193,7 @@ static void arpeggiate(voice_t *voice, const uint8_t data)
     {
         arpeggio_note = voice->current_note;
     }
-    voice->period = period_for_note(arpeggio_note, voice->fine_tuning);
+    voice->period = period_for_note(arpeggio_note, voice->sample->fine_tuning);
     voice->arpeggio_counter += 1;
 }
 
@@ -239,8 +239,8 @@ static void set_sample_offset(const player_t *player, voice_t *voice, const uint
     const sample_slice_t slice = instrument->sample_slices[data];
     if (slice.length == 0 || slice.offset >= sample_length) return;
     voice->phase_accumulator = (float) slice.offset;
-    if (slice.offset + slice.length < (uint32_t) voice->sample_end)
-        voice->sample_end = (int) (slice.offset + slice.length);
+    if (slice.offset + slice.length < (uint32_t) voice->sample->sample_end)
+        voice->sample->sample_end = (int) (slice.offset + slice.length);
 }
 
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)

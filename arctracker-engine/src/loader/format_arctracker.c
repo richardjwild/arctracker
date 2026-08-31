@@ -664,7 +664,7 @@ static bool read_sample_chunk(const uint8_t *data, const size_t data_size, modul
     if (copied_sample_data == NULL) return false;
     for (uint32_t sample = 0; sample < sample_length; sample++)
         copied_sample_data[sample] = read_f32_le(data + 8 + sample * 4);
-    const bool ok = module_set_sample(module, copied_sample_data, sample_length, sample_index);
+    const bool ok = module_set_sample(module, copied_sample_data, sample_length, 8287.14f, 24, 0, sample_index);
     if (!ok) deallocate(MODULE, copied_sample_data);
     return ok;
 }

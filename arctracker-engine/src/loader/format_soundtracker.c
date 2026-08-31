@@ -1112,7 +1112,6 @@ static bool load_samples(
             scale_mod_volume(mod_volume);
 
         instrument->transpose = 12;
-        instrument->finetune = finetune < 8 ? finetune : finetune - 16;
         instrument->sample_index = sample_no;
 
         /*
@@ -1204,6 +1203,9 @@ static bool load_samples(
         }
 
         sample->sample_data = sample_data;
+        sample->sample_rate = 8287.14f;
+        sample->base_note = 24;
+        sample->finetune = 16 * (finetune < 8 ? finetune : finetune - 16);
 
         sample_offset += (size_t)sample_length;
     }

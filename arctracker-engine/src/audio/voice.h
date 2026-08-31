@@ -5,15 +5,20 @@
 #include <stdint.h>
 
 typedef struct {
-    float phase_accumulator;
-    int period;
+    float phase_increment_per_period;
     double fine_tuning;
-    int tone_portamento_target_period;
-    int instrument_no;
     bool sample_repeats;
     int sample_end;
     int repeat_length;
     const float *sample_pointer;
+} player_sample_t;
+
+typedef struct {
+    float phase_accumulator;
+    player_sample_t *sample;
+    int period;
+    int tone_portamento_target_period;
+    int instrument_no;
     uint8_t volume;
     bool channel_playing;
     bool muted;

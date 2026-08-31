@@ -77,7 +77,6 @@ typedef struct {
     char name[MAX_LEN_SAMPLENAME];
     uint8_t default_volume;
     int transpose;
-    int8_t finetune;
     bool repeats;
     int repeat_offset;
     int repeat_length;
@@ -88,6 +87,9 @@ typedef struct {
 typedef struct
 {
     int sample_length;
+    float sample_rate;
+    uint8_t base_note;
+    int8_t finetune;
     const float *sample_data;
 } sample_t;
 
@@ -147,7 +149,7 @@ void module_set_instrument(module_t *module, int instrument_index, instrument_t 
 
 bool module_link_sample(module_t *module, const float *sample_data, int sample_length, int *sample_index);
 
-bool module_set_sample(module_t *module, const float *sample_data, int sample_length, int sample_index);
+bool module_set_sample(module_t *module, const float *sample_data, int sample_length, float sample_rate, uint8_t base_note, int8_t finetune, int sample_index);
 
 void module_set_name(module_t *module, const char *name);
 

@@ -15,6 +15,7 @@ import EditTempo from "./view/EditTempo.tsx";
 import EditAppConfig from "./view/EditAppConfig.tsx";
 import KeyboardOctave from "./view/KeyboardOctave.tsx";
 import UserMessages from "./view/UserMessages.tsx";
+import HexCalculator from "./view/HexCalculator.tsx";
 
 export default function AppLayout() {
   return (
@@ -25,6 +26,7 @@ export default function AppLayout() {
       <TransportBar />
       <PatternView />
       <InstrumentList />
+      <HexCalculator />
       <UserMessages />
       <KeyboardOctave />
       <SampleEditDialog />

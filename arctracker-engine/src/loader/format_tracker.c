@@ -376,6 +376,9 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
             sample_data[sample->sample_length + 1] = sample_data[instrument->repeat_offset + 1];
         }
         sample->sample_data = sample_data;
+        sample->sample_rate = 8287.14f;
+        sample->base_note = 24;
+        sample->finetune = 0;
     }
 
     // Transpose all notes up an octave when playing a Tracker module

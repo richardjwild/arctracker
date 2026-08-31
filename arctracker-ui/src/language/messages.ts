@@ -87,6 +87,9 @@ const messages = {
     moduleCreatedSuccessfully: "Module created successfully.",
     audioExportComplete: "Audio export completed successfully.",
     welcomeMessage: "Welcome to Arctracker!",
+    hexCalculatorButtonTooltip: "Open hex calculator",
+    decimalValueLabel: "Decimal:",
+    hexValueLabel: "Hex:",
   },
 } as const;
 

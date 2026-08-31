@@ -8,6 +8,7 @@ import { patternEvents } from "./patternEvents.ts";
 import { moduleMetaData } from "./moduleMetaData.ts";
 import { tempo } from "./tempo.ts";
 import { appConfig } from "../config/appConfig.ts";
+import { useStore } from "../store/useStore.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
@@ -16,6 +17,7 @@ export const editorKeyHandlers: {
   handleModuleTitleInput: KeyHandler,
   handleTempoInput: KeyHandler,
   handleAppConfigInput: KeyHandler,
+  handleHexCalculatorInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -103,5 +105,15 @@ export const editorKeyHandlers: {
       return true;
     }
     return false;
-  }
+  },
+
+  handleHexCalculatorInput: (e) => {
+    if (!useStore.getState().hexCalculatorActive)
+      return false;
+    if (e.code === 'Escape') {
+      commands.closeHexCalculator();
+      return true;
+    }
+    return false;
+  },
 };

@@ -144,6 +144,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
   ["Space", [{ modifiers: "none", execute: commands.togglePlay }]],
   ["KeyB", [{ modifiers: "primary", execute: commands.exportAudio }]],
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
+  ["KeyH", [{ modifiers: "primary", execute: commands.openHexCalculator }]],
   ["KeyI", [{ modifiers: "primary", execute: commands.openInstrumentEditor }]],
   [
     "KeyL",

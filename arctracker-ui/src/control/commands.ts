@@ -117,7 +117,9 @@ export type Command =
   | { type: "Toggle current track mute" }
   | { type: "Toggle track mute"; track: number }
   | { type: "Shift keyboard octave up" }
-  | { type: "Shift keyboard octave down" };
+  | { type: "Shift keyboard octave down" }
+  | { type: "Open hex calculator" }
+  | { type: "Close hex calculator" };
 
 const queue: Command[] = [];
 
@@ -151,16 +153,11 @@ export const commands = {
     commandQueue.push({ type: "Sequence seek backwards" }),
   sequenceSeekToStart: () =>
     commandQueue.push({ type: "Sequence seek to start" }),
-  sequenceSeekToEnd: () =>
-    commandQueue.push({ type: "Sequence seek to end" }),
-  nextInstrument: () =>
-    commandQueue.push({ type: "Next instrument" }),
-  previousInstrument: () =>
-    commandQueue.push({ type: "Previous instrument" }),
-  firstInstrument: () =>
-    commandQueue.push({ type: "First instrument" }),
-  lastInstrument: () =>
-    commandQueue.push({ type: "Last instrument" }),
+  sequenceSeekToEnd: () => commandQueue.push({ type: "Sequence seek to end" }),
+  nextInstrument: () => commandQueue.push({ type: "Next instrument" }),
+  previousInstrument: () => commandQueue.push({ type: "Previous instrument" }),
+  firstInstrument: () => commandQueue.push({ type: "First instrument" }),
+  lastInstrument: () => commandQueue.push({ type: "Last instrument" }),
   patternGridLeft: (extendSelection: boolean) =>
     commandQueue.push({ type: "Pattern grid left", extendSelection }),
   patternGridRight: (extendSelection: boolean) =>
@@ -207,10 +204,8 @@ export const commands = {
       patternIndex,
       extendSelection,
     }),
-  cursorFieldLeft: () =>
-    commandQueue.push({ type: "Cursor field left" }),
-  cursorFieldRight: () =>
-    commandQueue.push({ type: "Cursor field right" }),
+  cursorFieldLeft: () => commandQueue.push({ type: "Cursor field left" }),
+  cursorFieldRight: () => commandQueue.push({ type: "Cursor field right" }),
   increaseEffectsDisplayed: () =>
     commandQueue.push({ type: "Increase effects displayed" }),
   decreaseEffectsDisplayed: () =>
@@ -225,14 +220,10 @@ export const commands = {
     commandQueue.push({ type: "Edit effect data", field, value }),
   clearPatternEventField: () =>
     commandQueue.push({ type: "Clear pattern event field" }),
-  clearPatternEvent: () =>
-    commandQueue.push({ type: "Clear pattern event" }),
-  copyPatternEvents: () =>
-    commandQueue.push({ type: "Copy pattern events" }),
-  cutPatternEvents: () =>
-    commandQueue.push({ type: "Cut pattern events" }),
-  pastePatternEvents: () =>
-    commandQueue.push({ type: "Paste pattern events" }),
+  clearPatternEvent: () => commandQueue.push({ type: "Clear pattern event" }),
+  copyPatternEvents: () => commandQueue.push({ type: "Copy pattern events" }),
+  cutPatternEvents: () => commandQueue.push({ type: "Cut pattern events" }),
+  pastePatternEvents: () => commandQueue.push({ type: "Paste pattern events" }),
   copyTrack: () => commandQueue.push({ type: "Copy track" }),
   cutTrack: () => commandQueue.push({ type: "Cut track" }),
   pasteTrack: () => commandQueue.push({ type: "Paste track" }),
@@ -280,12 +271,9 @@ export const commands = {
       type: "Set current pattern length",
       newLength,
     }),
-  editModuleMetaData: () =>
-    commandQueue.push({ type: "Edit module metadata" }),
-  setModuleMetaData: () =>
-    commandQueue.push({ type: "Set module metadata" }),
-  editTrackCount: () =>
-    commandQueue.push({ type: "Edit track count" }),
+  editModuleMetaData: () => commandQueue.push({ type: "Edit module metadata" }),
+  setModuleMetaData: () => commandQueue.push({ type: "Set module metadata" }),
+  editTrackCount: () => commandQueue.push({ type: "Edit track count" }),
   setTrackCount: (trackCount: number) =>
     commandQueue.push({ type: "Set track count", trackCount }),
   editTempo: () => commandQueue.push({ type: "Edit tempo" }),
@@ -298,4 +286,6 @@ export const commands = {
     commandQueue.push({ type: "Shift keyboard octave up" }),
   shiftKeyboardOctaveDown: () =>
     commandQueue.push({ type: "Shift keyboard octave down" }),
+  openHexCalculator: () => commandQueue.push({ type: "Open hex calculator" }),
+  closeHexCalculator: () => commandQueue.push({ type: "Close hex calculator" }),
 };

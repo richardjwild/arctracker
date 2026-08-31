@@ -314,6 +314,12 @@ async function processCommands() {
       case "Shift keyboard octave down":
         pianoKeys.shiftOctave(-1);
         break;
+      case "Open hex calculator":
+        useStore.getState().setHexCalculatorActive(true);
+        break;
+      case "Close hex calculator":
+        useStore.getState().setHexCalculatorActive(false);
+        break;
     }
   }
 }
