@@ -58,11 +58,6 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
         const effect_t effect = event->effects[effect_no];
         if (effect.command == PORTAMENTO)
             start_tone_portamento(voice, effect_no, effect.data);
-        else if (effect.command == PORTAMENTO_PLUS_VOLUME_SIDE)
-        {
-            tone_portamento(voice, effect_no);
-            combined_volume_side(voice, effect.data);
-        }
         else if (effect.command == SET_VOLUME)
             set_volume(voice, effect.data);
         else if (effect.command == FINE_CRESCENDO)
@@ -116,6 +111,11 @@ void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *pl
             silence_voice(&player->tick_scheduler, voice, effect.data);
         else if (effect.command == VIBRATO)
             apply_vibrato(voice, effect_no);
+        else if (effect.command == VIBRATO_PLUS_VOLUME_SLIDE)
+        {
+            apply_vibrato(voice, effect_no);
+            combined_volume_side(voice, effect.data);
+        }
         else if (effect.command == ARPEGGIO)
             arpeggiate(voice, effect.data);
     }

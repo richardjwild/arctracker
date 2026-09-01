@@ -818,6 +818,11 @@ static void decode_effect(
             effect->data = mod_data * 4;
             break;
 
+        case 0x6:
+            effect->command = VIBRATO_PLUS_VOLUME_SLIDE;
+            effect->data = mod_data;
+            break;
+
         case 0x8:
             effect->command = SET_PANNING;
             // Arctracker uses both 0x00 and 0x80 to mean pan centre; hard left is 0x01 and hard right is 0xff.
@@ -907,6 +912,7 @@ static void decode_effect(
              * Unsupported effects are intentionally discarded rather than
              * making the whole module unloadable.
              */
+            printf("Ignored effect: %d\n", mod_effect);
             break;
     }
 
