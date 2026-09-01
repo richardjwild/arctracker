@@ -114,7 +114,7 @@ edit_result_t editor_load_sample(module_t *module, const char *filename, int *sa
         return failure(FILE_OPEN_FAILED);
     if (!load_result.file_valid)
         return failure(SAMPLE_LOAD_FAILED);
-    if (!module_link_sample(module, load_result.sample_data, load_result.sample_length, sample_index))
+    if (!module_link_sample(module, load_result.sample_data, load_result.sample_length, load_result.sample_rate, sample_index))
     {
         deallocate(MODULE, load_result.sample_data);
         return failure(SAMPLE_LINK_FAILED);

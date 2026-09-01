@@ -4,6 +4,7 @@ import { EditCommand, editor } from "./editor.ts";
 import { AUDIO_EXPORT_EXTENSION, filePicker } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
+import { userMessages } from "../messages/userMessages.ts";
 
 export type Instrument = {
   assigned: boolean;
@@ -212,6 +213,10 @@ export const editInstrument = {
     if (!filePath) return;
     try {
       await engine.exportSample(selectedInstrument, filePath);
+      userMessages.logMessage({
+        type: "info",
+        message: message("exportSampleSucceeded"),
+      })
     } catch (err) {
       void alerting.showError(err as string);
     }

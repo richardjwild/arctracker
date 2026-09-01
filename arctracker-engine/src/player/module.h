@@ -147,7 +147,7 @@ void module_get_instrument_info(const module_t *module, int instrument_index, ui
 
 void module_set_instrument(module_t *module, int instrument_index, instrument_t instrument_update);
 
-bool module_link_sample(module_t *module, const float *sample_data, int sample_length, int *sample_index);
+bool module_link_sample(module_t *module, const float *sample_data, int sample_length, float sample_rate, int *sample_index);
 
 bool module_set_sample(module_t *module, const float *sample_data, int sample_length, float sample_rate, uint8_t base_note, int8_t finetune, int sample_index);
 

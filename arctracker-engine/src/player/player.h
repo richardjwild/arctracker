@@ -47,6 +47,8 @@ typedef struct {
 
 player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue);
 
+void player_update_samples(player_t *);
+
 bool player_run(player_t *);
 
 bool player_queue_command(const player_t *, player_command_t);

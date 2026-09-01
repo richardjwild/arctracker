@@ -28,7 +28,6 @@ static void process_set_master_gain_command(player_t *player, master_gain_comman
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool);
 static void player_step(player_t *player);
-static void populate_player_samples(player_t *);
 static voice_t *initialise_voices(const player_t *);
 static event_t *get_events(const player_t *);
 static void note_on(int, const instrument_t *, player_sample_t *, voice_t *);
@@ -72,12 +71,32 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true);
     calculate_fine_tuning();
-    populate_player_samples(player);
+    player_update_samples(player);
     return player;
 
 init_failed:
     player_destroy(player);
     return NULL;
+}
+
+void player_update_samples(player_t *player)
+{
+    const module_t *module = player->module;
+    for (int i = 0; i < 256; i++)
+    {
+        const instrument_t instrument = module->instruments[i];
+        if (!instrument.assigned) continue;
+        const sample_t sample = module->samples[instrument.sample_index];
+        const double ft = fine_tuning[sample.finetune + 128];
+        const float base_period = (float) period_for_note(sample.base_note, ft);
+        const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
+        player->samples[i].phase_increment_per_period = phase_increment_per_period;
+        player->samples[i].fine_tuning = fine_tuning[128 + sample.finetune];
+        player->samples[i].sample_repeats = instrument.repeats;
+        player->samples[i].sample_end = sample.sample_length;
+        player->samples[i].repeat_length = instrument.repeat_length;
+        player->samples[i].sample_pointer = sample.sample_data;
+    }
 }
 
 bool player_run(player_t *player)
@@ -299,26 +318,6 @@ static void process_track_mute_state_changed_command(const player_t *player, con
     const bool new_state = player->module->tracks[track].muted;
     voice_t *voice = player->voices + track;
     voice->muted = new_state;
-}
-
-static void populate_player_samples(player_t *player)
-{
-    const module_t *module = player->module;
-    for (int i = 0; i < 256; i++)
-    {
-        const instrument_t instrument = module->instruments[i];
-        if (!instrument.assigned) continue;
-        const sample_t sample = module->samples[instrument.sample_index];
-        const double ft = fine_tuning[sample.finetune + 128];
-        const float base_period = (float) period_for_note(sample.base_note, ft);
-        const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
-        player->samples[i].phase_increment_per_period = phase_increment_per_period;
-        player->samples[i].fine_tuning = fine_tuning[128 + sample.finetune];
-        player->samples[i].sample_repeats = instrument.repeats;
-        player->samples[i].sample_end = sample.sample_length;
-        player->samples[i].repeat_length = instrument.repeat_length;
-        player->samples[i].sample_pointer = sample.sample_data;
-    }
 }
 
 static voice_t *initialise_voices(const player_t *player)

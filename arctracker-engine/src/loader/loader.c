@@ -44,10 +44,11 @@
     .sample_length = 0,\
     .sample_data = NULL,\
 }
-#define SUCCESSFULLY_LOADED_SAMPLE(length, data) (load_sample_result_t) {\
+#define SUCCESSFULLY_LOADED_SAMPLE(length, rate, data) (load_sample_result_t) {\
     .file_read = true,\
     .file_valid = true,\
     .sample_length = length,\
+    .sample_rate = rate,\
     .sample_data = data,\
 }
 
@@ -139,7 +140,7 @@ load_sample_result_t load_sample(const char *filename)
     {
         return FAILED_TO_READ_SAMPLE_FILE;
     }
-    return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, audio_data.audio_data);
+    return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, (float) audio_data.sample_rate, audio_data.audio_data);
 }
 
 bool export_sample(const module_t *module, const int instrument_index, const char *filename)
@@ -160,7 +161,7 @@ bool export_sample(const module_t *module, const int instrument_index, const cha
         sample_data_pcm16[byte_offset++] = pcm >> 8;
     }
     const wav_pcm16_t to_write = {
-        .sample_rate = 44100,
+        .sample_rate = (int) sample.sample_rate,
         .channels = 1,
         .bits_per_sample = 16,
         .frames = sample.sample_length,
