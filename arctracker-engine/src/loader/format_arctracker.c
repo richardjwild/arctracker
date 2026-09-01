@@ -180,6 +180,9 @@
  *   Chunk contents:                                                         *
  *   - u32 sample index                                                      *
  *   - u32 sample length (no of frames)                                      *
+ *   - f32 sample rate (frames/sec)                                          *
+ *   - u8 base note (0-C0; 12-C1; 24-C2; 36-C3; 48-C4)                       *
+ *   - s8 fine tune (semitone fractions; -128 to +127)                       *
  *   - f32 (array) sample data                                               *
  *                                                                           *
  * Sample slices chunk                                                       *
@@ -653,18 +656,33 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
 
 static bool read_sample_chunk(const uint8_t *data, const size_t data_size, module_t *module)
 {
-    const uint32_t sample_index = read_u32_le(data);
-    const uint32_t sample_length = read_u32_le(data + 4);
-    if (data_size != 8 + sample_length * 4)
+    const int sample_index = (int) read_u32_le(data);
+    const int sample_length = (int) read_u32_le(data + 4);
+    if (data_size != 14 + (size_t) sample_length * 4)
     {
         error(MODFILE_INVALID_SAMPLE_DATA_LENGTH);
         return false;
     }
+    const float sample_rate = read_f32_le(data + 8);
+    if (sample_rate <= 0.0f)
+    {
+        error(MODFILE_INVALID_SAMPLE_RATE);
+        return false;
+    }
+    const uint8_t base_note = read_u8(data + 12);
+    if (base_note > 59)
+    {
+        error(MODFILE_INVALID_BASE_NOTE);
+        return false;
+    }
+    const int8_t finetune = read_s8(data + 13);
     float *copied_sample_data = allocate_array(MODULE, sample_length + 2, sizeof(float));
     if (copied_sample_data == NULL) return false;
-    for (uint32_t sample = 0; sample < sample_length; sample++)
-        copied_sample_data[sample] = read_f32_le(data + 8 + sample * 4);
-    const bool ok = module_set_sample(module, copied_sample_data, sample_length, 8287.14f, 24, 0, sample_index);
+    for (int sample = 0; sample < sample_length; sample++)
+    {
+        copied_sample_data[sample] = read_f32_le(data + 14 + sample * 4);
+    }
+    const bool ok = module_set_sample(module, copied_sample_data, sample_length, sample_rate, base_note, finetune, sample_index);
     if (!ok) deallocate(MODULE, copied_sample_data);
     return ok;
 }
@@ -934,9 +952,12 @@ static bool write_sample_chunk(const module_t *module, const uint32_t sample_ind
     _Static_assert(sizeof(float) == 4, "float must be 32-bit");
     const sample_t sample = module->samples[sample_index];
     if (!write_fourcc(fp, SAMPLE_CHUNK_ID)) return false;
-    if (!write_u32_le(fp, 8 + sample.sample_length * 4)) return false;
+    if (!write_u32_le(fp, 14 + sample.sample_length * 4)) return false;
     if (!write_u32_le(fp, sample_index)) return false;
     if (!write_u32_le(fp, sample.sample_length)) return false;
+    if (!write_f32_le(fp, sample.sample_rate)) return false;
+    if (!write_u8(fp, sample.base_note)) return false;
+    if (!write_s8(fp, sample.finetune)) return false;
     for (int i = 0; i < sample.sample_length; i++)
         if (!write_f32_le(fp, sample.sample_data[i])) return false;
     return true;

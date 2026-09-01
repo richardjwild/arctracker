@@ -109,6 +109,8 @@
 #define MODFILE_INVALID_TRANSPOSE "File corrupt: invalid transpose value"
 #define MODFILE_INVALID_SAMPLE_LOOP_FLAG "File corrupt: invalid sample loop flag"
 #define MODFILE_INVALID_SAMPLE_DATA_LENGTH "File corrupt: sample data size does not match expected"
+#define MODFILE_INVALID_SAMPLE_RATE "File corrupt: invalid sample rate"
+#define MODFILE_INVALID_BASE_NOTE "File corrupt: invalid base note"
 #define MODFILE_INVALID_INVALID_SAMPLE_SLICE_LENGTH "File corrupt: sample slice length does not match expected"
 #define INVALID_SEQUENCE_PATTERN_NO "Sequence position references non existent pattern"
 #define MODFILE_INVALID_SAMPLE_INDEX "Instrument references non existent sample"
