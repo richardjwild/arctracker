@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "player/lfo.h"
+
 typedef struct {
     float phase_increment_per_period;
     double fine_tuning;
@@ -17,6 +19,7 @@ typedef struct {
     float phase_accumulator;
     player_sample_t *sample;
     int period;
+    int period_modulation;
     int tone_portamento_target_period;
     int instrument_no;
     uint8_t volume;
@@ -26,6 +29,9 @@ typedef struct {
     bool arpeggiator_on;
     int arpeggio_counter;
     int current_note;
+    bool vibrato_on;
+    pt_waveform_t vibrato_type;
+    uint8_t vibrato_phase;
     uint8_t effect_memory[4];
 } voice_t;
 

@@ -193,6 +193,13 @@
  *      divisions, the vibrato effect can be maintained. If either x or y
  *      are 0, then the old vibrato values will be used.
  *
+ *      [RJW note] That description is incorrect where it mentions y/16
+ *      semitones; that is not what the 4xy effect does. Instead, it adds
+ *      an offset to the period, given by offset = 2y x waveform(phase),
+ *      where waveform(phase) is normalised to -1 to +1. Also, to clarify
+ *      the vibrato rate: phase is an integer value from 0 to 63 that is
+ *      incremented by [x * ticks per event] every tick _except tick 0_.
+ *
  * [5]: Continue 'Slide to note', but also do Volume slide
  *      Where [5][x][y] means "either slide the volume up x*(ticks - 1) or
  *      slide the volume down y*(ticks - 1), at the same time as continuing
@@ -798,6 +805,11 @@ static void decode_effect(
 
         case 0x3:
             effect->command = PORTAMENTO;
+            effect->data = mod_data;
+            break;
+
+        case 0x4:
+            effect->command = VIBRATO;
             effect->data = mod_data;
             break;
 

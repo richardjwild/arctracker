@@ -27,7 +27,7 @@ static const uint8_t ARPEGGIO_COMMAND = 0x0;
 static const uint8_t PORTUP_COMMAND = 0x1;
 static const uint8_t PORTDOWN_COMMAND = 0x2;
 static const uint8_t TONEPORT_COMMAND = 0x3;
-// static const uint8_t VIBRATO_COMMAND = 0x4; not implemented yet
+static const uint8_t VIBRATO_COMMAND = 0x4;
 // static const uint8_t DELAYEDNOTE_COMMAND = 0x5; not implemented yet
 // static const uint8_t RELEASESAMP_COMMAND = 0x6; not implemented yet
 // static const uint8_t TREMOLO_COMMAND = 0x7; not implemented yet
@@ -254,6 +254,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
+    if (code == VIBRATO_COMMAND) return VIBRATO;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
     if (code == SETFINETEMPO_COMMAND) return SET_TICKS_PER_SECOND;
     if (code == FINEPORTAMENTO_COMMAND) return FINE_PORTAMENTO;

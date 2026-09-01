@@ -4,7 +4,7 @@
 #include "arctracker-console.h"
 #include "player.h"
 
-void reset_arpeggiator(voice_t *voice);
+void reset_effects(voice_t *voice);
 
 bool portamento(const event_t *event);
 

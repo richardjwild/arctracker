@@ -27,10 +27,10 @@ typedef enum
     PITCH_SLIDE_UP = '1',
     PITCH_SLIDE_DOWN = '2',
     PORTAMENTO = '3',
-    // TODO: Implement vibrato (4).
+    VIBRATO = '4',
     PORTAMENTO_PLUS_VOLUME_SIDE = '5',
-    // TODO: Implement tremolo (7).
     FINE_PORTAMENTO = '6',
+    // TODO: Implement tremolo (7).
     PATTERN_BREAK = 'B',
     CRESCENDO = 'C',
     DECRESCENDO = 'D',

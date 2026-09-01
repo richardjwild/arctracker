@@ -5,6 +5,7 @@
 
 #include "sequencer.h"
 #include "effects.h"
+#include "lfo.h"
 #include "period.h"
 #include "memory/heap.h"
 #include "messages.h"
@@ -72,6 +73,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     set_current_frame(player, true);
     calculate_fine_tuning();
     player_update_samples(player);
+    lfo_init_waveforms();
     return player;
 
 init_failed:
@@ -332,6 +334,10 @@ static voice_t *initialise_voices(const player_t *player)
         voices[channel].arpeggiator_on = false;
         voices[channel].panning = player->module->tracks[channel].panning - 1;
         voices[channel].volume = INTERNAL_GAIN_MAX;
+        voices[channel].period_modulation = 0;
+        voices[channel].vibrato_on = false;
+        voices[channel].vibrato_type = PT_WAVEFORM_SINE;
+        voices[channel].vibrato_phase = 0;
     }
     return voices;
 }
@@ -437,7 +443,7 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
         if (instrument.assigned)
             voice->volume = instrument.default_volume;
     }
-    reset_arpeggiator(voice);
+    reset_effects(voice);
     handle_effects_on_event(event, voice, player);
 }
 

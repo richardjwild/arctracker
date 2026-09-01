@@ -21,7 +21,8 @@ void resample(voice_t *voice, float *resample_buffer, int frames_to_write, const
     }
     float (*interpolate)(const float *, float) = interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
     const float *sample = voice->sample->sample_pointer;
-    const float phase_increment = voice->sample->phase_increment_per_period / (float) voice->period;
+    const int period = voice->period + voice->period_modulation;
+    const float phase_increment = voice->sample->phase_increment_per_period / (float) period;
     const float sample_end = (float) voice->sample->sample_end;
     const float repeat_length = (float) voice->sample->repeat_length;
     const bool sample_repeats = voice->sample->sample_repeats;
