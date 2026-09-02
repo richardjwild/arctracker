@@ -20,7 +20,7 @@ static void start_arpeggio(voice_t *);
 static void apply_arpeggio(voice_t *, uint8_t);
 static void start_vibrato(voice_t *, int, uint8_t, bool);
 static void apply_vibrato(voice_t *, int);
-static void set_vibrato_waveform(voice_t *, uint8_t);
+static void set_lfo_waveform(lfo_effect_t *, uint8_t);
 static void set_volume(voice_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
 static void set_sample_offset(const player_t *, voice_t *, uint8_t);
@@ -75,22 +75,22 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             portamento_fine(voice, effect.data);
         if (effect.command == VIBRATO)
             start_vibrato(voice, effect_no, effect.data, vibrato_already_on);
-        if (effect.command == SET_VIBRATO_WAVEFORM)
-            set_vibrato_waveform(voice, effect.data);
+        if (effect.command == SET_LFO_WAVEFORM)
+            set_lfo_waveform(&voice->vibrato, effect.data);
         if (effect.command == ARPEGGIO)
             start_arpeggio(voice);
     }
     if (!voice->arpeggiator_on)
     {
         voice->arpeggio_counter = 1;
-        if (!voice->vibrato_on) voice->period_modulation = 0;
+        if (!voice->vibrato.enabled) voice->period_modulation = 0;
     }
 }
 
 static void save_and_reset_effect_state(voice_t *voice, bool *vibrato_already_on)
 {
-    *vibrato_already_on = voice->vibrato_on;
-    voice->vibrato_on = false;
+    *vibrato_already_on = voice->vibrato.enabled;
+    voice->vibrato.enabled = false;
     voice->arpeggiator_on = false;
 }
 
@@ -189,16 +189,16 @@ static void tone_portamento(voice_t *voice, const int effect_no)
     }
 }
 
-static void set_vibrato_waveform(voice_t *voice, const uint8_t data)
+static void set_lfo_waveform(lfo_effect_t *lfo_effect, const uint8_t data)
 {
-    voice->vibrato_retrigger_on = (data & 0x4) == 0;
+    lfo_effect->retrigger = (data & 0x4) == 0;
     switch (data & 0x3)
     {
-        case 0: voice->vibrato_type = PT_WAVEFORM_SINE;
+        case 0: lfo_effect->waveform = PT_WAVEFORM_SINE;
             break;
-        case 1: voice->vibrato_type = PT_WAVEFORM_RAMP;
+        case 1: lfo_effect->waveform = PT_WAVEFORM_RAMP;
             break;
-        default: voice->vibrato_type = PT_WAVEFORM_SQUARE;
+        default: lfo_effect->waveform = PT_WAVEFORM_SQUARE;
             break;
     }
     // Some sources claim that type 3 (or 7) select a waveform at random, but this is disputed.
@@ -207,9 +207,9 @@ static void set_vibrato_waveform(voice_t *voice, const uint8_t data)
 
 static void start_vibrato(voice_t *voice, const int effect_no, const uint8_t data, const bool already_on)
 {
-    voice->vibrato_on = true;
-    if (!already_on && voice->vibrato_retrigger_on)
-        voice->vibrato_phase = 0;
+    voice->vibrato.enabled = true;
+    if (!already_on && voice->vibrato.retrigger)
+        voice->vibrato.phase = 0;
     if ((data & 0xf0) != 0 && (data & 0xf) != 0)
         voice->effect_memory[effect_no] = data;
 }
@@ -219,10 +219,10 @@ static void apply_vibrato(voice_t *voice, const int effect_no)
     const uint8_t vibrato_params = voice->effect_memory[effect_no];
     const uint8_t vibrato_speed = vibrato_params >> 4;
     const uint8_t vibrato_depth = vibrato_params & 0xf;
-    const float lfo_value = lfo_pt_waveform(voice->vibrato_type, voice->vibrato_phase);
+    const float lfo_value = lfo_pt_waveform(voice->vibrato.waveform, voice->vibrato.phase);
     const float period_modulation = lfo_value * (float) vibrato_depth * 2.0f;
     voice->period_modulation = (int) period_modulation;
-    voice->vibrato_phase = (voice->vibrato_phase + vibrato_speed) % PT_LFO_WAVELENGTH;
+    voice->vibrato.phase = (voice->vibrato.phase + vibrato_speed) % PT_LFO_WAVELENGTH;
 }
 
 static void start_arpeggio(voice_t *voice)

@@ -335,10 +335,10 @@ static voice_t *initialise_voices(const player_t *player)
         voices[channel].panning = player->module->tracks[channel].panning - 1;
         voices[channel].volume = INTERNAL_GAIN_MAX;
         voices[channel].period_modulation = 0;
-        voices[channel].vibrato_on = false;
-        voices[channel].vibrato_retrigger_on = true;
-        voices[channel].vibrato_type = PT_WAVEFORM_SINE;
-        voices[channel].vibrato_phase = 0;
+        voices[channel].vibrato.enabled = false;
+        voices[channel].vibrato.retrigger = true;
+        voices[channel].vibrato.waveform = PT_WAVEFORM_SINE;
+        voices[channel].vibrato.phase = 0;
     }
     return voices;
 }

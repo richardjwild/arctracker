@@ -15,6 +15,13 @@ typedef struct {
 } player_sample_t;
 
 typedef struct {
+    bool enabled;
+    bool retrigger;
+    pt_waveform_t waveform;
+    uint8_t phase;
+} lfo_effect_t;
+
+typedef struct {
     float phase_accumulator;
     player_sample_t *sample;
     int period;
@@ -28,10 +35,7 @@ typedef struct {
     bool arpeggiator_on;
     int arpeggio_counter;
     int current_note;
-    bool vibrato_on;
-    bool vibrato_retrigger_on;
-    pt_waveform_t vibrato_type;
-    uint8_t vibrato_phase;
+    lfo_effect_t vibrato;
     uint8_t effect_memory[4];
 } voice_t;
 

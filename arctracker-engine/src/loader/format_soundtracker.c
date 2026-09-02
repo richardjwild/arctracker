@@ -872,7 +872,7 @@ static void decode_effect(
                 // TODO: E1x and E2x map to FINE_PORTAMENTO but that needs figuring out first.
                 if (e_cmd == 4)
                 {
-                    effect->command = SET_VIBRATO_WAVEFORM;
+                    effect->command = SET_LFO_WAVEFORM;
                     effect->data = e_cmd_data;
                 }
                 if (e_cmd == 10)
