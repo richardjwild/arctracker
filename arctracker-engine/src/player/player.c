@@ -339,6 +339,10 @@ static voice_t *initialise_voices(const player_t *player)
         voices[channel].vibrato.retrigger = true;
         voices[channel].vibrato.waveform = PT_WAVEFORM_SINE;
         voices[channel].vibrato.phase = 0;
+        voices[channel].tremolo.enabled = false;
+        voices[channel].tremolo.retrigger = true;
+        voices[channel].tremolo.waveform = PT_WAVEFORM_SINE;
+        voices[channel].tremolo.phase = 0;
     }
     return voices;
 }

@@ -10,7 +10,7 @@ static const float PAN_HARD_RIGHT = 255.0f;
 static void calculate_gain_curve(float *);
 static bool fill_audio_buffer(audio_out_t *, voice_t *, int);
 static void write_audio_for_channel(audio_out_t *, voice_t *, int, int);
-static float volume_to_gain(const audio_out_t *, uint8_t);
+static float volume_to_gain(const audio_out_t *, uint8_t, int);
 static bool mix_and_send(audio_out_t *);
 
 bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain, volume_mapping_type_t volume_mapping_type)
@@ -82,7 +82,7 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
 {
     voice_t *voice = voices + channel;
     resample(voice, audio_out->resample_buffer, frames_to_fill, audio_out->interpolation_type);
-    const float voice_gain = volume_to_gain(audio_out, voice->volume);
+    const float voice_gain = volume_to_gain(audio_out, voice->volume, voice->volume_modulation);
     const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
     const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;
     const float right_gain = gain * ((float) voice->panning - PAN_HARD_LEFT) / 254.0f;
@@ -101,11 +101,14 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
     }
 }
 
-static float volume_to_gain(const audio_out_t *audio_out, const uint8_t volume)
+static float volume_to_gain(const audio_out_t *audio_out, const uint8_t volume, const int modulation)
 {
+    int modulated_volume = volume + modulation;
+    if (modulated_volume > 255) modulated_volume = 255;
+    if (modulated_volume < 0) modulated_volume = 0;
     return audio_out->volume_mapping_type == VOLUME_AMIGA
-               ? (float) volume / 255
-               : audio_out->gain_curve[volume];
+               ? (float) modulated_volume / 255
+               : audio_out->gain_curve[modulated_volume];
 }
 
 static bool mix_and_send(audio_out_t *audio_out)

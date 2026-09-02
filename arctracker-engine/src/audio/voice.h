@@ -29,6 +29,7 @@ typedef struct {
     int tone_portamento_target_period;
     int instrument_no;
     uint8_t volume;
+    int volume_modulation;
     bool channel_playing;
     bool muted;
     uint8_t panning;
@@ -36,6 +37,7 @@ typedef struct {
     int arpeggio_counter;
     int current_note;
     lfo_effect_t vibrato;
+    lfo_effect_t tremolo;
     uint8_t effect_memory[4];
 } voice_t;
 

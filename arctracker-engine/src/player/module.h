@@ -30,7 +30,7 @@ typedef enum
     VIBRATO = '4',
     PORTAMENTO_PLUS_VOLUME_SIDE = '5',
     VIBRATO_PLUS_VOLUME_SLIDE = '6',
-    // TODO: Implement tremolo (7).
+    TREMOLO = '7',
     PATTERN_BREAK = 'B',
     CRESCENDO = 'C',
     DECRESCENDO = 'D',

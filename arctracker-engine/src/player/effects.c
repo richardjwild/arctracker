@@ -1,5 +1,4 @@
 #include "effects.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include "sequencer.h"
 #include "period.h"
@@ -8,7 +7,7 @@
 
 static const uint8_t PAN_CENTRE = 0x80;
 
-static void save_and_reset_effect_state(voice_t *, bool *);
+static void save_and_reset_effect_state(voice_t *, bool *, bool *);
 static void volume_slide_up(voice_t *, uint8_t);
 static void volume_slide_down(voice_t *, uint8_t);
 static void combined_volume_side(voice_t *, uint8_t);
@@ -20,6 +19,8 @@ static void start_arpeggio(voice_t *);
 static void apply_arpeggio(voice_t *, uint8_t);
 static void start_vibrato(voice_t *, int, uint8_t, bool);
 static void apply_vibrato(voice_t *, int);
+static void start_tremolo(voice_t *, int, uint8_t, bool);
+static void apply_tremolo(voice_t *, int);
 static void set_lfo_waveform(lfo_effect_t *, uint8_t);
 static void set_volume(voice_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
@@ -44,8 +45,8 @@ bool portamento(const event_t *event)
 
 void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *player)
 {
-    bool vibrato_already_on;
-    save_and_reset_effect_state(voice, &vibrato_already_on);
+    bool vibrato_already_on, tremolo_already_on;
+    save_and_reset_effect_state(voice, &vibrato_already_on, &tremolo_already_on);
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
@@ -75,22 +76,31 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             portamento_fine(voice, effect.data);
         if (effect.command == VIBRATO)
             start_vibrato(voice, effect_no, effect.data, vibrato_already_on);
+        if (effect.command == TREMOLO)
+            start_tremolo(voice, effect_no, effect.data, tremolo_already_on);
         if (effect.command == SET_LFO_WAVEFORM)
-            set_lfo_waveform(&voice->vibrato, effect.data);
+        {
+            const uint8_t effect_type = effect.data >> 4;
+            if (effect_type == 0) set_lfo_waveform(&voice->vibrato, effect.data & 0xf);
+            if (effect_type == 1) set_lfo_waveform(&voice->tremolo, effect.data & 0xf);
+        }
         if (effect.command == ARPEGGIO)
             start_arpeggio(voice);
     }
     if (!voice->arpeggiator_on)
     {
         voice->arpeggio_counter = 1;
-        if (!voice->vibrato.enabled) voice->period_modulation = 0;
+        if (!voice->vibrato.enabled && !voice->tremolo.enabled)
+            voice->period_modulation = 0;
     }
 }
 
-static void save_and_reset_effect_state(voice_t *voice, bool *vibrato_already_on)
+static void save_and_reset_effect_state(voice_t *voice, bool *vibrato_already_on, bool *tremolo_already_on)
 {
     *vibrato_already_on = voice->vibrato.enabled;
+    *tremolo_already_on = voice->tremolo.enabled;
     voice->vibrato.enabled = false;
+    voice->tremolo.enabled = false;
     voice->arpeggiator_on = false;
 }
 
@@ -123,6 +133,8 @@ void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *pl
             apply_vibrato(voice, effect_no);
             combined_volume_side(voice, effect.data);
         }
+        if (effect.command == TREMOLO)
+            apply_tremolo(voice, effect_no);
         if (effect.command == ARPEGGIO)
             apply_arpeggio(voice, effect.data);
     }
@@ -223,6 +235,26 @@ static void apply_vibrato(voice_t *voice, const int effect_no)
     const float period_modulation = lfo_value * (float) vibrato_depth * 2.0f;
     voice->period_modulation = (int) period_modulation;
     voice->vibrato.phase = (voice->vibrato.phase + vibrato_speed) % PT_LFO_WAVELENGTH;
+}
+
+static void start_tremolo(voice_t *voice, const int effect_no, const uint8_t data, const bool already_on)
+{
+    voice->tremolo.enabled = true;
+    if (!already_on && voice->tremolo.retrigger)
+        voice->tremolo.phase = 0;
+    if ((data & 0xf0) != 0 && (data & 0xf) != 0)
+        voice->effect_memory[effect_no] = data;
+}
+
+static void apply_tremolo(voice_t *voice, const int effect_no)
+{
+    const uint8_t tremolo_params = voice->effect_memory[effect_no];
+    const uint8_t tremolo_speed = tremolo_params >> 4;
+    const uint8_t tremolo_depth = tremolo_params & 0xf;
+    const float lfo_value = lfo_pt_waveform(voice->tremolo.waveform, voice->tremolo.phase);
+    const float volume_modulation = lfo_value * (float) tremolo_depth * 16.0f;
+    voice->volume_modulation = (int) volume_modulation;
+    voice->tremolo.phase = (voice->tremolo.phase + tremolo_speed) % PT_LFO_WAVELENGTH;
 }
 
 static void start_arpeggio(voice_t *voice)

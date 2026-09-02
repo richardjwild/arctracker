@@ -823,6 +823,11 @@ static void decode_effect(
             effect->data = mod_data;
             break;
 
+        case 0x7:
+            effect->command = TREMOLO;
+            effect->data = mod_data;
+            break;
+
         case 0x8:
             effect->command = SET_PANNING;
             // Arctracker uses both 0x00 and 0x80 to mean pan centre; hard left is 0x01 and hard right is 0xff.
@@ -874,6 +879,11 @@ static void decode_effect(
                 {
                     effect->command = SET_LFO_WAVEFORM;
                     effect->data = e_cmd_data;
+                }
+                if (e_cmd == 7)
+                {
+                    effect->command = SET_LFO_WAVEFORM;
+                    effect->data = e_cmd_data | 0x10;
                 }
                 if (e_cmd == 10)
                 {
