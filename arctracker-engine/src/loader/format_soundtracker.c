@@ -874,17 +874,32 @@ static void decode_effect(
             {
                 const uint8_t e_cmd = mod_data >> 4;
                 const uint8_t e_cmd_data = mod_data & 0xf;
-                // TODO: E1x and E2x map to FINE_PORTAMENTO but that needs figuring out first.
+                // E0x (set filter on/off) not implemented.
+                if (e_cmd == 1)
+                {
+                    effect->command = FINE_PORTAMENTO;
+                    effect->data = e_cmd_data;
+                }
+                if (e_cmd == 2)
+                {
+                    effect->command = FINE_PORTAMENTO;
+                    effect->data = e_cmd_data | 0x80;
+                }
+                // E3x (set glissando on/off) to do.
                 if (e_cmd == 4)
                 {
                     effect->command = SET_LFO_WAVEFORM;
                     effect->data = e_cmd_data;
                 }
+                // E5x (set finetune) to do.
+                // E6x (define loop) to do.
                 if (e_cmd == 7)
                 {
                     effect->command = SET_LFO_WAVEFORM;
                     effect->data = e_cmd_data | 0x10;
                 }
+                // E8x unused.
+                // E9x (retrigger sample) to do.
                 if (e_cmd == 10)
                 {
                     effect->command = FINE_CRESCENDO;
@@ -900,11 +915,13 @@ static void decode_effect(
                     effect->command = SILENCE_SAMPLE_AFTER_DELAY;
                     effect->data = e_cmd_data;
                 }
+                // EDx (delay sample) to do.
                 if (e_cmd == 14)
                 {
                     effect->command = DELAY_NEXT_EVENT;
                     effect->data = e_cmd_data;
                 }
+                // EFx (invert loop) not implemented.
             }
             break;
 
@@ -923,10 +940,6 @@ static void decode_effect(
             break;
 
         default:
-            /*
-             * Unsupported effects are intentionally discarded rather than
-             * making the whole module unloadable.
-             */
             printf("Ignored effect: %d\n", mod_effect);
             break;
     }

@@ -30,7 +30,6 @@ static void pattern_break(sequence_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
 static void delay_next_event(tick_scheduler_t *, uint8_t);
 static void silence_voice(const tick_scheduler_t *tick_scheduler, voice_t *voice, uint8_t data);
-static void portamento_fine(voice_t *, uint8_t);
 
 bool portamento(const event_t *event)
 {
@@ -73,7 +72,10 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
         if (effect.command == DELAY_NEXT_EVENT)
             delay_next_event(&player->tick_scheduler, effect.data);
         if (effect.command == FINE_PORTAMENTO)
-            portamento_fine(voice, effect.data);
+        {
+            if ((effect.data & 0x80) == 0) portamento_up(voice, effect.data);
+            else portamento_down(voice, effect.data & 0x7f);
+        }
         if (effect.command == VIBRATO)
             start_vibrato(voice, effect_no, effect.data, vibrato_already_on);
         if (effect.command == TREMOLO)
@@ -281,16 +283,6 @@ static void apply_arpeggio(voice_t *voice, const uint8_t data)
 static void set_volume(voice_t *voice, const uint8_t data)
 {
     voice->volume = data;
-}
-
-static void portamento_fine(voice_t *voice, const uint8_t data)
-{
-    // TODO: This looks wrong. Find out what the semantics of this command are.
-    voice->period += data;
-    if (voice->period > PERIOD_MAX)
-        voice->period = PERIOD_MAX;
-    else if (voice->period < PERIOD_MIN)
-        voice->period = PERIOD_MIN;
 }
 
 static void set_voice_panning(voice_t *voice, const uint8_t data)
