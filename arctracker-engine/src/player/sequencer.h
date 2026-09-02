@@ -38,6 +38,8 @@ void set_jump_target(int next_position, int jump_pattern_index, sequence_t *sequ
 
 void set_pattern_loop(sequence_t *);
 
+void set_loop(sequence_t *, int, int);
+
 void clear_pattern_loop(sequence_t *);
 
 void sequence_destroy(sequence_t *sequence);

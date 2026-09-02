@@ -70,10 +70,16 @@ void set_pattern_loop(sequence_t *sequence)
 {
     const int current_sequence_pos = sequence->sequence_pos;
     const int current_pattern = sequence->sequence[current_sequence_pos];
+    set_loop(sequence, 0, sequence->patterns[current_pattern].num_lines - 1);
+}
+
+void set_loop(sequence_t *sequence, const int loop_pattern_start, const int loop_pattern_end)
+{
+    const int current_sequence_pos = sequence->sequence_pos;
     sequence->looping_state.looping = true;
     sequence->looping_state.loop_sequence_pos = current_sequence_pos;
-    sequence->looping_state.loop_pattern_start = 0;
-    sequence->looping_state.loop_pattern_end = sequence->patterns[current_pattern].num_lines - 1;
+    sequence->looping_state.loop_pattern_start = loop_pattern_start;
+    sequence->looping_state.loop_pattern_end = loop_pattern_end;
 }
 
 void clear_pattern_loop(sequence_t *sequence)
