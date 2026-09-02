@@ -45,6 +45,7 @@ typedef enum
     SET_TICKS_PER_SECOND = 'T',
     SET_VOLUME = 'V',
     SILENCE_SAMPLE_AFTER_DELAY = 'X',
+    SET_VIBRATO_WAVEFORM = 'Y',
 } command_t;
 
 typedef struct

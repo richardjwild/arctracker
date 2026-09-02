@@ -1,10 +1,7 @@
 #ifndef ARCTRACKER_EFFECTS_H
 #define ARCTRACKER_EFFECTS_H
 
-#include "arctracker-console.h"
 #include "player.h"
-
-void reset_effects(voice_t *voice);
 
 bool portamento(const event_t *event);
 

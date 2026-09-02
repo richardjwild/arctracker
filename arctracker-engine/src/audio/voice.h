@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "player/lfo.h"
 
 typedef struct {
@@ -30,6 +29,7 @@ typedef struct {
     int arpeggio_counter;
     int current_note;
     bool vibrato_on;
+    bool vibrato_retrigger_on;
     pt_waveform_t vibrato_type;
     uint8_t vibrato_phase;
     uint8_t effect_memory[4];

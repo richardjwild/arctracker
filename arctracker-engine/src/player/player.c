@@ -336,6 +336,7 @@ static voice_t *initialise_voices(const player_t *player)
         voices[channel].volume = INTERNAL_GAIN_MAX;
         voices[channel].period_modulation = 0;
         voices[channel].vibrato_on = false;
+        voices[channel].vibrato_retrigger_on = true;
         voices[channel].vibrato_type = PT_WAVEFORM_SINE;
         voices[channel].vibrato_phase = 0;
     }
@@ -443,7 +444,6 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
         if (instrument.assigned)
             voice->volume = instrument.default_volume;
     }
-    reset_effects(voice);
     handle_effects_on_event(event, voice, player);
 }
 

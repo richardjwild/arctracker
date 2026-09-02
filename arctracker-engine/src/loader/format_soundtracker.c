@@ -870,6 +870,11 @@ static void decode_effect(
                 const uint8_t e_cmd = mod_data >> 4;
                 const uint8_t e_cmd_data = mod_data & 0xf;
                 // TODO: E1x and E2x map to FINE_PORTAMENTO but that needs figuring out first.
+                if (e_cmd == 4)
+                {
+                    effect->command = SET_VIBRATO_WAVEFORM;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 10)
                 {
                     effect->command = FINE_CRESCENDO;
