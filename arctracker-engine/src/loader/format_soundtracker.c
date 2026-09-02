@@ -897,7 +897,11 @@ static void decode_effect(
                     const uint8_t finetune = e_cmd_data & 0xF;
                     effect->data = 16 * (finetune < 8 ? finetune : finetune - 16);
                 }
-                // E6x (define loop) to do.
+                if (e_cmd == 6)
+                {
+                    effect->command = SET_LOOP;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 7)
                 {
                     effect->command = SET_LFO_WAVEFORM;

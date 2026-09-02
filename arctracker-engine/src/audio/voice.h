@@ -22,6 +22,12 @@ typedef struct {
 } lfo_effect_t;
 
 typedef struct {
+    bool looping;
+    int start;
+    int counter;
+} pt_loop_state_t;
+
+typedef struct {
     float phase_accumulator;
     player_sample_t *sample;
     int period;
@@ -38,6 +44,7 @@ typedef struct {
     int current_note;
     lfo_effect_t vibrato;
     lfo_effect_t tremolo;
+    pt_loop_state_t loop_state;
     uint8_t effect_memory[4];
 } voice_t;
 

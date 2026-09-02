@@ -44,6 +44,7 @@ typedef enum
     SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
     SET_VOLUME = 'V',
+    SET_LOOP = 'W',
     SILENCE_SAMPLE_AFTER_DELAY = 'X',
     SET_LFO_WAVEFORM = 'Y',
     SET_FINETUNE = 'Z',

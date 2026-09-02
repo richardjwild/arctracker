@@ -16,6 +16,7 @@ static void portamento_down(voice_t *, uint8_t);
 static void start_tone_portamento(voice_t *, int, uint8_t);
 static void tone_portamento(voice_t *, int);
 static void start_arpeggio(voice_t *);
+static void define_loop(voice_t *, sequence_t *, uint8_t);
 static void apply_arpeggio(voice_t *, uint8_t);
 static void start_vibrato(voice_t *, int, uint8_t, bool);
 static void apply_vibrato(voice_t *, int);
@@ -98,6 +99,8 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
         }
         if (effect.command == ARPEGGIO)
             start_arpeggio(voice);
+        if (effect.command == SET_LOOP)
+            define_loop(voice, &player->sequence, effect.data);
     }
     if (!voice->arpeggiator_on)
     {
@@ -272,6 +275,30 @@ static void apply_tremolo(voice_t *voice, const int effect_no)
 static void start_arpeggio(voice_t *voice)
 {
     voice->arpeggiator_on = true;
+}
+
+static void define_loop(voice_t *voice, sequence_t *sequence, const uint8_t data)
+{
+    if (data == 0)
+    {
+        voice->loop_state.start = sequence->pattern_index;
+        return;
+    }
+    if (voice->loop_state.looping)
+    {
+        voice->loop_state.counter -= 1;
+        if (voice->loop_state.counter == 0)
+        {
+            clear_pattern_loop(sequence);
+            voice->loop_state.looping = false;
+        }
+    }
+    else
+    {
+        set_loop(sequence, voice->loop_state.start, sequence->pattern_index);
+        voice->loop_state.looping = true;
+        voice->loop_state.counter = data;
+    }
 }
 
 static void apply_arpeggio(voice_t *voice, const uint8_t data)

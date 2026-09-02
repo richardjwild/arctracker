@@ -28,6 +28,7 @@ static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool);
+static void reset_voice_loops(const player_t *);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(const player_t *);
 static event_t *get_events(const player_t *);
@@ -73,6 +74,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     set_current_frame(player, true);
     calculate_fine_tuning();
     player_update_samples(player);
+    reset_voice_loops(player);
     lfo_init_waveforms();
     return player;
 
@@ -362,15 +364,28 @@ static void set_current_frame(player_t *player, const bool row_advanced)
     player->current_frame.num_tracks = player->module->num_tracks;
 }
 
+static void reset_voice_loops(const player_t *player)
+{
+    for (int track = 0; track < player->module->num_tracks; track++)
+    {
+        voice_t *voice = player->voices + track;
+        voice->loop_state.start = 0;
+        voice->loop_state.counter = 0;
+        voice->loop_state.looping = false;
+    }
+}
+
 static void player_step(player_t *player)
 {
     bool row_advanced = false;
+    bool sequence_advanced = false;
     if (tick_scheduler_is_new_event(&player->tick_scheduler.event_scheduler))
     {
-        pattern_step(&player->sequence);
+        pattern_step(&player->sequence, &sequence_advanced);
         row_advanced = true;
     }
     set_current_frame(player, row_advanced);
+    if (sequence_advanced) reset_voice_loops(player);
 }
 
 static event_t *get_events(const player_t *player)
