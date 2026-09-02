@@ -207,8 +207,8 @@ static bool player_tick(player_t *player)
     const bool healthy = audio_consume(player);
     if (healthy && player->playing)
     {
-        update_voices(player);
         player_step(player);
+        update_voices(player);
         tick_scheduler_advance_tick(&tick_scheduler->event_scheduler);
     }
     return healthy;
@@ -381,7 +381,11 @@ static void player_step(player_t *player)
     bool sequence_advanced = false;
     if (tick_scheduler_is_new_event(&player->tick_scheduler.event_scheduler))
     {
+        row_advanced = true;
         pattern_step(&player->sequence, &sequence_advanced);
+    }
+    else if (tick_scheduler_just_started(&player->tick_scheduler.event_scheduler))
+    {
         row_advanced = true;
     }
     set_current_frame(player, row_advanced);

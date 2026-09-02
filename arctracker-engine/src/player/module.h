@@ -41,6 +41,7 @@ typedef enum
     DELAY_NEXT_EVENT = 'L',
     USE_SAMPLE_SLICE = 'O',
     SET_PANNING = 'P',
+    RETRIGGER_SAMPLE = 'R',
     SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
     SET_VOLUME = 'V',

@@ -18,6 +18,7 @@ static void tone_portamento(voice_t *, int);
 static void start_arpeggio(voice_t *);
 static void define_loop(voice_t *, sequence_t *, uint8_t);
 static void apply_arpeggio(voice_t *, uint8_t);
+static void retrigger_sample(const event_scheduler_t *, voice_t *, uint8_t);
 static void start_vibrato(voice_t *, int, uint8_t, bool);
 static void apply_vibrato(voice_t *, int);
 static void start_tremolo(voice_t *, int, uint8_t, bool);
@@ -152,6 +153,8 @@ void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *pl
             apply_tremolo(voice, effect_no);
         if (effect.command == ARPEGGIO)
             apply_arpeggio(voice, effect.data);
+        if (effect.command == RETRIGGER_SAMPLE)
+            retrigger_sample(&player->tick_scheduler.event_scheduler, voice, effect.data);
     }
 }
 
@@ -315,6 +318,14 @@ static void apply_arpeggio(voice_t *voice, const uint8_t data)
     }
     voice->period_modulation = period_for_note(arpeggio_note, voice->sample->fine_tuning) - voice->period;
     voice->arpeggio_counter += 1;
+}
+
+static void retrigger_sample(const event_scheduler_t *event_scheduler, voice_t *voice, const uint8_t data)
+{
+    if (data == 0 || event_scheduler->ticks == 0)
+        return;
+    if (event_scheduler->ticks % data == 0)
+        voice->phase_accumulator = 0.0f;
 }
 
 static void set_volume(voice_t *voice, const uint8_t data)

@@ -908,7 +908,11 @@ static void decode_effect(
                     effect->data = e_cmd_data | 0x10;
                 }
                 // E8x unused.
-                // E9x (retrigger sample) to do.
+                if (e_cmd == 9)
+                {
+                    effect->command = RETRIGGER_SAMPLE;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 10)
                 {
                     effect->command = FINE_CRESCENDO;
