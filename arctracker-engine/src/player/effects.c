@@ -42,6 +42,16 @@ bool portamento(const event_t *event)
     return false;
 }
 
+void handle_effects_before_note(const event_t *event, voice_t *voice, player_t *player)
+{
+    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
+    {
+        const effect_t effect = event->effects[effect_no];
+        if (effect.command == SET_FINETUNE)
+            player_set_sample_finetune(player, voice->instrument_no, (int8_t) effect.data);
+    }
+}
+
 void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *player)
 {
     bool vibrato_already_on, tremolo_already_on;

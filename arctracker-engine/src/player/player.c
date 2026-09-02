@@ -101,6 +101,12 @@ void player_update_samples(player_t *player)
     }
 }
 
+void player_set_sample_finetune(player_t *player, const int instrument_no, const int8_t finetune)
+{
+    if (instrument_no <= 0) return;
+    player->samples[instrument_no - 1].fine_tuning = fine_tuning[128 + finetune];
+}
+
 bool player_run(player_t *player)
 {
     player->running = true;
@@ -404,49 +410,44 @@ static void update_voices(player_t *player)
 
 static void on_new_event(player_t *player, const event_t *event, voice_t *voice)
 {
+    const bool instrument_changed = event->instrument_no && event->instrument_no != voice->instrument_no;
+    if (event->instrument_no)
+    {
+        voice->instrument_no = event->instrument_no;
+    }
+    handle_effects_before_note(event, voice, player);
     if (event->note)
     {
         const int note = event->note - 1;
-        if (event->instrument_no)
+        const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
+        if (!instrument->assigned)
         {
-            const bool instrument_changed = voice->instrument_no != event->instrument_no;
-            voice->instrument_no = event->instrument_no;
-            const instrument_t instrument = player->module->instruments[event->instrument_no - 1];
-            if (!instrument.assigned)
-                voice->channel_playing = false;
-            else
-            {
-                player_sample_t *sample = &player->samples[event->instrument_no - 1];
-                if (!instrument_changed && portamento(event))
-                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->sample->fine_tuning);
-                else
-                {
-                    note_on(note, &instrument, sample, voice);
-                    voice->volume = instrument.default_volume;
-                }
-            }
+            voice->channel_playing = false;
         }
         else
         {
-            const instrument_t instrument = player->module->instruments[voice->instrument_no - 1];
-            if (!instrument.assigned)
-                voice->channel_playing = false;
+            player_sample_t *sample = &player->samples[voice->instrument_no - 1];
+            if (!instrument_changed && portamento(event))
+            {
+                voice->tone_portamento_target_period = period_for_note(note + instrument->transpose, sample->fine_tuning);
+            }
             else
             {
-                player_sample_t *sample = &player->samples[voice->instrument_no - 1];
-                if (portamento(event))
-                    voice->tone_portamento_target_period = period_for_note(note + instrument.transpose, voice->sample->fine_tuning);
-                else
-                    note_on(note, &instrument, sample, voice);
+                note_on(note, instrument, sample, voice);
+                if (event->instrument_no)
+                {
+                    voice->volume = instrument->default_volume;
+                }
             }
         }
     }
     else if (event->instrument_no)
     {
-        voice->instrument_no = event->instrument_no;
-        const instrument_t instrument = player->module->instruments[event->instrument_no - 1];
-        if (instrument.assigned)
-            voice->volume = instrument.default_volume;
+        const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
+        if (instrument->assigned)
+        {
+            voice->volume = instrument->default_volume;
+        }
     }
     handle_effects_on_event(event, voice, player);
 }

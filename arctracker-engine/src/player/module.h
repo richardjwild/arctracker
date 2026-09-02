@@ -46,6 +46,7 @@ typedef enum
     SET_VOLUME = 'V',
     SILENCE_SAMPLE_AFTER_DELAY = 'X',
     SET_LFO_WAVEFORM = 'Y',
+    SET_FINETUNE = 'Z',
 } command_t;
 
 typedef struct

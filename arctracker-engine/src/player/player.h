@@ -49,6 +49,8 @@ player_t *player_create(module_t *module, audio_api_t audio_api, player_event_qu
 
 void player_update_samples(player_t *);
 
+void player_set_sample_finetune(player_t *player, int instrument_no, int8_t finetune);
+
 bool player_run(player_t *);
 
 bool player_queue_command(const player_t *, player_command_t);
