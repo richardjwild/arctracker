@@ -883,7 +883,11 @@ static void decode_effect(
                     effect->command = FINE_PORTAMENTO;
                     effect->data = e_cmd_data | 0x80;
                 }
-                // E3x (set glissando on/off) to do.
+                if (e_cmd == 3)
+                {
+                    effect->command = SET_GLISSANDO_MODE;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 4)
                 {
                     effect->command = SET_LFO_WAVEFORM;

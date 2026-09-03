@@ -40,6 +40,7 @@ typedef struct {
     player_sample_t *sample;
     int period;
     int period_modulation;
+    bool glissando_on;
     int tone_portamento_target_period;
     int instrument_no;
     uint8_t volume;

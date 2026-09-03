@@ -17,6 +17,7 @@ static void start_tone_portamento(voice_t *, uint8_t);
 static void tone_portamento(voice_t *);
 static void start_arpeggio(voice_t *);
 static void define_loop(voice_t *, sequence_t *, uint8_t);
+static void set_glissando_mode(voice_t *voice, uint8_t);
 static void apply_arpeggio(voice_t *, uint8_t);
 static void retrigger_sample(const event_scheduler_t *, voice_t *, uint8_t);
 static void start_vibrato(voice_t *, uint8_t, bool);
@@ -121,6 +122,8 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             start_arpeggio(voice);
         if (effect.command == SET_LOOP)
             define_loop(voice, &player->sequence, effect.data);
+        if (effect.command == SET_GLISSANDO_MODE)
+            set_glissando_mode(voice, effect.data);
     }
     if (!voice->arpeggiator_on)
     {
@@ -236,6 +239,15 @@ static void tone_portamento(voice_t *voice)
         if (voice->period < voice->tone_portamento_target_period)
             voice->period = voice->tone_portamento_target_period;
     }
+    if (voice->glissando_on)
+    {
+        const int snapped_period = nearest_note_period(voice->period, voice->sample->fine_tuning);
+        voice->period_modulation = snapped_period - voice->period;
+    }
+    else
+    {
+        voice->period_modulation = 0;
+    }
 }
 
 static void set_lfo_waveform(lfo_effect_t *lfo_effect, const uint8_t data)
@@ -323,6 +335,11 @@ static void define_loop(voice_t *voice, sequence_t *sequence, const uint8_t data
         voice->loop_state.looping = true;
         voice->loop_state.counter = data;
     }
+}
+
+static void set_glissando_mode(voice_t *voice, const uint8_t data)
+{
+    voice->glissando_on = data != 0;
 }
 
 static void apply_arpeggio(voice_t *voice, const uint8_t data)

@@ -45,6 +45,7 @@ typedef enum
     RETRIGGER_SAMPLE = 'R',
     SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
+    SET_GLISSANDO_MODE = 'U',
     SET_VOLUME = 'V',
     SET_LOOP = 'W',
     SILENCE_SAMPLE_AFTER_DELAY = 'X',

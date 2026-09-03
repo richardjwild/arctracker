@@ -1,5 +1,7 @@
 #include "period.h"
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "io/error.h"
 
 static const float periods[] = {
@@ -20,4 +22,22 @@ int period_for_note(const int note, const double fine_tuning)
 {
     if (note_out_of_range(note)) return 0;
     return (int) lround(periods[note] * fine_tuning);
+}
+
+int nearest_note_period(const int period, const double fine_tuning)
+{
+    int nearest_period = period_for_note(LOWEST_NOTE, fine_tuning);
+    int nearest_distance = abs(period - nearest_period);
+    for (int note = LOWEST_NOTE + 1; note <= HIGHEST_NOTE; note++)
+    {
+        const int candidate = period_for_note(note, fine_tuning);
+        const int distance = abs(period - candidate);
+        if (distance < nearest_distance)
+        {
+            nearest_period = candidate;
+            nearest_distance = distance;
+        }
+    }
+    printf("period %d nearest: %d\n", period, nearest_period);
+    return nearest_period;
 }
