@@ -177,7 +177,7 @@ export const patternEvents = {
       buildEvent: () => {
         return {
           ...emptyEvent(),
-          note,
+          note: note + 1,
           sampleNo: selectedSample + 1,
         };
       },
