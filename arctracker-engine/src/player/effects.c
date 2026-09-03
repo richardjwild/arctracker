@@ -13,16 +13,16 @@ static void volume_slide_down(voice_t *, uint8_t);
 static void combined_volume_side(voice_t *, uint8_t);
 static void portamento_up(voice_t *, uint8_t);
 static void portamento_down(voice_t *, uint8_t);
-static void start_tone_portamento(voice_t *, int, uint8_t);
-static void tone_portamento(voice_t *, int);
+static void start_tone_portamento(voice_t *, uint8_t);
+static void tone_portamento(voice_t *);
 static void start_arpeggio(voice_t *);
 static void define_loop(voice_t *, sequence_t *, uint8_t);
 static void apply_arpeggio(voice_t *, uint8_t);
 static void retrigger_sample(const event_scheduler_t *, voice_t *, uint8_t);
-static void start_vibrato(voice_t *, int, uint8_t, bool);
-static void apply_vibrato(voice_t *, int);
-static void start_tremolo(voice_t *, int, uint8_t, bool);
-static void apply_tremolo(voice_t *, int);
+static void start_vibrato(voice_t *, uint8_t, bool);
+static void apply_vibrato(voice_t *);
+static void start_tremolo(voice_t *, uint8_t, bool);
+static void apply_tremolo(voice_t *);
 static void set_lfo_waveform(lfo_effect_t *, uint8_t);
 static void set_volume(voice_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
@@ -43,7 +43,7 @@ bool portamento(const event_t *event)
     return false;
 }
 
-void handle_effects_before_note(const event_t *event, voice_t *voice, player_t *player)
+void handle_effects_before_note(const event_t *event, const voice_t *voice, player_t *player)
 {
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
@@ -83,7 +83,7 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
     {
         const effect_t effect = event->effects[effect_no];
         if (effect.command == PORTAMENTO)
-            start_tone_portamento(voice, effect_no, effect.data);
+            start_tone_portamento(voice, effect.data);
         if (effect.command == SET_VOLUME)
             set_volume(voice, effect.data);
         if (effect.command == FINE_CRESCENDO)
@@ -108,9 +108,9 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             else portamento_down(voice, effect.data & 0x7f);
         }
         if (effect.command == VIBRATO)
-            start_vibrato(voice, effect_no, effect.data, vibrato_already_on);
+            start_vibrato(voice, effect.data, vibrato_already_on);
         if (effect.command == TREMOLO)
-            start_tremolo(voice, effect_no, effect.data, tremolo_already_on);
+            start_tremolo(voice, effect.data, tremolo_already_on);
         if (effect.command == SET_LFO_WAVEFORM)
         {
             const uint8_t effect_type = effect.data >> 4;
@@ -153,23 +153,23 @@ void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *pl
         if (effect.command == PITCH_SLIDE_DOWN)
             portamento_down(voice, effect.data);
         if (effect.command == PORTAMENTO)
-            tone_portamento(voice, effect_no);
+            tone_portamento(voice);
         if (effect.command == PORTAMENTO_PLUS_VOLUME_SIDE)
         {
-            tone_portamento(voice, effect_no);
+            tone_portamento(voice);
             combined_volume_side(voice, effect.data);
         }
         if (effect.command == SILENCE_SAMPLE_AFTER_DELAY)
             silence_voice(&player->tick_scheduler, voice, effect.data);
         if (effect.command == VIBRATO)
-            apply_vibrato(voice, effect_no);
+            apply_vibrato(voice);
         if (effect.command == VIBRATO_PLUS_VOLUME_SLIDE)
         {
-            apply_vibrato(voice, effect_no);
+            apply_vibrato(voice);
             combined_volume_side(voice, effect.data);
         }
         if (effect.command == TREMOLO)
-            apply_tremolo(voice, effect_no);
+            apply_tremolo(voice);
         if (effect.command == ARPEGGIO)
             apply_arpeggio(voice, effect.data);
         if (effect.command == RETRIGGER_SAMPLE)
@@ -215,15 +215,15 @@ static void portamento_down(voice_t *voice, const uint8_t data)
         voice->period = PERIOD_MAX;
 }
 
-static void start_tone_portamento(voice_t *voice, const int effect_no, const uint8_t data)
+static void start_tone_portamento(voice_t *voice, const uint8_t data)
 {
     if (data)
-        voice->effect_memory[effect_no] = data;
+        voice->effect_memory.tone_portamento_speed = data;
 }
 
-static void tone_portamento(voice_t *voice, const int effect_no)
+static void tone_portamento(voice_t *voice)
 {
-    const int portamento_speed = voice->effect_memory[effect_no];
+    const int portamento_speed = voice->effect_memory.tone_portamento_speed;
     if (voice->period < voice->tone_portamento_target_period)
     {
         voice->period += portamento_speed;
@@ -254,40 +254,42 @@ static void set_lfo_waveform(lfo_effect_t *lfo_effect, const uint8_t data)
     // Other sources claim that it selects a noise waveform, and others still say it selects square.
 }
 
-static void start_vibrato(voice_t *voice, const int effect_no, const uint8_t data, const bool already_on)
+static void start_vibrato(voice_t *voice, const uint8_t data, const bool already_on)
 {
     voice->vibrato.enabled = true;
     if (!already_on && voice->vibrato.retrigger)
         voice->vibrato.phase = 0;
-    if ((data & 0xf0) != 0 && (data & 0xf) != 0)
-        voice->effect_memory[effect_no] = data;
+    if ((data & 0xf0) != 0)
+        voice->effect_memory.vibrato_speed = data >> 4;
+    if ((data & 0xf) != 0)
+        voice->effect_memory.vibrato_depth = data & 0xf;
 }
 
-static void apply_vibrato(voice_t *voice, const int effect_no)
+static void apply_vibrato(voice_t *voice)
 {
-    const uint8_t vibrato_params = voice->effect_memory[effect_no];
-    const uint8_t vibrato_speed = vibrato_params >> 4;
-    const uint8_t vibrato_depth = vibrato_params & 0xf;
+    const uint8_t vibrato_speed = voice->effect_memory.vibrato_speed;
+    const uint8_t vibrato_depth = voice->effect_memory.vibrato_depth;
     const float lfo_value = lfo_pt_waveform(voice->vibrato.waveform, voice->vibrato.phase);
     const float period_modulation = lfo_value * (float) vibrato_depth * 2.0f;
     voice->period_modulation = (int) period_modulation;
     voice->vibrato.phase = (voice->vibrato.phase + vibrato_speed) % PT_LFO_WAVELENGTH;
 }
 
-static void start_tremolo(voice_t *voice, const int effect_no, const uint8_t data, const bool already_on)
+static void start_tremolo(voice_t *voice, const uint8_t data, const bool already_on)
 {
     voice->tremolo.enabled = true;
     if (!already_on && voice->tremolo.retrigger)
         voice->tremolo.phase = 0;
-    if ((data & 0xf0) != 0 && (data & 0xf) != 0)
-        voice->effect_memory[effect_no] = data;
+    if ((data & 0xf0) != 0)
+        voice->effect_memory.tremolo_speed = data >> 4;
+    if ((data & 0xf) != 0)
+        voice->effect_memory.tremolo_depth = data & 0xf;
 }
 
-static void apply_tremolo(voice_t *voice, const int effect_no)
+static void apply_tremolo(voice_t *voice)
 {
-    const uint8_t tremolo_params = voice->effect_memory[effect_no];
-    const uint8_t tremolo_speed = tremolo_params >> 4;
-    const uint8_t tremolo_depth = tremolo_params & 0xf;
+    const uint8_t tremolo_speed = voice->effect_memory.tremolo_speed;
+    const uint8_t tremolo_depth = voice->effect_memory.tremolo_depth;
     const float lfo_value = lfo_pt_waveform(voice->tremolo.waveform, voice->tremolo.phase);
     const float volume_modulation = lfo_value * (float) tremolo_depth * 16.0f;
     voice->volume_modulation = (int) volume_modulation;
@@ -368,19 +370,6 @@ static void set_tempo(player_t *player, const uint8_t data)
         player->tick_scheduler.event_scheduler.ticks_per_event = data;
     else if (player->module->lines_per_beat > 0)
         player_set_bpm(player, data);
-}
-
-static void set_sample_offset(const player_t *player, voice_t *voice, const uint8_t data)
-{
-    if (!voice->channel_playing) return;
-    const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
-    if (!instrument->assigned) return;
-    const uint32_t sample_length = (uint32_t) player->module->samples[instrument->sample_index].sample_length;
-    const sample_slice_t slice = instrument->sample_slices[data];
-    if (slice.length == 0 || slice.offset >= sample_length) return;
-    voice->phase_accumulator = (float) slice.offset;
-    if (slice.offset + slice.length < (uint32_t) voice->sample->sample_end)
-        voice->sample->sample_end = (int) (slice.offset + slice.length);
 }
 
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)

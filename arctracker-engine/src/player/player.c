@@ -357,6 +357,7 @@ static voice_t *initialise_voices(const player_t *player)
         voices[channel].tremolo.retrigger = true;
         voices[channel].tremolo.waveform = PT_WAVEFORM_SINE;
         voices[channel].tremolo.phase = 0;
+        voices[channel].effect_memory = (effect_memory_t) {0};
     }
     return voices;
 }

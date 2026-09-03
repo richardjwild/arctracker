@@ -28,6 +28,14 @@ typedef struct {
 } pt_loop_state_t;
 
 typedef struct {
+    uint8_t tone_portamento_speed;
+    uint8_t vibrato_speed;
+    uint8_t vibrato_depth;
+    uint8_t tremolo_speed;
+    uint8_t tremolo_depth;
+} effect_memory_t;
+
+typedef struct {
     float phase_accumulator;
     player_sample_t *sample;
     int period;
@@ -45,7 +53,7 @@ typedef struct {
     lfo_effect_t vibrato;
     lfo_effect_t tremolo;
     pt_loop_state_t loop_state;
-    uint8_t effect_memory[4];
+    effect_memory_t effect_memory;
 } voice_t;
 
 #endif //ARCTRACKER_VOICE_H
