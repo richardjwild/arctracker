@@ -26,7 +26,6 @@ static void apply_tremolo(voice_t *, int);
 static void set_lfo_waveform(lfo_effect_t *, uint8_t);
 static void set_volume(voice_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
-static void set_sample_offset(const player_t *, voice_t *, uint8_t);
 static void set_voice_panning(voice_t *, uint8_t);
 static void pattern_break(sequence_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
@@ -54,6 +53,28 @@ void handle_effects_before_note(const event_t *event, voice_t *voice, player_t *
     }
 }
 
+uint8_t get_note_delay(const event_t *event)
+{
+    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
+    {
+        const effect_t effect = event->effects[effect_no];
+        if (effect.command == DELAY_SAMPLE)
+            return effect.data;
+    }
+    return 0;
+}
+
+uint8_t get_sample_slice(const event_t *event)
+{
+    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
+    {
+        const effect_t effect = event->effects[effect_no];
+        if (effect.command == USE_SAMPLE_SLICE)
+            return effect.data;
+    }
+    return 0;
+}
+
 void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *player)
 {
     bool vibrato_already_on, tremolo_already_on;
@@ -71,8 +92,6 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             volume_slide_down(voice, effect.data);
         if (effect.command == SET_TEMPO)
             set_tempo(player, effect.data);
-        if (effect.command == USE_SAMPLE_SLICE)
-            set_sample_offset(player, voice, effect.data);
         if (effect.command == SET_PANNING)
             set_voice_panning(voice, effect.data);
         if (effect.command == PATTERN_BREAK)

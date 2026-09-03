@@ -863,9 +863,7 @@ static void decode_effect(
             break;
 
         case 0xD:
-            /*
-             * ProTracker Dxx represents the target pattern line as decimal, not hex.
-             */
+            // ProTracker Dxx represents the target pattern line as decimal, not hex.
             effect->command = PATTERN_BREAK;
             effect->data = 10 * (mod_data >> 4) + (mod_data & 0xf);
             break;
@@ -928,7 +926,11 @@ static void decode_effect(
                     effect->command = SILENCE_SAMPLE_AFTER_DELAY;
                     effect->data = e_cmd_data;
                 }
-                // EDx (delay sample) to do.
+                if (e_cmd == 13)
+                {
+                    effect->command = DELAY_SAMPLE;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 14)
                 {
                     effect->command = DELAY_NEXT_EVENT;
