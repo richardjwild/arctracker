@@ -1,7 +1,6 @@
 #include "period.h"
 #include <math.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "io/error.h"
 
 static const float periods[] = {
@@ -38,6 +37,5 @@ int nearest_note_period(const int period, const double fine_tuning)
             nearest_distance = distance;
         }
     }
-    printf("period %d nearest: %d\n", period, nearest_period);
     return nearest_period;
 }
