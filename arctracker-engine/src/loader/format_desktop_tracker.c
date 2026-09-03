@@ -27,10 +27,10 @@ static const uint8_t ARPEGGIO_COMMAND = 0x0;
 static const uint8_t PORTUP_COMMAND = 0x1;
 static const uint8_t PORTDOWN_COMMAND = 0x2;
 static const uint8_t TONEPORT_COMMAND = 0x3;
-// static const uint8_t VIBRATO_COMMAND = 0x4; not implemented yet
+static const uint8_t VIBRATO_COMMAND = 0x4;
 // static const uint8_t DELAYEDNOTE_COMMAND = 0x5; not implemented yet
 // static const uint8_t RELEASESAMP_COMMAND = 0x6; not implemented yet
-// static const uint8_t TREMOLO_COMMAND = 0x7; not implemented yet
+static const uint8_t TREMOLO_COMMAND = 0x7;
 // static const uint8_t PHASOR_COMMAND1 = 0x8; not implemented yet
 // static const uint8_t PHASOR_COMMAND2 = 0x9; not implemented yet
 static const uint8_t VOLSLIDE_COMMAND = 0xa;
@@ -40,18 +40,18 @@ static const uint8_t STEREO_COMMAND = 0xd;
 // static const uint8_t STEREOSLIDE_COMMAND = 0xe; not implemented yet
 static const uint8_t SPEED_COMMAND = 0xf;
 // static const uint8_t ARPEGGIOSPEED_COMMAND = 0x10; not implemented yet
-static const uint8_t FINEPORTAMENTO_COMMAND = 0x11;
+// static const uint8_t FINEPORTAMENTO_COMMAND = 0x11; semantics need confirming
 // static const uint8_t CLEAREPEAT_COMMAND = 0x12; not implemented yet
-// static const uint8_t SETVIBRATOWAVEFORM_COMMAND = 0x14; not implemented yet
+// static const uint8_t SETVIBRATOWAVEFORM_COMMAND = 0x14; semantics need confirming
 // static const uint8_t LOOP_COMMAND = 0x16; not implemented yet
-// static const uint8_t SETTREMOLOWAVEFORM_COMMAND = 0x17; not implemented yet
+// static const uint8_t SETTREMOLOWAVEFORM_COMMAND = 0x17; semantics need confirming
 static const uint8_t SETFINETEMPO_COMMAND = 0x18;
 // static const uint8_t RETRIGGERSAMPLE_COMMAND = 0x19; not implemented yet
 static const uint8_t FINEVOLSLIDE_COMMAND = 0x1a;
 // static const uint8_t HOLD_COMMAND = 0x1b; not implemented yet
-// static const uint8_t NOTECUT_COMMAND = 0x1c; not implemented yet
+// static const uint8_t NOTECUT_COMMAND = 0x1c; semantics need confirming
 // static const uint8_t NOTEDELAY_COMMAND = 0x1d; not implemented yet
-// static const uint8_t PATTERNDELAY_COMMAND = 0x1e; not implemented yet
+// static const uint8_t PATTERNDELAY_COMMAND = 0x1e; semantics need confirming
 // static const uint8_t CALLLINKEDCODE_COMMAND = 0x1f; not implemented yet
 
 typedef struct
@@ -254,9 +254,9 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
+    if (code == VIBRATO_COMMAND) return VIBRATO;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
     if (code == SETFINETEMPO_COMMAND) return SET_TICKS_PER_SECOND;
-    if (code == FINEPORTAMENTO_COMMAND) return FINE_PORTAMENTO;
     if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) == 0) return FINE_CRESCENDO;
     if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) > 0) return FINE_DECRESCENDO;
     if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;

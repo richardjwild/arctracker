@@ -12,6 +12,7 @@ typedef struct {
 } audio_accumulator_t;
 
 typedef struct {
+    bool just_started;
     int ticks;
     int ticks_per_event;
     int event_delay;
@@ -37,5 +38,7 @@ void tick_scheduler_consume_samples(audio_accumulator_t *);
 void tick_scheduler_advance_tick(event_scheduler_t *);
 
 bool tick_scheduler_is_new_event(const event_scheduler_t *);
+
+bool tick_scheduler_just_started(const event_scheduler_t *);
 
 #endif //ARCTRACKER_CLOCK_H

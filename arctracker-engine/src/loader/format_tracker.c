@@ -39,6 +39,7 @@ static const uint8_t ARPEGGIO_COMMAND = 0;      // 0
 static const uint8_t PORTUP_COMMAND = 1;        // 1
 static const uint8_t PORTDOWN_COMMAND = 2;      // 2
 static const uint8_t TONEPORT_COMMAND = 3;      // 3
+static const uint8_t VIBRATO_COMMAND = 4;       // 4
 static const uint8_t BREAK_COMMAND = 11;        // B
 static const uint8_t STEREO_COMMAND = 14;       // E
 static const uint8_t VOLSLIDEUP_COMMAND = 16;   // G
@@ -195,6 +196,7 @@ static command_t tracker_command(const int code, const uint8_t data)
     if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
+    if (code == VIBRATO_COMMAND) return VIBRATO;
     if (code == BREAK_COMMAND) return PATTERN_BREAK;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
     if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;

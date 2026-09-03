@@ -193,6 +193,13 @@
  *      divisions, the vibrato effect can be maintained. If either x or y
  *      are 0, then the old vibrato values will be used.
  *
+ *      [RJW note] That description is incorrect where it mentions y/16
+ *      semitones; that is not what the 4xy effect does. Instead, it adds
+ *      an offset to the period, given by offset = 2y x waveform(phase),
+ *      where waveform(phase) is normalised to -1 to +1. Also, to clarify
+ *      the vibrato rate: phase is an integer value from 0 to 63 that is
+ *      incremented by [x * ticks per event] every tick _except tick 0_.
+ *
  * [5]: Continue 'Slide to note', but also do Volume slide
  *      Where [5][x][y] means "either slide the volume up x*(ticks - 1) or
  *      slide the volume down y*(ticks - 1), at the same time as continuing
@@ -801,9 +808,24 @@ static void decode_effect(
             effect->data = mod_data;
             break;
 
+        case 0x4:
+            effect->command = VIBRATO;
+            effect->data = mod_data;
+            break;
+
         case 0x5:
             effect->command = PORTAMENTO_PLUS_VOLUME_SIDE;
             effect->data = mod_data * 4;
+            break;
+
+        case 0x6:
+            effect->command = VIBRATO_PLUS_VOLUME_SLIDE;
+            effect->data = mod_data;
+            break;
+
+        case 0x7:
+            effect->command = TREMOLO;
+            effect->data = mod_data;
             break;
 
         case 0x8:
@@ -841,9 +863,7 @@ static void decode_effect(
             break;
 
         case 0xD:
-            /*
-             * ProTracker Dxx represents the target pattern line as decimal, not hex.
-             */
+            // ProTracker Dxx represents the target pattern line as decimal, not hex.
             effect->command = PATTERN_BREAK;
             effect->data = 10 * (mod_data >> 4) + (mod_data & 0xf);
             break;
@@ -852,7 +872,49 @@ static void decode_effect(
             {
                 const uint8_t e_cmd = mod_data >> 4;
                 const uint8_t e_cmd_data = mod_data & 0xf;
-                // TODO: E1x and E2x map to FINE_PORTAMENTO but that needs figuring out first.
+                // E0x (set filter on/off) not implemented.
+                if (e_cmd == 1)
+                {
+                    effect->command = FINE_PORTAMENTO;
+                    effect->data = e_cmd_data;
+                }
+                if (e_cmd == 2)
+                {
+                    effect->command = FINE_PORTAMENTO;
+                    effect->data = e_cmd_data | 0x80;
+                }
+                if (e_cmd == 3)
+                {
+                    effect->command = SET_GLISSANDO_MODE;
+                    effect->data = e_cmd_data;
+                }
+                if (e_cmd == 4)
+                {
+                    effect->command = SET_LFO_WAVEFORM;
+                    effect->data = e_cmd_data;
+                }
+                if (e_cmd == 5)
+                {
+                    effect->command = SET_FINETUNE;
+                    const uint8_t finetune = e_cmd_data & 0xF;
+                    effect->data = 16 * (finetune < 8 ? finetune : finetune - 16);
+                }
+                if (e_cmd == 6)
+                {
+                    effect->command = SET_LOOP;
+                    effect->data = e_cmd_data;
+                }
+                if (e_cmd == 7)
+                {
+                    effect->command = SET_LFO_WAVEFORM;
+                    effect->data = e_cmd_data | 0x10;
+                }
+                // E8x unused.
+                if (e_cmd == 9)
+                {
+                    effect->command = RETRIGGER_SAMPLE;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 10)
                 {
                     effect->command = FINE_CRESCENDO;
@@ -868,11 +930,17 @@ static void decode_effect(
                     effect->command = SILENCE_SAMPLE_AFTER_DELAY;
                     effect->data = e_cmd_data;
                 }
+                if (e_cmd == 13)
+                {
+                    effect->command = DELAY_SAMPLE;
+                    effect->data = e_cmd_data;
+                }
                 if (e_cmd == 14)
                 {
                     effect->command = DELAY_NEXT_EVENT;
                     effect->data = e_cmd_data;
                 }
+                // EFx (invert loop) not implemented.
             }
             break;
 
@@ -891,10 +959,7 @@ static void decode_effect(
             break;
 
         default:
-            /*
-             * Unsupported effects are intentionally discarded rather than
-             * making the whole module unloadable.
-             */
+            printf("Ignored effect: %d\n", mod_effect);
             break;
     }
 

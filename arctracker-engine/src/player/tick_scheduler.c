@@ -5,17 +5,14 @@
 tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const int sample_rate_in)
 {
     if (tempo.actual_bpm > 0.0001) printf("Actual BPM: %0.3f\n", tempo.actual_bpm);
-    event_scheduler_t event_scheduler = {
-        .ticks = 0,
-        .event_delay = 0,
+    const event_scheduler_t event_scheduler = {
         .ticks_per_event = tempo.ticks_per_event,
     };
-    audio_accumulator_t audio_accumulator = {
+    const audio_accumulator_t audio_accumulator = {
         .sample_rate = sample_rate_in,
-        .accumulator = 0,
         .ticks_per_second = tempo.ticks_per_second,
     };
-    tick_scheduler_t tick_scheduler = {
+    const tick_scheduler_t tick_scheduler = {
         .event_scheduler = event_scheduler,
         .audio_accumulator = audio_accumulator
     };
@@ -31,7 +28,9 @@ void tick_scheduler_set_tempo(tick_scheduler_t *tick_scheduler, const tempo_t ne
 
 void tick_scheduler_restart(tick_scheduler_t *tick_scheduler)
 {
-    tick_scheduler->event_scheduler.ticks = 1;
+    tick_scheduler->event_scheduler.just_started = true;
+    tick_scheduler->event_scheduler.ticks = 0;
+    tick_scheduler->event_scheduler.event_delay = 0;
     tick_scheduler->audio_accumulator.accumulator = 0;
 }
 
@@ -54,18 +53,28 @@ void tick_scheduler_consume_samples(audio_accumulator_t *audio_accumulator)
 
 void tick_scheduler_advance_tick(event_scheduler_t *event_scheduler)
 {
-    const int ticks_per_event = event_scheduler->ticks_per_event;
+    const int last_tick = event_scheduler->ticks_per_event - 1;
     int ticks = event_scheduler->ticks;
-    ticks += 1;
-    if (ticks >= ticks_per_event + event_scheduler->event_delay)
+    if (ticks >= last_tick + event_scheduler->event_delay)
     {
         ticks = 0;
         event_scheduler->event_delay = 0;
     }
+    else
+    {
+        ticks += 1;
+    }
     event_scheduler->ticks = ticks;
+    if (event_scheduler->just_started)
+        event_scheduler->just_started = false;
 }
 
 bool tick_scheduler_is_new_event(const event_scheduler_t *event_scheduler)
 {
-    return (event_scheduler->ticks == 0);
+    return !event_scheduler->just_started && event_scheduler->ticks == 0;
+}
+
+bool tick_scheduler_just_started(const event_scheduler_t *event_scheduler)
+{
+    return event_scheduler->just_started;
 }

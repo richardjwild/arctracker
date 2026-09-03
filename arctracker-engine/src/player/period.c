@@ -1,19 +1,16 @@
 #include "period.h"
-
 #include <math.h>
-#include <stdio.h>
-
-#include "messages.h"
+#include <stdlib.h>
 #include "io/error.h"
 
-static
-const int periods[] = {
-        0x06B0, 0x0650, 0x05F5, 0x05A0, 0x054D, 0x0501, 0x04B9, 0x0475, 0x0435, 0x03F9, 0x03C1, 0x038B,
-        0x0358, 0x0328, 0x02FA, 0x02D0, 0x02A6, 0x0280, 0x025C, 0x023A, 0x021A, 0x01FC, 0x01E0, 0x01C5,
-        0x01AC, 0x0194, 0x017D, 0x0168, 0x0153, 0x0140, 0x012E, 0x011D, 0x010D, 0x00FE, 0x00F0, 0x00E2,
-        0x00D6, 0x00CA, 0x00BE, 0x00B4, 0x00AA, 0x00A0, 0x0097, 0x008F, 0x0087, 0x007F, 0x0078, 0x0071,
-        0x006B, 0x0065, 0x005F, 0x005A, 0x0055, 0x0050, 0x004C, 0x0047, 0x0043, 0x0040, 0x003C, 0x0039,
-        0x0035, 0x0032};
+static const float periods[] = {
+    1712, 1616, 1525, 1440, 1357, 1281, 1209, 1141, 1077, 1017,  961,  907,
+     856,  808,  762,  720,  678,  640,  604,  570,  538,  508,  480,  453,
+     428,  404,  381,  360,  339,  320,  302,  285,  269,  254,  240,  226,
+     214,  202,  190,  180,  170,  160,  151,  143,  135,  127,  120,  113,
+     107,  101,   95,   90,   85,   80,   76,   71,   67,   64,   60,   57,
+      53,   50,
+};
 
 bool note_out_of_range(const int note)
 {
@@ -24,4 +21,21 @@ int period_for_note(const int note, const double fine_tuning)
 {
     if (note_out_of_range(note)) return 0;
     return (int) lround(periods[note] * fine_tuning);
+}
+
+int nearest_note_period(const int period, const double fine_tuning)
+{
+    int nearest_period = period_for_note(LOWEST_NOTE, fine_tuning);
+    int nearest_distance = abs(period - nearest_period);
+    for (int note = LOWEST_NOTE + 1; note <= HIGHEST_NOTE; note++)
+    {
+        const int candidate = period_for_note(note, fine_tuning);
+        const int distance = abs(period - candidate);
+        if (distance < nearest_distance)
+        {
+            nearest_period = candidate;
+            nearest_distance = distance;
+        }
+    }
+    return nearest_period;
 }

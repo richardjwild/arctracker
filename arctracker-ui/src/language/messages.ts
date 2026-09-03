@@ -54,6 +54,7 @@ const messages = {
     loadSampleButtonLabel: "Load Sample",
     deleteSampleButtonLabel: "Delete Sample",
     exportSampleButtonLabel: "Export Sample",
+    exportSampleSucceeded: "Sample exported successfully.",
     insertSequencePositionBeforeCurrentHintText: "Insert new sequence position before current (shift-click to create new pattern)",
     insertSequencePositionAfterCurrentHintText: "Insert new sequence position after current (shift-click to create new pattern)",
     deleteSequencePositionHintText: "Delete sequence position at current",

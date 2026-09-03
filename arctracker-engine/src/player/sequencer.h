@@ -28,7 +28,7 @@ sequence_t initialise_sequence(const module_t *module, bool bouncing);
 
 sequence_t reinitialise_sequence(const module_t *module, const sequence_t *old_sequence, bool bouncing);
 
-void pattern_step(sequence_t *);
+void pattern_step(sequence_t *, bool *);
 
 void sequence_seek(sequence_t *, int new_sequence_pos, int new_pattern_pos);
 
@@ -37,6 +37,8 @@ void break_to_next_position(sequence_t *, int jump_pattern_index);
 void set_jump_target(int next_position, int jump_pattern_index, sequence_t *sequence);
 
 void set_pattern_loop(sequence_t *);
+
+void set_loop(sequence_t *, int, int);
 
 void clear_pattern_loop(sequence_t *);
 

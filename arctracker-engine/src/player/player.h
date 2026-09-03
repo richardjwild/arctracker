@@ -21,6 +21,16 @@ typedef struct {
     void (*on_player_error)(const char *);
 } ui_event_consumer_t;
 
+typedef struct {
+    bool scheduled;
+    uint8_t delay;
+    int note;
+    const instrument_t *instrument;
+    player_sample_t *sample;
+    uint8_t slice;
+    voice_t *voice;
+} scheduled_note_t;
+
 typedef struct player {
     bool running;
     bool playing;
@@ -29,6 +39,7 @@ typedef struct player {
     int current_bpm;
     voice_t *voices;
     module_t *module;
+    scheduled_note_t *scheduled_notes;
     sequence_t sequence;
     player_sample_t samples[256];
     tick_scheduler_t tick_scheduler;
@@ -46,6 +57,10 @@ typedef struct {
 } player_restore_state_t;
 
 player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue);
+
+void player_update_samples(player_t *);
+
+void player_set_sample_finetune(player_t *player, int instrument_no, int8_t finetune);
 
 bool player_run(player_t *);
 

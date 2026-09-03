@@ -27,23 +27,30 @@ typedef enum
     PITCH_SLIDE_UP = '1',
     PITCH_SLIDE_DOWN = '2',
     PORTAMENTO = '3',
-    // TODO: Implement vibrato (4).
+    VIBRATO = '4',
     PORTAMENTO_PLUS_VOLUME_SIDE = '5',
-    // TODO: Implement tremolo (7).
-    FINE_PORTAMENTO = '6',
+    VIBRATO_PLUS_VOLUME_SLIDE = '6',
+    TREMOLO = '7',
     PATTERN_BREAK = 'B',
     CRESCENDO = 'C',
     DECRESCENDO = 'D',
     FINE_CRESCENDO = 'E',
     FINE_DECRESCENDO = 'F',
+    FINE_PORTAMENTO = 'G',
     SEQUENCE_JUMP = 'J',
     DELAY_NEXT_EVENT = 'L',
     USE_SAMPLE_SLICE = 'O',
     SET_PANNING = 'P',
+    DELAY_SAMPLE = 'Q',
+    RETRIGGER_SAMPLE = 'R',
     SET_TEMPO = 'S',
     SET_TICKS_PER_SECOND = 'T',
+    SET_GLISSANDO_MODE = 'U',
     SET_VOLUME = 'V',
+    SET_LOOP = 'W',
     SILENCE_SAMPLE_AFTER_DELAY = 'X',
+    SET_LFO_WAVEFORM = 'Y',
+    SET_FINETUNE = 'Z',
 } command_t;
 
 typedef struct
@@ -147,7 +154,7 @@ void module_get_instrument_info(const module_t *module, int instrument_index, ui
 
 void module_set_instrument(module_t *module, int instrument_index, instrument_t instrument_update);
 
-bool module_link_sample(module_t *module, const float *sample_data, int sample_length, int *sample_index);
+bool module_link_sample(module_t *module, const float *sample_data, int sample_length, float sample_rate, int *sample_index);
 
 bool module_set_sample(module_t *module, const float *sample_data, int sample_length, float sample_rate, uint8_t base_note, int8_t finetune, int sample_index);
 

@@ -740,6 +740,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         instrument_update.sample_index);
     if (!result.success)
         return failure(result.error_message);
+    player_update_samples(arctracker->playback.player);
     return SUCCESS;
 }
 
