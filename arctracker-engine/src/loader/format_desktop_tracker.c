@@ -221,12 +221,12 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     uint8_t effect_data = data;
     if (command == SET_VOLUME)
         effect_data = (data & VOLUME_VALUE_MASK) * 2;
-    if ((command == VOLUME_SLIDE && (data & 0x80) == 0) || command == FINE_CRESCENDO)
+    if (command == FINE_CRESCENDO || (command == VOLUME_SLIDE && data < 128))
     {
-        // DSKT volume slide parameter has twice the resolution of the equivalent Tracker effect.
-        effect_data = (data * 2);
+        // DSKT volume slide parameter has half the resolution of the equivalent Tracker effect.
+        effect_data = (data * 2) | 0x80;
     }
-    if ((command == VOLUME_SLIDE && (data & 0x80) > 0) || command == FINE_DECRESCENDO)
+    if (command == FINE_DECRESCENDO || (command == VOLUME_SLIDE && data >= 128))
     {
         // DSKT volume slide command data is a signed integer: negative values slide the volume down.
         const int amount = (256 - data) * 2;
@@ -254,6 +254,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
     if (code == VIBRATO_COMMAND) return VIBRATO;
+    if (code == TREMOLO_COMMAND) return TREMOLO;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
     if (code == SETFINETEMPO_COMMAND) return SET_TICKS_PER_SECOND;
     if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) == 0) return FINE_CRESCENDO;
