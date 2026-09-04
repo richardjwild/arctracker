@@ -221,7 +221,7 @@ pub struct Module {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Effect {
-    pub effect_code: String,
+    pub effect_code: [i32; 2],
     pub effect_data: [i32; 2],
 }
 
@@ -242,13 +242,8 @@ pub struct PatternLine {
 
 impl From<ffi::UiEffect> for Effect {
     fn from(effect: ffi::UiEffect) -> Self {
-        let code = effect.effect_code as u8 as char;
         Self {
-            effect_code: if code == '\0' {
-                String::new()
-            } else {
-                code.to_string()
-            },
+            effect_code: effect.effect_code,
             effect_data: effect.effect_data,
         }
     }
@@ -257,13 +252,8 @@ impl From<ffi::UiEffect> for Effect {
 impl TryFrom<Effect> for ffi::UiEffect {
     type Error = String;
     fn try_from(effect: Effect) -> Result<Self, Self::Error> {
-        let code = match effect.effect_code.as_str() {
-            "" => 0,
-            s if s.len() == 1 => s.as_bytes()[0],
-            other => return Err(format!("Invalid effect code: {other}")),
-        };
         Ok(Self {
-            effect_code: code as c_char,
+            effect_code: effect.effect_code,
             effect_data: effect.effect_data,
         })
     }
@@ -559,7 +549,7 @@ impl Arctracker {
     ) -> Vec<PatternLine> {
         let len = (num_rows * num_tracks) as usize;
         let empty_effect = ffi::UiEffect {
-            effect_code: 0,
+            effect_code: [0, 0],
             effect_data: [0, 0],
         };
         let empty_event = ffi::UiPatternEvent {
@@ -590,15 +580,16 @@ impl Arctracker {
     fn pack_event(event: ffi::UiPatternEvent) -> [u32; 3] {
         let note_and_instrument: u32 =
             ((event.note as u32) & 0xff) << 16 | ((event.sample_no as u32) & 0xff) << 24;
-        let mut effect_codes: u32 = 0;
+        let mut effect_code: u32 = 0;
         let mut effect_data: u32 = 0;
         for effect in 0..4 {
             let shift = effect * 8;
-            effect_codes |= ((event.effects[effect].effect_code as u32) & 0xff) << shift;
+            effect_code |= ((event.effects[effect].effect_code[1] as u32) & 0xf) << shift;
+            effect_code |= ((event.effects[effect].effect_code[0] as u32) & 0xf) << (shift + 4);
             effect_data |= ((event.effects[effect].effect_data[1] as u32) & 0xf) << shift;
             effect_data |= ((event.effects[effect].effect_data[0] as u32) & 0xf) << (shift + 4);
         }
-        [note_and_instrument, effect_codes, effect_data]
+        [note_and_instrument, effect_code, effect_data]
     }
 
     pub fn create_module(&mut self, params: NewModuleParams) -> Result<Module, ArctrackerError> {

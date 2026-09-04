@@ -191,8 +191,8 @@ static command_t tracker_command(const int code, const uint8_t data)
     if (code == VOLUME_COMMAND) return SET_VOLUME;
     if (code == SPEED_COMMAND) return SET_TEMPO;
     if (code == STEREO_COMMAND) return SET_PANNING;
-    if (code == VOLSLIDEUP_COMMAND) return CRESCENDO;
-    if (code == VOLSLIDEDOWN_COMMAND) return DECRESCENDO;
+    if (code == VOLSLIDEUP_COMMAND) return VOLUME_SLIDE;
+    if (code == VOLSLIDEDOWN_COMMAND) return VOLUME_SLIDE;
     if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
@@ -265,6 +265,11 @@ static effect_t effect(const uint8_t code, const uint8_t data)
         // Tracker always breaks to the next pattern at line 0, but Arctracker interprets the data as the line to begin
         // the next pattern at, so zero it here.
         effect_data = 0;
+    }
+    if (command == VOLUME_SLIDE)
+    {
+        if (code == VOLSLIDEUP_COMMAND) effect_data = 0x80 | data / 2;
+        else effect_data = data / 2;
     }
     return (effect_t) {
         .data = effect_data,

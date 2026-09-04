@@ -218,7 +218,7 @@ pub struct UiModuleInfo {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct UiEffect {
-    pub effect_code: c_char,
+    pub effect_code: [c_int; 2],
     pub effect_data: [c_int; 2],
 }
 

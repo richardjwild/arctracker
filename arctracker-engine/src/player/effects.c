@@ -103,21 +103,18 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
             set_tempo_fine(&player->tick_scheduler, effect.data);
         if (effect.command == DELAY_NEXT_EVENT)
             delay_next_event(&player->tick_scheduler, effect.data);
-        if (effect.command == FINE_PORTAMENTO)
-        {
-            if ((effect.data & 0x80) == 0) portamento_up(voice, effect.data);
-            else portamento_down(voice, effect.data & 0x7f);
-        }
+        if (effect.command == FINE_PORTAMENTO_UP)
+            portamento_up(voice, effect.data);
+        if (effect.command == FINE_PORTAMENTO_DOWN)
+            portamento_down(voice, effect.data);
         if (effect.command == VIBRATO)
             start_vibrato(voice, effect.data, vibrato_already_on);
         if (effect.command == TREMOLO)
             start_tremolo(voice, effect.data, tremolo_already_on);
-        if (effect.command == SET_LFO_WAVEFORM)
-        {
-            const uint8_t effect_type = effect.data >> 4;
-            if (effect_type == 0) set_lfo_waveform(&voice->vibrato, effect.data & 0xf);
-            if (effect_type == 1) set_lfo_waveform(&voice->tremolo, effect.data & 0xf);
-        }
+        if (effect.command == SET_VIBRATO_WAVEFORM)
+            set_lfo_waveform(&voice->vibrato, effect.data);
+        if (effect.command == SET_TREMOLO_WAVEFORM)
+            set_lfo_waveform(&voice->tremolo, effect.data);
         if (effect.command == ARPEGGIO)
             start_arpeggio(voice);
         if (effect.command == SET_LOOP)
@@ -147,10 +144,11 @@ void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *pl
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
-        if (effect.command == CRESCENDO)
-            volume_slide_up(voice, effect.data);
-        if (effect.command == DECRESCENDO)
-            volume_slide_down(voice, effect.data);
+        if (effect.command == VOLUME_SLIDE)
+        {
+            if ((effect.data & 0x80) > 0) volume_slide_up(voice, effect.data & 0x7f);
+            else volume_slide_down(voice, effect.data);
+        }
         if (effect.command == PITCH_SLIDE_UP)
             portamento_up(voice, effect.data);
         if (effect.command == PITCH_SLIDE_DOWN)

@@ -12,8 +12,10 @@
     --colour-note-at-playhead: #00ffee;
     --colour-sample: #aaaa55;
     --colour-sample-at-playhead: #eeee33;
-    --colour-effect: #aa7700;
-    --colour-effect-at-playhead: #ffbb00;
+    --colour-command: #aa7700;
+    --colour-command-at-playhead: #ffbb00;
+    --colour-effect: #b75500;
+    --colour-effect-at-playhead: #e77700;
     --colour-cursor: #00ff00;
     --colour-cursor-non-edit: #555555;
     --colour-cursor-text: #003300;

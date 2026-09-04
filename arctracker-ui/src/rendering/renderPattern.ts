@@ -59,6 +59,7 @@ export type Colours = {
   cursorText: string;
   note: string;
   sample: string;
+  command: string;
   effect: string;
   selectionBox: string;
   selectionBoxOutline: string;
@@ -242,12 +243,14 @@ export class PatternRenderer {
       cursorX += this.layout.glyphWidth * 4;
     } else if (cursorField.field === "sampleLow") {
       cursorX += this.layout.glyphWidth * 5;
-    } else if (cursorField.field === "effectCode") {
+    } else if (cursorField.field === "effectCode1") {
       cursorX += this.layout.glyphWidth * (7 + (cursorField.effectIndex * 4));
-    } else if (cursorField.field === "effectData1") {
+    } else if (cursorField.field === "effectCode2") {
       cursorX += this.layout.glyphWidth * (8 + (cursorField.effectIndex * 4));
-    } else if (cursorField.field === "effectData2") {
+    } else if (cursorField.field === "effectData1") {
       cursorX += this.layout.glyphWidth * (9 + (cursorField.effectIndex * 4));
+    } else if (cursorField.field === "effectData2") {
+      cursorX += this.layout.glyphWidth * (10 + (cursorField.effectIndex * 4));
     }
     this.withFillStyle(this.colours().cursor)
       .fillRect(cursorX, y, cursorWidth, this.layout.rowHeight);
@@ -467,20 +470,38 @@ export class PatternRenderer {
   }
 
   private renderEffect(view: RenderPatternView, x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
-    if (effect.effectCode === "" && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
-      x += this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 0, muted);
-      x += this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 1, muted);
-      this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 2, muted);
+    if (effect.effectCode[0] === 0 && effect.effectCode[1] === 0 && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
+      x += this.renderCommandField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 0, muted);
+      x += this.renderCommandField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 1, muted);
+      x += this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 2, muted);
+      this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 3, muted);
     } else {
-      x += this.renderEffectField(view, x, y, effectIndex, effect.effectCode, atPlayhead, cursorOnEvent, 0, muted);
-      x += this.renderEffectField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 1, muted);
-      this.renderEffectField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectData[1]), atPlayhead, cursorOnEvent, 2, muted);
+      if (effect.effectCode[0] === 0)
+        x += this.renderCommandField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 0, muted);
+      else
+        x += this.renderCommandField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectCode[0]), atPlayhead, cursorOnEvent, 0, muted);
+      x += this.renderCommandField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectCode[1]), atPlayhead, cursorOnEvent, 1, muted);
+      x += this.renderEffectField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectData[0]), atPlayhead, cursorOnEvent, 2, muted);
+      this.renderEffectField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectData[1]), atPlayhead, cursorOnEvent, 3, muted);
     }
     return this.layout.glyphWidth * (FIELDS_PER_EFFECT + 1);
   }
 
+  private renderCommandField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
+    const cursorField = FIRST_EFFECT_FIELD + (effectIndex * FIELDS_PER_EFFECT) + effectField;
+    let colour;
+    if (muted)
+      colour = this.colours().channelMuted;
+    else if (cursorOnEvent && view.cursorField === cursorField)
+      colour = this.colours().cursorText;
+    else
+      colour = (effectParam === DASH) ? this.colours(atPlayhead).text : this.colours(atPlayhead).command;
+    this.withFillStyle(colour).renderGlyph(effectParam, x, y)
+    return this.layout.glyphWidth;
+  }
+
   private renderEffectField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
-    const cursorField = FIRST_EFFECT_FIELD + (effectIndex * 3) + effectField;
+    const cursorField = FIRST_EFFECT_FIELD + (effectIndex * FIELDS_PER_EFFECT) + effectField;
     let colour;
     if (muted)
       colour = this.colours().channelMuted;

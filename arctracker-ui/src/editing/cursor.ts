@@ -10,7 +10,7 @@ export type CursorPosition = {
 
 export type NoteField = "note";
 export type SampleField = "sampleHigh" | "sampleLow";
-export type EffectCodeField = "effectCode";
+export type EffectCodeField = "effectCode1" | "effectCode2";
 export type EffectDataField = "effectData1" | "effectData2";
 
 export type CursorField =
@@ -23,7 +23,7 @@ export const NOTE_FIELD = 0;
 export const SAMPLE_HIGH_FIELD = 1;
 export const SAMPLE_LOW_FIELD = 2;
 export const FIRST_EFFECT_FIELD = 3;
-export const FIELDS_PER_EFFECT = 3;
+export const FIELDS_PER_EFFECT = 4;
 
 export class Cursor {
   editorState: EditorState;
@@ -59,9 +59,11 @@ export class Cursor {
       const relativeField =
         this.editorState.cursorPosition.field - FIRST_EFFECT_FIELD;
       const effectIndex = Math.floor(relativeField / FIELDS_PER_EFFECT);
-      if (relativeField % 3 === 0) {
-        return { field: "effectCode", effectIndex };
-      } else if (relativeField % 3 === 1) {
+      if (relativeField % 4 === 0) {
+        return { field: "effectCode1", effectIndex };
+      } else if (relativeField % 4 === 1) {
+        return { field: "effectCode2", effectIndex }
+      } else if (relativeField % 4 === 2) {
         return { field: "effectData1", effectIndex };
       } else {
         return { field: "effectData2", effectIndex };
@@ -71,7 +73,7 @@ export class Cursor {
 
   rightmostFieldFor(track: number): number {
     return (
-      FIRST_EFFECT_FIELD + this.effectsDisplayed[track] * 3 - 1
+      FIRST_EFFECT_FIELD + this.effectsDisplayed[track] * FIELDS_PER_EFFECT - 1
     );
   }
 

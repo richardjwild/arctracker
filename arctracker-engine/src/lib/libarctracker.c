@@ -487,7 +487,8 @@ static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event)
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
-        event_buffer->effects[effect_no].effect_code = effect.command;
+        event_buffer->effects[effect_no].effect_code[0] = HIGH_NYBBLE(effect.command);
+        event_buffer->effects[effect_no].effect_code[1] = LOW_NYBBLE(effect.command);
         event_buffer->effects[effect_no].effect_data[0] = HIGH_NYBBLE(effect.data);
         event_buffer->effects[effect_no].effect_data[1] = LOW_NYBBLE(effect.data);
     }
@@ -501,8 +502,10 @@ static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event)
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
         const ui_effect_t effect = event->effects[effect_no];
-        event_buffer->effects[effect_no].command = (unsigned) effect.effect_code;
         // Reading left to right gives us most significant nybble first.
+        event_buffer->effects[effect_no].command =
+                ((effect.effect_code[0] & 0xf) << 4)
+                + (effect.effect_code[1] & 0xf);
         event_buffer->effects[effect_no].data =
                 ((effect.effect_data[0] & 0xf) << 4)
                 + (effect.effect_data[1] & 0xf);

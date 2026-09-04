@@ -52,7 +52,7 @@ export const patternLayout = {
       playheadPadding: 2,
       rowNumberWidth: glyphWidth * 5,
       getEventWidth: (track: number) =>
-        glyphWidth * 8 + getEffectsDisplayed(track) * glyphWidth * 4,
+        glyphWidth * 8 + getEffectsDisplayed(track) * glyphWidth * 5,
       maxLines: 1000,
     };
   },

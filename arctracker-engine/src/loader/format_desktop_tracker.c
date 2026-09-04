@@ -217,16 +217,16 @@ static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *deco
 
 static effect_t effect(const uint8_t code, const uint8_t data)
 {
-    const char command = desktop_tracker_command(code, data);
+    const command_t command = desktop_tracker_command(code, data);
     uint8_t effect_data = data;
     if (command == SET_VOLUME)
         effect_data = (data & VOLUME_VALUE_MASK) * 2;
-    if (command == CRESCENDO || command == FINE_CRESCENDO)
+    if ((command == VOLUME_SLIDE && (data & 0x80) == 0) || command == FINE_CRESCENDO)
     {
         // DSKT volume slide parameter has twice the resolution of the equivalent Tracker effect.
         effect_data = (data * 2);
     }
-    if (command == DECRESCENDO || command == FINE_DECRESCENDO)
+    if ((command == VOLUME_SLIDE && (data & 0x80) > 0) || command == FINE_DECRESCENDO)
     {
         // DSKT volume slide command data is a signed integer: negative values slide the volume down.
         const int amount = (256 - data) * 2;
@@ -249,8 +249,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == VOLUME_COMMAND) return SET_VOLUME;
     if (code == SPEED_COMMAND) return SET_TEMPO;
     if (code == STEREO_COMMAND) return SET_PANNING;
-    if (code == VOLSLIDE_COMMAND && (data & 0x80) == 0) return CRESCENDO;
-    if (code == VOLSLIDE_COMMAND && (data & 0x80) > 0) return DECRESCENDO;
+    if (code == VOLSLIDE_COMMAND) return VOLUME_SLIDE;
     if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
