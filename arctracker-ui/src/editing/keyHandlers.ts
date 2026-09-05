@@ -33,7 +33,10 @@ export const editorKeyHandlers: {
   handleEffectFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
     const cursorField = new Cursor().currentField();
-    if (cursorField.field === "effectCode") {
+    if (
+      cursorField.field === "effectCode1" ||
+      cursorField.field === "effectCode2"
+    ) {
       if (e.metaKey || e.ctrlKey || !/^[0-9A-Za-z]$/i.test(e.key)) return false;
       commands.editEffectCode(cursorField, e.key);
       return true;

@@ -63,7 +63,7 @@ typedef struct ui_module_info {
 } ui_module_info_t;
 
 typedef struct ui_effect {
-    char effect_code;
+    int effect_code[2];
     int effect_data[2];
 } ui_effect_t;
 

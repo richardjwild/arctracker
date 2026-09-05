@@ -58,10 +58,10 @@ function unpackEvent(packed: number[]): PatternEvent {
   const effects: Effect[] = [];
   for (let effect = 0; effect < 4; effect++) {
     const shift = effect * 8;
-    const effectCode = toEffectCode((effectCodes >>> shift) & 0xff);
+    const packedCode = (effectCodes >>> shift) & 0xff;
     const packedData = (effectData >>> shift) & 0xff;
     effects.push({
-      effectCode,
+      effectCode: [(packedCode >>> 4) & 0xf, packedCode & 0xf],
       effectData: [(packedData >>> 4) & 0xf, packedData & 0xf],
     });
   }
@@ -70,11 +70,6 @@ function unpackEvent(packed: number[]): PatternEvent {
     sampleNo: (noteAndInstrument & 0xff000000) >>> 24,
     effects,
   };
-}
-
-function toEffectCode(charCode: number): string {
-  if (charCode === 0) return "";
-  return String.fromCharCode(charCode);
 }
 
 export const engine = {
@@ -289,6 +284,7 @@ export const engine = {
     track: number,
     newEvent: PatternEvent,
   ) => {
+    console.log('setEvent', newEvent.effects[0].effectCode[0], newEvent.effects[0].effectCode[1], newEvent.effects[0].effectData[0], newEvent.effects[0].effectData[1]);
     return await invoke("edit_set_event", {
       patternNo,
       patternIndex,

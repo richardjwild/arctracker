@@ -6,7 +6,10 @@ type SampleCursorField = Extract<
   { field: "sampleHigh" | "sampleLow" }
 >;
 
-type EffectCodeCursorField = Extract<CursorField, { field: "effectCode" }>;
+type EffectCodeCursorField = Extract<
+  CursorField,
+  { field: "effectCode1" | "effectCode2" }
+>;
 
 type EffectDataCursorField = Extract<
   CursorField,

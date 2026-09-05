@@ -6,7 +6,7 @@ import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { patternGrid } from "./patternGrid.ts";
 
 export type Effect = {
-  effectCode: string;
+  effectCode: number[];
   effectData: number[];
 }
 
@@ -132,7 +132,8 @@ function eventsEqual(a: PatternEvent, b: PatternEvent): boolean {
 
 function effectsEqual(a: Effect, b: Effect): boolean {
   return (
-    a.effectCode === b.effectCode &&
+    a.effectCode[0] === b.effectCode[0] &&
+    a.effectCode[1] === b.effectCode[1] &&
     a.effectData[0] === b.effectData[0] &&
     a.effectData[1] === b.effectData[1]
   );
@@ -142,7 +143,7 @@ function copyEffects(effects: Effect[]) {
   let copy: Effect[] = [];
   for (const effect of effects) {
     copy.push({
-      effectCode: effect.effectCode,
+      effectCode: [...effect.effectCode],
       effectData: [...effect.effectData],
     });
   }
@@ -154,7 +155,7 @@ function emptyEvent(): PatternEvent {
     note: 0,
     sampleNo: 0,
     effects: Array.from({ length: 4 }, () => ({
-      effectCode: "",
+      effectCode: [0, 0],
       effectData: [0, 0],
     })),
   };
@@ -208,7 +209,9 @@ export const patternEvents = {
 
   setEventEffectCode: async (field: CursorField, value: string) => {
     if (!patternEvents.editing()) return;
-    if (field.field !== "effectCode") return false;
+    if (field.field !== "effectCode1" && field.field !== "effectCode2") return false;
+    const numberValue = hexadecimal.fromHexDigit(value);
+    if (numberValue === null) return;
     const effectIndex = field.effectIndex;
     const command = await buildEventEditCommand({
       eventLocation: null,
@@ -217,11 +220,15 @@ export const patternEvents = {
           return currentEvent;
         }
         let effects = copyEffects(currentEvent.effects);
-        effects[effectIndex].effectCode = value.toUpperCase();
-        return {
+        const codeIndex = field.field === "effectCode1" ? 0 : 1;
+        effects[effectIndex].effectCode[codeIndex] = numberValue;
+        const newEvent = {
           ...currentEvent,
           effects,
         };
+        console.log('currentEvent', currentEvent);
+        console.log('newEvent', newEvent);
+        return newEvent;
       },
     });
     await editor.applyEdit(command);
@@ -263,11 +270,12 @@ export const patternEvents = {
         const field = cursorField.field;
         let effects = copyEffects(currentEvent.effects);
         if (
-          field === "effectCode" ||
+          field === "effectCode1" ||
+          field === "effectCode2" ||
           field === "effectData1" ||
           field === "effectData2"
         ) {
-          effects[cursorField.effectIndex].effectCode = "";
+          effects[cursorField.effectIndex].effectCode = [0, 0];
           effects[cursorField.effectIndex].effectData = [0, 0];
         }
         return {

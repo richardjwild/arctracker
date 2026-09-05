@@ -106,7 +106,7 @@ const initialPattern: CurrentPattern = {
           sampleNo: 0,
           effects: Array.from({ length: 4 }, () => {
             return {
-              effectCode: "",
+              effectCode: [0, 0],
               effectData: [0, 0],
             };
           }),

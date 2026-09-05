@@ -842,12 +842,11 @@ static void decode_effect(
             break;
 
         case 0xA:
+            effect->command = VOLUME_SLIDE;
             if ((mod_data & 0xf0) != 0) {
-                effect->command = CRESCENDO;
-                effect->data = 4 * (mod_data >> 4);
+                effect->data = 0x80 | 4 * (mod_data >> 4);
             }
             else if ((mod_data & 0x0f) != 0) {
-                effect->command = DECRESCENDO;
                 effect->data = 4 * (mod_data & 0xf);
             }
             break;
@@ -875,13 +874,13 @@ static void decode_effect(
                 // E0x (set filter on/off) not implemented.
                 if (e_cmd == 1)
                 {
-                    effect->command = FINE_PORTAMENTO;
+                    effect->command = FINE_PORTAMENTO_UP;
                     effect->data = e_cmd_data;
                 }
                 if (e_cmd == 2)
                 {
-                    effect->command = FINE_PORTAMENTO;
-                    effect->data = e_cmd_data | 0x80;
+                    effect->command = FINE_PORTAMENTO_DOWN;
+                    effect->data = e_cmd_data;
                 }
                 if (e_cmd == 3)
                 {
@@ -890,7 +889,7 @@ static void decode_effect(
                 }
                 if (e_cmd == 4)
                 {
-                    effect->command = SET_LFO_WAVEFORM;
+                    effect->command = SET_VIBRATO_WAVEFORM;
                     effect->data = e_cmd_data;
                 }
                 if (e_cmd == 5)
@@ -906,8 +905,8 @@ static void decode_effect(
                 }
                 if (e_cmd == 7)
                 {
-                    effect->command = SET_LFO_WAVEFORM;
-                    effect->data = e_cmd_data | 0x10;
+                    effect->command = SET_TREMOLO_WAVEFORM;
+                    effect->data = e_cmd_data;
                 }
                 // E8x unused.
                 if (e_cmd == 9)
