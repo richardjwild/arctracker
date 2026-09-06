@@ -46,8 +46,7 @@ typedef struct {
     bool scheduled;
     uint8_t delay;
     int note;
-    const instrument_t *instrument;
-    player_sample_t *sample;
+    player_instrument_t *instrument;
     uint8_t slice;
     voice_t *voice;
 } scheduled_note_t;

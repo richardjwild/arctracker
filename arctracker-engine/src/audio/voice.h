@@ -18,8 +18,15 @@ typedef struct {
 } player_sample_t;
 
 typedef struct {
+    uint32_t offset;
+    uint32_t length;
+} player_sample_slice_t;
+
+typedef struct {
     bool assigned;
+    int transpose;
     volume_mapping_type_t volume_mapping;
+    player_sample_slice_t sample_slices[256];
     player_sample_t sample;
 } player_instrument_t;
 
