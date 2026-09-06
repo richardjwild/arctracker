@@ -13,6 +13,6 @@ uint8_t get_sample_slice(const event_t *);
 
 void handle_effects_on_event(const event_t *event, voice_t *voice, player_track_t *, player_t *);
 
-void handle_effects_off_event(const event_t *event, voice_t *voice, const player_track_t *, player_t *);
+void handle_effects_off_event(const event_t *event, voice_t *voice, const player_track_t *, const player_t *);
 
 #endif //ARCTRACKER_EFFECTS_H

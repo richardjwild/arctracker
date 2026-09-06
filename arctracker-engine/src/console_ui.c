@@ -107,10 +107,11 @@ static void render_ui(ui_transport_state_t ui_state, ui_module_info_t module_inf
     {
         const ui_pattern_event_t event = event_line[track];
         printf(
-            "%s %c%c%X%X | ",
+            "%s %c%X%X%X%X | ",
             NOTES[event.note],
             ALPHANUM[event.sample_no],
-            event.effects[0].effect_code == 0 ? '-' : event.effects[0].effect_code,
+            event.effects[0].effect_code[0],
+            event.effects[0].effect_code[1],
             event.effects[0].effect_data[0],
             event.effects[0].effect_data[1]);
     }

@@ -17,10 +17,10 @@ bool note_out_of_range(const int note)
     return note < LOWEST_NOTE || note > HIGHEST_NOTE;
 }
 
-int period_for_note(const int note, const double fine_tuning)
+int16_t period_for_note(const int note, const double fine_tuning)
 {
     if (note_out_of_range(note)) return 0;
-    return (int) lround(periods[note] * fine_tuning);
+    return (int16_t) lround(periods[note] * fine_tuning);
 }
 
 int nearest_note_period(const int period, const double fine_tuning)

@@ -13,20 +13,21 @@ float *allocate_resample_buffer(const int no_of_frames)
 
 void resample(voice_t *voice, float *resample_buffer, int frames_to_write, const interpolation_type_t interpolation_type)
 {
-    if (!voice->channel_playing || voice->period == 0)
+    sampler_state_t *sampler_state = &voice->sampler_state;
+    if (!voice->channel_playing || sampler_state->period == 0)
     {
         // Fill the buffer with silence.
         memset(resample_buffer, 0, frames_to_write * sizeof(float));
         return;
     }
     float (*interpolate)(const float *, float) = interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
-    const float *sample = voice->sample->sample_pointer;
-    const int period = voice->period + voice->period_modulation;
-    const float phase_increment = voice->sample->phase_increment_per_period / (float) period;
-    const float sample_end = (float) voice->sample->sample_end;
-    const float repeat_length = (float) voice->sample->repeat_length;
-    const bool sample_repeats = voice->sample->sample_repeats;
-    float phase_accumulator = voice->phase_accumulator;
+    const float *sample = sampler_state->sample->sample_pointer;
+    const int period = sampler_state->period + sampler_state->period_modulation;
+    const float phase_increment = sampler_state->sample->phase_increment_per_period / (float) period;
+    const float sample_end = (float) sampler_state->sample->sample_end;
+    const float repeat_length = (float) sampler_state->sample->repeat_length;
+    const bool sample_repeats = sampler_state->sample->sample_repeats;
+    float phase_accumulator = sampler_state->phase_accumulator;
     int offset = 0;
     while (frames_to_write > 0)
     {
@@ -46,7 +47,7 @@ void resample(voice_t *voice, float *resample_buffer, int frames_to_write, const
         // Fill the remainder of the buffer with silence.
         memset(resample_buffer + offset, 0, frames_to_write * sizeof(float));
     }
-    voice->phase_accumulator = phase_accumulator;
+    sampler_state->phase_accumulator = phase_accumulator;
 }
 
 static float interpolate_linear(const float *sample, const float phase_accumulator)

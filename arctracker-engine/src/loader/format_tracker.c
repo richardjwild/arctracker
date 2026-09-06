@@ -199,7 +199,7 @@ static command_t tracker_command(const int code, const uint8_t data)
     if (code == VIBRATO_COMMAND) return VIBRATO;
     if (code == BREAK_COMMAND) return PATTERN_BREAK;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
-    if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    if (code == ARPEGGIO_COMMAND && data > 0) return ARPEGGIO;
     return NO_EFFECT;
 }
 
@@ -253,7 +253,7 @@ static size_t decode_tracker_event(const uint8_t *event_p, event_t *decoded)
 
 static effect_t effect(const uint8_t code, const uint8_t data)
 {
-    const char command = tracker_command(code, data);
+    const command_t command = tracker_command(code, data);
     uint8_t effect_data = data;
     if (command == SET_PANNING)
     {

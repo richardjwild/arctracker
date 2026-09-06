@@ -82,7 +82,7 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
 {
     voice_t *voice = voices + channel;
     resample(voice, audio_out->resample_buffer, frames_to_fill, audio_out->interpolation_type);
-    const float voice_gain = volume_to_gain(audio_out, voice->volume, voice->volume_modulation);
+    const float voice_gain = volume_to_gain(audio_out, voice->sampler_state.volume, voice->sampler_state.volume_modulation); // TODO: This volume should be applied by the sampler.
     const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
     const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;
     const float right_gain = gain * ((float) voice->panning - PAN_HARD_LEFT) / 254.0f;

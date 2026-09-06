@@ -23,7 +23,7 @@ typedef struct {
 
 typedef struct {
     bool enabled;
-    uint16_t chord[3];
+    int16_t chord[3];
     int counter;
 } pt_arpeggiator_state_t;
 
@@ -42,21 +42,10 @@ typedef struct {
 } sampler_state_t;
 
 typedef struct {
-    float phase_accumulator; /* sampler_state_t */
-    player_sample_t *sample; /* sampler_state_t */
-    int period; /* sampler_state_t */
-    int period_modulation; /* sampler_state_t */
-    bool glissando_on; /* sampler_state_t */
-    int tone_portamento_target_period; /* sampler_state_t */
-    uint8_t volume; /* sampler_state_t */
-    int volume_modulation; /* sampler_state_t */
+    sampler_state_t sampler_state;
     bool channel_playing;
     bool muted;
     uint8_t panning;
-    bool arpeggiator_on; /* arpeggiator_state_t */
-    int arpeggio_counter; /* arpeggiator_state_t */
-    lfo_effect_t vibrato; /* sampler_state_t */
-    lfo_effect_t tremolo; /* sampler_state_t */
 } voice_t;
 
 #endif //ARCTRACKER_VOICE_H
