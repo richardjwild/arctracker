@@ -98,6 +98,7 @@ void player_update_samples(player_t *player)
         const instrument_t instrument = module->instruments[i];
         player->instruments[i].assigned = instrument.assigned;
         if (!instrument.assigned) continue;
+        player->instruments[i].volume_mapping = player->audio_out.volume_mapping_type;
         const sample_t sample = module->samples[instrument.sample_index];
         const double ft = fine_tuning[sample.finetune + 128];
         const float base_period = period_for_note(sample.base_note, ft);
@@ -107,6 +108,7 @@ void player_update_samples(player_t *player)
         player->instruments[i].sample.sample_repeats = instrument.repeats;
         player->instruments[i].sample.sample_end = sample.sample_length;
         player->instruments[i].sample.repeat_length = instrument.repeat_length;
+        player->instruments[i].sample.interpolation_type = player->audio_out.interpolation_type;
         player->instruments[i].sample.sample_pointer = sample.sample_data;
     }
 }
@@ -530,6 +532,7 @@ static void note_on(const int note, const instrument_t *instrument, player_sampl
     voice->sampler_state.arpeggio.enabled = false;
     voice->sampler_state.period = period_for_note(played_note, voice->sampler_state.sample->fine_tuning);
     voice->sampler_state.tone_portamento_target_period = voice->sampler_state.period;
+    voice->sampler_state.interpolation_type = sample->interpolation_type;
     const sample_slice_t sample_slice = instrument->sample_slices[slice];
     if (sample_slice.length == 0 || sample_slice.offset >= (uint32_t) sample->sample_end)
         voice->sampler_state.phase_accumulator = 0.0f;

@@ -84,7 +84,7 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
     voice_t *voice = voices + channel;
     if (voice->channel_playing)
     {
-        voice->channel_playing = resample(&voice->sampler_state, audio_out->resample_buffer, frames_to_fill, audio_out->interpolation_type);
+        voice->channel_playing = resample(&voice->sampler_state, audio_out->resample_buffer, frames_to_fill);
     }
     else
     {

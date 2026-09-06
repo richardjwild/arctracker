@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "player/lfo.h"
+#include "audio/interpolation_type.h"
+#include "audio/volume_mapping_type.h"
 
 typedef struct {
     float phase_increment_per_period;
@@ -11,11 +13,13 @@ typedef struct {
     bool sample_repeats;
     int sample_end;
     int repeat_length;
+    interpolation_type_t interpolation_type;
     const float *sample_pointer;
 } player_sample_t;
 
 typedef struct {
     bool assigned;
+    volume_mapping_type_t volume_mapping;
     player_sample_t sample;
 } player_instrument_t;
 
@@ -34,6 +38,7 @@ typedef struct {
 
 typedef struct {
     player_sample_t *sample;
+    interpolation_type_t interpolation_type;
     float phase_accumulator;
     int period;
     int period_modulation;

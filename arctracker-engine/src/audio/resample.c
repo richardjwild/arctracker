@@ -11,7 +11,7 @@ float *allocate_resample_buffer(const int no_of_frames)
     return allocate_array(AUDIO, no_of_frames, sizeof(float));
 }
 
-bool resample(sampler_state_t *sampler, float *channel_buffer, int frames_to_write, const interpolation_type_t interpolation_type)
+bool resample(sampler_state_t *sampler, float *channel_buffer, int frames_to_write)
 {
     if (sampler->period == 0)
     {
@@ -19,7 +19,7 @@ bool resample(sampler_state_t *sampler, float *channel_buffer, int frames_to_wri
         memset(channel_buffer, 0, frames_to_write * sizeof(float));
         return false;
     }
-    float (*interpolate)(const float *, float) = interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
+    float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
     const float *sample = sampler->sample->sample_pointer;
     const int period = sampler->period + sampler->period_modulation;
     const float phase_increment = sampler->sample->phase_increment_per_period / (float) period;
