@@ -99,7 +99,7 @@ void player_update_samples(player_t *player)
         player->instruments[i].assigned = instrument.assigned;
         if (!instrument.assigned) continue;
         player->instruments[i].transpose = instrument.transpose;
-        player->instruments[i].volume_mapping = player->audio_out.volume_mapping_type;
+        player->instruments[i].gain_curve = player->audio_out.gain_curve;
         const sample_t sample = module->samples[instrument.sample_index];
         const double ft = fine_tuning[sample.finetune + 128];
         const float base_period = period_for_note(sample.base_note, ft);
@@ -537,6 +537,7 @@ static void note_on(const int note, player_instrument_t *instrument, const uint8
     voice->sampler_state.period = period_for_note(played_note, voice->sampler_state.sample->fine_tuning);
     voice->sampler_state.tone_portamento_target_period = voice->sampler_state.period;
     voice->sampler_state.interpolation_type = instrument->sample.interpolation_type;
+    voice->sampler_state.gain_curve = instrument->gain_curve;
     const player_sample_slice_t sample_slice = instrument->sample_slices[slice];
     if (sample_slice.length == 0 || sample_slice.offset >= (uint32_t) instrument->sample.sample_end)
         voice->sampler_state.phase_accumulator = 0.0f;

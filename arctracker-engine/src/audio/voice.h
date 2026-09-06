@@ -25,7 +25,7 @@ typedef struct {
 typedef struct {
     bool assigned;
     int transpose;
-    volume_mapping_type_t volume_mapping;
+    float *gain_curve;
     player_sample_slice_t sample_slices[256];
     player_sample_t sample;
 } player_instrument_t;
@@ -56,6 +56,7 @@ typedef struct {
     pt_arpeggiator_state_t arpeggio;
     lfo_effect_t vibrato;
     lfo_effect_t tremolo;
+    float *gain_curve;
 } sampler_state_t;
 
 typedef struct {

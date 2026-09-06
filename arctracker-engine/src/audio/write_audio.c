@@ -8,10 +8,9 @@
 static const float PAN_HARD_LEFT = 1.0f;
 static const float PAN_HARD_RIGHT = 255.0f;
 
-static void calculate_gain_curve(float *);
+static void calculate_gain_curve(float *, volume_mapping_type_t);
 static bool fill_audio_buffer(audio_out_t *, voice_t *, int);
 static void write_audio_for_channel(audio_out_t *, voice_t *, int, int);
-static float volume_to_gain(const audio_out_t *, uint8_t, int);
 static bool mix_and_send(audio_out_t *);
 
 bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain, volume_mapping_type_t volume_mapping_type)
@@ -27,21 +26,29 @@ bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_cha
     audio_out->peak_l = 0;
     audio_out->peak_r = 0;
     audio_out->volume_mapping_type = volume_mapping_type;
-    calculate_gain_curve(audio_out->gain_curve);
+    calculate_gain_curve(audio_out->gain_curve, audio_out->volume_mapping_type);
     audio_out->api.info.healthy = true;
     return audio_out->api.init(&audio_api.info);
 }
 
-static void calculate_gain_curve(float *gain_curve)
+static void calculate_gain_curve(float *gain_curve, const volume_mapping_type_t volume_mapping)
 {
-    for (int i = 0; i <= 127; i++)
+    if (volume_mapping == VOLUME_AMIGA)
     {
-        gain_curve[(i * 2) + 1] = mu_law_to_linear(255 - i);
-        if (i >= 1)
-            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
+        for (int i = 0; i <= 255; i++)
+            gain_curve[i] = (float) i / 255;
     }
-    gain_curve[0] = 0.0f;
-    gain_curve[1] = gain_curve[2] / 2;
+    else
+    {
+        for (int i = 0; i <= 127; i++)
+        {
+            gain_curve[(i * 2) + 1] = mu_law_to_linear(255 - i);
+            if (i >= 1)
+                gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
+        }
+        gain_curve[0] = 0.0f;
+        gain_curve[1] = gain_curve[2] / 2;
+    }
 }
 
 bool write_audio_data(audio_out_t *audio_out, voice_t *voices, int samples_to_write)
@@ -91,8 +98,7 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
         // Fill the buffer with silence.
         memset(audio_out->resample_buffer, 0, frames_to_fill * sizeof(float));
     }
-    const float voice_gain = volume_to_gain(audio_out, voice->sampler_state.volume, voice->sampler_state.volume_modulation); // TODO: This volume should be applied by the sampler.
-    const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
+    const float gain = voice->muted ? 0.0f : audio_out->master_gain;
     const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;
     const float right_gain = gain * ((float) voice->panning - PAN_HARD_LEFT) / 254.0f;
     const int channels = audio_out->num_channels;
@@ -108,16 +114,6 @@ static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, con
         };
         offset += channels;
     }
-}
-
-static float volume_to_gain(const audio_out_t *audio_out, const uint8_t volume, const int modulation)
-{
-    int modulated_volume = volume + modulation;
-    if (modulated_volume > 255) modulated_volume = 255;
-    if (modulated_volume < 0) modulated_volume = 0;
-    return audio_out->volume_mapping_type == VOLUME_AMIGA
-               ? (float) modulated_volume / 255
-               : audio_out->gain_curve[modulated_volume];
 }
 
 static bool mix_and_send(audio_out_t *audio_out)

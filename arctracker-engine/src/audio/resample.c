@@ -28,9 +28,10 @@ bool resample(sampler_state_t *sampler, float *channel_buffer, int frames_to_wri
     const bool sample_repeats = sampler->sample->sample_repeats;
     float phase_accumulator = sampler->phase_accumulator;
     int offset = 0;
+    const float gain = sampler->gain_curve[sampler->volume];
     while (frames_to_write > 0)
     {
-        channel_buffer[offset++] = interpolate(sample, phase_accumulator);
+        channel_buffer[offset++] = interpolate(sample, phase_accumulator) * gain;
         frames_to_write--;
         phase_accumulator += phase_increment;
         if (phase_accumulator >= sample_end)
