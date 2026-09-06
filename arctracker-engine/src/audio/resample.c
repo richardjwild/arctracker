@@ -39,16 +39,15 @@ bool resample(sampler_state_t *sampler, float *channel_buffer, int frames_to_wri
             phase_accumulator -= repeat_length;
         }
     }
-    bool still_playing = true;
     if (frames_to_write > 0)
     {
         // The sample ended before we wrote all the requested frames.
-        still_playing = false;
         // Fill the remainder of the buffer with silence.
         memset(channel_buffer + offset, 0, frames_to_write * sizeof(float));
+        return false;
     }
     sampler->phase_accumulator = phase_accumulator;
-    return still_playing;
+    return true;
 }
 
 static float interpolate_linear(const float *sample, const float phase_accumulator)
