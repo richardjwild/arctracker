@@ -33,6 +33,6 @@ bool write_audio_data(audio_out_t *, voice_t *, int);
 
 void send_remaining_audio(audio_out_t *);
 
-void destroy_audio_resources(audio_out_t *);
+void destroy_audio_resources(const audio_out_t *);
 
 #endif // ARCTRACKER_WRITE_AUDIO_H
