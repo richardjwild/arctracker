@@ -22,39 +22,41 @@ typedef struct {
 } lfo_effect_t;
 
 typedef struct {
-    bool looping;
-    int start;
+    bool enabled;
+    uint16_t chord[3];
     int counter;
-} pt_loop_state_t;
+} pt_arpeggiator_state_t;
 
 typedef struct {
-    uint8_t tone_portamento_speed;
-    uint8_t vibrato_speed;
-    uint8_t vibrato_depth;
-    uint8_t tremolo_speed;
-    uint8_t tremolo_depth;
-} effect_memory_t;
-
-typedef struct {
-    float phase_accumulator;
     player_sample_t *sample;
+    float phase_accumulator;
     int period;
     int period_modulation;
     bool glissando_on;
     int tone_portamento_target_period;
-    int instrument_no;
     uint8_t volume;
     int volume_modulation;
+    pt_arpeggiator_state_t arpeggio;
+    lfo_effect_t vibrato;
+    lfo_effect_t tremolo;
+} sampler_state_t;
+
+typedef struct {
+    float phase_accumulator; /* sampler_state_t */
+    player_sample_t *sample; /* sampler_state_t */
+    int period; /* sampler_state_t */
+    int period_modulation; /* sampler_state_t */
+    bool glissando_on; /* sampler_state_t */
+    int tone_portamento_target_period; /* sampler_state_t */
+    uint8_t volume; /* sampler_state_t */
+    int volume_modulation; /* sampler_state_t */
     bool channel_playing;
     bool muted;
     uint8_t panning;
-    bool arpeggiator_on;
-    int arpeggio_counter;
-    int current_note;
-    lfo_effect_t vibrato;
-    lfo_effect_t tremolo;
-    pt_loop_state_t loop_state;
-    effect_memory_t effect_memory;
+    bool arpeggiator_on; /* arpeggiator_state_t */
+    int arpeggio_counter; /* arpeggiator_state_t */
+    lfo_effect_t vibrato; /* sampler_state_t */
+    lfo_effect_t tremolo; /* sampler_state_t */
 } voice_t;
 
 #endif //ARCTRACKER_VOICE_H

@@ -22,6 +22,27 @@ typedef struct {
 } ui_event_consumer_t;
 
 typedef struct {
+    bool looping;
+    int start;
+    int counter;
+} pt_loop_state_t;
+
+typedef struct {
+    uint8_t tone_portamento_speed;
+    uint8_t vibrato_speed;
+    uint8_t vibrato_depth;
+    uint8_t tremolo_speed;
+    uint8_t tremolo_depth;
+} effect_memory_t;
+
+typedef struct {
+    int instrument_no;
+    int current_note;
+    pt_loop_state_t loop_state;
+    effect_memory_t effect_memory;
+} player_track_t;
+
+typedef struct {
     bool scheduled;
     uint8_t delay;
     int note;
@@ -29,6 +50,7 @@ typedef struct {
     player_sample_t *sample;
     uint8_t slice;
     voice_t *voice;
+    player_track_t *track;
 } scheduled_note_t;
 
 typedef struct player {
@@ -38,6 +60,7 @@ typedef struct player {
     float master_gain;
     int current_bpm;
     voice_t *voices;
+    player_track_t *tracks;
     module_t *module;
     scheduled_note_t *scheduled_notes;
     sequence_t sequence;

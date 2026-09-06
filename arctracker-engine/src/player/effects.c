@@ -13,17 +13,17 @@ static void volume_slide_down(voice_t *, uint8_t);
 static void combined_volume_side(voice_t *, uint8_t);
 static void portamento_up(voice_t *, uint8_t);
 static void portamento_down(voice_t *, uint8_t);
-static void start_tone_portamento(voice_t *, uint8_t);
-static void tone_portamento(voice_t *);
+static void start_tone_portamento(player_track_t *, uint8_t);
+static void tone_portamento(voice_t *, const player_track_t *);
 static void start_arpeggio(voice_t *);
-static void define_loop(voice_t *, sequence_t *, uint8_t);
+static void define_loop(player_track_t *, sequence_t *, uint8_t);
 static void set_glissando_mode(voice_t *voice, uint8_t);
-static void apply_arpeggio(voice_t *, uint8_t);
+static void apply_arpeggio(voice_t *, const player_track_t *, uint8_t);
 static void retrigger_sample(const event_scheduler_t *, voice_t *, uint8_t);
-static void start_vibrato(voice_t *, uint8_t, bool);
-static void apply_vibrato(voice_t *);
-static void start_tremolo(voice_t *, uint8_t, bool);
-static void apply_tremolo(voice_t *);
+static void start_vibrato(voice_t *, player_track_t *, uint8_t, bool);
+static void apply_vibrato(voice_t *, const player_track_t *);
+static void start_tremolo(voice_t *, player_track_t *, uint8_t, bool);
+static void apply_tremolo(voice_t *, const player_track_t *);
 static void set_lfo_waveform(lfo_effect_t *, uint8_t);
 static void set_volume(voice_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
@@ -44,13 +44,13 @@ bool portamento(const event_t *event)
     return false;
 }
 
-void handle_effects_before_note(const event_t *event, const voice_t *voice, player_t *player)
+void handle_effects_before_note(const event_t *event, const player_track_t *track, player_t *player)
 {
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
         if (effect.command == SET_FINETUNE)
-            player_set_sample_finetune(player, voice->instrument_no, (int8_t) effect.data);
+            player_set_sample_finetune(player, track->instrument_no, (int8_t) effect.data);
     }
 }
 
@@ -76,7 +76,7 @@ uint8_t get_sample_slice(const event_t *event)
     return 0;
 }
 
-void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *player)
+void handle_effects_on_event(const event_t *event, voice_t *voice, player_track_t *track, player_t *player)
 {
     bool vibrato_already_on, tremolo_already_on;
     save_and_reset_effect_state(voice, &vibrato_already_on, &tremolo_already_on);
@@ -84,7 +84,7 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
     {
         const effect_t effect = event->effects[effect_no];
         if (effect.command == PORTAMENTO)
-            start_tone_portamento(voice, effect.data);
+            start_tone_portamento(track, effect.data);
         if (effect.command == SET_VOLUME)
             set_volume(voice, effect.data);
         if (effect.command == FINE_CRESCENDO)
@@ -108,9 +108,9 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
         if (effect.command == FINE_PORTAMENTO_DOWN)
             portamento_down(voice, effect.data);
         if (effect.command == VIBRATO)
-            start_vibrato(voice, effect.data, vibrato_already_on);
+            start_vibrato(voice, track, effect.data, vibrato_already_on);
         if (effect.command == TREMOLO)
-            start_tremolo(voice, effect.data, tremolo_already_on);
+            start_tremolo(voice, track, effect.data, tremolo_already_on);
         if (effect.command == SET_VIBRATO_WAVEFORM)
             set_lfo_waveform(&voice->vibrato, effect.data);
         if (effect.command == SET_TREMOLO_WAVEFORM)
@@ -118,7 +118,7 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_t *pla
         if (effect.command == ARPEGGIO)
             start_arpeggio(voice);
         if (effect.command == SET_LOOP)
-            define_loop(voice, &player->sequence, effect.data);
+            define_loop(track, &player->sequence, effect.data);
         if (effect.command == SET_GLISSANDO_MODE)
             set_glissando_mode(voice, effect.data);
     }
@@ -139,7 +139,7 @@ static void save_and_reset_effect_state(voice_t *voice, bool *vibrato_already_on
     voice->arpeggiator_on = false;
 }
 
-void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *player)
+void handle_effects_off_event(const event_t *event, voice_t *voice, const player_track_t *track, player_t *player)
 {
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
@@ -154,25 +154,25 @@ void handle_effects_off_event(const event_t *event, voice_t *voice, player_t *pl
         if (effect.command == PITCH_SLIDE_DOWN)
             portamento_down(voice, effect.data);
         if (effect.command == PORTAMENTO)
-            tone_portamento(voice);
+            tone_portamento(voice, track);
         if (effect.command == PORTAMENTO_PLUS_VOLUME_SIDE)
         {
-            tone_portamento(voice);
+            tone_portamento(voice, track);
             combined_volume_side(voice, effect.data);
         }
         if (effect.command == SILENCE_SAMPLE_AFTER_DELAY)
             silence_voice(&player->tick_scheduler, voice, effect.data);
         if (effect.command == VIBRATO)
-            apply_vibrato(voice);
+            apply_vibrato(voice, track);
         if (effect.command == VIBRATO_PLUS_VOLUME_SLIDE)
         {
-            apply_vibrato(voice);
+            apply_vibrato(voice, track);
             combined_volume_side(voice, effect.data);
         }
         if (effect.command == TREMOLO)
-            apply_tremolo(voice);
+            apply_tremolo(voice, track);
         if (effect.command == ARPEGGIO)
-            apply_arpeggio(voice, effect.data);
+            apply_arpeggio(voice, track, effect.data);
         if (effect.command == RETRIGGER_SAMPLE)
             retrigger_sample(&player->tick_scheduler.event_scheduler, voice, effect.data);
     }
@@ -216,15 +216,15 @@ static void portamento_down(voice_t *voice, const uint8_t data)
         voice->period = PERIOD_MAX;
 }
 
-static void start_tone_portamento(voice_t *voice, const uint8_t data)
+static void start_tone_portamento(player_track_t *track, const uint8_t data)
 {
     if (data)
-        voice->effect_memory.tone_portamento_speed = data;
+        track->effect_memory.tone_portamento_speed = data;
 }
 
-static void tone_portamento(voice_t *voice)
+static void tone_portamento(voice_t *voice, const player_track_t *track)
 {
-    const int portamento_speed = voice->effect_memory.tone_portamento_speed;
+    const int portamento_speed = track->effect_memory.tone_portamento_speed;
     if (voice->period < voice->tone_portamento_target_period)
     {
         voice->period += portamento_speed;
@@ -264,42 +264,42 @@ static void set_lfo_waveform(lfo_effect_t *lfo_effect, const uint8_t data)
     // Other sources claim that it selects a noise waveform, and others still say it selects square.
 }
 
-static void start_vibrato(voice_t *voice, const uint8_t data, const bool already_on)
+static void start_vibrato(voice_t *voice, player_track_t *track, const uint8_t data, const bool already_on)
 {
     voice->vibrato.enabled = true;
     if (!already_on && voice->vibrato.retrigger)
         voice->vibrato.phase = 0;
     if ((data & 0xf0) != 0)
-        voice->effect_memory.vibrato_speed = data >> 4;
+        track->effect_memory.vibrato_speed = data >> 4;
     if ((data & 0xf) != 0)
-        voice->effect_memory.vibrato_depth = data & 0xf;
+        track->effect_memory.vibrato_depth = data & 0xf;
 }
 
-static void apply_vibrato(voice_t *voice)
+static void apply_vibrato(voice_t *voice, const player_track_t *track)
 {
-    const uint8_t vibrato_speed = voice->effect_memory.vibrato_speed;
-    const uint8_t vibrato_depth = voice->effect_memory.vibrato_depth;
+    const uint8_t vibrato_speed = track->effect_memory.vibrato_speed;
+    const uint8_t vibrato_depth = track->effect_memory.vibrato_depth;
     const float lfo_value = lfo_pt_waveform(voice->vibrato.waveform, voice->vibrato.phase);
     const float period_modulation = lfo_value * (float) vibrato_depth * 2.0f;
     voice->period_modulation = (int) period_modulation;
     voice->vibrato.phase = (voice->vibrato.phase + vibrato_speed) % PT_LFO_WAVELENGTH;
 }
 
-static void start_tremolo(voice_t *voice, const uint8_t data, const bool already_on)
+static void start_tremolo(voice_t *voice, player_track_t *track, const uint8_t data, const bool already_on)
 {
     voice->tremolo.enabled = true;
     if (!already_on && voice->tremolo.retrigger)
         voice->tremolo.phase = 0;
     if ((data & 0xf0) != 0)
-        voice->effect_memory.tremolo_speed = data >> 4;
+        track->effect_memory.tremolo_speed = data >> 4;
     if ((data & 0xf) != 0)
-        voice->effect_memory.tremolo_depth = data & 0xf;
+        track->effect_memory.tremolo_depth = data & 0xf;
 }
 
-static void apply_tremolo(voice_t *voice)
+static void apply_tremolo(voice_t *voice, const player_track_t *track)
 {
-    const uint8_t tremolo_speed = voice->effect_memory.tremolo_speed;
-    const uint8_t tremolo_depth = voice->effect_memory.tremolo_depth;
+    const uint8_t tremolo_speed = track->effect_memory.tremolo_speed;
+    const uint8_t tremolo_depth = track->effect_memory.tremolo_depth;
     const float lfo_value = lfo_pt_waveform(voice->tremolo.waveform, voice->tremolo.phase);
     const float volume_modulation = lfo_value * (float) tremolo_depth * 16.0f;
     voice->volume_modulation = (int) volume_modulation;
@@ -311,27 +311,27 @@ static void start_arpeggio(voice_t *voice)
     voice->arpeggiator_on = true;
 }
 
-static void define_loop(voice_t *voice, sequence_t *sequence, const uint8_t data)
+static void define_loop(player_track_t *track, sequence_t *sequence, const uint8_t data)
 {
     if (data == 0)
     {
-        voice->loop_state.start = sequence->pattern_index;
+        track->loop_state.start = sequence->pattern_index;
         return;
     }
-    if (voice->loop_state.looping)
+    if (track->loop_state.looping)
     {
-        voice->loop_state.counter -= 1;
-        if (voice->loop_state.counter == 0)
+        track->loop_state.counter -= 1;
+        if (track->loop_state.counter == 0)
         {
             clear_pattern_loop(sequence);
-            voice->loop_state.looping = false;
+            track->loop_state.looping = false;
         }
     }
     else
     {
-        set_loop(sequence, voice->loop_state.start, sequence->pattern_index);
-        voice->loop_state.looping = true;
-        voice->loop_state.counter = data;
+        set_loop(sequence, track->loop_state.start, sequence->pattern_index);
+        track->loop_state.looping = true;
+        track->loop_state.counter = data;
     }
 }
 
@@ -340,17 +340,17 @@ static void set_glissando_mode(voice_t *voice, const uint8_t data)
     voice->glissando_on = data != 0;
 }
 
-static void apply_arpeggio(voice_t *voice, const uint8_t data)
+static void apply_arpeggio(voice_t *voice, const player_track_t *track, const uint8_t data)
 {
     const int chord[] = {
-            voice->current_note,
-            voice->current_note + HIGH_NYBBLE(data),
-            voice->current_note + LOW_NYBBLE(data)
+            track->current_note,
+            track->current_note + HIGH_NYBBLE(data),
+            track->current_note + LOW_NYBBLE(data)
     };
     int arpeggio_note = chord[voice->arpeggio_counter % 3];
     if (note_out_of_range(arpeggio_note))
     {
-        arpeggio_note = voice->current_note;
+        arpeggio_note = track->current_note;
     }
     voice->period_modulation = period_for_note(arpeggio_note, voice->sample->fine_tuning) - voice->period;
     voice->arpeggio_counter += 1;
