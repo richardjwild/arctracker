@@ -1,6 +1,6 @@
 import "./PatternView.css";
 import { useStore } from "../store/useStore.ts";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { engine } from "../engine/engine.ts";
 import { animation } from "../rendering/animation.ts";
 import {
@@ -70,7 +70,7 @@ export default function PatternView() {
   const wheelDeltaRef = useRef(0);
   const { patternNo, patternLength } = useSequencePosition();
 
-  const coloursAtPlayhead: Colours = {
+  const coloursAtPlayhead = useMemo<Colours>(() => ({
     background: cssProperty("--colour-panel-bg"),
     beatLine: cssProperty("--colour-beat-line"),
     trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
@@ -97,9 +97,9 @@ export default function PatternView() {
     effect: cssProperty("--colour-effect-at-playhead"),
     selectionBox: cssProperty("--colour-selection-fill"),
     selectionBoxOutline: cssProperty("--colour-selection-outline"),
-  };
+  }), []);
 
-  const coloursOffPlayhead: Colours = {
+  const coloursOffPlayhead = useMemo<Colours>(() => ({
     background: cssProperty("--colour-panel-bg"),
     beatLine: cssProperty("--colour-beat-line"),
     trackLaneSeparator: cssProperty("--colour-track-lane-separator"),
@@ -126,10 +126,10 @@ export default function PatternView() {
     effect: cssProperty("--colour-effect"),
     selectionBox: cssProperty("--colour-selection-fill"),
     selectionBoxOutline: cssProperty("--colour-selection-outline"),
-  };
+  }), []);
 
-  const trackHeaderFont: string = cssProperty("--font-track-header");
-  const patternDataFont: string = cssProperty("--font-pattern-data");
+  const trackHeaderFont = useMemo(() => cssProperty("--font-track-header"), []);
+  const patternDataFont = useMemo(() => cssProperty("--font-pattern-data"), []);
 
   const ensureCanvasSize = (
     canvas: HTMLCanvasElement,
