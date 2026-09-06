@@ -3,7 +3,6 @@
 #include "sequencer.h"
 #include "period.h"
 #include "memory/bits.h"
-#include "pcm/mu_law.h"
 
 static const uint8_t PAN_CENTRE = 0x80;
 

@@ -15,6 +15,11 @@ typedef struct {
 } player_sample_t;
 
 typedef struct {
+    bool assigned;
+    player_sample_t sample;
+} player_instrument_t;
+
+typedef struct {
     bool enabled;
     bool retrigger;
     pt_waveform_t waveform;

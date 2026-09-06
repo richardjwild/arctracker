@@ -96,24 +96,25 @@ void player_update_samples(player_t *player)
     for (int i = 0; i < 256; i++)
     {
         const instrument_t instrument = module->instruments[i];
+        player->instruments[i].assigned = instrument.assigned;
         if (!instrument.assigned) continue;
         const sample_t sample = module->samples[instrument.sample_index];
         const double ft = fine_tuning[sample.finetune + 128];
-        const float base_period = (float) period_for_note(sample.base_note, ft);
+        const float base_period = period_for_note(sample.base_note, ft);
         const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
-        player->samples[i].phase_increment_per_period = phase_increment_per_period;
-        player->samples[i].fine_tuning = fine_tuning[128 + sample.finetune];
-        player->samples[i].sample_repeats = instrument.repeats;
-        player->samples[i].sample_end = sample.sample_length;
-        player->samples[i].repeat_length = instrument.repeat_length;
-        player->samples[i].sample_pointer = sample.sample_data;
+        player->instruments[i].sample.phase_increment_per_period = phase_increment_per_period;
+        player->instruments[i].sample.fine_tuning = fine_tuning[128 + sample.finetune];
+        player->instruments[i].sample.sample_repeats = instrument.repeats;
+        player->instruments[i].sample.sample_end = sample.sample_length;
+        player->instruments[i].sample.repeat_length = instrument.repeat_length;
+        player->instruments[i].sample.sample_pointer = sample.sample_data;
     }
 }
 
 void player_set_sample_finetune(player_t *player, const int instrument_no, const int8_t finetune)
 {
     if (instrument_no <= 0) return;
-    player->samples[instrument_no - 1].fine_tuning = fine_tuning[128 + finetune];
+    player->instruments[instrument_no - 1].sample.fine_tuning = fine_tuning[128 + finetune];
 }
 
 bool player_run(player_t *player)
@@ -289,7 +290,7 @@ static void process_midi_note_on_command(player_t *player, const midi_note_on_co
         note_off(voice);
         return;
     }
-    player_sample_t *sample = &player->samples[data.instrument_no];
+    player_sample_t *sample = &player->instruments[data.instrument_no].sample;
     note_on(data.note, &instrument, sample, 0, voice);
     voice->sampler_state.volume = instrument.default_volume;
 }
@@ -303,7 +304,7 @@ static void process_keyboard_note_on_command(player_t *player, const keyboard_no
         note_off(voice);
         return;
     }
-    player_sample_t *sample = &player->samples[data.instrument_no];
+    player_sample_t *sample = &player->instruments[data.instrument_no].sample;
     note_on(data.note, &instrument, sample, 0, voice);
     voice->sampler_state.volume = instrument.default_volume;
 }
@@ -473,7 +474,7 @@ static void on_new_event(player_t *player, const event_t *event, const uint8_t t
         }
         else
         {
-            player_sample_t *sample = &player->samples[track->instrument_no - 1];
+            player_sample_t *sample = &player->instruments[track->instrument_no - 1].sample;
             if (!instrument_changed && portamento(event))
             {
                 voice->sampler_state.tone_portamento_target_period = period_for_note(note + instrument->transpose, sample->fine_tuning);
