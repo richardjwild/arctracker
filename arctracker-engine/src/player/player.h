@@ -50,7 +50,6 @@ typedef struct {
     player_sample_t *sample;
     uint8_t slice;
     voice_t *voice;
-    player_track_t *track;
 } scheduled_note_t;
 
 typedef struct player {

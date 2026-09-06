@@ -268,8 +268,8 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     }
     if (command == VOLUME_SLIDE)
     {
-        if (code == VOLSLIDEUP_COMMAND) effect_data = 0x80 | data / 2;
-        else effect_data = data / 2;
+        if (code == VOLSLIDEUP_COMMAND) effect_data = 0x80 | data;
+        else effect_data = data;
     }
     return (effect_t) {
         .data = effect_data,
