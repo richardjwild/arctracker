@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "heap.h"
 #include "io/error.h"
 #include "messages.h"

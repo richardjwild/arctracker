@@ -110,7 +110,7 @@ static void render_ui(ui_transport_state_t ui_state, ui_module_info_t module_inf
             "%s %c%c%X%X | ",
             NOTES[event.note],
             ALPHANUM[event.sample_no],
-            event.effects[0].effect_code == 0 ? '-' : event.effects[0].effect_code,
+            (event.effects[0].effect_code[0] == 0 && event.effects[0].effect_code[1] == 0) ? '-' : ALPHANUM[event.effects[0].effect_code[1] + 1],
             event.effects[0].effect_data[0],
             event.effects[0].effect_data[1]);
     }

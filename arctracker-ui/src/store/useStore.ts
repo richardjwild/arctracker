@@ -10,6 +10,7 @@ import { ExportState } from "../audioExport/audioExport.ts";
 import { ModuleTempo } from "../editing/tempo.ts";
 import { DraftAppConfig } from "../config/appConfig.ts";
 import { UserMessage } from "../messages/userMessages.ts";
+import type { PlayerSnapshot } from "../player/player.ts";
 
 interface AppStore {
   moduleId: number;
@@ -66,6 +67,7 @@ interface AppStore {
   setLoadingModule: (loading: boolean) => void;
   logMessage: (message: UserMessage) => void;
   setHexCalculatorActive: (active: boolean) => void;
+  updatePlaybackState: (snapshot: PlayerSnapshot) => void;
 }
 
 const initialModule: Module = {
@@ -392,5 +394,67 @@ export const useStore = create<AppStore>((set) => ({
   setHexCalculatorActive: (hexCalculatorActive: boolean) =>
     set({
       hexCalculatorActive,
+    }),
+
+  updatePlaybackState: (snapshot: PlayerSnapshot) =>
+    set((state) => {
+      const nextState: Partial<AppStore> = {};
+
+      const currentTS = state.transportState;
+      if (
+        currentTS.playbackAvailable !== snapshot.playbackAvailable ||
+        currentTS.playing !== snapshot.playing ||
+        currentTS.looping !== snapshot.looping ||
+        currentTS.sequencePos !== snapshot.sequencePos ||
+        currentTS.patternIndex !== snapshot.patternIndex
+      ) {
+        nextState.transportState = {
+          playbackAvailable: snapshot.playbackAvailable,
+          playing: snapshot.playing,
+          looping: snapshot.looping,
+          sequencePos: snapshot.sequencePos,
+          patternIndex: snapshot.patternIndex,
+        };
+      }
+
+      const nextMutes = snapshot.tracks.map((track) => track.muted);
+      if (!arraysEqual(state.trackMuteState, nextMutes)) {
+        nextState.trackMuteState = nextMutes;
+      }
+
+      const nextEffects = snapshot.tracks.map((track) => track.effectsDisplayed);
+      if (!arraysEqual(state.effectsDisplayed, nextEffects)) {
+        nextState.effectsDisplayed = nextEffects;
+      }
+
+      const nextPanning = snapshot.tracks.map((track) => track.panning);
+      if (!arraysEqual(state.trackPanning, nextPanning)) {
+        nextState.trackPanning = nextPanning;
+      }
+
+      if (snapshot.playing && snapshot.newPattern !== null) {
+        if (
+          state.currentPattern.patternNo !== snapshot.patternNo ||
+          state.currentPattern.lines !== snapshot.newPattern
+        ) {
+          nextState.currentPattern = {
+            patternNo: snapshot.patternNo,
+            lines: snapshot.newPattern,
+          };
+        }
+      }
+
+      if (state.module.beatsPerMinute !== snapshot.currentBpm) {
+        nextState.module = {
+          ...state.module,
+          beatsPerMinute: snapshot.currentBpm,
+        };
+      }
+
+      if (Object.keys(nextState).length === 0) {
+        return state;
+      }
+
+      return nextState;
     }),
 }));
