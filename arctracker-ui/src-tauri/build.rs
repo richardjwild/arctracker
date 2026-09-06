@@ -85,6 +85,13 @@ fn main() {
         // RtMidi is implemented in C++.
         println!("cargo:rustc-link-lib=c++");
     }
+    #[cfg(target_os = "linux")]
+    {
+        println!("cargo:rustc-link-lib=dylib=asound");
+        println!("cargo:rustc-link-lib=dylib=stdc++");
+        println!("cargo:rustc-link-lib=dylib=pthread");
+        println!("cargo:rustc-link-lib=dylib=m");
+    }
     println!("cargo:rustc-link-lib=static=arctracker");
     println!("cargo:rerun-if-changed={}", engine_source_directory.join("meson.build").display());
     println!("cargo:rerun-if-changed={}", engine_source_directory.join("src").display());

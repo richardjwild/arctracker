@@ -3,7 +3,7 @@
 
 #include <stdatomic.h>
 #include <stdbool.h>
-#include <sys/_pthread/_pthread_mutex_t.h>
+#include <pthread.h>
 #include "player_command.h"
 
 #define CMD_QUEUE_SIZE 64

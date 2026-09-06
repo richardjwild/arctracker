@@ -1,6 +1,7 @@
 #include "mix.h"
 #include "memory/heap.h"
 #include <stdatomic.h>
+#include <stdint.h>
 
 static void atomic_peak_max(atomic_uint *peak, float value);
 
