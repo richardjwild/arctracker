@@ -1,3 +1,4 @@
+#include <string.h>
 #include "write_audio.h"
 #include "mix.h"
 #include "resample.h"
@@ -81,7 +82,15 @@ static bool fill_audio_buffer(audio_out_t *audio_out, voice_t *voices, const int
 static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, const int channel, const int frames_to_fill)
 {
     voice_t *voice = voices + channel;
-    resample(voice, audio_out->resample_buffer, frames_to_fill, audio_out->interpolation_type);
+    if (voice->channel_playing)
+    {
+        voice->channel_playing = resample(&voice->sampler_state, audio_out->resample_buffer, frames_to_fill, audio_out->interpolation_type);
+    }
+    else
+    {
+        // Fill the buffer with silence.
+        memset(audio_out->resample_buffer, 0, frames_to_fill * sizeof(float));
+    }
     const float voice_gain = volume_to_gain(audio_out, voice->sampler_state.volume, voice->sampler_state.volume_modulation); // TODO: This volume should be applied by the sampler.
     const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
     const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;
