@@ -53,35 +53,7 @@ export const player = {
         displayedPatternNo,
         numTracks,
       );
-      useStore.getState().setTransportState({
-        playbackAvailable: snapshot.playbackAvailable,
-        playing: snapshot.playing,
-        looping: snapshot.looping,
-        sequencePos: snapshot.sequencePos,
-        patternIndex: snapshot.patternIndex,
-      });
-      useStore
-        .getState()
-        .setTrackMuteState(snapshot.tracks.map((track) => track.muted));
-      useStore
-        .getState()
-        .setEffectsDisplayed(
-          snapshot.tracks.map((track) => track.effectsDisplayed),
-        );
-      useStore
-        .getState()
-        .setTrackPanning(snapshot.tracks.map((track) => track.panning));
-      if (snapshot.playing && snapshot.newPattern !== null) {
-        useStore.getState().setCurrentPattern({
-          patternNo: snapshot.patternNo,
-          lines: snapshot.newPattern,
-        });
-      }
-      const currentBpm = useStore.getState().module.beatsPerMinute;
-      if (currentBpm !== snapshot.currentBpm) {
-        const linesPerBeat = useStore.getState().module.linesPerBeat;
-        useStore.getState().updateTempo(linesPerBeat, snapshot.currentBpm);
-      }
+      useStore.getState().updatePlaybackState(snapshot);
     } finally {
       snapshotPolling = false;
     }
