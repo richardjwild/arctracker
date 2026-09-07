@@ -2,6 +2,7 @@
 #define ARCTRACKER_PERIOD_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 static const int PERIOD_MAX = 0x06B0;
 static const int PERIOD_MIN = 0x0032;
@@ -10,7 +11,7 @@ static const int HIGHEST_NOTE = 61;
 
 bool note_out_of_range(int note);
 
-int period_for_note(int note, double fine_tuning);
+int16_t period_for_note(int note, double fine_tuning);
 
 int nearest_note_period(int period, double fine_tuning);
 

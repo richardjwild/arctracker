@@ -11,26 +11,27 @@ float *allocate_resample_buffer(const int no_of_frames)
     return allocate_array(AUDIO, no_of_frames, sizeof(float));
 }
 
-void resample(voice_t *voice, float *resample_buffer, int frames_to_write, const interpolation_type_t interpolation_type)
+bool resample(sampler_state_t *sampler, float *channel_buffer, int frames_to_write)
 {
-    if (!voice->channel_playing || voice->period == 0)
+    if (sampler->period == 0)
     {
         // Fill the buffer with silence.
-        memset(resample_buffer, 0, frames_to_write * sizeof(float));
-        return;
+        memset(channel_buffer, 0, frames_to_write * sizeof(float));
+        return false;
     }
-    float (*interpolate)(const float *, float) = interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
-    const float *sample = voice->sample->sample_pointer;
-    const int period = voice->period + voice->period_modulation;
-    const float phase_increment = voice->sample->phase_increment_per_period / (float) period;
-    const float sample_end = (float) voice->sample->sample_end;
-    const float repeat_length = (float) voice->sample->repeat_length;
-    const bool sample_repeats = voice->sample->sample_repeats;
-    float phase_accumulator = voice->phase_accumulator;
+    float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
+    const float *sample = sampler->sample->sample_pointer;
+    const int period = sampler->period + sampler->period_modulation;
+    const float phase_increment = sampler->sample->phase_increment_per_period / (float) period;
+    const float sample_end = (float) sampler->sample->sample_end;
+    const float repeat_length = (float) sampler->sample->repeat_length;
+    const bool sample_repeats = sampler->sample->sample_repeats;
+    float phase_accumulator = sampler->phase_accumulator;
     int offset = 0;
+    const float gain = sampler->gain_curve[sampler->volume];
     while (frames_to_write > 0)
     {
-        resample_buffer[offset++] = interpolate(sample, phase_accumulator);
+        channel_buffer[offset++] = interpolate(sample, phase_accumulator) * gain;
         frames_to_write--;
         phase_accumulator += phase_increment;
         if (phase_accumulator >= sample_end)
@@ -42,11 +43,12 @@ void resample(voice_t *voice, float *resample_buffer, int frames_to_write, const
     if (frames_to_write > 0)
     {
         // The sample ended before we wrote all the requested frames.
-        voice->channel_playing = false;
         // Fill the remainder of the buffer with silence.
-        memset(resample_buffer + offset, 0, frames_to_write * sizeof(float));
+        memset(channel_buffer + offset, 0, frames_to_write * sizeof(float));
+        return false;
     }
-    voice->phase_accumulator = phase_accumulator;
+    sampler->phase_accumulator = phase_accumulator;
+    return true;
 }
 
 static float interpolate_linear(const float *sample, const float phase_accumulator)

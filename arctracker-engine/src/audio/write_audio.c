@@ -1,3 +1,4 @@
+#include <string.h>
 #include "write_audio.h"
 #include "mix.h"
 #include "resample.h"
@@ -7,13 +8,13 @@
 static const float PAN_HARD_LEFT = 1.0f;
 static const float PAN_HARD_RIGHT = 255.0f;
 
-static void calculate_gain_curve(float *);
+static void calculate_gain_curve(float *, volume_mapping_type_t);
 static bool fill_audio_buffer(audio_out_t *, voice_t *, int);
-static void write_audio_for_channel(audio_out_t *, voice_t *, int, int);
-static float volume_to_gain(const audio_out_t *, uint8_t, int);
+static void write_audio_for_channel(const audio_out_t *, voice_t *, int, int);
+static void calculate_gain(float *left_gain, float *right_gain, float master_gain, uint8_t panning);
 static bool mix_and_send(audio_out_t *);
 
-bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain, volume_mapping_type_t volume_mapping_type)
+bool initialise_audio(audio_out_t *audio_out, const audio_api_t audio_api, const int num_channels, const float master_gain, const volume_mapping_type_t volume_mapping_type)
 {
     audio_out->api = audio_api;
     audio_out->num_channels = num_channels;
@@ -26,27 +27,37 @@ bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_cha
     audio_out->peak_l = 0;
     audio_out->peak_r = 0;
     audio_out->volume_mapping_type = volume_mapping_type;
-    calculate_gain_curve(audio_out->gain_curve);
+    calculate_gain_curve(audio_out->gain_curve, audio_out->volume_mapping_type);
     audio_out->api.info.healthy = true;
     return audio_out->api.init(&audio_api.info);
 }
 
-static void calculate_gain_curve(float *gain_curve)
+static void calculate_gain_curve(float *gain_curve, const volume_mapping_type_t volume_mapping)
 {
-    for (int i = 0; i <= 127; i++)
+    if (volume_mapping == VOLUME_AMIGA)
     {
-        gain_curve[(i * 2) + 1] = mu_law_to_linear(255 - i);
-        if (i >= 1)
-            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
+        for (int i = 0; i <= 255; i++)
+            gain_curve[i] = (float) i / 255;
     }
-    gain_curve[0] = 0.0f;
-    gain_curve[1] = gain_curve[2] / 2;
+    else
+    {
+        for (int i = 0; i <= 127; i++)
+        {
+            gain_curve[i * 2 + 1] = mu_law_to_linear(255 - i);
+            if (i >= 1)
+                gain_curve[i * 2] = (gain_curve[i * 2 - 1] + gain_curve[i * 2 + 1]) / 2;
+        }
+        gain_curve[0] = 0.0f;
+        gain_curve[1] = gain_curve[2] / 2;
+    }
 }
 
 bool write_audio_data(audio_out_t *audio_out, voice_t *voices, int samples_to_write)
 {
+    //
     // The player has called us to output one tick's worth of samples, which is given by samples_to_write.
     // We will write it all to the audio buffer, sending to the device whenever the buffer becomes full.
+    //
     while (samples_to_write)
     {
         const int buffer_frames_unfilled = audio_out->api.info.buffer_size_frames - audio_out->frames_filled;
@@ -78,37 +89,45 @@ static bool fill_audio_buffer(audio_out_t *audio_out, voice_t *voices, const int
     return result;
 }
 
-static void write_audio_for_channel(audio_out_t *audio_out, voice_t *voices, const int channel, const int frames_to_fill)
+static void write_audio_for_channel(const audio_out_t *audio_out, voice_t *voices, const int channel, const int frames_to_fill)
 {
     voice_t *voice = voices + channel;
-    resample(voice, audio_out->resample_buffer, frames_to_fill, audio_out->interpolation_type);
-    const float voice_gain = volume_to_gain(audio_out, voice->volume, voice->volume_modulation);
-    const float gain = voice->muted ? 0.0f : voice_gain * audio_out->master_gain;
-    const float left_gain = gain * (PAN_HARD_RIGHT - (float) voice->panning) / 254.0f;
-    const float right_gain = gain * ((float) voice->panning - PAN_HARD_LEFT) / 254.0f;
+    float *resample_buffer = audio_out->resample_buffer;
     const int channels = audio_out->num_channels;
+    //
+    // Generate channel audio.
+    //
+    if (voice->channel_playing)
+    {
+        voice->channel_playing = resample(&voice->sampler_state, resample_buffer, frames_to_fill);
+    }
+    else
+    {
+        // Fill the buffer with silence.
+        memset(audio_out->resample_buffer, 0, frames_to_fill * sizeof(float));
+    }
+    float left_gain = 0.0f;
+    float right_gain = 0.0f;
+    if (!voice->muted)
+        calculate_gain(&left_gain, &right_gain, audio_out->master_gain, voice->panning);
+    //
+    // Now copy the channel buffer to the mix buffer, applying panning and master gain as we go.
+    //
     stereo_frame_t *mix_buffer = audio_out->mix_buffer;
-    const float *resample_buffer = audio_out->resample_buffer;
-    int offset = (audio_out->frames_filled * channels) + channel;
+    int offset = audio_out->frames_filled * channels + channel;
     for (int frame = 0; frame < frames_to_fill; frame++)
     {
         const float pcm = resample_buffer[frame];
-        mix_buffer[offset] = (stereo_frame_t) {
-            .l = pcm * left_gain,
-            .r = pcm * right_gain,
-        };
+        mix_buffer[offset].l = pcm * left_gain;
+        mix_buffer[offset].r = pcm * right_gain;
         offset += channels;
     }
 }
 
-static float volume_to_gain(const audio_out_t *audio_out, const uint8_t volume, const int modulation)
+static void calculate_gain(float *left_gain, float *right_gain, const float master_gain, const uint8_t panning)
 {
-    int modulated_volume = volume + modulation;
-    if (modulated_volume > 255) modulated_volume = 255;
-    if (modulated_volume < 0) modulated_volume = 0;
-    return audio_out->volume_mapping_type == VOLUME_AMIGA
-               ? (float) modulated_volume / 255
-               : audio_out->gain_curve[modulated_volume];
+    *left_gain = master_gain * (PAN_HARD_RIGHT - (float) panning) / 254.0f;
+    *right_gain = master_gain * ((float) panning - PAN_HARD_LEFT) / 254.0f;
 }
 
 static bool mix_and_send(audio_out_t *audio_out)
@@ -126,7 +145,7 @@ void send_remaining_audio(audio_out_t *audio_out)
     }
 }
 
-void destroy_audio_resources(audio_out_t *audio_out)
+void destroy_audio_resources(const audio_out_t *audio_out)
 {
     audio_out->api.finish(&audio_out->api.info);
     deallocate(AUDIO, audio_out->resample_buffer);

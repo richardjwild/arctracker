@@ -26,18 +26,18 @@ static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool);
-static void reset_voice_loops(const player_t *);
+static void reset_track_loops(const player_t *);
 static void player_step(player_t *player);
 static voice_t *initialise_voices(const player_t *);
 static scheduled_note_t *initialise_note_schedulers(const player_t *);
 static event_t *get_events(const player_t *);
 static void play_scheduled_notes(const player_t *);
-static void note_on(int, const instrument_t *, player_sample_t *, uint8_t, voice_t *);
+static void note_on(int, player_instrument_t *, uint8_t, voice_t *);
 static void clear_scheduled_notes(const player_t *);
 static void note_off(voice_t *voice);
 static bool audio_consume(player_t *);
 static void update_voices(player_t *player);
-static void on_new_event(player_t *, const event_t *, voice_t *, scheduled_note_t *);
+static void on_new_event(player_t *, const event_t *, uint8_t, scheduled_note_t *);
 static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
@@ -65,6 +65,9 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->voices = initialise_voices(player);
     if (player->voices == NULL)
         goto init_failed;
+    player->tracks = allocate_array(PLAYER, module->num_tracks, sizeof(player_track_t));
+    if (player->tracks == NULL)
+        goto init_failed;
     player->scheduled_notes = initialise_note_schedulers(player);
     if (player->scheduled_notes == NULL)
         goto init_failed;
@@ -78,7 +81,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     set_current_frame(player, true);
     calculate_fine_tuning();
     player_update_samples(player);
-    reset_voice_loops(player);
+    reset_track_loops(player);
     lfo_init_waveforms();
     return player;
 
@@ -93,24 +96,33 @@ void player_update_samples(player_t *player)
     for (int i = 0; i < 256; i++)
     {
         const instrument_t instrument = module->instruments[i];
+        player->instruments[i].assigned = instrument.assigned;
         if (!instrument.assigned) continue;
+        player->instruments[i].transpose = instrument.transpose;
+        player->instruments[i].gain_curve = player->audio_out.gain_curve;
         const sample_t sample = module->samples[instrument.sample_index];
         const double ft = fine_tuning[sample.finetune + 128];
-        const float base_period = (float) period_for_note(sample.base_note, ft);
+        const float base_period = period_for_note(sample.base_note, ft);
         const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
-        player->samples[i].phase_increment_per_period = phase_increment_per_period;
-        player->samples[i].fine_tuning = fine_tuning[128 + sample.finetune];
-        player->samples[i].sample_repeats = instrument.repeats;
-        player->samples[i].sample_end = sample.sample_length;
-        player->samples[i].repeat_length = instrument.repeat_length;
-        player->samples[i].sample_pointer = sample.sample_data;
+        player->instruments[i].sample.phase_increment_per_period = phase_increment_per_period;
+        player->instruments[i].sample.fine_tuning = fine_tuning[128 + sample.finetune];
+        player->instruments[i].sample.sample_repeats = instrument.repeats;
+        player->instruments[i].sample.sample_end = sample.sample_length;
+        player->instruments[i].sample.repeat_length = instrument.repeat_length;
+        player->instruments[i].sample.interpolation_type = player->audio_out.interpolation_type;
+        player->instruments[i].sample.sample_pointer = sample.sample_data;
+        for (int j = 0; j < 256; j++)
+        {
+            player->instruments[i].sample_slices[j].offset = module->instruments[i].sample_slices[j].offset;
+            player->instruments[i].sample_slices[j].length = module->instruments[i].sample_slices[j].length;
+        }
     }
 }
 
 void player_set_sample_finetune(player_t *player, const int instrument_no, const int8_t finetune)
 {
     if (instrument_no <= 0) return;
-    player->samples[instrument_no - 1].fine_tuning = fine_tuning[128 + finetune];
+    player->instruments[instrument_no - 1].sample.fine_tuning = fine_tuning[128 + finetune];
 }
 
 bool player_run(player_t *player)
@@ -171,6 +183,7 @@ void player_destroy(player_t *player)
 {
     command_queue_destroy(player->command_queue);
     deallocate(PLAYER, player->voices);
+    deallocate(PLAYER, player->tracks);
     deallocate(PLAYER, player->scheduled_notes);
     deallocate(PLAYER, player);
 }
@@ -285,9 +298,8 @@ static void process_midi_note_on_command(player_t *player, const midi_note_on_co
         note_off(voice);
         return;
     }
-    player_sample_t *sample = &player->samples[data.instrument_no];
-    note_on(data.note, &instrument, sample, 0, voice);
-    voice->volume = instrument.default_volume;
+    note_on(data.note, player->instruments + data.instrument_no, 0, voice);
+    voice->sampler_state.volume = instrument.default_volume;
 }
 
 static void process_keyboard_note_on_command(player_t *player, const keyboard_note_on_command_t data)
@@ -299,9 +311,8 @@ static void process_keyboard_note_on_command(player_t *player, const keyboard_no
         note_off(voice);
         return;
     }
-    player_sample_t *sample = &player->samples[data.instrument_no];
-    note_on(data.note, &instrument, sample, 0, voice);
-    voice->volume = instrument.default_volume;
+    note_on(data.note, player->instruments + data.instrument_no, 0, voice);
+    voice->sampler_state.volume = instrument.default_volume;
 }
 
 static void process_note_off_command(const player_t *player, const note_off_command_t data)
@@ -345,19 +356,18 @@ static voice_t *initialise_voices(const player_t *player)
     {
         voices[channel].channel_playing = false;
         voices[channel].muted = player->module->tracks[channel].muted;
-        voices[channel].arpeggiator_on = false;
         voices[channel].panning = player->module->tracks[channel].panning - 1;
-        voices[channel].volume = INTERNAL_GAIN_MAX;
-        voices[channel].period_modulation = 0;
-        voices[channel].vibrato.enabled = false;
-        voices[channel].vibrato.retrigger = true;
-        voices[channel].vibrato.waveform = PT_WAVEFORM_SINE;
-        voices[channel].vibrato.phase = 0;
-        voices[channel].tremolo.enabled = false;
-        voices[channel].tremolo.retrigger = true;
-        voices[channel].tremolo.waveform = PT_WAVEFORM_SINE;
-        voices[channel].tremolo.phase = 0;
-        voices[channel].effect_memory = (effect_memory_t) {0};
+        voices[channel].sampler_state.arpeggio.enabled = false;
+        voices[channel].sampler_state.volume = INTERNAL_GAIN_MAX;
+        voices[channel].sampler_state.period_modulation = 0;
+        voices[channel].sampler_state.vibrato.enabled = false;
+        voices[channel].sampler_state.vibrato.retrigger = true;
+        voices[channel].sampler_state.vibrato.waveform = PT_WAVEFORM_SINE;
+        voices[channel].sampler_state.vibrato.phase = 0;
+        voices[channel].sampler_state.tremolo.enabled = false;
+        voices[channel].sampler_state.tremolo.retrigger = true;
+        voices[channel].sampler_state.tremolo.waveform = PT_WAVEFORM_SINE;
+        voices[channel].sampler_state.tremolo.phase = 0;
     }
     return voices;
 }
@@ -385,14 +395,14 @@ static void set_current_frame(player_t *player, const bool row_advanced)
     player->current_frame.num_tracks = player->module->num_tracks;
 }
 
-static void reset_voice_loops(const player_t *player)
+static void reset_track_loops(const player_t *player)
 {
-    for (int track = 0; track < player->module->num_tracks; track++)
+    for (int i = 0; i < player->module->num_tracks; i++)
     {
-        voice_t *voice = player->voices + track;
-        voice->loop_state.start = 0;
-        voice->loop_state.counter = 0;
-        voice->loop_state.looping = false;
+        player_track_t *track = player->tracks + i;
+        track->loop_state.start = 0;
+        track->loop_state.counter = 0;
+        track->loop_state.looping = false;
     }
 }
 
@@ -411,7 +421,7 @@ static void player_step(player_t *player)
     }
     set_current_frame(player, row_advanced);
     if (row_advanced) clear_scheduled_notes(player);
-    if (sequence_advanced) reset_voice_loops(player);
+    if (sequence_advanced) reset_track_loops(player);
 }
 
 static event_t *get_events(const player_t *player)
@@ -438,39 +448,43 @@ static bool audio_consume(player_t *player)
 static void update_voices(player_t *player)
 {
     const frame_t *current_frame = &player->current_frame;
-    for (int track = 0; track < player->module->num_tracks; track++)
+    for (int track_no = 0; track_no < player->module->num_tracks; track_no++)
     {
-        const event_t *event = current_frame->events + track;
-        voice_t *voice = player->voices + track;
+        const event_t *event = current_frame->events + track_no;
+        const player_track_t *track = player->tracks + track_no;
+        voice_t *voice = player->voices + track_no;
         if (current_frame->row_advanced)
-            on_new_event(player, event, voice, player->scheduled_notes + track);
+            on_new_event(player, event, track_no, player->scheduled_notes + track_no);
         else
-            handle_effects_off_event(event, voice, player);
+            handle_effects_off_event(event, voice, track, player);
     }
 }
 
-static void on_new_event(player_t *player, const event_t *event, voice_t *voice, scheduled_note_t *scheduler)
+static void on_new_event(player_t *player, const event_t *event, const uint8_t track_no, scheduled_note_t *scheduler)
 {
-    const bool instrument_changed = event->instrument_no && event->instrument_no != voice->instrument_no;
+    player_track_t *track = player->tracks + track_no;
+    voice_t *voice = player->voices + track_no;
+    const bool instrument_changed = event->instrument_no && event->instrument_no != track->instrument_no;
     if (event->instrument_no)
     {
-        voice->instrument_no = event->instrument_no;
+        track->instrument_no = event->instrument_no;
     }
-    handle_effects_before_note(event, voice, player);
+    handle_effects_before_note(event, track, player);
+    const int instrument_no = track->instrument_no - 1;
     if (event->note)
     {
         const int note = event->note - 1;
-        const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
+        const instrument_t *instrument = &player->module->instruments[instrument_no];
         if (!instrument->assigned)
         {
             voice->channel_playing = false;
         }
         else
         {
-            player_sample_t *sample = &player->samples[voice->instrument_no - 1];
+            const player_sample_t *sample = &player->instruments[instrument_no].sample;
             if (!instrument_changed && portamento(event))
             {
-                voice->tone_portamento_target_period = period_for_note(note + instrument->transpose, sample->fine_tuning);
+                voice->sampler_state.tone_portamento_target_period = period_for_note(note + instrument->transpose, sample->fine_tuning);
             }
             else
             {
@@ -478,27 +492,26 @@ static void on_new_event(player_t *player, const event_t *event, voice_t *voice,
                     .scheduled = true,
                     .delay = get_note_delay(event),
                     .slice = get_sample_slice(event),
-                    .instrument = instrument,
-                    .sample = sample,
+                    .instrument = player->instruments + instrument_no,
                     .note = note,
                     .voice = voice,
                 };
                 if (event->instrument_no)
                 {
-                    voice->volume = instrument->default_volume;
+                    voice->sampler_state.volume = instrument->default_volume;
                 }
             }
         }
     }
     else if (event->instrument_no)
     {
-        const instrument_t *instrument = &player->module->instruments[voice->instrument_no - 1];
+        const instrument_t *instrument = &player->module->instruments[instrument_no];
         if (instrument->assigned)
         {
-            voice->volume = instrument->default_volume;
+            voice->sampler_state.volume = instrument->default_volume;
         }
     }
-    handle_effects_on_event(event, voice, player);
+    handle_effects_on_event(event, voice, track, player);
 }
 
 static void play_scheduled_notes(const player_t *player)
@@ -508,28 +521,31 @@ static void play_scheduled_notes(const player_t *player)
         scheduled_note_t *s = player->scheduled_notes + track;
         if (s->scheduled && s->delay == player->tick_scheduler.event_scheduler.ticks)
         {
-            note_on(s->note, s->instrument, s->sample, s->slice, s->voice);
+            note_on(s->note, s->instrument, s->slice, s->voice);
+            player->tracks[track].current_note = s->note + s->instrument->transpose;
             s->scheduled = false;
         }
     }
 }
 
-static void note_on(const int note, const instrument_t *instrument, player_sample_t *sample, const uint8_t slice, voice_t *voice)
+static void note_on(const int note, player_instrument_t *instrument, const uint8_t slice, voice_t *voice)
 {
+    const int played_note = note + instrument->transpose;
     voice->channel_playing = true;
-    voice->sample = sample;
-    voice->arpeggiator_on = false;
-    voice->current_note = note + instrument->transpose;
-    voice->period = period_for_note(voice->current_note, voice->sample->fine_tuning);
-    voice->tone_portamento_target_period = voice->period;
-    const sample_slice_t sample_slice = instrument->sample_slices[slice];
-    if (sample_slice.length == 0 || sample_slice.offset >= (uint32_t) sample->sample_end)
-        voice->phase_accumulator = 0.0f;
+    voice->sampler_state.sample = &instrument->sample;
+    voice->sampler_state.arpeggio.enabled = false;
+    voice->sampler_state.period = period_for_note(played_note, voice->sampler_state.sample->fine_tuning);
+    voice->sampler_state.tone_portamento_target_period = voice->sampler_state.period;
+    voice->sampler_state.interpolation_type = instrument->sample.interpolation_type;
+    voice->sampler_state.gain_curve = instrument->gain_curve;
+    const player_sample_slice_t sample_slice = instrument->sample_slices[slice];
+    if (sample_slice.length == 0 || sample_slice.offset >= (uint32_t) instrument->sample.sample_end)
+        voice->sampler_state.phase_accumulator = 0.0f;
     else
     {
-        voice->phase_accumulator = (float) sample_slice.offset;
-        if (sample_slice.offset + sample_slice.length < (uint32_t) voice->sample->sample_end)
-            voice->sample->sample_end = (int) (sample_slice.offset + sample_slice.length);
+        voice->sampler_state.phase_accumulator = (float) sample_slice.offset;
+        if (sample_slice.offset + sample_slice.length < (uint32_t) voice->sampler_state.sample->sample_end)
+            voice->sampler_state.sample->sample_end = (int) (sample_slice.offset + sample_slice.length);
     }
 }
 
