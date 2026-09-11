@@ -7,6 +7,7 @@ main_sources = files(
 subdir('audio')
 subdir('audio_api')
 subdir('audio_file')
+subdir('audio_generator')
 subdir('editor')
 subdir('loader')
 subdir('io')
@@ -22,6 +23,7 @@ libarctracker_sources += lib_sources
 libarctracker_sources += audio_sources
 libarctracker_sources += audio_api_sources
 libarctracker_sources += audio_file_sources
+libarctracker_sources += audio_generator_sources
 libarctracker_sources += loader_sources
 libarctracker_sources += editor_sources
 libarctracker_sources += io_sources

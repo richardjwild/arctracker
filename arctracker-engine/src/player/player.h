@@ -5,7 +5,7 @@
 #include "player_cmd_queue.h"
 #include "sequencer.h"
 #include "tick_scheduler.h"
-#include "audio/sample_player.h"
+#include "../audio_generator/sample_player.h"
 #include "audio_api/audio_api.h"
 #include "audio/audio_out.h"
 #include "ui/player_event_queue.h"

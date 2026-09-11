@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdatomic.h>
 #include "audio_out.h"
-#include "sample_player.h"
+#include "../audio_generator/sample_player.h"
 #include "memory/heap.h"
 #include "pcm/mu_law.h"
 

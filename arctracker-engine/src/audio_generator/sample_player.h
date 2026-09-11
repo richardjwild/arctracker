@@ -1,8 +1,8 @@
 #ifndef ARCTRACKER_RESAMPLE_H
 #define ARCTRACKER_RESAMPLE_H
 
-#include "audio_channel.h"
-#include "interpolation_type.h"
+#include "../audio/audio_channel.h"
+#include "../audio/interpolation_type.h"
 
 typedef struct {
     float phase_increment_per_period;

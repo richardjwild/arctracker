@@ -7,7 +7,7 @@
 #include "period.h"
 #include "memory/heap.h"
 #include "messages.h"
-#include "audio/sample_player.h"
+#include "../audio_generator/sample_player.h"
 #include "io/error.h"
 
 #define DEFAULT_TICKS_PER_SECOND 50
