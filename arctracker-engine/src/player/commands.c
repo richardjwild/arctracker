@@ -98,40 +98,46 @@ static const effect_t *get_priority_cmd(const event_t *event, bool (*is_of_group
 
 static void process_pitch_slide_cmd(const effect_t *effect, audio_generator_t *generator, track_command_state_t *command_state)
 {
-    generator->pitch_slide_off(&generator->state);
-    generator->tone_portamento_off(&generator->state);
-    if (effect == NULL) return;
-    switch (effect->command)
+    if (effect == NULL)
     {
-        case PITCH_SLIDE_UP:
-            generator->pitch_slide_on(&generator->state, -effect->data, false);
-            break;
-        case PITCH_SLIDE_DOWN:
-            generator->pitch_slide_on(&generator->state, effect->data, false);
-            break;
-        case PORTAMENTO:
-        {
-            int slide_rate = effect->data;
-            if (slide_rate == 0) slide_rate = command_state->effect_memory.tone_portamento_speed;
-            else command_state->effect_memory.tone_portamento_speed = slide_rate;
-            generator->tone_portamento_on(&generator->state, slide_rate);
-            break;
-        }
-        case FINE_PORTAMENTO_UP:
-            generator->pitch_slide_on(&generator->state, -effect->data, true);
-            break;
-        case FINE_PORTAMENTO_DOWN:
-            generator->pitch_slide_on(&generator->state, effect->data, true);
-            break;
-        default:
-            break;
+        generator->pitch_slide_off(&generator->state);
+        generator->tone_portamento_off(&generator->state);
+        return;
+    }
+    if (effect->command == PITCH_SLIDE_UP || effect->command == FINE_PORTAMENTO_UP)
+    {
+        const bool fine = effect->command == FINE_PORTAMENTO_UP;
+        generator->pitch_slide_on(&generator->state, -effect->data, fine);
+    }
+    else if (effect->command == PITCH_SLIDE_DOWN || effect->command == FINE_PORTAMENTO_DOWN)
+    {
+        const bool fine = effect->command == FINE_PORTAMENTO_DOWN;
+        generator->pitch_slide_on(&generator->state, effect->data, fine);
+    }
+    else
+    {
+        generator->pitch_slide_off(&generator->state);
+    }
+    if (effect->command == PORTAMENTO)
+    {
+        int slide_rate = effect->data;
+        if (slide_rate == 0) slide_rate = command_state->effect_memory.tone_portamento_speed;
+        else command_state->effect_memory.tone_portamento_speed = slide_rate;
+        generator->tone_portamento_on(&generator->state, slide_rate);
+    }
+    else
+    {
+        generator->tone_portamento_off(&generator->state);
     }
 }
 
 static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *generator)
 {
-    generator->volume_slide_off(&generator->state);
-    if (effect == NULL) return;
+    if (effect == NULL)
+    {
+        generator->volume_slide_off(&generator->state);
+        return;
+    }
     switch (effect->command)
     {
         case VOLUME_SLIDE:
@@ -148,6 +154,7 @@ static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *
             generator->volume_slide_on(&generator->state, effect->data * -1, true);
             break;
         default:
+            generator->volume_slide_off(&generator->state);
             break;
     }
 }

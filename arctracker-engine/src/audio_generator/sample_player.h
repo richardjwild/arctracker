@@ -30,6 +30,9 @@ typedef struct {
 
 typedef struct {
     bool enabled;
+    int bottom_note;
+    int interval_1;
+    int interval_2;
     int16_t chord[3];
     int counter;
     int speed;

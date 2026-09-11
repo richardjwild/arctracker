@@ -251,20 +251,31 @@ static void tremolo_off(audio_generator_state_t *state)
     sampler->volume_modulation = 0;
 }
 
-static void arpeggio_on(audio_generator_state_t *state, const int root_note, const int interval_1, const int interval_2, const int speed)
+static void arpeggio_on(audio_generator_state_t *state, const int bottom_note, const int interval_1, const int interval_2, const int speed)
 {
     sampler_state_t *sampler = state->sampler;
-    const int arpeggio_note_1 = root_note;
-    uint16_t arpeggio_note_2 = arpeggio_note_1 + interval_1;
-    uint16_t arpeggio_note_3 = arpeggio_note_1 + interval_2;
-    if (note_out_of_range(arpeggio_note_2)) arpeggio_note_2 = arpeggio_note_1;
-    if (note_out_of_range(arpeggio_note_3)) arpeggio_note_3 = arpeggio_note_1;
-    const double fine_tuning = sampler->sample->fine_tuning;
-    sampler->arpeggio.chord[0] = period_for_note(arpeggio_note_1, fine_tuning) - sampler->period;
-    sampler->arpeggio.chord[1] = period_for_note(arpeggio_note_2, fine_tuning) - sampler->period;
-    sampler->arpeggio.chord[2] = period_for_note(arpeggio_note_3, fine_tuning) - sampler->period;
-    sampler->arpeggio.speed = speed;
+    if (sampler->arpeggio.enabled
+        && sampler->arpeggio.bottom_note == bottom_note
+        && sampler->arpeggio.interval_1 == interval_1
+        && sampler->arpeggio.interval_2 == interval_2)
+    {
+        // The arpeggio was already on with the same parameters, no need to change anything except possibly the speed.
+        sampler->arpeggio.speed = speed;
+        return;
+    }
     sampler->arpeggio.enabled = true;
+    sampler->arpeggio.bottom_note = bottom_note;
+    sampler->arpeggio.interval_1 = interval_1;
+    sampler->arpeggio.interval_2 = interval_2;
+    sampler->arpeggio.speed = speed;
+    uint16_t middle_note = bottom_note + interval_1;
+    uint16_t top_note = bottom_note + interval_2;
+    if (note_out_of_range(middle_note)) middle_note = bottom_note;
+    if (note_out_of_range(top_note)) top_note = bottom_note;
+    const double fine_tuning = sampler->sample->fine_tuning;
+    sampler->arpeggio.chord[0] = period_for_note(bottom_note, fine_tuning) - sampler->period;
+    sampler->arpeggio.chord[1] = period_for_note(middle_note, fine_tuning) - sampler->period;
+    sampler->arpeggio.chord[2] = period_for_note(top_note, fine_tuning) - sampler->period;
 }
 
 static void arpeggio_off(audio_generator_state_t *state)
