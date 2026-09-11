@@ -4,7 +4,7 @@
 #include <stdatomic.h>
 #include "audio_channel.h"
 #include "audio_api/audio_api.h"
-#include "src/audio_out/volume_mapping_type.h"
+#include "audio_out/volume_mapping_type.h"
 
 typedef struct
 {
