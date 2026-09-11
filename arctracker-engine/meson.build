@@ -1,4 +1,11 @@
-project('arctracker', ['c', 'cpp'], version: '0.4.2')
+project('arctracker', ['c', 'cpp'],
+    version: '0.4.2',
+    default_options: [
+        'warning_level=2',
+        'werror=false',
+        'b_sanitize=address,undefined'
+    ]
+)
 
 cmake = import('cmake')
 
@@ -10,6 +17,9 @@ portaudio_options.add_cmake_defines({
     'PA_BUILD_EXAMPLES': false,
     'CMAKE_POLICY_VERSION_MINIMUM': '3.5',
 })
+portaudio_options.set_override_option('warning_level', '0')
+portaudio_options.append_compile_args('c', '-w')
+portaudio_options.append_compile_args('cpp', '-w')
 portaudio_project = cmake.subproject(
     'portaudio-19.7.0',
     options: portaudio_options,
@@ -22,6 +32,9 @@ rtmidi_options.add_cmake_defines({
     'RTMIDI_BUILD_SHARED_LIBS': false,
     'RTMIDI_BUILD_TESTING': false,
 })
+rtmidi_options.set_override_option('warning_level', '0')
+rtmidi_options.append_compile_args('c', '-w')
+rtmidi_options.append_compile_args('cpp', '-w')
 rtmidi_project = cmake.subproject(
     'rtmidi-6.0.0',
     options: rtmidi_options,
@@ -29,17 +42,10 @@ rtmidi_project = cmake.subproject(
 rtmidi = rtmidi_project.dependency('rtmidi')
 
 add_project_arguments(
-  '-Wall',
-  '-Wextra',
   '-Wpedantic',
   '-Werror=implicit-function-declaration',
   language: 'c'
 )
-
-if get_option('asan')
-  add_project_arguments('-fsanitize=address', language: ['c', 'cpp'])
-  add_project_link_arguments('-fsanitize=address', language: ['c', 'cpp'])
-endif
 
 subdir('src')
 project_includes = include_directories('src')

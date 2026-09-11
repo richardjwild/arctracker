@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "audio/audio_generator.h"
+#include "audio_generator/audio_generator.h"
 
 typedef struct {
     audio_generator_t audio_generator;

@@ -237,6 +237,7 @@ export class PatternRenderer {
     let cursorWidth = this.layout.glyphWidth;
     const cursor = new Cursor();
     const cursorField = cursor.currentField();
+    const effectLaneWidth = FIELDS_PER_EFFECT + 1;
     if (cursorField.field === "note") {
       cursorWidth = this.layout.glyphWidth * 3;
     } else if (cursorField.field === "sampleHigh") {
@@ -244,13 +245,13 @@ export class PatternRenderer {
     } else if (cursorField.field === "sampleLow") {
       cursorX += this.layout.glyphWidth * 5;
     } else if (cursorField.field === "effectCode1") {
-      cursorX += this.layout.glyphWidth * (7 + (cursorField.effectIndex * 4));
+      cursorX += this.layout.glyphWidth * (7 + (cursorField.effectIndex * effectLaneWidth));
     } else if (cursorField.field === "effectCode2") {
-      cursorX += this.layout.glyphWidth * (8 + (cursorField.effectIndex * 4));
+      cursorX += this.layout.glyphWidth * (8 + (cursorField.effectIndex * effectLaneWidth));
     } else if (cursorField.field === "effectData1") {
-      cursorX += this.layout.glyphWidth * (9 + (cursorField.effectIndex * 4));
+      cursorX += this.layout.glyphWidth * (9 + (cursorField.effectIndex * effectLaneWidth));
     } else if (cursorField.field === "effectData2") {
-      cursorX += this.layout.glyphWidth * (10 + (cursorField.effectIndex * 4));
+      cursorX += this.layout.glyphWidth * (10 + (cursorField.effectIndex * effectLaneWidth));
     }
     this.withFillStyle(this.colours().cursor)
       .fillRect(cursorX, y, cursorWidth, this.layout.rowHeight);

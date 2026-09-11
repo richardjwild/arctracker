@@ -42,6 +42,7 @@ audio_api_t initialise_wav(const char *output_filename, const interpolation_type
 
 static bool init_wav(const audio_api_info_t *info)
 {
+    (void) info;
     return true;
 }
 

@@ -6,7 +6,7 @@
 #include "arctracker.h"
 #include "messages.h"
 #include "player/player.h"
-#include "audio_api/api.h"
+#include "audio_api/audio_api.h"
 #include "audio_api/api_portaudio.h"
 #include "audio_api/api_wav.h"
 #include "io/error.h"

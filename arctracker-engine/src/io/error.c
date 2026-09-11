@@ -12,7 +12,7 @@ void error(char *error_message_p)
     error_occurred = true;
 }
 
-void error_with_detail(const char *error_message_p, const char *detail)
+void error_with_detail(char *error_message_p, const char *detail)
 {
     static char message_buffer[256];
     error_occurred = true;
