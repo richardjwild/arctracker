@@ -226,6 +226,7 @@ static bool write_audio(const stereo_frame_t *audio_buffer, int frames_in_buffer
 
 static void close_audio_stream(const audio_api_info_t *info)
 {
+    (void) info;
     if (stream != NULL)
     {
         Pa_StopStream(stream);

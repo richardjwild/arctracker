@@ -1,4 +1,11 @@
-project('arctracker', ['c', 'cpp'], version: '0.4.2')
+project('arctracker', ['c', 'cpp'],
+    version: '0.4.2',
+    default_options: [
+        'warning_level=2',
+        'werror=false',
+        'b_sanitize=address,undefined'
+    ]
+)
 
 cmake = import('cmake')
 
@@ -35,17 +42,10 @@ rtmidi_project = cmake.subproject(
 rtmidi = rtmidi_project.dependency('rtmidi')
 
 add_project_arguments(
-  '-Wall',
-  '-Wextra',
   '-Wpedantic',
   '-Werror=implicit-function-declaration',
   language: 'c'
 )
-
-if get_option('asan')
-  add_project_arguments('-fsanitize=address', language: ['c', 'cpp'])
-  add_project_link_arguments('-fsanitize=address', language: ['c', 'cpp'])
-endif
 
 subdir('src')
 project_includes = include_directories('src')
