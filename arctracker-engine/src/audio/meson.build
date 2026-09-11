@@ -1,5 +1,4 @@
 audio_sources = files(
-    'mix.c',
-    'resample.c',
+    'sample_player.c',
     'write_audio.c',
 )

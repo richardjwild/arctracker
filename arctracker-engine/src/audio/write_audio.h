@@ -2,7 +2,7 @@
 #define ARCTRACKER_WRITE_AUDIO_H
 
 #include <stdatomic.h>
-#include "voice.h"
+#include "audio_channel.h"
 #include "audio_api/api.h"
 #include "audio/volume_mapping_type.h"
 
@@ -11,8 +11,8 @@ typedef struct
     int num_channels;
     float master_gain;
     float gain_curve[256];
-    float *resample_buffer;
-    stereo_frame_t *mix_buffer;
+    float *mono_channel_buffer;
+    stereo_frame_t *stereo_channel_buffer;
     stereo_frame_t *output_buffer;
     int frames_filled;
     interpolation_type_t interpolation_type;
@@ -29,7 +29,7 @@ typedef struct {
 
 bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain, volume_mapping_type_t volume_mapping_type);
 
-bool write_audio_data(audio_out_t *, voice_t *, int);
+bool write_audio_data(audio_out_t *, audio_channel_t *, int);
 
 void send_remaining_audio(audio_out_t *);
 

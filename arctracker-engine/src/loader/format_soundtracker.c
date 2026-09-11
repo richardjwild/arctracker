@@ -418,37 +418,6 @@ typedef struct {
     size_t total_sample_data_size;
 } mod_info_t;
 
-static uint8_t volume_mapping[65] = {
-    0,
-    99,  115, 129, 137, 145, 152, 160, 164, 168, 172, 176, 180, 183, 187, 191, 193,
-    195, 197, 199, 201, 203, 205, 207, 209, 211, 213, 215, 217, 219, 221, 223, 224,
-    225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
-    241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 255,
-};
-
-static void calculate_volume_map(void)
-{
-    float gain_curve[256];
-    for (int i = 0; i <= 127; i++)
-    {
-        gain_curve[(i * 2) + 1] = mu_law_to_linear(255 - i);
-        if (i >= 1)
-            gain_curve[i * 2] = (gain_curve[(i * 2) - 1] + gain_curve[(i * 2) + 1]) / 2;
-    }
-    // gain_curve now maps Arctracker volume values to linear gain values.
-    uint8_t internal_volume[65];
-    for (int ivol = 0; ivol <= 255; ivol++)
-    {
-        const uint8_t linear = (uint8_t) 64.0f * gain_curve[ivol];
-        if (ivol > internal_volume[linear]) internal_volume[linear] = ivol;
-    }
-    printf("Mod to internal volume mapping:\n");
-    for (int mod_volume = 0; mod_volume <= 64; mod_volume++)
-    {
-        printf("[%d] = %d;\n", mod_volume, internal_volume[mod_volume]);
-    }
-}
-
 /*
  * --------------------------------------------------------------------------
  * Basic binary helpers
@@ -781,90 +750,103 @@ static uint8_t scale_mod_volume(uint8_t volume)
 static void decode_effect(
     uint8_t mod_effect,
     uint8_t mod_data,
-    effect_t *effect)
+    effect_t *effects)
 {
-    effect->command = NO_EFFECT;
-    effect->data = 0;
+    effects[0].command = NO_EFFECT;
+    effects[0].data = 0;
     switch (mod_effect) {
         case 0x0:
             if (mod_data != 0) {
-                effect->command = ARPEGGIO;
-                effect->data = mod_data;
+                effects[0].command = ARPEGGIO;
+                effects[0].data = mod_data;
             }
             break;
 
         case 0x1:
-            effect->command = PITCH_SLIDE_UP;
-            effect->data = mod_data;
+            effects[0].command = PITCH_SLIDE_UP;
+            effects[0].data = mod_data;
             break;
 
         case 0x2:
-            effect->command = PITCH_SLIDE_DOWN;
-            effect->data = mod_data;
+            effects[0].command = PITCH_SLIDE_DOWN;
+            effects[0].data = mod_data;
             break;
 
         case 0x3:
-            effect->command = PORTAMENTO;
-            effect->data = mod_data;
+            effects[0].command = PORTAMENTO;
+            effects[0].data = mod_data;
             break;
 
         case 0x4:
-            effect->command = VIBRATO;
-            effect->data = mod_data;
+            effects[0].command = VIBRATO;
+            effects[0].data = mod_data;
             break;
 
         case 0x5:
-            effect->command = PORTAMENTO_PLUS_VOLUME_SIDE;
-            effect->data = mod_data * 4;
+            effects[0].command = PORTAMENTO;
+            effects[0].data = 0;
+            effects[1].command = VOLUME_SLIDE;
+            if ((mod_data & 0xf0) != 0) {
+                effects[1].data = 0x80 | 4 * (mod_data >> 4);
+            }
+            else if ((mod_data & 0x0f) != 0) {
+                effects[1].data = 4 * (mod_data & 0xf);
+            }
             break;
 
         case 0x6:
-            effect->command = VIBRATO_PLUS_VOLUME_SLIDE;
-            effect->data = mod_data;
+            effects[0].command = VIBRATO;
+            effects[0].data = 0;
+            if ((mod_data & 0xf0) != 0) {
+                effects[1].data = 0x80 | 4 * (mod_data >> 4);
+            }
+            else if ((mod_data & 0x0f) != 0) {
+                effects[1].data = 4 * (mod_data & 0xf);
+            }
             break;
 
         case 0x7:
-            effect->command = TREMOLO;
-            effect->data = mod_data;
+            effects[0].command = TREMOLO;
+            effects[0].data = mod_data;
             break;
 
         case 0x8:
-            effect->command = SET_PANNING;
+            effects[0].command = SET_PANNING;
             // Arctracker uses both 0x00 and 0x80 to mean pan centre; hard left is 0x01 and hard right is 0xff.
             // FastTracker panning ranges from 0x00 for hard left to 0xff for hard right, so we need to correct
             // value 0 in order to not inadvertently pan hard left as centre by mistake.
-            effect->data = mod_data == 0 ? 1 : mod_data;
+            effects[0].data = mod_data == 0 ? 1 : mod_data;
             break;
 
         case 0x9:
-            effect->command = USE_SAMPLE_SLICE;
-            effect->data = mod_data;
+            effects[0].command = USE_SAMPLE_SLICE;
+            effects[0].data = mod_data;
             break;
 
         case 0xA:
-            effect->command = VOLUME_SLIDE;
+            effects[0].command = VOLUME_SLIDE;
             if ((mod_data & 0xf0) != 0) {
-                effect->data = 0x80 | 4 * (mod_data >> 4);
+                effects[0].data = 0x80 | 4 * (mod_data >> 4);
             }
             else if ((mod_data & 0x0f) != 0) {
-                effect->data = 4 * (mod_data & 0xf);
+                effects[0].data = 4 * (mod_data & 0xf);
             }
             break;
 
         case 0xB:
-            effect->command = SEQUENCE_JUMP;
-            effect->data = mod_data;
+            effects[0].command = SEQUENCE_JUMP;
+            effects[0].data = mod_data;
             break;
 
         case 0xC:
-            effect->command = SET_VOLUME;
-            effect->data = scale_mod_volume(mod_data);
+            effects[0].command = SET_VOLUME;
+            effects[0].data = scale_mod_volume(mod_data);
             break;
 
         case 0xD:
             // ProTracker Dxx represents the target pattern line as decimal, not hex.
-            effect->command = PATTERN_BREAK;
-            effect->data = 10 * (mod_data >> 4) + (mod_data & 0xf);
+            effects[0].command = PATTERN_BREAK;
+            effects[0].data = 10 * (mod_data >> 4) + (mod_data & 0xf);
             break;
 
         case 0xE:
@@ -874,70 +856,70 @@ static void decode_effect(
                 // E0x (set filter on/off) not implemented.
                 if (e_cmd == 1)
                 {
-                    effect->command = FINE_PORTAMENTO_UP;
-                    effect->data = e_cmd_data;
+                    effects[0].command = FINE_PORTAMENTO_UP;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 2)
                 {
-                    effect->command = FINE_PORTAMENTO_DOWN;
-                    effect->data = e_cmd_data;
+                    effects[0].command = FINE_PORTAMENTO_DOWN;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 3)
                 {
-                    effect->command = SET_GLISSANDO_MODE;
-                    effect->data = e_cmd_data;
+                    effects[0].command = SET_GLISSANDO_MODE;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 4)
                 {
-                    effect->command = SET_VIBRATO_WAVEFORM;
-                    effect->data = e_cmd_data;
+                    effects[0].command = SET_VIBRATO_WAVEFORM;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 5)
                 {
-                    effect->command = SET_FINETUNE;
+                    effects[0].command = SET_FINETUNE;
                     const uint8_t finetune = e_cmd_data & 0xF;
-                    effect->data = 16 * (finetune < 8 ? finetune : finetune - 16);
+                    effects[0].data = 16 * (finetune < 8 ? finetune : finetune - 16);
                 }
                 if (e_cmd == 6)
                 {
-                    effect->command = SET_LOOP;
-                    effect->data = e_cmd_data;
+                    effects[0].command = SET_LOOP;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 7)
                 {
-                    effect->command = SET_TREMOLO_WAVEFORM;
-                    effect->data = e_cmd_data;
+                    effects[0].command = SET_TREMOLO_WAVEFORM;
+                    effects[0].data = e_cmd_data;
                 }
                 // E8x unused.
                 if (e_cmd == 9)
                 {
-                    effect->command = RETRIGGER_SAMPLE;
-                    effect->data = e_cmd_data;
+                    effects[0].command = RETRIGGER_SAMPLE;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 10)
                 {
-                    effect->command = FINE_CRESCENDO;
-                    effect->data = e_cmd_data * 4;
+                    effects[0].command = FINE_CRESCENDO;
+                    effects[0].data = e_cmd_data * 4;
                 }
                 if (e_cmd == 11)
                 {
-                    effect->command = FINE_DECRESCENDO;
-                    effect->data = e_cmd_data * 4;
+                    effects[0].command = FINE_DECRESCENDO;
+                    effects[0].data = e_cmd_data * 4;
                 }
                 if (e_cmd == 12)
                 {
-                    effect->command = SILENCE_SAMPLE_AFTER_DELAY;
-                    effect->data = e_cmd_data;
+                    effects[0].command = SILENCE_SAMPLE_AFTER_DELAY;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 13)
                 {
-                    effect->command = DELAY_SAMPLE;
-                    effect->data = e_cmd_data;
+                    effects[0].command = DELAY_SAMPLE;
+                    effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 14)
                 {
-                    effect->command = DELAY_NEXT_EVENT;
-                    effect->data = e_cmd_data;
+                    effects[0].command = DELAY_NEXT_EVENT;
+                    effects[0].data = e_cmd_data;
                 }
                 // EFx (invert loop) not implemented.
             }
@@ -945,15 +927,15 @@ static void decode_effect(
 
         case 0xF:
             if (mod_data >= 1 && mod_data <= 0x20) {
-                effect->command = SET_TEMPO;
-                effect->data = mod_data;
+                effects[0].command = SET_TEMPO;
+                effects[0].data = mod_data;
             } else
             {
                 const float ticks_per_second = (float) mod_data * 2.0f / 5.0f;
-                effect->command = SET_TICKS_PER_SECOND;
+                effects[0].command = SET_TICKS_PER_SECOND;
                 // Unfortunately we cannot accurately represent the calculated ticks_per_second in an effect data field.
                 // This is the best we can do without redesigning Arctracker's timing system just for Protracker.
-                effect->data = (uint8_t) ticks_per_second + 0.5f;
+                effects[0].data = (uint8_t) ticks_per_second + 0.5f;
             }
             break;
 
@@ -1094,7 +1076,7 @@ static bool load_patterns(
                 decode_effect(
                     mod_effect,
                     byte3,
-                    &event->effects[0]
+                    event->effects
                 );
             }
         }

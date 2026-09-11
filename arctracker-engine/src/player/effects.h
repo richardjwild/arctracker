@@ -3,6 +3,8 @@
 
 #include "player.h"
 
+void process_instrument_effects(const event_t *event, const player_instrument_t *instrument, player_track_t *track, audio_generator_t *generator);
+
 bool portamento(const event_t *event);
 
 void handle_effects_before_note(const event_t *event, const player_track_t *track, player_t *);
@@ -11,8 +13,6 @@ uint8_t get_note_delay(const event_t *);
 
 uint8_t get_sample_slice(const event_t *);
 
-void handle_effects_on_event(const event_t *event, voice_t *voice, player_track_t *, player_t *);
-
-void handle_effects_off_event(const event_t *event, voice_t *voice, const player_track_t *, const player_t *);
+void process_non_instrument_effects(const event_t *event, audio_channel_t *channel, player_track_t *, player_t *);
 
 #endif //ARCTRACKER_EFFECTS_H

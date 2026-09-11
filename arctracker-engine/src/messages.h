@@ -32,7 +32,7 @@
 #define EXPORT_NOT_STARTED "No export job was started"
 #define PLAYER_INIT_FAILED "Failed to initialize player"
 #define EXPORT_INIT_FAILED "Failed to export audio"
-#define VOICE_INIT_FAILED "Failed to initialise voices"
+#define CHANNEL_INIT_FAILED "Failed to initialise audio channels"
 #define AUDIO_INIT_FAILED "Failed to initialise audio"
 #define PLAYER_THREAD_CREATE_FAILED "Failed to create player thread"
 #define EXPORT_THREAD_CREATE_FAILED "Failed to create export thread"

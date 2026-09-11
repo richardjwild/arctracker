@@ -372,7 +372,7 @@ void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *trac
     track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
     track_state->muted = arctracker->module->tracks[track].muted;
     if (arctracker->playback.thread_active && arctracker->playback.player->running)
-        track_state->panning = arctracker->playback.player->voices[track].panning;
+        track_state->panning = arctracker->playback.player->audio_channels[track].panning;
     else
         track_state->panning = arctracker->module->tracks[track].panning;
 }
@@ -743,7 +743,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         instrument_update.sample_index);
     if (!result.success)
         return failure(result.error_message);
-    player_update_samples(arctracker->playback.player);
+    player_update_instruments(arctracker->playback.player);
     return SUCCESS;
 }
 

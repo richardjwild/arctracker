@@ -2,99 +2,329 @@
 #include <stdlib.h>
 #include "sequencer.h"
 #include "period.h"
-#include "memory/bits.h"
+
+/******************************************************************************
+ * Commands are processed in right-to-left priority order, which means that   *
+ * when the same command appears twice or more in the same event, the one     *
+ * with the highest index wins; that is, the one furthest to the right from   *
+ * the user's point of view.                                                  *
+ *                                                                            *
+ * Some commands are grouped together because they all modify the same state  *
+ * variable(s) and there is no practical reason to be using them at the same  *
+ * time: they would simply fight each other. For these commands, the one out  *
+ * of the group with the highest index wins. The groups are:                  *
+ *                                                                            *
+ * Pitch slide command group:                                                 *
+ *   - PITCH_SLIDE_UP (0x1)                                                   *
+ *   - PITCH_SLIDE_DOWN (0x2)                                                 *
+ *   - PORTAMENTO (0x3)                                                       *
+ *   - FINE_PORTAMENTO_UP (0xE1)                                              *
+ *   - FINE_PORTAMENTO_DOWN (0xE2)                                            *
+ *                                                                            *
+ * Volume slide command group:                                                *
+ *   - VOLUME_SLIDE (0xA)                                                     *
+ *   - FINE_CRESCENDO (0xEA)                                                  *
+ *   - FINE_DECRESCENDO (0xEB)                                                *
+ *                                                                            *
+ * The other commands are all orthogonal and may be applied simultaneously.   *
+ *****************************************************************************/
 
 static const uint8_t PAN_CENTRE = 0x80;
 
-static void save_and_reset_effect_state(sampler_state_t *, bool *, bool *);
-static void volume_slide_up(sampler_state_t *, uint8_t);
-static void volume_slide_down(sampler_state_t *, uint8_t);
-static void combined_volume_side(sampler_state_t *, uint8_t);
-static void portamento_up(sampler_state_t *, uint8_t);
-static void portamento_down(sampler_state_t *, uint8_t);
-static void start_tone_portamento(player_track_t *, uint8_t);
-static void tone_portamento(sampler_state_t *, const player_track_t *);
-static void start_arpeggio(sampler_state_t *, const player_track_t *, uint8_t);
+static bool is_pitch_slide_effect(command_t);
+static bool is_volume_slide_effect(command_t);
+static const effect_t *get_priority_effect(const event_t *, bool (*is_of_group)(command_t));
+static void process_pitch_slide_effect(const effect_t *, audio_generator_t *, track_command_state_t *);
+static void process_volume_slide_effect(const effect_t *, audio_generator_t *);
+static const effect_t *get_effect(const event_t *, command_t);
+static void process_vibrato_effect(const event_t *, audio_generator_t *, track_command_state_t *);
+static void process_tremolo_effect(const event_t *, audio_generator_t *, track_command_state_t *);
+static void process_set_volume_effect(const event_t *, audio_generator_t *, track_command_state_t *);
+static void process_set_glissando_effect(const event_t *, audio_generator_t *);
+static void process_set_vibrato_waveform_effect(const event_t *, track_command_state_t *);
+static void process_set_tremolo_waveform_effect(const event_t *, track_command_state_t *);
+static void process_arpeggio_effect(const event_t *, const player_instrument_t *, const player_track_t *, audio_generator_t *);
+static void process_retrigger_sample_effect(const event_t *, audio_generator_t *);
+static void process_silence_after_delay_effect(const event_t *, audio_generator_t *);
 static void define_loop(player_track_t *, sequence_t *, uint8_t);
-static void set_glissando_mode(sampler_state_t *, uint8_t);
-static void apply_arpeggio(sampler_state_t *);
-static void retrigger_sample(const event_scheduler_t *, sampler_state_t *, uint8_t);
-static void start_vibrato(sampler_state_t *, player_track_t *, uint8_t, bool);
-static void apply_vibrato(sampler_state_t *, const player_track_t *);
-static void start_tremolo(sampler_state_t *, player_track_t *, uint8_t, bool);
-static void apply_tremolo(sampler_state_t *, const player_track_t *);
-static void set_lfo_waveform(lfo_effect_t *, uint8_t);
-static void set_volume(sampler_state_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
-static void set_voice_panning(voice_t *, uint8_t);
+static void set_panning(audio_channel_t *, uint8_t);
 static void pattern_break(sequence_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
 static void delay_next_event(tick_scheduler_t *, uint8_t);
-static void silence_voice(const tick_scheduler_t *, sampler_state_t *, uint8_t);
+
+void process_instrument_effects(const event_t *event, const player_instrument_t *instrument, player_track_t *track, audio_generator_t *generator)
+{
+    track_command_state_t *command_state = &track->command_state;
+    process_pitch_slide_effect(get_priority_effect(event, is_pitch_slide_effect), generator, command_state);
+    process_volume_slide_effect(get_priority_effect(event, is_volume_slide_effect), generator);
+    process_vibrato_effect(event, generator, command_state);
+    process_tremolo_effect(event, generator, command_state);
+    process_set_volume_effect(event, generator, command_state);
+    process_set_glissando_effect(event, generator);
+    process_set_vibrato_waveform_effect(event, command_state);
+    process_set_tremolo_waveform_effect(event, command_state);
+    process_arpeggio_effect(event, instrument, track, generator);
+    process_retrigger_sample_effect(event, generator);
+    process_silence_after_delay_effect(event, generator);
+}
+
+static bool is_pitch_slide_effect(const command_t command)
+{
+    return command == PITCH_SLIDE_UP ||
+           command == PITCH_SLIDE_DOWN ||
+           command == PORTAMENTO ||
+           command == FINE_PORTAMENTO_UP ||
+           command == FINE_PORTAMENTO_DOWN;
+}
+
+static bool is_volume_slide_effect(const command_t command)
+{
+    return command == VOLUME_SLIDE ||
+           command == FINE_CRESCENDO ||
+           command == FINE_DECRESCENDO;
+}
+
+static const effect_t *get_priority_effect(const event_t *event, bool (*is_of_group)(command_t))
+{
+    for (int effect_no = MAX_EFFECTS - 1; effect_no >= 0; effect_no--)
+    {
+        const effect_t *effect = &event->effects[effect_no];
+        if (is_of_group(effect->command))
+            return effect;
+    }
+    return NULL;
+}
+
+static void process_pitch_slide_effect(const effect_t *effect, audio_generator_t *generator, track_command_state_t *command_state)
+{
+    generator->pitch_slide_off(&generator->state);
+    generator->tone_portamento_off(&generator->state);
+    if (effect == NULL) return;
+    switch (effect->command)
+    {
+        case PITCH_SLIDE_UP:
+            generator->pitch_slide_on(&generator->state, -effect->data, false);
+            break;
+        case PITCH_SLIDE_DOWN:
+            generator->pitch_slide_on(&generator->state, effect->data, false);
+            break;
+        case PORTAMENTO:
+        {
+            int slide_rate = effect->data;
+            if (slide_rate == 0) slide_rate = command_state->effect_memory.tone_portamento_speed;
+            else command_state->effect_memory.tone_portamento_speed = slide_rate;
+            generator->tone_portamento_on(&generator->state, slide_rate);
+            break;
+        }
+        case FINE_PORTAMENTO_UP:
+            generator->pitch_slide_on(&generator->state, -effect->data, true);
+            break;
+        case FINE_PORTAMENTO_DOWN:
+            generator->pitch_slide_on(&generator->state, effect->data, true);
+            break;
+        default:
+            break;
+    }
+}
+
+static void process_volume_slide_effect(const effect_t *effect, audio_generator_t *generator)
+{
+    generator->volume_slide_off(&generator->state);
+    if (effect == NULL) return;
+    switch (effect->command)
+    {
+        case VOLUME_SLIDE:
+        {
+            int slide_rate = effect->data &0x7f;
+            if ((effect->data & 0x80) == 0) slide_rate *= -1;
+            generator->volume_slide_on(&generator->state, slide_rate, false);
+            break;
+        }
+        case FINE_CRESCENDO:
+            generator->volume_slide_on(&generator->state, effect->data, true);
+            break;
+        case FINE_DECRESCENDO:
+            generator->volume_slide_on(&generator->state, effect->data * -1, true);
+            break;
+        default:
+            break;
+    }
+}
+
+static const effect_t *get_effect(const event_t *event, const command_t command)
+{
+    for (int effect_no = MAX_EFFECTS - 1; effect_no >= 0; effect_no--)
+    {
+        if (event->effects[effect_no].command == command)
+            return &event->effects[effect_no];
+    }
+    return NULL;
+}
+
+static void process_vibrato_effect(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
+{
+    const effect_t *effect = get_effect(event, VIBRATO);
+    if (effect == NULL)
+    {
+        generator->vibrato_off(&generator->state);
+        return;
+    }
+    int rate = effect->data >> 4;
+    if (rate == 0)
+    {
+        rate = command_state->effect_memory.vibrato_speed;
+    }
+    else
+    {
+        command_state->effect_memory.vibrato_speed = rate;
+    }
+    int depth = effect->data & 0xf;
+    if (depth == 0)
+    {
+        depth = command_state->effect_memory.vibrato_depth;
+    }
+    else
+    {
+        command_state->effect_memory.vibrato_depth = depth;
+    }
+    const bool retrigger = command_state->vibrato_retrigger;
+    const pt_waveform_t waveform = command_state->vibrato_waveform;
+    generator->vibrato_on(&generator->state, rate, depth, waveform, retrigger);
+}
+
+static void process_tremolo_effect(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
+{
+    const effect_t *effect = get_effect(event, TREMOLO);
+    if (effect == NULL)
+    {
+        generator->tremolo_off(&generator->state);
+        return;
+    }
+    int rate = effect->data >> 4;
+    if (rate == 0)
+    {
+        rate = command_state->effect_memory.tremolo_speed;
+    }
+    else
+    {
+        command_state->effect_memory.tremolo_speed = rate;
+    }
+    int depth = effect->data & 0xf;
+    if (depth == 0)
+    {
+        depth = command_state->effect_memory.tremolo_depth;
+    }
+    else
+    {
+        command_state->effect_memory.tremolo_depth = depth;
+    }
+    const bool retrigger = command_state->tremolo_retrigger;
+    const pt_waveform_t waveform = command_state->tremolo_waveform;
+    generator->tremolo_on(&generator->state, rate, depth, waveform, retrigger);
+}
+
+static void process_set_volume_effect(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
+{
+    const effect_t *effect = get_effect(event, SET_VOLUME);
+    if (effect == NULL) return;
+    generator->set_volume(&generator->state, effect->data);
+    command_state->volume = effect->data;
+}
+
+static void process_set_glissando_effect(const event_t *event, audio_generator_t *generator)
+{
+    const effect_t *effect = get_effect(event, SET_GLISSANDO_MODE);
+    if (effect == NULL) return;
+    generator->set_glissando(&generator->state, effect->data != 0);
+}
+
+static void process_set_vibrato_waveform_effect(const event_t *event, track_command_state_t *command_state)
+{
+    const effect_t *effect = get_effect(event, SET_VIBRATO_WAVEFORM);
+    if (effect == NULL) return;
+    const int waveform_select = effect->data & 0x3;
+    pt_waveform_t vibrato_waveform = PT_WAVEFORM_SQUARE;
+    if (waveform_select == 0) vibrato_waveform = PT_WAVEFORM_SINE;
+    if (waveform_select == 1) vibrato_waveform = PT_WAVEFORM_RAMP;
+    command_state->vibrato_waveform = vibrato_waveform;
+    command_state->vibrato_retrigger = (effect->data & 4) == 0;
+}
+
+static void process_set_tremolo_waveform_effect(const event_t *event, track_command_state_t *command_state)
+{
+    const effect_t *effect = get_effect(event, SET_TREMOLO_WAVEFORM);
+    if (effect == NULL) return;
+    const int waveform_select = effect->data & 0x3;
+    pt_waveform_t tremolo_waveform = PT_WAVEFORM_SQUARE;
+    if (waveform_select == 0) tremolo_waveform = PT_WAVEFORM_SINE;
+    if (waveform_select == 1) tremolo_waveform = PT_WAVEFORM_RAMP;
+    command_state->tremolo_waveform = tremolo_waveform;
+    command_state->tremolo_retrigger = (effect->data & 4) == 0;
+}
+
+static void process_arpeggio_effect(const event_t *event, const player_instrument_t *instrument, const player_track_t *track, audio_generator_t *generator)
+{
+    const effect_t *effect = get_effect(event, ARPEGGIO);
+    if (effect == NULL)
+    {
+        generator->arpeggio_off(&generator->state);
+        return;
+    }
+    const int root_note = event->note == 0 ? track->current_note : event->note - 1;
+    const int interval_1 = effect->data >> 4;
+    const int interval_2 = effect->data & 0xf;
+    const track_command_state_t *command_state = &track->command_state;
+    generator->arpeggio_on(&generator->state, root_note + instrument->transpose, interval_1, interval_2, command_state->arpeggio_speed);
+}
+
+static void process_retrigger_sample_effect(const event_t *event, audio_generator_t *generator)
+{
+    const effect_t *effect = get_effect(event, RETRIGGER_SAMPLE);
+    if (effect == NULL) return;
+    generator->retrigger(&generator->state, effect->data);
+}
+
+static void process_silence_after_delay_effect(const event_t *event, audio_generator_t *generator)
+{
+    const effect_t *effect = get_effect(event, SILENCE_SAMPLE_AFTER_DELAY);
+    if (effect == NULL) return;
+    generator->silence_after_delay(&generator->state, effect->data);
+}
 
 bool portamento(const event_t *event)
 {
-    const effect_t *effects = event->effects;
-    for (int i = 0; i < 4; i++, effects++)
-    {
-        if (effects->command == PORTAMENTO || effects->command == PORTAMENTO_PLUS_VOLUME_SIDE)
-            return true;
-    }
-    return false;
+    return get_effect(event, PORTAMENTO) != NULL;
 }
 
 void handle_effects_before_note(const event_t *event, const player_track_t *track, player_t *player)
 {
-    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
-    {
-        const effect_t effect = event->effects[effect_no];
-        if (effect.command == SET_FINETUNE)
-            player_set_sample_finetune(player, track->instrument_no, (int8_t) effect.data);
-    }
+    const effect_t *effect = get_effect(event, SET_FINETUNE);
+    if (effect != NULL)
+        player_set_sample_finetune(player, track->instrument_no, (int8_t) effect->data);
 }
 
 uint8_t get_note_delay(const event_t *event)
 {
-    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
-    {
-        const effect_t effect = event->effects[effect_no];
-        if (effect.command == DELAY_SAMPLE)
-            return effect.data;
-    }
-    return 0;
+    const effect_t *effect = get_effect(event, DELAY_SAMPLE);
+    return effect != NULL ? effect->data : 0;
 }
 
 uint8_t get_sample_slice(const event_t *event)
 {
-    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
-    {
-        const effect_t effect = event->effects[effect_no];
-        if (effect.command == USE_SAMPLE_SLICE)
-            return effect.data;
-    }
-    return 0;
+    const effect_t *effect = get_effect(event, USE_SAMPLE_SLICE);
+    return effect != NULL ? effect->data : 0;
 }
 
-void handle_effects_on_event(const event_t *event, voice_t *voice, player_track_t *track, player_t *player)
+void process_non_instrument_effects(const event_t *event, audio_channel_t *channel, player_track_t *track, player_t *player)
 {
-    bool vibrato_already_on, tremolo_already_on;
-    sampler_state_t *sampler_state = &voice->sampler_state;
-    save_and_reset_effect_state(sampler_state, &vibrato_already_on, &tremolo_already_on);
     for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
-        if (effect.command == PORTAMENTO)
-            start_tone_portamento(track, effect.data);
-        if (effect.command == SET_VOLUME)
-            set_volume(sampler_state, effect.data);
-        if (effect.command == FINE_CRESCENDO)
-            volume_slide_up(sampler_state, effect.data);
-        if (effect.command == FINE_DECRESCENDO)
-            volume_slide_down(sampler_state, effect.data);
         if (effect.command == SET_TEMPO)
             set_tempo(player, effect.data);
         if (effect.command == SET_PANNING)
-            set_voice_panning(voice, effect.data);
+            set_panning(channel, effect.data);
         if (effect.command == PATTERN_BREAK)
             pattern_break(&player->sequence, effect.data);
         if (effect.command == SEQUENCE_JUMP)
@@ -103,226 +333,9 @@ void handle_effects_on_event(const event_t *event, voice_t *voice, player_track_
             set_tempo_fine(&player->tick_scheduler, effect.data);
         if (effect.command == DELAY_NEXT_EVENT)
             delay_next_event(&player->tick_scheduler, effect.data);
-        if (effect.command == FINE_PORTAMENTO_UP)
-            portamento_up(sampler_state, effect.data);
-        if (effect.command == FINE_PORTAMENTO_DOWN)
-            portamento_down(sampler_state, effect.data);
-        if (effect.command == VIBRATO)
-            start_vibrato(sampler_state, track, effect.data, vibrato_already_on);
-        if (effect.command == TREMOLO)
-            start_tremolo(sampler_state, track, effect.data, tremolo_already_on);
-        if (effect.command == SET_VIBRATO_WAVEFORM)
-            set_lfo_waveform(&sampler_state->vibrato, effect.data);
-        if (effect.command == SET_TREMOLO_WAVEFORM)
-            set_lfo_waveform(&sampler_state->tremolo, effect.data);
-        if (effect.command == ARPEGGIO)
-            start_arpeggio(sampler_state, track, effect.data);
         if (effect.command == SET_LOOP)
             define_loop(track, &player->sequence, effect.data);
-        if (effect.command == SET_GLISSANDO_MODE)
-            set_glissando_mode(sampler_state, effect.data);
     }
-    if (!sampler_state->arpeggio.enabled)
-    {
-        sampler_state->arpeggio.counter = 1;
-        if (!sampler_state->vibrato.enabled && !sampler_state->tremolo.enabled)
-            sampler_state->period_modulation = 0;
-    }
-}
-
-static void save_and_reset_effect_state(sampler_state_t *sampler_state, bool *vibrato_already_on, bool *tremolo_already_on)
-{
-    *vibrato_already_on = sampler_state->vibrato.enabled;
-    *tremolo_already_on = sampler_state->tremolo.enabled;
-    sampler_state->vibrato.enabled = false;
-    sampler_state->tremolo.enabled = false;
-    sampler_state->arpeggio.enabled = false;
-}
-
-void handle_effects_off_event(const event_t *event, voice_t *voice, const player_track_t *track, const player_t *player)
-{
-    sampler_state_t *sampler_state = &voice->sampler_state;
-    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
-    {
-        const effect_t effect = event->effects[effect_no];
-        if (effect.command == VOLUME_SLIDE)
-        {
-            if ((effect.data & 0x80) > 0) volume_slide_up(sampler_state, effect.data & 0x7f);
-            else volume_slide_down(sampler_state, effect.data);
-        }
-        if (effect.command == PITCH_SLIDE_UP)
-            portamento_up(sampler_state, effect.data);
-        if (effect.command == PITCH_SLIDE_DOWN)
-            portamento_down(sampler_state, effect.data);
-        if (effect.command == PORTAMENTO)
-            tone_portamento(sampler_state, track);
-        if (effect.command == PORTAMENTO_PLUS_VOLUME_SIDE)
-        {
-            tone_portamento(sampler_state, track);
-            combined_volume_side(sampler_state, effect.data);
-        }
-        if (effect.command == SILENCE_SAMPLE_AFTER_DELAY)
-            silence_voice(&player->tick_scheduler, sampler_state, effect.data);
-        if (effect.command == VIBRATO)
-            apply_vibrato(sampler_state, track);
-        if (effect.command == VIBRATO_PLUS_VOLUME_SLIDE)
-        {
-            apply_vibrato(sampler_state, track);
-            combined_volume_side(sampler_state, effect.data);
-        }
-        if (effect.command == TREMOLO)
-            apply_tremolo(sampler_state, track);
-        if (effect.command == ARPEGGIO)
-            apply_arpeggio(sampler_state);
-        if (effect.command == RETRIGGER_SAMPLE)
-            retrigger_sample(&player->tick_scheduler.event_scheduler, sampler_state, effect.data);
-    }
-}
-
-static void volume_slide_up(sampler_state_t *sampler_state, const uint8_t data)
-{
-    const uint8_t headroom = INTERNAL_GAIN_MAX - sampler_state->volume;
-    const uint8_t change = headroom > data ? data : headroom;
-    sampler_state->volume += change;
-}
-
-static void volume_slide_down(sampler_state_t *sampler_state, const uint8_t data)
-{
-    if (sampler_state->volume >= data)
-        sampler_state->volume -= data;
-    else
-        sampler_state->volume = 0;
-}
-
-static void combined_volume_side(sampler_state_t *sampler_state, const uint8_t data)
-{
-    const uint8_t up_amount = data >> 4;
-    const uint8_t down_amount = data & 0xf;
-    if (up_amount > 0 && down_amount > 0) return;
-    if (up_amount > 0) volume_slide_up(sampler_state, up_amount);
-    if (down_amount > 0) volume_slide_down(sampler_state, down_amount);
-}
-
-static void portamento_up(sampler_state_t *sampler_state, const uint8_t data)
-{
-    sampler_state->period -= data;
-    if (sampler_state->period < PERIOD_MIN)
-        sampler_state->period = PERIOD_MIN;
-}
-
-static void portamento_down(sampler_state_t *sampler_state, const uint8_t data)
-{
-    sampler_state->period += data;
-    if (sampler_state->period > PERIOD_MAX)
-        sampler_state->period = PERIOD_MAX;
-}
-
-static void start_tone_portamento(player_track_t *track, const uint8_t data)
-{
-    if (data)
-        track->effect_memory.tone_portamento_speed = data;
-}
-
-static void tone_portamento(sampler_state_t *sampler_state, const player_track_t *track)
-{
-    const int portamento_speed = track->effect_memory.tone_portamento_speed;
-    if (sampler_state->period < sampler_state->tone_portamento_target_period)
-    {
-        sampler_state->period += portamento_speed;
-        if (sampler_state->period > sampler_state->tone_portamento_target_period)
-            sampler_state->period = sampler_state->tone_portamento_target_period;
-    }
-    else
-    {
-        sampler_state->period -= portamento_speed;
-        if (sampler_state->period < sampler_state->tone_portamento_target_period)
-            sampler_state->period = sampler_state->tone_portamento_target_period;
-    }
-    if (sampler_state->glissando_on)
-    {
-        const int snapped_period = nearest_note_period(sampler_state->period, sampler_state->sample->fine_tuning);
-        sampler_state->period_modulation = snapped_period - sampler_state->period;
-    }
-    else
-    {
-        sampler_state->period_modulation = 0;
-    }
-}
-
-static void set_lfo_waveform(lfo_effect_t *lfo_effect, const uint8_t data)
-{
-    lfo_effect->retrigger = (data & 0x4) == 0;
-    switch (data & 0x3)
-    {
-        case 0: lfo_effect->waveform = PT_WAVEFORM_SINE;
-            break;
-        case 1: lfo_effect->waveform = PT_WAVEFORM_RAMP;
-            break;
-        default: lfo_effect->waveform = PT_WAVEFORM_SQUARE;
-            break;
-    }
-    // Some sources claim that type 3 (or 7) select a waveform at random, but this is disputed.
-    // Other sources claim that it selects a noise waveform, and others still say it selects square.
-}
-
-static void start_vibrato(sampler_state_t *sampler_state, player_track_t *track, const uint8_t data, const bool already_on)
-{
-    sampler_state->vibrato.enabled = true;
-    if (!already_on && sampler_state->vibrato.retrigger)
-        sampler_state->vibrato.phase = 0;
-    if ((data & 0xf0) != 0)
-        track->effect_memory.vibrato_speed = data >> 4;
-    if ((data & 0xf) != 0)
-        track->effect_memory.vibrato_depth = data & 0xf;
-}
-
-static void apply_vibrato(sampler_state_t *sampler_state, const player_track_t *track)
-{
-    const uint8_t vibrato_speed = track->effect_memory.vibrato_speed;
-    const uint8_t vibrato_depth = track->effect_memory.vibrato_depth;
-    const float lfo_value = lfo_pt_waveform(sampler_state->vibrato.waveform, sampler_state->vibrato.phase);
-    const float period_modulation = lfo_value * (float) vibrato_depth * 2.0f;
-    sampler_state->period_modulation = (int) period_modulation;
-    sampler_state->vibrato.phase = (sampler_state->vibrato.phase + vibrato_speed) % PT_LFO_WAVELENGTH;
-}
-
-static void start_tremolo(sampler_state_t *sampler_state, player_track_t *track, const uint8_t data, const bool already_on)
-{
-    sampler_state->tremolo.enabled = true;
-    if (!already_on && sampler_state->tremolo.retrigger)
-        sampler_state->tremolo.phase = 0;
-    if ((data & 0xf0) != 0)
-        track->effect_memory.tremolo_speed = data >> 4;
-    if ((data & 0xf) != 0)
-        track->effect_memory.tremolo_depth = data & 0xf;
-}
-
-static void apply_tremolo(sampler_state_t *sampler_state, const player_track_t *track)
-{
-    const uint8_t tremolo_speed = track->effect_memory.tremolo_speed;
-    const uint8_t tremolo_depth = track->effect_memory.tremolo_depth;
-    const float lfo_value = lfo_pt_waveform(sampler_state->tremolo.waveform, sampler_state->tremolo.phase);
-    const float volume_modulation = lfo_value * (float) tremolo_depth * 16.0f;
-    sampler_state->volume_modulation = (int) volume_modulation;
-    sampler_state->tremolo.phase = (sampler_state->tremolo.phase + tremolo_speed) % PT_LFO_WAVELENGTH;
-}
-
-static void start_arpeggio(sampler_state_t *sampler_state, const player_track_t *track, const uint8_t data)
-{
-    uint16_t arpeggio_note_2 = track->current_note + HIGH_NYBBLE(data);
-    if (note_out_of_range(arpeggio_note_2))
-    {
-        arpeggio_note_2 = track->current_note;
-    }
-    uint16_t arpeggio_note_3 = track->current_note + LOW_NYBBLE(data);
-    if (note_out_of_range(arpeggio_note_3))
-    {
-        arpeggio_note_3 = track->current_note;
-    }
-    sampler_state->arpeggio.enabled = true;
-    sampler_state->arpeggio.chord[0] = 0;
-    sampler_state->arpeggio.chord[1] = period_for_note(arpeggio_note_2, sampler_state->sample->fine_tuning) - sampler_state->period;
-    sampler_state->arpeggio.chord[2] = period_for_note(arpeggio_note_3, sampler_state->sample->fine_tuning) - sampler_state->period;
 }
 
 static void define_loop(player_track_t *track, sequence_t *sequence, const uint8_t data)
@@ -349,33 +362,9 @@ static void define_loop(player_track_t *track, sequence_t *sequence, const uint8
     }
 }
 
-static void set_glissando_mode(sampler_state_t *sampler_state, const uint8_t data)
+static void set_panning(audio_channel_t *channel, const uint8_t data)
 {
-    sampler_state->glissando_on = data != 0;
-}
-
-static void apply_arpeggio(sampler_state_t *sampler_state)
-{
-    sampler_state->period_modulation = sampler_state->arpeggio.chord[sampler_state->arpeggio.counter % 3];
-    sampler_state->arpeggio.counter += 1;
-}
-
-static void retrigger_sample(const event_scheduler_t *event_scheduler, sampler_state_t *sampler_state, const uint8_t data)
-{
-    if (data == 0 || event_scheduler->ticks == 0)
-        return;
-    if (event_scheduler->ticks % data == 0)
-        sampler_state->phase_accumulator = 0.0f;
-}
-
-static void set_volume(sampler_state_t *sampler_state, const uint8_t data)
-{
-    sampler_state->volume = data;
-}
-
-static void set_voice_panning(voice_t *voice, const uint8_t data)
-{
-    voice->panning = data == 0 ? PAN_CENTRE : data;
+    channel->panning = data == 0 ? PAN_CENTRE : data;
 }
 
 static void pattern_break(sequence_t *sequence, const uint8_t data)
@@ -401,10 +390,4 @@ static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t dat
 {
     if (data > 0)
         tick_scheduler->event_scheduler.event_delay = data * tick_scheduler->event_scheduler.ticks_per_event;
-}
-
-static void silence_voice(const tick_scheduler_t *tick_scheduler, sampler_state_t *sampler_state, const uint8_t data)
-{
-    if (tick_scheduler->event_scheduler.ticks == data)
-        sampler_state->volume = 0;
 }

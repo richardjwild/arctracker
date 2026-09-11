@@ -71,7 +71,7 @@
  *   - u8 lines per beat (0-255: 0=undefined)                                *
  *   - u16 default pattern length (1-1000)                                   *
  *   - u8 interpolation type (0=native, 1=Archimedes)                        *
- *   - u8 volume mapping (0=native/Archimedes, 1=Amiga                       *
+ *   - u8 volume mapping (0=native/Archimedes, 1=Amiga)                      *
  *                                                                           *
  * Track chunk                                                               *
  * -----------                                                               *
@@ -355,12 +355,13 @@ static module_t *read_arctracker_module(const mapped_file_t mapped_file)
         goto read_arctracker_module_failed;
     }
     return module;
+
+read_arctracker_module_failed:
     //
     // Something went wrong while we were populating the module; destroy it and return nothing.
     //
-    read_arctracker_module_failed:
-        module_destroy(module);
-        return NULL;
+    module_destroy(module);
+    return NULL;
 }
 
 static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_size)
@@ -593,8 +594,6 @@ static command_t decode_command(const uint8_t code)
         case 0x32: return PITCH_SLIDE_DOWN;
         case 0x33: return PORTAMENTO;
         case 0x34: return VIBRATO;
-        case 0x35: return PORTAMENTO_PLUS_VOLUME_SIDE;
-        case 0x36: return VIBRATO_PLUS_VOLUME_SLIDE;
         case 0x37: return TREMOLO;
         case 0x42: return PATTERN_BREAK;
         case 0x43: return VOLUME_SLIDE;
@@ -957,8 +956,6 @@ static uint8_t encode_command(const command_t command)
         case PITCH_SLIDE_DOWN: return 0x32;
         case PORTAMENTO: return 0x33;
         case VIBRATO: return 0x34;
-        case PORTAMENTO_PLUS_VOLUME_SIDE: return 0x35;
-        case VIBRATO_PLUS_VOLUME_SLIDE: return 0x36;
         case TREMOLO: return 0x37;
         case PATTERN_BREAK: return 0x42;
         case VOLUME_SLIDE: return 0x43;
