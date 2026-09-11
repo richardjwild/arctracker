@@ -318,24 +318,21 @@ uint8_t get_sample_slice(const event_t *event)
 
 void process_non_instrument_commands(const event_t *event, audio_channel_t *channel, player_track_t *track, player_t *player)
 {
-    for (int effect_no = 0; effect_no < MAX_EFFECTS; effect_no++)
-    {
-        const effect_t effect = event->effects[effect_no];
-        if (effect.command == SET_TEMPO)
-            set_tempo(player, effect.data);
-        if (effect.command == SET_PANNING)
-            set_panning(channel, effect.data);
-        if (effect.command == PATTERN_BREAK)
-            pattern_break(&player->sequence, effect.data);
-        if (effect.command == SEQUENCE_JUMP)
-            set_jump_target(effect.data, 0, &player->sequence);
-        if (effect.command == SET_TICKS_PER_SECOND)
-            set_tempo_fine(&player->tick_scheduler, effect.data);
-        if (effect.command == DELAY_NEXT_EVENT)
-            delay_next_event(&player->tick_scheduler, effect.data);
-        if (effect.command == SET_LOOP)
-            define_loop(track, &player->sequence, effect.data);
-    }
+    const effect_t *effect = NULL;
+    if ((effect = get_effect(event, SET_TEMPO)) != NULL)
+        set_tempo(player, effect->data);
+    if ((effect = get_effect(event, SET_PANNING)) != NULL)
+        set_panning(channel, effect->data);
+    if ((effect = get_effect(event, PATTERN_BREAK)) != NULL)
+        pattern_break(&player->sequence, effect->data);
+    if ((effect = get_effect(event, SEQUENCE_JUMP)) != NULL)
+        set_jump_target(effect->data, 0, &player->sequence);
+    if ((effect = get_effect(event, SET_TICKS_PER_SECOND)) != NULL)
+        set_tempo_fine(&player->tick_scheduler, effect->data);
+    if ((effect = get_effect(event, DELAY_NEXT_EVENT)) != NULL)
+        delay_next_event(&player->tick_scheduler, effect->data);
+    if ((effect = get_effect(event, SET_LOOP)) != NULL)
+        define_loop(track, &player->sequence, effect->data);
 }
 
 static void define_loop(player_track_t *track, sequence_t *sequence, const uint8_t data)
