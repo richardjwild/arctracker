@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_PORTAUDIO_H
 #define ARCTRACKER_PORTAUDIO_H
 
-#include "api.h"
+#include "audio_api.h"
 
 typedef struct {
     int device_index;

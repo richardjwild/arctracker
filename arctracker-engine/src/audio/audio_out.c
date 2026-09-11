@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdatomic.h>
-#include "write_audio.h"
+#include "audio_out.h"
 #include "sample_player.h"
 #include "memory/heap.h"
 #include "pcm/mu_law.h"

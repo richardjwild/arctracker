@@ -6,8 +6,8 @@
 #include "sequencer.h"
 #include "tick_scheduler.h"
 #include "audio/sample_player.h"
-#include "audio_api/api.h"
-#include "audio/write_audio.h"
+#include "audio_api/audio_api.h"
+#include "audio/audio_out.h"
 #include "ui/player_event_queue.h"
 
 typedef struct {

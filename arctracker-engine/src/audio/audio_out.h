@@ -3,7 +3,7 @@
 
 #include <stdatomic.h>
 #include "audio_channel.h"
-#include "audio_api/api.h"
+#include "audio_api/audio_api.h"
 #include "audio/volume_mapping_type.h"
 
 typedef struct
