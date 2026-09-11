@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "tempo.h"
-#include "audio/interpolation_type.h"
-#include "audio/volume_mapping_type.h"
+#include "src/audio_out/interpolation_type.h"
+#include "src/audio_out/volume_mapping_type.h"
 #include "ui/ui.h"
 
 #define MAX_LEN_TUNENAME 65

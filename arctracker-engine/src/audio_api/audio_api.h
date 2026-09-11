@@ -2,7 +2,7 @@
 #define ARCTRACKER_AUDIO_API_H
 
 #include <stdbool.h>
-#include "audio/interpolation_type.h"
+#include "src/audio_out/interpolation_type.h"
 
 #define AUDIO_DEVICE_NAME_SIZE 256
 #define HOST_API_NAME_SIZE 256
