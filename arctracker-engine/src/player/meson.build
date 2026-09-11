@@ -1,5 +1,5 @@
 player_sources = files(
-    'effects.c',
+    'commands.c',
     'lfo.c',
     'player.c',
     'module.c',

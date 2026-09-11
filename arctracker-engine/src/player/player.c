@@ -2,7 +2,7 @@
 #include "player.h"
 #include <math.h>
 #include "sequencer.h"
-#include "effects.h"
+#include "commands.h"
 #include "lfo.h"
 #include "period.h"
 #include "memory/heap.h"
@@ -519,7 +519,7 @@ static void on_new_event(player_t *player, event_t *event, const uint8_t track_n
                 // Don't schedule a new note, start bending the pitch of the current one instead.
                 //
                 audio_generator->set_tone_portamento_target(&audio_generator->state, note + instrument->transpose);
-                process_instrument_effects(event, instrument, track, audio_generator);
+                process_instrument_commands(event, instrument, track, audio_generator);
             }
         }
     }
@@ -533,10 +533,10 @@ static void on_new_event(player_t *player, event_t *event, const uint8_t track_n
         if (channel->playing)
         {
             const player_instrument_t *instrument = &player->instruments[instrument_no];
-            process_instrument_effects(event, instrument, track, audio_generator);
+            process_instrument_commands(event, instrument, track, audio_generator);
         }
     }
-    process_non_instrument_effects(event, channel, track, player);
+    process_non_instrument_commands(event, channel, track, player);
 }
 
 static void play_scheduled_notes(const player_t *player)
@@ -567,7 +567,7 @@ static void note_on(const int note, const player_instrument_t *instrument, const
     track->audio_channel->playing = true;
     if (event != NULL)
     {
-        process_instrument_effects(event, instrument, track, &track->audio_channel->audio_generator);
+        process_instrument_commands(event, instrument, track, &track->audio_channel->audio_generator);
     }
 }
 
