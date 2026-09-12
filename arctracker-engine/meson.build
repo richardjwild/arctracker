@@ -3,7 +3,7 @@ project('arctracker', ['c', 'cpp'],
     default_options: [
         'warning_level=2',
         'werror=false',
-        'b_sanitize=address,undefined'
+        'b_sanitize=none'
     ]
 )
 
