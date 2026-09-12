@@ -33,6 +33,7 @@ fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: 
             format!("-Dbuildtype={build_type}").as_ref(),
             "-Ddefault_library=static".as_ref(),
             "-Dasan=false".as_ref(),
+            "-Db_sanitize=none".as_ref(),
         ]);
     } else {
         run("meson", [
