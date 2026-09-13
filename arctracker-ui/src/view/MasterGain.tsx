@@ -1,7 +1,7 @@
 import "./MasterGain.css";
 import { useStore } from "../store/useStore.ts";
 import { engine } from "../engine/engine.ts";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { animation } from "../rendering/animation.ts";
 import {
   VuMeterColours,
@@ -22,14 +22,14 @@ export default function MasterGain() {
     setMasterGain(gain);
     engine.setMasterGain(gain);
   };
-  const colours: VuMeterColours = {
+  const colours = useMemo<VuMeterColours>(() => ({
     clipIndicatorOff: cssColour("--colour-clip-indicator-off"),
     clipIndicatorOn: cssColour("--colour-clip-indicator-on"),
     guide: cssColour("--colour-vu-meter-guide"),
     vuMeterBottom: cssColour("--colour-vu-meter-bottom"),
     vuMeterMiddle: cssColour("--colour-vu-meter-middle"),
     vuMeterTop: cssColour("--colour-vu-meter-top"),
-  };
+  }), []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
