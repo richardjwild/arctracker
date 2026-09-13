@@ -1,5 +1,5 @@
 import { BaseDirectory } from "@tauri-apps/api/path";
-import { exists, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { audioDevice, AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
 import { editor } from "../editing/editor.ts";
 import { midi, MidiDeviceInfo } from "../midi/midi.ts";
@@ -118,6 +118,13 @@ export const appConfig = {
   },
 
   save: async () => {
+    const baseDirExists = await exists('', { baseDir: BaseDirectory.AppConfig });
+    if (!baseDirExists) {
+      await mkdir('', {
+        baseDir: BaseDirectory.AppConfig,
+        recursive: true
+      });
+    }
     await writeTextFile(configFileName, JSON.stringify(config, null, 2), {
       baseDir: BaseDirectory.AppConfig,
     });

@@ -22,7 +22,6 @@ install-sh
 cmake-build-debug/
 arctracker-*.tar.gz
 bin/
-CMakeLists.txt
 .DS_Store
 p.patch
 logs
