@@ -7,10 +7,11 @@
 
 typedef struct {
     audio_generator_t audio_generator;
-    bool playing;
     bool muted;
     uint8_t panning;
     float gain;
 } audio_channel_t;
+
+void silence_channel(audio_channel_t *channel);
 
 #endif //ARCTRACKER_AUDIO_CHANNEL_H

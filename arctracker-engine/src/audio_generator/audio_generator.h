@@ -51,4 +51,6 @@ typedef struct {
     void (*retrigger)(audio_generator_state_t *state, int ticks);
 } audio_generator_t;
 
+audio_generator_t null_audio_generator(void);
+
 #endif //ARCTRACKER_ENGINE_AUDIO_GENERATOR_H

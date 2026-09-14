@@ -102,14 +102,11 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     //
     // Generate channel audio.
     //
-    if (channel->playing)
+    audio_generator_t *audio_generator = &channel->audio_generator;
+    const bool still_playing = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
+    if (!still_playing)
     {
-        audio_generator_t *audio_generator = &channel->audio_generator;
-        channel->playing = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
-    }
-    else
-    {
-        memset(mono_channel_buffer, 0, frames_to_fill * sizeof(float));
+        silence_channel(channel);
     }
     //
     // This is the point where we would apply mono effects: filtering, compression, distortion, etc.

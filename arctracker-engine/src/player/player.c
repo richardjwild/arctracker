@@ -294,7 +294,6 @@ static void process_seek_command(player_t *player, const seek_command_t data)
 
 static void set_volume(const player_track_t *track, const uint8_t volume)
 {
-    if (!track->audio_channel->playing) return;
     audio_generator_t *generator = &track->audio_channel->audio_generator;
     generator->set_volume(&generator->state, volume);
 }
@@ -365,8 +364,7 @@ static audio_channel_t *initialise_audio_channels(const module_t *module)
         return NULL;
     for (int channel = 0; channel < module->num_tracks; channel++)
     {
-        channels[channel].audio_generator = (audio_generator_t) {0};
-        channels[channel].playing = false;
+        silence_channel(&channels[channel]);
         channels[channel].muted = module->tracks[channel].muted;
         channels[channel].panning = module->tracks[channel].panning - 1;
         channels[channel].gain = 1.0f;
@@ -475,7 +473,7 @@ static void update_audio_channels(player_t *player, const event_scheduler_t *eve
         {
             on_new_event(player, event, track_no, player->scheduled_notes + track_no);
         }
-        else if (channel->playing)
+        else
         {
             audio_generator->tick(&audio_generator->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
         }
@@ -495,8 +493,11 @@ static void on_new_event(player_t *player, event_t *event, const uint8_t track_n
     {
         const int note = event->note - 1;
         const player_instrument_t *instrument = &player->instruments[instrument_no];
-        channel->playing = instrument->assigned;
-        if (channel->playing)
+        if (!instrument->assigned)
+        {
+            silence_channel(channel);
+        }
+        else
         {
             if (instrument_changed || !portamento(event))
             {
@@ -530,11 +531,8 @@ static void on_new_event(player_t *player, event_t *event, const uint8_t track_n
             const player_instrument_t *instrument = &player->instruments[event->instrument_no - 1];
             if (instrument->assigned) set_volume(track, instrument->default_volume);
         }
-        if (channel->playing)
-        {
-            const player_instrument_t *instrument = &player->instruments[instrument_no];
-            process_instrument_commands(event, instrument, track, audio_generator);
-        }
+        const player_instrument_t *instrument = &player->instruments[instrument_no];
+        process_instrument_commands(event, instrument, track, audio_generator);
     }
     process_non_instrument_commands(event, channel, track, player);
 }
@@ -564,7 +562,6 @@ static void note_on(const int note, const player_instrument_t *instrument, const
             volume = track->command_state.volume;
     }
     track->audio_channel->audio_generator = init_audio_generator(note + instrument->transpose, track, instrument, slice, volume);
-    track->audio_channel->playing = true;
     if (event != NULL)
     {
         process_instrument_commands(event, instrument, track, &track->audio_channel->audio_generator);
@@ -592,14 +589,14 @@ static void clear_scheduled_notes(const player_t *player)
 
 static void note_off(audio_channel_t *channel)
 {
-    channel->playing = false;
+    silence_channel(channel);
 }
 
 static void player_stop(player_t *player)
 {
     player->playing = false;
     for (int track = 0; track < player->module->num_tracks; track++)
-        player->tracks[track].audio_channel->playing = false;
+        silence_channel(player->tracks[track].audio_channel);
 }
 
 static void player_start(player_t *player)
