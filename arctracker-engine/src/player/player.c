@@ -44,6 +44,7 @@ static void on_new_event(player_t *, event_t *, uint8_t, scheduled_note_t *);
 static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
+static void clear_track_loop_state(player_t *);
 static player_event_t create_user_midi_event(int note);
 static player_event_t create_error_event(const char *);
 
@@ -604,6 +605,7 @@ static void player_start(player_t *player)
     player->playing = true;
     player->sequence.song_ended = false;
     tick_scheduler_restart(&player->tick_scheduler);
+    clear_track_loop_state(player);
     if (player->sequence.looping_state.looping && !player->sequence.looping_state.commanded_by_ui)
         clear_pattern_loop(&player->sequence);
 }
@@ -612,6 +614,12 @@ static void player_seek(player_t *player, const int new_sequence_pos, const int 
 {
     sequence_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
     set_current_frame(player, true);
+}
+
+static void clear_track_loop_state(player_t *player)
+{
+    for (int track = 0; track < player->module->num_tracks; track++)
+        player->tracks[track].loop_state.looping = false;
 }
 
 static player_event_t create_user_midi_event(const int note)
