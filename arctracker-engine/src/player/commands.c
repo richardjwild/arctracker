@@ -47,6 +47,7 @@ static void process_arpeggio_cmd(const event_t *, const player_instrument_t *, c
 static void process_set_arpeggio_speed_cmd(const event_t *, track_command_state_t *);
 static void process_retrigger_sample_cmd(const event_t *, audio_generator_t *);
 static void process_silence_after_delay_cmd(const event_t *, audio_generator_t *);
+static void process_advance_phase_cmd(const event_t *, audio_generator_t *);
 static void define_loop(player_track_t *, sequence_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
 static void set_panning(audio_channel_t *, uint8_t);
@@ -69,6 +70,7 @@ void process_instrument_commands(const event_t *event, const player_instrument_t
     process_set_arpeggio_speed_cmd(event, command_state);
     process_retrigger_sample_cmd(event, generator);
     process_silence_after_delay_cmd(event, generator);
+    process_advance_phase_cmd(event, generator);
 }
 
 static bool is_pitch_slide_cmd(const command_t command)
@@ -308,6 +310,15 @@ static void process_silence_after_delay_cmd(const event_t *event, audio_generato
     generator->silence_after_delay(&generator->state, effect->data);
 }
 
+static void process_advance_phase_cmd(const event_t *event, audio_generator_t *generator)
+{
+    const effect_t *effect = NULL;
+    if ((effect = get_effect(event, FINE_ADVANCE_PHASE)) != NULL)
+        generator->advance_phase(&generator->state, effect->data);
+    if ((effect = get_effect(event, ADVANCE_PHASE)) != NULL)
+        generator->advance_phase(&generator->state, (int) effect->data * 256);
+}
+
 bool portamento(const event_t *event)
 {
     return get_effect(event, PORTAMENTO) != NULL;
@@ -369,7 +380,7 @@ static void define_loop(player_track_t *track, sequence_t *sequence, const uint8
     }
     else
     {
-        set_loop(sequence, track->loop_state.start, sequence->pattern_index);
+        set_loop(sequence, track->loop_state.start, sequence->pattern_index, false);
         track->loop_state.looping = true;
         track->loop_state.counter = data;
     }

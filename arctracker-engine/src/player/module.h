@@ -27,6 +27,8 @@ typedef enum
     PITCH_SLIDE_DOWN = 0x2,
     PORTAMENTO = 0x3,
     VIBRATO = 0x4,
+    FINE_ADVANCE_PHASE = 0x5,
+    ADVANCE_PHASE = 0x6,
     TREMOLO = 0x7,
     SET_PANNING = 0x8,
     USE_SAMPLE_SLICE = 0x9,

@@ -25,6 +25,7 @@ static void arpeggio_off(audio_generator_state_t *);
 static void set_glissando(audio_generator_state_t *, bool);
 static void silence_after_delay(audio_generator_state_t *, int);
 static void retrigger(audio_generator_state_t *, int);
+static void advance_phase(audio_generator_state_t *, int);
 static void tick(audio_generator_state_t *, int, int);
 static void apply_volume_slide(sampler_state_t *);
 static void apply_pitch_slide(sampler_state_t *);
@@ -82,6 +83,7 @@ audio_generator_t init_sampler(const int note, const player_sample_t *sample, co
         .set_glissando = set_glissando,
         .silence_after_delay = silence_after_delay,
         .retrigger = retrigger,
+        .advance_phase = advance_phase,
         .tick = tick,
     };
 }
@@ -301,6 +303,23 @@ static void retrigger(audio_generator_state_t *state, const int retrigger_delay)
 {
     sampler_state_t *sampler = state->sampler;
     sampler->retrigger_delay = retrigger_delay;
+}
+
+static void advance_phase(audio_generator_state_t *state, const int frames)
+{
+    sampler_state_t *sampler = state->sampler;
+    if ((int) sampler->phase_accumulator + frames < sampler->sample_end)
+    {
+        sampler->phase_accumulator += (float) frames;
+        printf("%f\n", sampler->phase_accumulator);
+    }
+    else if (sampler->sample->sample_repeats)
+    {
+        sampler->phase_accumulator += (float) frames;
+        while ((int) sampler->phase_accumulator >= sampler->sample_end)
+            sampler->phase_accumulator -= (float) sampler->sample->repeat_length;
+        printf("%f\n", sampler->phase_accumulator);
+    }
 }
 
 // static void print_state(const sampler_state_t *sampler, const int tick, const int ticks_per_event)

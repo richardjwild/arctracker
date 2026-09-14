@@ -604,6 +604,8 @@ static void player_start(player_t *player)
     player->playing = true;
     player->sequence.song_ended = false;
     tick_scheduler_restart(&player->tick_scheduler);
+    if (player->sequence.looping_state.looping && !player->sequence.looping_state.commanded_by_ui)
+        clear_pattern_loop(&player->sequence);
 }
 
 static void player_seek(player_t *player, const int new_sequence_pos, const int new_pattern_pos)

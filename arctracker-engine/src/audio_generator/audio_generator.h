@@ -53,6 +53,7 @@ typedef struct {
     void (*set_glissando)(audio_generator_state_t *state, bool enabled);
     void (*silence_after_delay)(audio_generator_state_t *state, int ticks);
     void (*retrigger)(audio_generator_state_t *state, int ticks);
+    void (*advance_phase)(audio_generator_state_t *state, int frames);
 } audio_generator_t;
 
 audio_generator_t null_audio_generator(void);

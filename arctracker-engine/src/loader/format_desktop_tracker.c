@@ -6,13 +6,6 @@
 #include "pcm/mu_law.h"
 #include "io/error.h"
 
-// As you can see, about half of the effects are left unimplemented. Neither
-// is the sample sustain feature. I could in principle have a stab at doing
-// some of them, but I do not posses any modfiles that make use of these
-// features so I have no means to test them properly. Therefore I have elected
-// not to implement them, unless I should ever come into possession of some
-// modfiles that could serve as an acceptance test, which seems quite unlikely.
-
 #define MAX_LEN_TUNENAME_DSKT 64
 #define MAX_LEN_AUTHOR_DSKT 64
 #define MAX_LEN_SAMPLENAME_DSKT 32
@@ -31,8 +24,8 @@ static const uint8_t VIBRATO_COMMAND = 0x4;
 // static const uint8_t DELAYEDNOTE_COMMAND = 0x5; not implemented yet
 static const uint8_t RELEASESAMP_COMMAND = 0x6;
 static const uint8_t TREMOLO_COMMAND = 0x7;
-// static const uint8_t PHASOR_COMMAND1 = 0x8; not implemented yet
-// static const uint8_t PHASOR_COMMAND2 = 0x9; not implemented yet
+static const uint8_t PHASOR_COMMAND2 = 0x8;
+static const uint8_t PHASOR_COMMAND1 = 0x9;
 static const uint8_t VOLSLIDE_COMMAND = 0xa;
 static const uint8_t JUMP_COMMAND = 0xb;
 static const uint8_t VOLUME_COMMAND = 0xc;
@@ -267,6 +260,8 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == VIBRATO_COMMAND) return VIBRATO;
     if (code == RELEASESAMP_COMMAND) return USE_SAMPLE_SLICE;
     if (code == TREMOLO_COMMAND) return TREMOLO;
+    if (code == PHASOR_COMMAND2) return FINE_ADVANCE_PHASE;
+    if (code == PHASOR_COMMAND1) return ADVANCE_PHASE;
     if (code == VOLSLIDE_COMMAND) return VOLUME_SLIDE;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
     if (code == VOLUME_COMMAND) return SET_VOLUME;

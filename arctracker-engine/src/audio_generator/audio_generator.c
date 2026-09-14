@@ -20,6 +20,7 @@ static void arpeggio_off(audio_generator_state_t *);
 static void set_glissando(audio_generator_state_t *, bool);
 static void silence_after_delay(audio_generator_state_t *, int);
 static void retrigger(audio_generator_state_t *, int);
+static void advance_phase(audio_generator_state_t *, int);
 
 audio_generator_t null_audio_generator(void)
 {
@@ -44,6 +45,7 @@ audio_generator_t null_audio_generator(void)
         .set_glissando = set_glissando,
         .silence_after_delay = silence_after_delay,
         .retrigger = retrigger,
+        .advance_phase = advance_phase,
     };
 }
 
@@ -166,4 +168,10 @@ static void retrigger(audio_generator_state_t *state, int ticks)
 {
     (void) state;
     (void) ticks;
+}
+
+static void advance_phase(audio_generator_state_t *state, int frames)
+{
+    (void) state;
+    (void) frames;
 }
