@@ -34,6 +34,8 @@ typedef enum
     SEQUENCE_JUMP = 0xB,
     SET_VOLUME = 0xC,
     PATTERN_BREAK = 0xD,
+    SET_TEMPO = 0xF,
+    SET_TICKS_PER_SECOND = 0x18,
     FINE_PORTAMENTO_UP = 0xE1,
     FINE_PORTAMENTO_DOWN = 0xE2,
     SET_GLISSANDO_MODE = 0xE3,
@@ -48,8 +50,6 @@ typedef enum
     SILENCE_SAMPLE_AFTER_DELAY = 0xEC,
     DELAY_SAMPLE = 0xED,
     DELAY_NEXT_EVENT = 0xEE,
-    SET_TEMPO = 0xF,
-    SET_TICKS_PER_SECOND = 0xF0,
 } command_t;
 
 typedef struct
