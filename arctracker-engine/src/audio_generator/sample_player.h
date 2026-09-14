@@ -57,6 +57,8 @@ struct sampler_state {
     bool volume_slide_fine;
     int silence_delay;
     int retrigger_delay;
+    bool repeat_cleared;
+    int clear_repeat_delay;
     int volume_modulation;
     pt_arpeggiator_state_t arpeggio;
     lfo_effect_t vibrato;

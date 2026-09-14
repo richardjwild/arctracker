@@ -34,7 +34,7 @@ static const uint8_t STEREO_COMMAND = 0xd;
 static const uint8_t SPEED_COMMAND = 0xf;
 static const uint8_t ARPEGGIOSPEED_COMMAND = 0x10;
 static const uint8_t FINEPORTAMENTO_COMMAND = 0x11;
-// static const uint8_t CLEAREPEAT_COMMAND = 0x12; not implemented yet
+static const uint8_t CLEAREPEAT_COMMAND = 0x12;
 static const uint8_t SETVIBRATOWAVEFORM_COMMAND = 0x14;
 static const uint8_t LOOP_COMMAND = 0x16;
 static const uint8_t SETTREMOLOWAVEFORM_COMMAND = 0x17;
@@ -270,6 +270,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == ARPEGGIOSPEED_COMMAND) return SET_ARPEGGIO_SPEED;
     if (code == FINEPORTAMENTO_COMMAND && (data & 0x80) == 0) return FINE_PORTAMENTO_UP;
     if (code == FINEPORTAMENTO_COMMAND && (data & 0x80) > 0) return FINE_PORTAMENTO_DOWN;
+    if (code == CLEAREPEAT_COMMAND) return CLEAR_REPEAT;
     if (code == SETVIBRATOWAVEFORM_COMMAND) return SET_VIBRATO_WAVEFORM;
     if (code == LOOP_COMMAND) return SET_LOOP;
     if (code == SETTREMOLOWAVEFORM_COMMAND) return SET_TREMOLO_WAVEFORM;

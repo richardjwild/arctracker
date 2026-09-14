@@ -26,6 +26,8 @@ static void set_glissando(audio_generator_state_t *, bool);
 static void silence_after_delay(audio_generator_state_t *, int);
 static void retrigger(audio_generator_state_t *, int);
 static void advance_phase(audio_generator_state_t *, int);
+static void clear_repeat(audio_generator_state_t *, int);
+static void cancel_clear_repeat(audio_generator_state_t *);
 static void tick(audio_generator_state_t *, int, int);
 static void apply_volume_slide(sampler_state_t *);
 static void apply_pitch_slide(sampler_state_t *);
@@ -35,6 +37,7 @@ static void apply_tremolo(sampler_state_t *);
 static void apply_arpeggio(sampler_state_t *, int);
 static void apply_silence_after_delay(sampler_state_t *, int);
 static void apply_retrigger(sampler_state_t *, int);
+static void apply_clear_repeat(sampler_state_t *, int);
 
 audio_generator_t init_sampler(const int note, const player_sample_t *sample, const player_sample_slice_t slice, const uint8_t volume, const float *gain_curve, sampler_state_t *sampler_state)
 {
@@ -54,6 +57,8 @@ audio_generator_t init_sampler(const int note, const player_sample_t *sample, co
     sampler_state->vibrato_period_modulation = 0;
     sampler_state->vibrato = (lfo_effect_t) {0};
     sampler_state->tremolo = (lfo_effect_t) {0};
+    sampler_state->repeat_cleared = false;
+    sampler_state->clear_repeat_delay = 0;
     if (slice.length > 0 && slice.offset < (uint32_t) sample->sample_end)
     {
         sampler_state->phase_accumulator = (float) slice.offset;
@@ -84,6 +89,8 @@ audio_generator_t init_sampler(const int note, const player_sample_t *sample, co
         .silence_after_delay = silence_after_delay,
         .retrigger = retrigger,
         .advance_phase = advance_phase,
+        .clear_repeat = clear_repeat,
+        .cancel_clear_repeat = cancel_clear_repeat,
         .tick = tick,
     };
 }
@@ -107,7 +114,7 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     const float phase_increment = sample->phase_increment_per_period / (float) period;
     const float sample_end = (float) sampler->sample_end;
     const float repeat_length = (float) sample->repeat_length;
-    const bool sample_repeats = sample->sample_repeats;
+    const bool sample_repeats = sample->sample_repeats && !sampler->repeat_cleared;
     float phase_accumulator = sampler->phase_accumulator;
     int offset = 0;
     const float gain = sampler->gain_curve[volume];
@@ -322,6 +329,21 @@ static void advance_phase(audio_generator_state_t *state, const int frames)
     }
 }
 
+static void clear_repeat(audio_generator_state_t *state, int ticks)
+{
+    sampler_state_t *sampler = state->sampler;
+    if (ticks == 0)
+        sampler->repeat_cleared = true;
+    else
+        sampler->clear_repeat_delay = ticks;
+}
+
+static void cancel_clear_repeat(audio_generator_state_t *state)
+{
+    sampler_state_t *sampler = state->sampler;
+    sampler->clear_repeat_delay = 0;
+}
+
 // static void print_state(const sampler_state_t *sampler, const int tick, const int ticks_per_event)
 // {
 //     printf("(%02d/%02d) %s %s %s %s %s %s\n",
@@ -355,6 +377,8 @@ static void tick(audio_generator_state_t *state, const int tick, const int ticks
         apply_silence_after_delay(sampler, tick);
     if (sampler->retrigger_delay != 0)
         apply_retrigger(sampler, tick);
+    if (sampler->clear_repeat_delay != 0)
+        apply_clear_repeat(sampler, tick);
 }
 
 static void apply_volume_slide(sampler_state_t *sampler)
@@ -444,4 +468,13 @@ static void apply_retrigger(sampler_state_t *sampler, const int tick)
 {
     if (tick % sampler->retrigger_delay == 0)
         sampler->phase_accumulator = 0.0f;
+}
+
+static void apply_clear_repeat(sampler_state_t *sampler, const int tick)
+{
+    if (tick == sampler->clear_repeat_delay)
+    {
+        sampler->repeat_cleared = true;
+        sampler->clear_repeat_delay = 0;
+    }
 }

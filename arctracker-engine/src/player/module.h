@@ -37,6 +37,7 @@ typedef enum
     SET_VOLUME = 0xC,
     PATTERN_BREAK = 0xD,
     SET_TEMPO = 0xF,
+    CLEAR_REPEAT = 0x12,
     SET_TICKS_PER_SECOND = 0x18,
     ARPEGGIO = 0xE0,
     FINE_PORTAMENTO_UP = 0xE1,
