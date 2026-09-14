@@ -26,6 +26,10 @@ typedef union {
  * generator effects such as the aforementioned vibrato, tremolo, pitch and volume slides, etc.   *
  * The generator may or may not implement these effects, and if not, it is once again free to do  *
  * nothing when any of these functions are called.                                                *
+ *                                                                                                *
+ * The null audio generator is attached to a channel by default, when no other sound is playing.  *
+ * Its generate_audio function always writes zeros to the channel buffer, and none of its other   *
+ * functions do anything.                                                                         *
  *************************************************************************************************/
 
 typedef struct {
