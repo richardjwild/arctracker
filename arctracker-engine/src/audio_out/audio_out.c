@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdatomic.h>
 #include "audio_out.h"
-#include "../audio_generator/sample_player.h"
 #include "memory/heap.h"
 #include "pcm/mu_law.h"
 
@@ -103,8 +102,8 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     // Generate channel audio.
     //
     audio_generator_t *audio_generator = &channel->audio_generator;
-    const bool still_playing = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
-    if (!still_playing)
+    const bool has_more_audio = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
+    if (!has_more_audio)
     {
         silence_channel(channel);
     }
