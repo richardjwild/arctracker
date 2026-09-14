@@ -44,6 +44,7 @@ static void process_set_glissando_cmd(const event_t *, audio_generator_t *);
 static void process_set_vibrato_waveform_cmd(const event_t *, track_command_state_t *);
 static void process_set_tremolo_waveform_cmd(const event_t *, track_command_state_t *);
 static void process_arpeggio_cmd(const event_t *, const player_instrument_t *, const player_track_t *, audio_generator_t *);
+static void process_set_arpeggio_speed_cmd(const event_t *, track_command_state_t *);
 static void process_retrigger_sample_cmd(const event_t *, audio_generator_t *);
 static void process_silence_after_delay_cmd(const event_t *, audio_generator_t *);
 static void define_loop(player_track_t *, sequence_t *, uint8_t);
@@ -65,6 +66,7 @@ void process_instrument_commands(const event_t *event, const player_instrument_t
     process_set_vibrato_waveform_cmd(event, command_state);
     process_set_tremolo_waveform_cmd(event, command_state);
     process_arpeggio_cmd(event, instrument, track, generator);
+    process_set_arpeggio_speed_cmd(event, command_state);
     process_retrigger_sample_cmd(event, generator);
     process_silence_after_delay_cmd(event, generator);
 }
@@ -283,6 +285,13 @@ static void process_arpeggio_cmd(const event_t *event, const player_instrument_t
     const int interval_2 = effect->data & 0xf;
     const track_command_state_t *command_state = &track->command_state;
     generator->arpeggio_on(&generator->state, root_note + instrument->transpose, interval_1, interval_2, command_state->arpeggio_speed);
+}
+
+static void process_set_arpeggio_speed_cmd(const event_t *event, track_command_state_t *command_state)
+{
+    const effect_t *effect = get_effect(event, SET_ARPEGGIO_SPEED);
+    if (effect == NULL) return;
+    command_state->arpeggio_speed = effect->data;
 }
 
 static void process_retrigger_sample_cmd(const event_t *event, audio_generator_t *generator)
