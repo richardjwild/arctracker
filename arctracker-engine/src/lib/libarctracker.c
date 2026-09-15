@@ -16,6 +16,7 @@
 #include "editor/editor.h"
 #include "loader/format_arctracker.h"
 #include "midi/midi.h"
+#include "player/period.h"
 
 #define SUCCESS (api_result_t) {\
     .success = true,\
@@ -37,6 +38,7 @@ arctracker_init_result_t arctracker_init(void)
 {
     arctracker_t *arctracker = arctracker_create();
     midi_subsystem_t *midi = midi_initialise(arctracker);
+    periods_init(PERIOD_MAX);
     return (arctracker_init_result_t) {
         .arctracker_handle = arctracker,
         .midi_handle = midi,
