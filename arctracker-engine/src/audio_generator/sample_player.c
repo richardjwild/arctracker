@@ -41,7 +41,7 @@ static void apply_clear_repeat(sampler_state_t *, int);
 
 audio_generator_t init_sampler(const int note, const player_sample_t *sample, const player_sample_slice_t slice, const uint8_t volume, const float *gain_curve, sampler_state_t *sampler_state)
 {
-    const int16_t period = period_for_note(note, sample->fine_tuning);
+    const float period = period_for_note(note, sample->fine_tuning);
     memset(sampler_state, 0, sizeof(sampler_state_t));
     sampler_state->sample = sample;
     sampler_state->sample_end = sample->sample_end;
@@ -54,7 +54,7 @@ audio_generator_t init_sampler(const int note, const player_sample_t *sample, co
     sampler_state->gain_curve = gain_curve;
     sampler_state->volume = volume;
     sampler_state->volume_slide_rate = 0;
-    sampler_state->vibrato_period_modulation = 0;
+    sampler_state->vibrato_period_modulation = 0.0f;
     sampler_state->vibrato = (lfo_effect_t) {0};
     sampler_state->tremolo = (lfo_effect_t) {0};
     sampler_state->repeat_cleared = false;
@@ -98,8 +98,8 @@ audio_generator_t init_sampler(const int note, const player_sample_t *sample, co
 static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, int frames_to_write)
 {
     sampler_state_t *sampler = state->sampler;
-    const int period = sampler->period + sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation;
-    if (period <= 0)
+    const float period = sampler->period + sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation;
+    if (period <= 0.0f)
     {
         // Fill the buffer with silence.
         memset(channel_buffer, 0, frames_to_write * sizeof(float));
@@ -187,7 +187,7 @@ static void pitch_slide_on(audio_generator_state_t *state, const int slide_rate,
     sampler->pitch_slide_fine = fine;
     if (sampler->pitch_slide_fine)
     {
-        int new_period = sampler->period + slide_rate;
+        float new_period = sampler->period + (float) slide_rate;
         if (new_period < PERIOD_MIN) new_period = PERIOD_MIN;
         if (new_period > PERIOD_MAX) new_period = PERIOD_MAX;
         sampler->period = new_period;
@@ -393,7 +393,7 @@ static void apply_volume_slide(sampler_state_t *sampler)
 static void apply_pitch_slide(sampler_state_t *sampler)
 {
     if (sampler->pitch_slide_fine) return;
-    int new_period = sampler->period + sampler->pitch_slide_rate;
+    float new_period = sampler->period + (float) sampler->pitch_slide_rate;
     if (new_period < PERIOD_MIN) new_period = PERIOD_MIN;
     if (new_period > PERIOD_MAX) new_period = PERIOD_MAX;
     sampler->period = new_period;
@@ -401,7 +401,7 @@ static void apply_pitch_slide(sampler_state_t *sampler)
 
 static void apply_tone_portamento(sampler_state_t *sampler)
 {
-    const int slide_rate = sampler->tone_portamento_slide_rate;
+    const float slide_rate = (float) sampler->tone_portamento_slide_rate;
     if (sampler->period < sampler->tone_portamento_target_period)
     {
         sampler->period += slide_rate;
@@ -422,7 +422,7 @@ static void apply_tone_portamento(sampler_state_t *sampler)
     }
     if (sampler->glissando_on)
     {
-        const int snapped_period = nearest_note_period(sampler->period, sampler->sample->fine_tuning);
+        const float snapped_period = nearest_note_period(sampler->period, sampler->sample->fine_tuning);
         sampler->vibrato_period_modulation = snapped_period - sampler->period;
     }
     else
@@ -437,7 +437,7 @@ static void apply_vibrato(sampler_state_t *sampler)
     const uint8_t depth = sampler->vibrato.depth;
     const float lfo_value = lfo_pt_waveform(sampler->vibrato.waveform, sampler->vibrato.phase);
     const float period_modulation = lfo_value * (float) depth * 2.0f;
-    sampler->vibrato_period_modulation = (int) period_modulation;
+    sampler->vibrato_period_modulation = period_modulation;
     sampler->vibrato.phase = (sampler->vibrato.phase + rate) % PT_LFO_WAVELENGTH;
 }
 
