@@ -305,7 +305,12 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
         if (!convert_vidc_encoded_sample(sample_data, sample_data_mu_law, sample->sample_length))
             return false;
         sample->sample_data = sample_data;
-        sample->sample_rate = 8287.14f;
+        //
+        // TODO:
+        // I believe this sample rate (usually 8400) is stored in the file_sample.period field
+        // but I do not yet know how it's encoded. Usually it has the value 0x1DC30C.
+        //
+        sample->sample_rate = 8400.0f;
         sample->base_note = 24;
         sample->finetune = 0;
         if (sample->sample_length > 0)
