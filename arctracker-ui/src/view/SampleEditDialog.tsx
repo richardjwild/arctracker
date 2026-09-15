@@ -37,7 +37,7 @@ export default function SampleEditDialog() {
 
   const syncInputStateWithDraft = () => {
     setInputState({
-      transpose: (draftInstrument.transpose - 13).toString(),
+      transpose: (draftInstrument.transpose).toString(),
       repeatStart: draftInstrument.repeatOffset.toString(),
       repeatEnd: (
         draftInstrument.repeatOffset + draftInstrument.repeatLength
@@ -64,7 +64,7 @@ export default function SampleEditDialog() {
   const validateTranspose = () => {
     const transpose = Number(inputState.transpose);
     if (Number.isInteger(transpose) && transpose >= -12 && transpose <= 12) {
-      setDraftInstrument({ ...draftInstrument, transpose: transpose + 13 });
+      setDraftInstrument({ ...draftInstrument, transpose });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(message("invalidTranspose"));

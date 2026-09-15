@@ -51,6 +51,7 @@ export default function KeyboardOctave() {
     (state) => state.pianoKeyboardTranspose,
   );
   const currentOctave = pianoKeyboardTranspose / 12;
+  console.log('pianoKeyboardTranspose', pianoKeyboardTranspose, 'currentOctave', currentOctave);
   const whiteKeySelectedColor = cssProperty(
     "--colour-piano-key-white-selected",
   );

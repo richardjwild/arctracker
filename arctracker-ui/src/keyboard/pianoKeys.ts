@@ -47,6 +47,7 @@ export const pianoKeyHandler: { handleRealtimePianoInput: KeyHandler } = {
     if (!patternEvents.editing() || cursorField.field === "note") {
       const pianoKey = noteFromKeyboard(e);
       if (pianoKey !== null) {
+        console.log('pianoKey', pianoKey);
         engine.noteOn(pianoKey);
         commands.editNoteField(pianoKey);
         return true;

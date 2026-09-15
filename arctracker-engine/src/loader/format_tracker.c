@@ -242,7 +242,8 @@ static size_t decode_tracker_event(const uint8_t *event_p, event_t *decoded)
 {
     const uint32_t *raw = (uint32_t *) event_p;
     decoded->instrument_no = MASK_8_SHIFT_RIGHT(*raw, 16);
-    decoded->note = MASK_8_SHIFT_RIGHT(*raw, 24);
+    const int note = MASK_8_SHIFT_RIGHT(*raw, 24);
+    decoded->note = note == 0 ? 0 : note + 12;
     decoded->effects[0] = effect(MASK_8_SHIFT_RIGHT(*raw, 8), MASK_8_SHIFT_RIGHT(*raw, 0));
     for (int i = 1; i <= 3; i++)
     {
@@ -390,7 +391,7 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
 
     // Transpose all notes up an octave when playing a Tracker module
     // because Desktop Tracker has 5 octaves compared to Tracker's 3.
-    instrument->transpose = 12;
+    instrument->transpose = 0;
 
     return true;
 

@@ -191,7 +191,8 @@ static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *deco
 {
     const uint32_t *raw = (uint32_t *) event_p;
     decoded->instrument_no = MASK_6_SHIFT_RIGHT(*raw, 0);
-    decoded->note = MASK_6_SHIFT_RIGHT(*raw, 6);
+    const int note = MASK_6_SHIFT_RIGHT(*raw, 6);
+    decoded->note = note == 0 ? 0 : note + 12;
     if (IS_MULTIPLE_EFFECT(*raw))
     {
         decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*(raw + 1), 0));
@@ -312,7 +313,7 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
             instrument->assigned = true;
             strncpy(instrument->name, file_sample.name, MAX_LEN_SAMPLENAME_DSKT);
             instrument->sample_index = i;
-            instrument->transpose = 26 - file_sample.note;
+            instrument->transpose = 13 - file_sample.note;
             instrument->default_volume = file_sample.volume * 2;
         }
         else
