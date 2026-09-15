@@ -6,6 +6,7 @@
 
 typedef struct {
     bool looping;
+    bool commanded_by_ui;
     int loop_sequence_pos;
     int loop_pattern_start;
     int loop_pattern_end;
@@ -38,7 +39,7 @@ void set_jump_target(int next_position, int jump_pattern_index, sequence_t *sequ
 
 void set_pattern_loop(sequence_t *);
 
-void set_loop(sequence_t *, int, int);
+void set_loop(sequence_t *, int, int, bool);
 
 void clear_pattern_loop(sequence_t *);
 

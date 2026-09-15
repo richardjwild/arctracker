@@ -26,6 +26,10 @@ typedef union {
  * generator effects such as the aforementioned vibrato, tremolo, pitch and volume slides, etc.   *
  * The generator may or may not implement these effects, and if not, it is once again free to do  *
  * nothing when any of these functions are called.                                                *
+ *                                                                                                *
+ * The null audio generator is attached to a channel by default, when no other sound is playing.  *
+ * Its generate_audio function always writes zeros to the channel buffer, and none of its other   *
+ * functions do anything.                                                                         *
  *************************************************************************************************/
 
 typedef struct {
@@ -49,6 +53,11 @@ typedef struct {
     void (*set_glissando)(audio_generator_state_t *state, bool enabled);
     void (*silence_after_delay)(audio_generator_state_t *state, int ticks);
     void (*retrigger)(audio_generator_state_t *state, int ticks);
+    void (*advance_phase)(audio_generator_state_t *state, int frames);
+    void (*clear_repeat)(audio_generator_state_t *state, int ticks);
+    void (*cancel_clear_repeat)(audio_generator_state_t *state);
 } audio_generator_t;
+
+audio_generator_t null_audio_generator(void);
 
 #endif //ARCTRACKER_ENGINE_AUDIO_GENERATOR_H

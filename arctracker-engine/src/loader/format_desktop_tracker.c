@@ -6,13 +6,6 @@
 #include "pcm/mu_law.h"
 #include "io/error.h"
 
-// As you can see, about half of the effects are left unimplemented. Neither
-// is the sample sustain feature. I could in principle have a stab at doing
-// some of them, but I do not posses any modfiles that make use of these
-// features so I have no means to test them properly. Therefore I have elected
-// not to implement them, unless I should ever come into possession of some
-// modfiles that could serve as an acceptance test, which seems quite unlikely.
-
 #define MAX_LEN_TUNENAME_DSKT 64
 #define MAX_LEN_AUTHOR_DSKT 64
 #define MAX_LEN_SAMPLENAME_DSKT 32
@@ -29,30 +22,29 @@ static const uint8_t PORTDOWN_COMMAND = 0x2;
 static const uint8_t TONEPORT_COMMAND = 0x3;
 static const uint8_t VIBRATO_COMMAND = 0x4;
 // static const uint8_t DELAYEDNOTE_COMMAND = 0x5; not implemented yet
-// static const uint8_t RELEASESAMP_COMMAND = 0x6; not implemented yet
+static const uint8_t RELEASESAMP_COMMAND = 0x6;
 static const uint8_t TREMOLO_COMMAND = 0x7;
-// static const uint8_t PHASOR_COMMAND1 = 0x8; not implemented yet
-// static const uint8_t PHASOR_COMMAND2 = 0x9; not implemented yet
+static const uint8_t PHASOR_COMMAND2 = 0x8;
+static const uint8_t PHASOR_COMMAND1 = 0x9;
 static const uint8_t VOLSLIDE_COMMAND = 0xa;
 static const uint8_t JUMP_COMMAND = 0xb;
 static const uint8_t VOLUME_COMMAND = 0xc;
 static const uint8_t STEREO_COMMAND = 0xd;
 // static const uint8_t STEREOSLIDE_COMMAND = 0xe; not implemented yet
 static const uint8_t SPEED_COMMAND = 0xf;
-// static const uint8_t ARPEGGIOSPEED_COMMAND = 0x10; not implemented yet
-// static const uint8_t FINEPORTAMENTO_COMMAND = 0x11; semantics need confirming
-// static const uint8_t CLEAREPEAT_COMMAND = 0x12; not implemented yet
-// static const uint8_t SETVIBRATOWAVEFORM_COMMAND = 0x14; semantics need confirming
-// static const uint8_t LOOP_COMMAND = 0x16; not implemented yet
-// static const uint8_t SETTREMOLOWAVEFORM_COMMAND = 0x17; semantics need confirming
+static const uint8_t ARPEGGIOSPEED_COMMAND = 0x10;
+static const uint8_t FINEPORTAMENTO_COMMAND = 0x11;
+static const uint8_t CLEAREPEAT_COMMAND = 0x12;
+static const uint8_t SETVIBRATOWAVEFORM_COMMAND = 0x14;
+static const uint8_t LOOP_COMMAND = 0x16;
+static const uint8_t SETTREMOLOWAVEFORM_COMMAND = 0x17;
 static const uint8_t SETFINETEMPO_COMMAND = 0x18;
-// static const uint8_t RETRIGGERSAMPLE_COMMAND = 0x19; not implemented yet
+static const uint8_t RETRIGGERSAMPLE_COMMAND = 0x19;
 static const uint8_t FINEVOLSLIDE_COMMAND = 0x1a;
 // static const uint8_t HOLD_COMMAND = 0x1b; not implemented yet
-// static const uint8_t NOTECUT_COMMAND = 0x1c; semantics need confirming
-// static const uint8_t NOTEDELAY_COMMAND = 0x1d; not implemented yet
-// static const uint8_t PATTERNDELAY_COMMAND = 0x1e; semantics need confirming
-// static const uint8_t CALLLINKEDCODE_COMMAND = 0x1f; not implemented yet
+static const uint8_t NOTECUT_COMMAND = 0x1c;
+static const uint8_t NOTEDELAY_COMMAND = 0x1d;
+static const uint8_t PATTERNDELAY_COMMAND = 0x1e;
 
 typedef struct
 {
@@ -232,12 +224,27 @@ static effect_t effect(const uint8_t code, const uint8_t data)
         const int amount = (256 - data) * 2;
         effect_data = amount > UINT8_MAX ? UINT8_MAX : amount;
     }
+    if (code == FINE_PORTAMENTO_DOWN)
+    {
+        effect_data = 256 - data;
+    }
     if (command == SET_PANNING)
     {
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
     }
-    // TODO: Find out whether Desktop Tracker uses the pattern break data or not.
+    if (command == USE_SAMPLE_SLICE)
+    {
+        // TODO:
+        // If the effect is in one of slots 0-2 and the effect in the following slot is non-zero,
+        // use the effect in the following slot and its data as part of the sample slice offset.
+    }
+    if (command == DELAY_NEXT_EVENT)
+    {
+        // TODO:
+        // Find out whether command 0x1E really delays the next pattern, as it says in the manual,
+        // or whether it actually works the same way as the Protracker EEy command (as I suspect).
+    }
     return (effect_t) {
         .data = effect_data,
         .command = command,
@@ -246,20 +253,35 @@ static effect_t effect(const uint8_t code, const uint8_t data)
 
 static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
 {
-    if (code == VOLUME_COMMAND) return SET_VOLUME;
-    if (code == SPEED_COMMAND) return SET_TEMPO;
-    if (code == STEREO_COMMAND) return SET_PANNING;
-    if (code == VOLSLIDE_COMMAND) return VOLUME_SLIDE;
+    if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;
     if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
     if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
     if (code == TONEPORT_COMMAND) return PORTAMENTO;
     if (code == VIBRATO_COMMAND) return VIBRATO;
+    if (code == RELEASESAMP_COMMAND) return USE_SAMPLE_SLICE;
     if (code == TREMOLO_COMMAND) return TREMOLO;
+    if (code == PHASOR_COMMAND2) return FINE_ADVANCE_PHASE;
+    if (code == PHASOR_COMMAND1) return ADVANCE_PHASE;
+    if (code == VOLSLIDE_COMMAND) return VOLUME_SLIDE;
     if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
+    if (code == VOLUME_COMMAND) return SET_VOLUME;
+    if (code == STEREO_COMMAND) return SET_PANNING;
+    if (code == SPEED_COMMAND) return SET_TEMPO;
+    if (code == ARPEGGIOSPEED_COMMAND) return SET_ARPEGGIO_SPEED;
+    if (code == FINEPORTAMENTO_COMMAND && (data & 0x80) == 0) return FINE_PORTAMENTO_UP;
+    if (code == FINEPORTAMENTO_COMMAND && (data & 0x80) > 0) return FINE_PORTAMENTO_DOWN;
+    if (code == CLEAREPEAT_COMMAND) return CLEAR_REPEAT;
+    if (code == SETVIBRATOWAVEFORM_COMMAND) return SET_VIBRATO_WAVEFORM;
+    if (code == LOOP_COMMAND) return SET_LOOP;
+    if (code == SETTREMOLOWAVEFORM_COMMAND) return SET_TREMOLO_WAVEFORM;
     if (code == SETFINETEMPO_COMMAND) return SET_TICKS_PER_SECOND;
+    if (code == RETRIGGERSAMPLE_COMMAND) return RETRIGGER_SAMPLE;
     if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) == 0) return FINE_CRESCENDO;
     if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) > 0) return FINE_DECRESCENDO;
-    if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    if (code == NOTECUT_COMMAND) return SILENCE_SAMPLE_AFTER_DELAY;
+    if (code == NOTEDELAY_COMMAND) return DELAY_SAMPLE;
+    if (code == PATTERNDELAY_COMMAND) return DELAY_NEXT_EVENT;
+    // command 0x1F (call linked code) is unimplementable.
     return NO_EFFECT;
 }
 
