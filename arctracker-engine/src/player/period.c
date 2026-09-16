@@ -1,36 +1,37 @@
 #include "period.h"
 #include <math.h>
-#include <stdlib.h>
 #include "io/error.h"
 
-static const float periods[] = {
-    1712, 1616, 1525, 1440, 1357, 1281, 1209, 1141, 1077, 1017,  961,  907,
-     856,  808,  762,  720,  678,  640,  604,  570,  538,  508,  480,  453,
-     428,  404,  381,  360,  339,  320,  302,  285,  269,  254,  240,  226,
-     214,  202,  190,  180,  170,  160,  151,  143,  135,  127,  120,  113,
-     107,  101,   95,   90,   85,   80,   76,   71,   67,   64,   60,   57,
-      53,   50,
-};
+static float periods[1 + HIGHEST_NOTE - LOWEST_NOTE];
+
+void periods_init(const double base_period)
+{
+    for (int i = LOWEST_NOTE; i <= HIGHEST_NOTE; i++)
+    {
+        const double period = base_period / pow(2.0, (double) i / 12.0);
+        periods[i] = (float) period;
+    }
+}
 
 bool note_out_of_range(const int note)
 {
     return note < LOWEST_NOTE || note > HIGHEST_NOTE;
 }
 
-int16_t period_for_note(const int note, const double fine_tuning)
+float period_for_note(const int note, const double fine_tuning)
 {
     if (note_out_of_range(note)) return 0;
-    return (int16_t) lround(periods[note] * fine_tuning);
+    return periods[note] * (float) fine_tuning;
 }
 
-int nearest_note_period(const int period, const double fine_tuning)
+float nearest_note_period(const float period, const double fine_tuning)
 {
-    int nearest_period = period_for_note(LOWEST_NOTE, fine_tuning);
-    int nearest_distance = abs(period - nearest_period);
+    float nearest_period = period_for_note(LOWEST_NOTE, fine_tuning);
+    float nearest_distance = fabsf(period - nearest_period);
     for (int note = LOWEST_NOTE + 1; note <= HIGHEST_NOTE; note++)
     {
-        const int candidate = period_for_note(note, fine_tuning);
-        const int distance = abs(period - candidate);
+        const float candidate = period_for_note(note, fine_tuning);
+        const float distance = fabsf(period - candidate);
         if (distance < nearest_distance)
         {
             nearest_period = candidate;

@@ -726,7 +726,7 @@ static int mod_period_to_arctracker_note(uint16_t period)
         }
     }
 
-    return 1 + (int)closest;
+    return 1 + (int)closest + 12; // Up an octave because Arctracker goes down to period 1712.
 }
 
 
@@ -1157,7 +1157,7 @@ static bool load_samples(
         instrument->default_volume =
             scale_mod_volume(mod_volume);
 
-        instrument->transpose = 12;
+        instrument->transpose = 0;
         instrument->sample_index = sample_no;
 
         /*

@@ -33,7 +33,7 @@ typedef struct {
     int bottom_note;
     int interval_1;
     int interval_2;
-    int16_t chord[3];
+    float chord[3];
     int counter;
     int speed;
 } pt_arpeggiator_state_t;
@@ -43,14 +43,14 @@ struct sampler_state {
     int sample_end;
     interpolation_type_t interpolation_type;
     float phase_accumulator;
-    int period;
-    int vibrato_period_modulation;
-    int arpeggio_period_modulation;
+    float period;
+    float vibrato_period_modulation;
+    float arpeggio_period_modulation;
     bool glissando_on;
     int pitch_slide_rate;
     bool pitch_slide_fine;
     bool tone_portamento_on;
-    int tone_portamento_target_period;
+    float tone_portamento_target_period;
     int tone_portamento_slide_rate;
     uint8_t volume;
     int volume_slide_rate;
