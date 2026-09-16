@@ -4,6 +4,7 @@
 #include "pcm/mu_law.h"
 #include "memory/heap.h"
 #include "memory/bits.h"
+#include "player/period.h"
 
 uint8_t *CHUNK_NOT_FOUND = NULL;
 sample_t *get_sample_info_failed = NULL;
@@ -56,8 +57,10 @@ static uint8_t *search_tff(uint8_t *, long, const char *);
 static bool decode_patterns(uint8_t *, long, module_t *, const int *);
 static size_t decode_tracker_event(const uint8_t *, event_t *);
 static effect_t effect(uint8_t code, uint8_t);
-static int get_samples(void *, long, sample_t *, instrument_t *);
-static bool get_sample_info(void *, long, sample_t *, instrument_t *);
+static int get_samples(void *, long, sample_t *, instrument_t *, int);
+static bool get_sample_info(void *, long, sample_t *, instrument_t *, int);
+static float calculate_sample_rate(int, int);
+static float assumed_sample_period(int);
 static void copy_int_array(uint8_t *, int *, int);
 
 format_t tracker_format(void)
@@ -160,7 +163,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     copy_int_array(chunk_address + 8, module->sequence, module->sequence_length);
     if (!decode_patterns(file.addr, array_end, module, pattern_lengths))
         goto fail;
-    module->sample_slots = get_samples(file.addr, array_end, module->samples, module->instruments);
+    module->sample_slots = get_samples(file.addr, array_end, module->samples, module->instruments, module->num_tracks);
     if (module->sample_slots == 0)
         goto fail;
     destroy_encoding_buffer();
@@ -278,7 +281,7 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     };
 }
 
-static int get_samples(void *array_start, long array_end, sample_t *samples, instrument_t *instrument_slots)
+static int get_samples(void *array_start, long array_end, sample_t *samples, instrument_t *instrument_slots, const int num_tracks)
 {
     int sample_index = 0;
     int slot = 0;
@@ -288,7 +291,7 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, ins
     {
         sample_t *sample = &samples[sample_index];
         instrument_t *instrument = &instrument_slots[slot];
-        if (!get_sample_info(chunk_address, array_end, sample, instrument))
+        if (!get_sample_info(chunk_address, array_end, sample, instrument, num_tracks))
         {
             snprintf(error_message, 256, "Modfile corrupt - sample %d invalid", sample_index);
             error(error_message);
@@ -310,7 +313,7 @@ static int get_samples(void *array_start, long array_end, sample_t *samples, ins
     return sample_index;
 }
 
-static bool get_sample_info(void *array_start, const long array_end, sample_t *sample, instrument_t *instrument)
+static bool get_sample_info(void *array_start, const long array_end, sample_t *sample, instrument_t *instrument, const int num_tracks)
 {
     uint8_t *chunk_address;
 
@@ -385,10 +388,10 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
         }
         sample->sample_data = sample_data;
         //
-        // TODO: This sample rate has been tuned by ear. Find the correct value more scientifically.
+        // The sample base note is chosen as C2 for convenience, but it could be any playable note.
         //
-        sample->sample_rate = 8190.0f;
         sample->base_note = 24;
+        sample->sample_rate = calculate_sample_rate(num_tracks, sample->base_note);
         sample->finetune = 0;
     }
     instrument->transpose = 0;
@@ -397,6 +400,43 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
 
 get_sample_info_failed:
     return false;
+}
+
+static float calculate_sample_rate(const int channels, const int base_note)
+{
+    // Internally Arctracker uses this to calculate the phase increment per period:
+    //   const float base_period = period_for_note(sample.base_note, ft);
+    //   const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
+    // We need to calculate a sample rate that can be plugged into that calculation and give the correct playback pitch.
+    const float sample_period_assumed = assumed_sample_period(channels);
+    const float sample_period_playback = channels < 4 ? 34.0f : 32.0f;
+    // The Tracker play routine uses this formula to calculate the phase increment per period:
+    //   phase increment per period (calculated) = 60000 * 3575872 * sample_period_assumed / 1000000
+    // However, the music is actually played back at a different rate whose increment is given by:
+    //   65536 * 3575872 * sample_period_playback / 1000000
+    // Therefore, for a given base period of:
+    const float base_period = period_for_note(base_note, 1.0f);
+    // the sample rate we need is:
+    return 60000.0f * 3575872.0f * sample_period_assumed / (65536.0f * base_period * sample_period_playback);
+}
+
+static float assumed_sample_period(const int channels)
+{
+    // I don't know why the Tracker play routine assumes these periods in its phase increment calculation.
+    // Fortunately, we don't need to know the reason for calculating the correct playback pitch. It merely is.
+    switch (channels)
+    {
+        case 1:
+            /* fallthrough */
+        case 2:
+            return 37.0f;
+        case 3:
+            /* fallthrough */
+        case 4:
+            return 34.0f;
+        default:
+            return 26.0f;
+    }
 }
 
 static void copy_int_array(uint8_t *dest, int *source, int num_elements)
