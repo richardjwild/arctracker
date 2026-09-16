@@ -391,9 +391,6 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
         sample->base_note = 24;
         sample->finetune = 0;
     }
-
-    // Transpose all notes up an octave when playing a Tracker module
-    // because Desktop Tracker has 5 octaves compared to Tracker's 3.
     instrument->transpose = 0;
 
     return true;
