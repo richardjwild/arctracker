@@ -405,9 +405,9 @@ get_sample_info_failed:
 static float calculate_sample_rate(const int channels, const int base_note)
 {
     // Internally Arctracker uses this to calculate the phase increment per period:
-    //   const float base_period = period_for_note(sample.base_note, ft);
-    //   const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
-    // We need to calculate a sample rate that can be plugged into that calculation and give the correct playback pitch.
+    //   given: base period = period_for_note(sample base note, fine tuning);
+    //   phase increment per period = recorded sample rate * base period / output sample rate;
+    // We will calculate a recorded sample rate to plug into that formula which gives the correct playback pitch.
     const float sample_period_assumed = assumed_sample_period(channels);
     const float sample_period_playback = channels < 4 ? 34.0f : 32.0f;
     // The Tracker play routine uses this formula to calculate the phase increment per period:
