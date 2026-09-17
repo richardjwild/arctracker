@@ -1,8 +1,8 @@
 #include "mu_law.h"
+#include <assert.h>
 #include "memory/heap.h"
 
 const int BIAS = 0x84;
-const unsigned int SIGN_BIT = 0x80;
 const unsigned int QUANTIZATION_BITS_MASK = 0xf;
 const unsigned int SEGMENT_NUMBER_MASK = 0x70;
 const float EXPANDED_MAX = 32124.0f;
@@ -10,25 +10,14 @@ const float EXPANDED_MAX = 32124.0f;
 static float *encoding = NULL;
 
 static void calculate_vidc_encoding(void);
-
-float mu_law_to_linear(const int8_t mu_law)
-{
-    const int normal_mu_law = ~mu_law;
-    const int biased_quantization_bits = ((normal_mu_law & QUANTIZATION_BITS_MASK) << 3) + BIAS;
-    const unsigned int segment_number = ((unsigned) normal_mu_law & SEGMENT_NUMBER_MASK) >> 4;
-    const int linear = normal_mu_law & SIGN_BIT
-            ? (BIAS - (biased_quantization_bits << segment_number))
-            : ((biased_quantization_bits << segment_number) - BIAS);
-    return linear / EXPANDED_MAX;
-}
+static float mu_law_to_linear(int);
 
 bool convert_vidc_encoded_sample(float *linear, const uint8_t *vidc_encoded_sample, const int no_samples)
 {
     if (encoding == NULL)
     {
         encoding = allocate_array(MODULE, 256, sizeof(float));
-        if (encoding == NULL)
-            return false;
+        if (encoding == NULL) return false;
         calculate_vidc_encoding();
     }
     for (int i = 0; i < no_samples; i++)
@@ -47,8 +36,18 @@ static void calculate_vidc_encoding(void)
     for (int i = 0; i <= 127; i++)
     {
         encoding[i * 2] = mu_law_to_linear(127 - i);
-        encoding[(i * 2) + 1] = mu_law_to_linear(127 - i) * -1;
+        encoding[i * 2 + 1] = mu_law_to_linear(127 - i) * -1;
     }
+}
+
+static float mu_law_to_linear(const int mu_law)
+{
+    assert(mu_law >= 0 && mu_law <= 127);
+    const int normal_mu_law = ~mu_law;
+    const int biased_quantization_bits = (int) ((normal_mu_law & QUANTIZATION_BITS_MASK) << 3) + BIAS;
+    const unsigned int segment_number = ((unsigned) normal_mu_law & SEGMENT_NUMBER_MASK) >> 4;
+    const int linear = (biased_quantization_bits << segment_number) - BIAS;
+    return (float) linear / EXPANDED_MAX;
 }
 
 void destroy_encoding_buffer(void)
