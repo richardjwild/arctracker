@@ -1,6 +1,5 @@
 #include <string.h>
 #include <stdatomic.h>
-#include <stdio.h>
 #include "audio_out.h"
 
 #include <math.h>
@@ -40,15 +39,16 @@ static void calculate_gain_curve(float *gain_curve, const volume_mapping_type_t 
 {
     if (volume_mapping == VOLUME_AMIGA)
     {
-        for (int i = 0; i <= 255; i++)
-            gain_curve[i] = (float) i / 255;
+        for (int vol = 0; vol <= 255; vol++)
+            gain_curve[vol] = (float) vol / 255.0f;
     }
     else
     {
         gain_curve[0] = 0.0f;
-        for (int i = 1; i <= 255; i++)
+        for (int vol = 1; vol <= 255; vol++)
         {
-            gain_curve[i] = (powf(256.0f, (float) i / 255.0f) - 1.0f) / 255.0f;
+            const float exponent = (float) vol / 255.0f;
+            gain_curve[vol] = (powf(256.0f, exponent) - 1.0f) / 255.0f;
         }
     }
 }
