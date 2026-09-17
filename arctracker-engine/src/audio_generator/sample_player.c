@@ -41,6 +41,10 @@ static void apply_clear_repeat(sampler_state_t *, int);
 
 audio_generator_t init_sampler(const int note, const player_sample_t *sample, const player_sample_slice_t slice, const uint8_t volume, const float *gain_curve, sampler_state_t *sampler_state)
 {
+    if (note_out_of_range(note))
+    {
+        return null_audio_generator();
+    }
     const float period = period_for_note(note, sample->fine_tuning);
     memset(sampler_state, 0, sizeof(sampler_state_t));
     sampler_state->sample = sample;

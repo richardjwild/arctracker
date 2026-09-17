@@ -1,4 +1,5 @@
 #include "period.h"
+#include <assert.h>
 #include <math.h>
 #include "io/error.h"
 
@@ -20,7 +21,7 @@ bool note_out_of_range(const int note)
 
 float period_for_note(const int note, const double fine_tuning)
 {
-    if (note_out_of_range(note)) return 0;
+    assert(!note_out_of_range(note));
     return periods[note] * (float) fine_tuning;
 }
 

@@ -100,12 +100,12 @@ void player_update_instruments(player_t *player)
     for (int i = 0; i < 256; i++)
     {
         const instrument_t instrument = module->instruments[i];
-        player->instruments[i].assigned = instrument.assigned;
+        const sample_t sample = module->samples[instrument.sample_index];
+        player->instruments[i].assigned = instrument.assigned || note_out_of_range(sample.base_note);
         if (!instrument.assigned) continue;
         player->instruments[i].transpose = instrument.transpose;
         player->instruments[i].default_volume = instrument.default_volume;
         player->instruments[i].gain_curve = player->audio_out.gain_curve;
-        const sample_t sample = module->samples[instrument.sample_index];
         const double ft = fine_tuning[sample.finetune + 128];
         const float base_period = period_for_note(sample.base_note, ft);
         const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
