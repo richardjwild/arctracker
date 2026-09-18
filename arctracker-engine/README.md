@@ -29,5 +29,5 @@ Note there is no bounds checking on the sequence. If you attempt to seek backwar
 
 To export a module as a WAV file, run:
 ```
-<build dir>/arctracker-console --output-file=<path to WAV output> <path to modfile>
+<build dir>/arctracker-console --output=<path to WAV output> <path to modfile>
 ```
