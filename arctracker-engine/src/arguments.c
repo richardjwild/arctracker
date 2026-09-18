@@ -17,7 +17,6 @@ static const char *USAGE_MESSAGE =
         "Options are:\n"
         "\n"
         "\t-h or --help\n"
-        "\t-c or --clip-warn\n"
         "\t-o<output file> or --output=<output file>\n"
         "\nArctracker version: " VERSION "\n"
         "\n";
