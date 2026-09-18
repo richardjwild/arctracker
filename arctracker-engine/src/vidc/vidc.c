@@ -25,7 +25,7 @@ static float mu_law_to_linear(const int mu_law)
     // G.711 mu-law decoder. The sign is not handled here: G.711 normally uses bit 7 for sign, whereas VIDC uses
     // bit 0, which has already been removed and handled by the caller.
     //
-    // The magnitude is complemented before interpreting it as:
+    // The mu-law magnitude is interpreted as:
     //   0EEEMMMM
     // where:
     //   EEE  is the exponent (segment/chord number)
