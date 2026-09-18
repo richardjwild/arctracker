@@ -322,14 +322,12 @@ static void advance_phase(audio_generator_state_t *state, const int frames)
     if ((int) sampler->phase_accumulator + frames < sampler->sample_end)
     {
         sampler->phase_accumulator += (float) frames;
-        printf("%f\n", sampler->phase_accumulator);
     }
     else if (sampler->sample->sample_repeats)
     {
         sampler->phase_accumulator += (float) frames;
         while ((int) sampler->phase_accumulator >= sampler->sample_end)
             sampler->phase_accumulator -= (float) sampler->sample->repeat_length;
-        printf("%f\n", sampler->phase_accumulator);
     }
 }
 
