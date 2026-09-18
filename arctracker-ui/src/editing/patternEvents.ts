@@ -38,11 +38,9 @@ export type EventLocation = {
 async function buildEventEditCommand({
   eventLocation,
   buildEvent,
-  postApply,
 }: {
   eventLocation: EventLocation | null;
   buildEvent: (before: PatternEvent) => PatternEvent;
-  postApply?: () => void;
 }): Promise<EditCommand> {
   const { sequence } = useStore.getState();
   const { sequencePosition } = useStore.getState().editorState;
@@ -60,7 +58,7 @@ async function buildEventEditCommand({
     );
     const updatedEvent = buildEvent(currentEvent);
     return {
-      apply: async (redoing: boolean) => {
+      apply: async () => {
         if (!eventsEqual(currentEvent, updatedEvent)) {
           await engine.setEvent(
             location.patternNo,
@@ -69,7 +67,6 @@ async function buildEventEditCommand({
             updatedEvent,
           );
           useStore.getState().patternRevised();
-          if (postApply && !redoing) postApply();
           return true;
         }
         return false;
@@ -182,9 +179,9 @@ export const patternEvents = {
           sampleNo: selectedSample + 1,
         };
       },
-      postApply: () => patternGrid.moveDown(true),
     });
     await editor.applyEdit(command);
+    patternGrid.moveDown(true);
   },
 
   setEventSample: async (field: CursorField, value: string) => {
