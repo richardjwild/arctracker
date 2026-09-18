@@ -1,7 +1,7 @@
 #include "format_tracker.h"
 #include <string.h>
 #include "io/error.h"
-#include "pcm/mu_law.h"
+#include "src/vidc/vidc.h"
 #include "memory/heap.h"
 #include "memory/bits.h"
 #include "player/period.h"
@@ -166,7 +166,6 @@ static module_t *read_tracker_module(mapped_file_t file)
     module->sample_slots = get_samples(file.addr, array_end, module->samples, module->instruments, module->num_tracks);
     if (module->sample_slots == 0)
         goto fail;
-    destroy_encoding_buffer();
     deallocate(MODULE, pattern_lengths);
     return module;
 fail:
@@ -174,7 +173,6 @@ fail:
         module_destroy(module);
     if (pattern_lengths != NULL)
         deallocate(MODULE, pattern_lengths);
-    destroy_encoding_buffer();
     return NULL;
 }
 
@@ -376,10 +374,10 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
     else
     {
         float *sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
-        if (!convert_vidc_encoded_sample(sample_data, sample_data_mu_law, sample->sample_length))
+        if (sample_data == NULL) goto get_sample_info_failed;
+        for (int i = 0; i < sample->sample_length; i++)
         {
-            fprintf(stderr, "Failed to convert sample data\n");
-            goto get_sample_info_failed;
+            sample_data[i] = vidc_to_linear(sample_data_mu_law[i]);
         }
         instrument->repeats = instrument->repeat_offset != 0 || instrument->repeat_length != 2;
         if (instrument->repeats) {

@@ -3,7 +3,7 @@
 #include "loader.h"
 #include "memory/bits.h"
 #include "memory/heap.h"
-#include "pcm/mu_law.h"
+#include "src/vidc/vidc.h"
 #include "io/error.h"
 
 #define MAX_LEN_TUNENAME_DSKT 64
@@ -148,7 +148,6 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     uint8_t *samples_start = pattern_lengths_start + ALIGN_TO_WORD(module->num_patterns);
     if (!get_samples(module, (dtt_sample_format_t *) samples_start, file.addr))
         goto fail;
-    destroy_encoding_buffer();
     deallocate(MODULE, pattern_lengths);
     return module;
 
@@ -157,7 +156,6 @@ fail:
         module_destroy(module);
     if (pattern_lengths != NULL)
         deallocate(MODULE, pattern_lengths);
-    destroy_encoding_buffer();
     return NULL;
 }
 
@@ -302,8 +300,11 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
         instrument->repeats = (instrument->repeat_length != 0);
         const uint8_t *sample_data_mu_law = base_address + file_sample.sample_data_offset;
         float *sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
-        if (!convert_vidc_encoded_sample(sample_data, sample_data_mu_law, sample->sample_length))
-            return false;
+        if (sample_data == NULL) return false;
+        for (int s = 0; s < sample->sample_length; s++)
+        {
+            sample_data[s] = vidc_to_linear(sample_data_mu_law[s]);
+        }
         sample->sample_data = sample_data;
         //
         // TODO:
