@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdatomic.h>
 #include "audio_out.h"
+
+#include <math.h>
+
 #include "memory/heap.h"
 #include "pcm/mu_law.h"
 
@@ -36,19 +39,17 @@ static void calculate_gain_curve(float *gain_curve, const volume_mapping_type_t 
 {
     if (volume_mapping == VOLUME_AMIGA)
     {
-        for (int i = 0; i <= 255; i++)
-            gain_curve[i] = (float) i / 255;
+        for (int vol = 0; vol <= 255; vol++)
+            gain_curve[vol] = (float) vol / 255.0f;
     }
     else
     {
-        for (int i = 0; i <= 127; i++)
-        {
-            gain_curve[i * 2 + 1] = mu_law_to_linear(255 - i);
-            if (i >= 1)
-                gain_curve[i * 2] = (gain_curve[i * 2 - 1] + gain_curve[i * 2 + 1]) / 2;
-        }
         gain_curve[0] = 0.0f;
-        gain_curve[1] = gain_curve[2] / 2;
+        for (int vol = 1; vol <= 255; vol++)
+        {
+            const float exponent = (float) vol / 255.0f;
+            gain_curve[vol] = (powf(256.0f, exponent) - 1.0f) / 255.0f;
+        }
     }
 }
 
