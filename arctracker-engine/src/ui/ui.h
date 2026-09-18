@@ -16,6 +16,7 @@ typedef struct ui_instrument_info {
     bool assigned;
     char name[MAX_LEN_SAMPLENAME];
     int default_volume;
+    int base_note;
     int transpose;
     bool repeats;
     int repeat_offset;
@@ -27,6 +28,7 @@ typedef struct ui_instrument_update {
     bool assigned;
     const char name[MAX_LEN_SAMPLENAME];
     int default_volume;
+    int base_note;
     int transpose;
     int sample_index;
     bool repeats;

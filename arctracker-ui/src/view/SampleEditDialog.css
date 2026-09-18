@@ -1,20 +1,20 @@
 .sampleEdit {
-    width: 500px;
+    width: 600px;
     height: 525px;
     display: grid;
-    grid-template-columns: 150px 1fr;
+    grid-template-columns: 145px 1fr 145px 1fr;
     grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 50px;
     gap: 10px;
     grid-template-areas:
-        "instrumentEditTitle instrumentEditTitle"
-        "sampleNameLabel sampleNameEdit"
-        "defaultVolumeLabel defaultVolumeEdit"
-        "transposeLabel transposeEdit"
-        "sampleLengthLabel sampleLengthEdit"
-        "sampleRepeatsLabel sampleRepeatsEdit"
-        "repeatStartLabel repeatStartEdit"
-        "repeatEndLabel repeatEndEdit"
-        "saveCloseButtons saveCloseButtons"
+        "instrumentEditTitle instrumentEditTitle instrumentEditTitle instrumentEditTitle"
+        "sampleNameLabel sampleNameEdit sampleNameEdit sampleNameEdit"
+        "defaultVolumeLabel defaultVolumeEdit defaultVolumeEdit defaultVolumeEdit"
+        "baseNoteLabel baseNoteEdit transposeLabel transposeEdit"
+        "sampleLengthLabel sampleLengthEdit sampleLengthEdit sampleLengthEdit"
+        "sampleRepeatsLabel sampleRepeatsEdit sampleRepeatsEdit sampleRepeatsEdit"
+        "repeatStartLabel repeatStartEdit repeatStartEdit repeatStartEdit"
+        "repeatEndLabel repeatEndEdit repeatEndEdit repeatEndEdit"
+        "saveCloseButtons saveCloseButtons saveCloseButtons saveCloseButtons"
 }
 
 .instrumentEditTitle {
@@ -40,6 +40,14 @@
 
 .defaultVolumeEdit {
     grid-area: defaultVolumeEdit;
+}
+
+.baseNoteLabel {
+    grid-area: baseNoteLabel;
+}
+
+.baseNoteEdit {
+    grid-area: baseNoteEdit;
 }
 
 .transposeLabel {
@@ -106,6 +114,19 @@
     color: var(--colour-sample-edit-input-text);
     caret-shape: block;
     caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.sampleEditField select {
+    box-sizing: content-box;
+    width: 100%;
+    height: 28px;
+    background-color: transparent;
+    border: none;
+    font-family: SplineSansMono, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--colour-sample-edit-input-text);
     accent-color: var(--colour-sample-edit-input-text);
 }
 

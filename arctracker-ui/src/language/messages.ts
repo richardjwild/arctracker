@@ -46,6 +46,7 @@ const messages = {
     editModuleDetailsHintText: "Edit module details",
     instrumentNameLabel: "Name:",
     instrumentDefaultVolumeLabel: "Default Volume:",
+    instrumentBaseNoteLabel: "Base Note:",
     instrumentTransposeLabel: "Transpose:",
     instrumentSampleLengthLabel: "Sample Length:",
     instrumentSampleLoopsLabel: "Sample Loops:",

@@ -12,6 +12,7 @@ import {
   SampleNameMaxLength,
 } from "../editing/editInstrument.ts";
 import { message, messageFn } from "../language/messages.ts";
+import { notes } from "../rendering/notes.ts";
 
 type InputState = {
   transpose: string;
@@ -190,7 +191,32 @@ export default function SampleEditDialog() {
             });
           }}
         />
-        <span className="defaultVolumeValue">{Math.round(100 * draftInstrument.defaultVolume / 255) + "%"}</span>
+        <span className="defaultVolumeValue">
+          {Math.round((100 * draftInstrument.defaultVolume) / 255) + "%"}
+        </span>
+      </div>
+      <div className="baseNoteLabel padded sampleEditLabel">
+        <label htmlFor="baseNoteInput">
+          {message("instrumentBaseNoteLabel")}
+        </label>
+      </div>
+      <div className="baseNoteEdit uiArea padded rounded sampleEditField">
+        <select
+          id="baseNoteInput"
+          value={draftInstrument.baseNote}
+          onChange={(e) =>
+            setDraftInstrument({
+              ...draftInstrument,
+              baseNote: Number(e.target.value),
+            })
+          }
+        >
+          {notes.allNotes().map((note, index) => (
+            <option key={index} value={index}>
+              {note}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="transposeLabel padded sampleEditLabel">
         <label htmlFor="transposeInput">

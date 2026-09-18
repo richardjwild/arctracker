@@ -68,4 +68,10 @@ export const notes = {
   },
 
   inRange: (note: number) => note >= 0 && note < noteStrings.length,
+
+  allNotes: (): string[] => {
+    let notes = [...noteStrings];
+    notes.splice(0, 1);
+    return notes;
+  }
 }

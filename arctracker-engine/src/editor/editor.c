@@ -107,6 +107,12 @@ edit_result_t editor_update_instrument(
     return EDIT_SUCCESS;
 }
 
+void editor_update_sample(const module_t *module, const int sample_index, const int base_note)
+{
+    sample_t *sample = &module->samples[sample_index];
+    sample->base_note = base_note;
+}
+
 edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length)
 {
     const load_sample_result_t load_result = load_sample(filename);

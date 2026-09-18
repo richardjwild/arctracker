@@ -10,6 +10,7 @@ export type Instrument = {
   assigned: boolean;
   name: string;
   defaultVolume: number;
+  baseNote: number;
   transpose: number;
   repeats: boolean;
   repeatOffset: number;
@@ -29,7 +30,8 @@ export function emptyInstrument(): Instrument {
     name: "",
     assigned: false,
     defaultVolume: 255,
-    transpose: 13,
+    baseNote: 24,
+    transpose: 0,
     repeats: false,
     repeatOffset: 0,
     repeatLength: 0,
@@ -45,6 +47,7 @@ function instrumentsEqual(a: Instrument, b: Instrument): boolean {
     a.assigned === b.assigned &&
     a.name === b.name &&
     a.defaultVolume === b.defaultVolume &&
+    a.baseNote === b.baseNote &&
     a.transpose === b.transpose &&
     a.repeats === b.repeats &&
     a.repeatOffset === b.repeatOffset &&
@@ -103,6 +106,7 @@ export const editInstrument = {
       assigned: draftInstrument.assigned,
       name: draftInstrument.name,
       defaultVolume: draftInstrument.defaultVolume,
+      baseNote: draftInstrument.baseNote,
       transpose: draftInstrument.transpose,
       repeats: draftInstrument.repeats,
       repeatOffset: draftInstrument.repeatOffset,
@@ -121,6 +125,7 @@ export const editInstrument = {
       assigned: instrument.assigned,
       name: instrument.name,
       defaultVolume: instrument.defaultVolume,
+      baseNote: instrument.baseNote,
       transpose: instrument.transpose,
       repeats: instrument.repeats,
       repeatOffset: instrument.repeatOffset,
@@ -131,6 +136,7 @@ export const editInstrument = {
       assigned: draftInstrument.assigned,
       name: draftInstrument.name,
       defaultVolume: draftInstrument.defaultVolume,
+      baseNote: draftInstrument.baseNote,
       transpose: draftInstrument.transpose,
       repeats: draftInstrument.repeats,
       repeatOffset: draftInstrument.repeatOffset,
@@ -160,6 +166,7 @@ export const editInstrument = {
       assigned: instrument.assigned,
       name: instrument.name,
       defaultVolume: instrument.defaultVolume,
+      baseNote: instrument.baseNote,
       transpose: instrument.transpose,
       repeats: instrument.repeats,
       repeatOffset: instrument.repeatOffset,
