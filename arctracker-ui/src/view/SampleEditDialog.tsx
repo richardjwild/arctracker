@@ -4,7 +4,7 @@ import { useStore } from "../store/useStore.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
 import {
   editInstrument,
@@ -18,6 +18,10 @@ type InputState = {
   transpose: string;
   repeatStart: string;
   repeatEnd: string;
+};
+
+type SpinnerButtonProps = {
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 };
 
 const emptyInputState: InputState = {
@@ -156,6 +160,46 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
+  const IncrementButton = ({ onClick }: SpinnerButtonProps) => {
+    return (
+      <button
+        type="button"
+        className={"increment"}
+        onClick={onClick}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="24px"
+          viewBox="0 -960 960 960"
+          width="24px"
+          fill="currentColor"
+        >
+          <path d="m280-400 200-200 200 200H280Z" />
+        </svg>
+      </button>
+    );
+  };
+
+  const DecrementButton = ({ onClick }: SpinnerButtonProps) => {
+    return (
+      <button
+        type="button"
+        className={"decrement"}
+        onClick={onClick}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="24px"
+          viewBox="0 -960 960 960"
+          width="24px"
+          fill="currentColor"
+        >
+          <path d="M480-360 280-560h400L480-360Z" />
+        </svg>
+      </button>
+    );
+  };
+
   return (
     <Modal ref={modalRef} className="sampleEdit">
       <h1 className="instrumentEditTitle padded">
@@ -250,6 +294,26 @@ export default function SampleEditDialog() {
             validateTranspose();
           }}
         />
+        <div className="spinnerButtons">
+          <IncrementButton
+            onClick={() => {
+              if (draftInstrument.transpose == 12) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                transpose: draftInstrument.transpose + 1,
+              });
+            }}
+          />
+          <DecrementButton
+            onClick={() => {
+              if (draftInstrument.transpose == -12) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                transpose: draftInstrument.transpose - 1,
+              });
+            }}
+          />
+        </div>
       </div>
       <div className="sampleLengthLabel padded sampleEditLabel">
         <label>{message("instrumentSampleLengthLabel")}</label>

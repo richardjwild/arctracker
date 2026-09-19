@@ -142,6 +142,30 @@
     outline: none;
 }
 
+.transposeEdit .spinnerButtons button {
+    display: block;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 20px;
+    height: 13px;
+}
+
+.transposeEdit .spinnerButtons button {
+    color: var(--colour-sample-edit-input-text);
+}
+
+.transposeEdit .spinnerButtons button.increment svg {
+    transform: translateY(-4.5px);
+    pointer-events: none;
+}
+
+.transposeEdit .spinnerButtons button.decrement svg {
+    transform: translateY(-6.5px);
+    pointer-events: none;
+}
+
 .sampleRepeatsEdit {
     display: flex;
     flex-direction: row;
