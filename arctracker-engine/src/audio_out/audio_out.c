@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "memory/heap.h"
-#include "pcm/mu_law.h"
+#include "src/vidc/vidc.h"
 
 static const float PAN_HARD_LEFT = 1.0f;
 static const float PAN_HARD_RIGHT = 255.0f;

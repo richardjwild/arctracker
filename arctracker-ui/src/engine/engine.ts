@@ -14,6 +14,7 @@ export type InstrumentUpdate = {
   assigned: boolean;
   name: string;
   defaultVolume: number;
+  baseNote: number;
   transpose: number;
   repeats: boolean;
   repeatOffset: number;
@@ -284,7 +285,6 @@ export const engine = {
     track: number,
     newEvent: PatternEvent,
   ) => {
-    console.log('setEvent', newEvent.effects[0].effectCode[0], newEvent.effects[0].effectCode[1], newEvent.effects[0].effectData[0], newEvent.effects[0].effectData[1]);
     return await invoke("edit_set_event", {
       patternNo,
       patternIndex,

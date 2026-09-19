@@ -745,6 +745,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         instrument_update.sample_index);
     if (!result.success)
         return failure(result.error_message);
+    editor_update_sample(arctracker->module, instrument_update.sample_index, instrument_update.base_note);
     player_update_instruments(arctracker->playback.player);
     return SUCCESS;
 }
