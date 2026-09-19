@@ -8,8 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
 import {
   editInstrument,
-  emptyInstrument,
-  SampleNameMaxLength,
+  emptyInstrument, Instrument,
+  SampleNameMaxLength
 } from "../editing/editInstrument.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { notes } from "../rendering/notes.ts";
@@ -32,6 +32,7 @@ export default function SampleEditDialog() {
   const instrumentEditing =
     useStore((state) => state.editorState.editMode) === "instrument";
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
+  const [draftModified, setDraftModified] = useState(false);
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
   const loseFocus = () => modalRef.current?.focus();
@@ -53,11 +54,19 @@ export default function SampleEditDialog() {
         ? emptyInstrument()
         : instruments[instrumentIndex];
     setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
+    setDraftModified(false);
   }, [instruments, instrumentIndex, instrumentEditing]);
+
+  const updateDraftInstrument = (updatedDraftInstrument: Instrument) => {
+    setDraftInstrument(updatedDraftInstrument);
+    setDraftModified(true);
+  }
 
   useEffect(() => {
     syncInputStateWithDraft();
-    void editInstrument.auditionInstrument();
+    if (draftModified) {
+      void editInstrument.auditionInstrument();
+    }
   }, [draftInstrument]);
 
   if (instrumentIndex === null || !instrumentEditing) return null;
@@ -65,7 +74,7 @@ export default function SampleEditDialog() {
   const validateTranspose = () => {
     const transpose = Number(inputState.transpose);
     if (Number.isInteger(transpose) && transpose >= -12 && transpose <= 12) {
-      setDraftInstrument({ ...draftInstrument, transpose });
+      updateDraftInstrument({ ...draftInstrument, transpose });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(message("invalidTranspose"));
@@ -74,7 +83,7 @@ export default function SampleEditDialog() {
   };
 
   const setSampleRepeats = () => {
-    setDraftInstrument({
+    updateDraftInstrument({
       ...draftInstrument,
       repeats: true,
       repeatOffset: 0,
@@ -83,7 +92,7 @@ export default function SampleEditDialog() {
   };
 
   const setSampleNoRepeat = () => {
-    setDraftInstrument({
+    updateDraftInstrument({
       ...draftInstrument,
       repeats: false,
       repeatOffset: 0,
@@ -93,14 +102,14 @@ export default function SampleEditDialog() {
 
   const setRepeatOffsetAndLength = (repeatStart: number) => {
     if (draftInstrument.repeatLength === 0) {
-      setDraftInstrument({
+      updateDraftInstrument({
         ...draftInstrument,
         repeatOffset: repeatStart,
         repeatLength: draftInstrument.sample.sampleLength - (repeatStart + 1),
       });
     } else {
       const delta = repeatStart - draftInstrument.repeatOffset;
-      setDraftInstrument({
+      updateDraftInstrument({
         ...draftInstrument,
         repeatOffset: repeatStart,
         repeatLength: draftInstrument.repeatLength - delta,
@@ -136,7 +145,7 @@ export default function SampleEditDialog() {
       repeatEnd > draftInstrument.repeatOffset &&
       repeatEnd < draftInstrument.sample.sampleLength
     ) {
-      setDraftInstrument({
+      updateDraftInstrument({
         ...draftInstrument,
         repeatLength: repeatEnd - draftInstrument.repeatOffset,
       });
@@ -168,7 +177,7 @@ export default function SampleEditDialog() {
           onFocus={editor.startTextInput}
           onBlur={editor.stopTextInput}
           onChange={(e) => {
-            setDraftInstrument({ ...draftInstrument, name: e.target.value });
+            updateDraftInstrument({ ...draftInstrument, name: e.target.value });
           }}
         />
       </div>
@@ -185,7 +194,7 @@ export default function SampleEditDialog() {
           max={255}
           value={draftInstrument.defaultVolume}
           onChange={(e) => {
-            setDraftInstrument({
+            updateDraftInstrument({
               ...draftInstrument,
               defaultVolume: e.target.valueAsNumber,
             });
@@ -205,7 +214,7 @@ export default function SampleEditDialog() {
           id="baseNoteInput"
           value={draftInstrument.baseNote}
           onChange={(e) =>
-            setDraftInstrument({
+            updateDraftInstrument({
               ...draftInstrument,
               baseNote: Number(e.target.value),
             })

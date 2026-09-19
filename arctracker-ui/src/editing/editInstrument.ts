@@ -42,20 +42,6 @@ export function emptyInstrument(): Instrument {
   };
 }
 
-function instrumentsEqual(a: Instrument, b: Instrument): boolean {
-  return (
-    a.assigned === b.assigned &&
-    a.name === b.name &&
-    a.defaultVolume === b.defaultVolume &&
-    a.baseNote === b.baseNote &&
-    a.transpose === b.transpose &&
-    a.repeats === b.repeats &&
-    a.repeatOffset === b.repeatOffset &&
-    a.repeatLength === b.repeatLength &&
-    a.sample.sampleIndex === b.sample.sampleIndex
-  );
-}
-
 export const editInstrument = {
   instrumentEditing: () => {
     return useStore.getState().editorState.editMode === "instrument";
@@ -97,11 +83,8 @@ export const editInstrument = {
     const {
       draftInstrument,
       selectedInstrument,
-      module: { instruments },
     } = useStore.getState();
     if (selectedInstrument === null) return;
-    const instrument = instruments[selectedInstrument] || emptyInstrument();
-    if (instrumentsEqual(instrument, draftInstrument)) return;
     const update: InstrumentUpdate = {
       assigned: draftInstrument.assigned,
       name: draftInstrument.name,
