@@ -106,8 +106,7 @@ void player_update_instruments(player_t *player)
         player->instruments[i].transpose = instrument.transpose;
         player->instruments[i].default_volume = instrument.default_volume;
         player->instruments[i].gain_curve = player->audio_out.gain_curve;
-        const double ft = fine_tuning[sample.finetune + 128];
-        const float base_period = period_for_note(sample.base_note, ft);
+        const float base_period = period_for_note(sample.base_note, 1.0f);
         const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
         player->instruments[i].sample.phase_increment_per_period = phase_increment_per_period;
         player->instruments[i].sample.fine_tuning = fine_tuning[128 + sample.finetune];

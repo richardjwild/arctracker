@@ -10,13 +10,15 @@
 typedef struct ui_sample_info {
     int sample_index;
     int sample_length;
+    float sample_rate;
+    int base_note;
+    int fine_tuning;
 } ui_sample_info_t;
 
 typedef struct ui_instrument_info {
     bool assigned;
     char name[MAX_LEN_SAMPLENAME];
     int default_volume;
-    int base_note;
     int transpose;
     bool repeats;
     int repeat_offset;
@@ -29,6 +31,7 @@ typedef struct ui_instrument_update {
     const char name[MAX_LEN_SAMPLENAME];
     int default_volume;
     int base_note;
+    int fine_tuning;
     int transpose;
     int sample_index;
     bool repeats;

@@ -1,7 +1,6 @@
 #include "sample_player.h"
 #include <string.h>
 #include "memory/heap.h"
-#include <stdio.h>
 #include "player/module.h"
 #include "player/period.h"
 

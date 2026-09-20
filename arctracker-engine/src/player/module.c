@@ -222,10 +222,12 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
         const sample_t sample = module->samples[instrument.sample_index];
         snprintf(instrument_info->name, sizeof instrument_info->name, "%s", instrument.name);
         instrument_info->default_volume = instrument.default_volume;
-        instrument_info->base_note = sample.base_note;
         instrument_info->transpose = instrument.transpose;
         instrument_info->sample_info.sample_index = instrument.sample_index;
         instrument_info->sample_info.sample_length = sample.sample_length;
+        instrument_info->sample_info.sample_rate = sample.sample_rate;
+        instrument_info->sample_info.base_note = sample.base_note;
+        instrument_info->sample_info.fine_tuning = (int) sample.finetune;
         instrument_info->repeats = instrument.repeats;
         instrument_info->repeat_offset = instrument.repeat_offset;
         instrument_info->repeat_length = instrument.repeat_length;
@@ -234,10 +236,12 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
     {
         instrument_info->name[0] = '\0';
         instrument_info->default_volume = 255;
-        instrument_info->base_note = 24;
         instrument_info->transpose = 0;
         instrument_info->sample_info.sample_index = 0;
         instrument_info->sample_info.sample_length = 0;
+        instrument_info->sample_info.sample_rate = 0;
+        instrument_info->sample_info.base_note = 24;
+        instrument_info->sample_info.fine_tuning = 0;
         instrument_info->repeats = false;
         instrument_info->repeat_offset = 0;
         instrument_info->repeat_length = 0;

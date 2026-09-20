@@ -4,24 +4,30 @@ import { useStore } from "../store/useStore.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
 import {
   editInstrument,
-  emptyInstrument,
-  SampleNameMaxLength,
+  emptyInstrument, Instrument,
+  SampleNameMaxLength
 } from "../editing/editInstrument.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { notes } from "../rendering/notes.ts";
 
 type InputState = {
   transpose: string;
+  fineTuning: string;
   repeatStart: string;
   repeatEnd: string;
 };
 
+type SpinnerButtonProps = {
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+};
+
 const emptyInputState: InputState = {
   transpose: "0",
+  fineTuning: "0",
   repeatStart: "0",
   repeatEnd: "0",
 };
@@ -32,6 +38,7 @@ export default function SampleEditDialog() {
   const instrumentEditing =
     useStore((state) => state.editorState.editMode) === "instrument";
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
+  const [draftModified, setDraftModified] = useState(false);
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
   const loseFocus = () => modalRef.current?.focus();
@@ -39,6 +46,7 @@ export default function SampleEditDialog() {
   const syncInputStateWithDraft = () => {
     setInputState({
       transpose: (draftInstrument.transpose).toString(),
+      fineTuning: (draftInstrument.sample.fineTuning).toString(),
       repeatStart: draftInstrument.repeatOffset.toString(),
       repeatEnd: (
         draftInstrument.repeatOffset + draftInstrument.repeatLength
@@ -53,11 +61,19 @@ export default function SampleEditDialog() {
         ? emptyInstrument()
         : instruments[instrumentIndex];
     setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
+    setDraftModified(false);
   }, [instruments, instrumentIndex, instrumentEditing]);
+
+  const updateDraftInstrument = (updatedDraftInstrument: Instrument) => {
+    setDraftInstrument(updatedDraftInstrument);
+    setDraftModified(true);
+  }
 
   useEffect(() => {
     syncInputStateWithDraft();
-    void editInstrument.auditionInstrument();
+    if (draftModified) {
+      void editInstrument.auditionInstrument();
+    }
   }, [draftInstrument]);
 
   if (instrumentIndex === null || !instrumentEditing) return null;
@@ -65,7 +81,7 @@ export default function SampleEditDialog() {
   const validateTranspose = () => {
     const transpose = Number(inputState.transpose);
     if (Number.isInteger(transpose) && transpose >= -12 && transpose <= 12) {
-      setDraftInstrument({ ...draftInstrument, transpose });
+      updateDraftInstrument({ ...draftInstrument, transpose });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(message("invalidTranspose"));
@@ -73,8 +89,24 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
+  const validateFineTune = () => {
+    const fineTune = Number(inputState.fineTuning);
+    if (Number.isInteger(fineTune) && fineTune >= -128 && fineTune <= 127) {
+      updateDraftInstrument({
+        ...draftInstrument,
+        sample: {
+          ...draftInstrument.sample,
+          fineTuning: fineTune,
+        }
+      })
+    } else {
+      syncInputStateWithDraft();
+      void alerting.showInfo(message("invalidFineTune"));
+    }
+  }
+
   const setSampleRepeats = () => {
-    setDraftInstrument({
+    updateDraftInstrument({
       ...draftInstrument,
       repeats: true,
       repeatOffset: 0,
@@ -83,7 +115,7 @@ export default function SampleEditDialog() {
   };
 
   const setSampleNoRepeat = () => {
-    setDraftInstrument({
+    updateDraftInstrument({
       ...draftInstrument,
       repeats: false,
       repeatOffset: 0,
@@ -93,14 +125,14 @@ export default function SampleEditDialog() {
 
   const setRepeatOffsetAndLength = (repeatStart: number) => {
     if (draftInstrument.repeatLength === 0) {
-      setDraftInstrument({
+      updateDraftInstrument({
         ...draftInstrument,
         repeatOffset: repeatStart,
         repeatLength: draftInstrument.sample.sampleLength - (repeatStart + 1),
       });
     } else {
       const delta = repeatStart - draftInstrument.repeatOffset;
-      setDraftInstrument({
+      updateDraftInstrument({
         ...draftInstrument,
         repeatOffset: repeatStart,
         repeatLength: draftInstrument.repeatLength - delta,
@@ -136,7 +168,7 @@ export default function SampleEditDialog() {
       repeatEnd > draftInstrument.repeatOffset &&
       repeatEnd < draftInstrument.sample.sampleLength
     ) {
-      setDraftInstrument({
+      updateDraftInstrument({
         ...draftInstrument,
         repeatLength: repeatEnd - draftInstrument.repeatOffset,
       });
@@ -145,6 +177,46 @@ export default function SampleEditDialog() {
       void alerting.showInfo(message("invalidRepeatEnd"));
     }
     loseFocus();
+  };
+
+  const IncrementButton = ({ onClick }: SpinnerButtonProps) => {
+    return (
+      <button
+        type="button"
+        className={"increment"}
+        onClick={onClick}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="24px"
+          viewBox="0 -960 960 960"
+          width="24px"
+          fill="currentColor"
+        >
+          <path d="m280-400 200-200 200 200H280Z" />
+        </svg>
+      </button>
+    );
+  };
+
+  const DecrementButton = ({ onClick }: SpinnerButtonProps) => {
+    return (
+      <button
+        type="button"
+        className={"decrement"}
+        onClick={onClick}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="24px"
+          viewBox="0 -960 960 960"
+          width="24px"
+          fill="currentColor"
+        >
+          <path d="M480-360 280-560h400L480-360Z" />
+        </svg>
+      </button>
+    );
   };
 
   return (
@@ -168,7 +240,7 @@ export default function SampleEditDialog() {
           onFocus={editor.startTextInput}
           onBlur={editor.stopTextInput}
           onChange={(e) => {
-            setDraftInstrument({ ...draftInstrument, name: e.target.value });
+            updateDraftInstrument({ ...draftInstrument, name: e.target.value });
           }}
         />
       </div>
@@ -185,7 +257,7 @@ export default function SampleEditDialog() {
           max={255}
           value={draftInstrument.defaultVolume}
           onChange={(e) => {
-            setDraftInstrument({
+            updateDraftInstrument({
               ...draftInstrument,
               defaultVolume: e.target.valueAsNumber,
             });
@@ -194,29 +266,6 @@ export default function SampleEditDialog() {
         <span className="defaultVolumeValue">
           {Math.round((100 * draftInstrument.defaultVolume) / 255) + "%"}
         </span>
-      </div>
-      <div className="baseNoteLabel padded sampleEditLabel">
-        <label htmlFor="baseNoteInput">
-          {message("instrumentBaseNoteLabel")}
-        </label>
-      </div>
-      <div className="baseNoteEdit uiArea padded rounded sampleEditField">
-        <select
-          id="baseNoteInput"
-          value={draftInstrument.baseNote}
-          onChange={(e) =>
-            setDraftInstrument({
-              ...draftInstrument,
-              baseNote: Number(e.target.value),
-            })
-          }
-        >
-          {notes.allNotes().map((note, index) => (
-            <option key={index} value={index}>
-              {note}
-            </option>
-          ))}
-        </select>
       </div>
       <div className="transposeLabel padded sampleEditLabel">
         <label htmlFor="transposeInput">
@@ -241,6 +290,26 @@ export default function SampleEditDialog() {
             validateTranspose();
           }}
         />
+        <div className="spinnerButtons">
+          <IncrementButton
+            onClick={() => {
+              if (draftInstrument.transpose == 12) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                transpose: draftInstrument.transpose + 1,
+              });
+            }}
+          />
+          <DecrementButton
+            onClick={() => {
+              if (draftInstrument.transpose == -12) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                transpose: draftInstrument.transpose - 1,
+              });
+            }}
+          />
+        </div>
       </div>
       <div className="sampleLengthLabel padded sampleEditLabel">
         <label>{message("instrumentSampleLengthLabel")}</label>
@@ -252,6 +321,94 @@ export default function SampleEditDialog() {
           value={draftInstrument.sample.sampleLength}
         />
       </div>
+      <div className="sampleRateLabel padded sampleEditLabel">
+        <label>{message("sampleRateLabel")}</label>
+      </div>
+      <div className="sampleRateEdit padded sampleEditField">
+        <input
+          type="text"
+          readOnly
+          value={`${draftInstrument.sample.sampleRate}Hz`}
+        />
+      </div>
+      <div className="baseNoteLabel padded sampleEditLabel">
+        <label htmlFor="baseNoteInput">
+          {message("instrumentBaseNoteLabel")}
+        </label>
+      </div>
+      <div className="baseNoteEdit uiArea padded rounded sampleEditField">
+        <select
+          id="baseNoteInput"
+          value={draftInstrument.sample.baseNote}
+          onChange={(e) =>
+            updateDraftInstrument({
+              ...draftInstrument,
+              sample: {
+                ...draftInstrument.sample,
+                baseNote: Number(e.target.value),
+              },
+            })
+          }
+        >
+          {notes.allNotes().map((note, index) => (
+            <option key={index} value={index}>
+              {note}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="fineTuneLabel padded sampleEditLabel">
+        <label htmlFor="fineTuneInput">
+          {message("instrumentFineTuneLabel")}
+        </label>
+      </div>
+      <div className="fineTuneEdit uiArea padded rounded sampleEditField">
+        <input
+          type="text"
+          id="fineTuneInput"
+          value={inputState.fineTuning}
+          onFocus={editor.startTextInput}
+          onChange={(e) =>
+            setInputState({
+              ...inputState,
+              fineTuning: e.target.value,
+            })
+          }
+          onBlur={(e) => {
+            e.preventDefault();
+            editor.stopTextInput();
+            validateFineTune();
+          }}
+        />
+        <div className="spinnerButtons">
+          <IncrementButton
+            onClick={() => {
+              if (draftInstrument.sample.fineTuning == 127) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                sample: {
+                  ...draftInstrument.sample,
+                  fineTuning: draftInstrument.sample.fineTuning + 1,
+                }
+              });
+            }}
+          />
+          <DecrementButton
+            onClick={() => {
+              if (draftInstrument.sample.fineTuning == -128) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                sample: {
+                  ...draftInstrument.sample,
+                  fineTuning: draftInstrument.sample.fineTuning - 1,
+                }
+              });
+            }}
+          />
+        </div>
+      </div>
+
       <div className="sampleRepeatsLabel padded sampleEditLabel">
         <label>{message("instrumentSampleLoopsLabel")}</label>
       </div>

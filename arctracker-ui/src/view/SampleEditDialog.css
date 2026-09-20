@@ -9,11 +9,11 @@
         "instrumentEditTitle instrumentEditTitle instrumentEditTitle instrumentEditTitle"
         "sampleNameLabel sampleNameEdit sampleNameEdit sampleNameEdit"
         "defaultVolumeLabel defaultVolumeEdit defaultVolumeEdit defaultVolumeEdit"
-        "baseNoteLabel baseNoteEdit transposeLabel transposeEdit"
-        "sampleLengthLabel sampleLengthEdit sampleLengthEdit sampleLengthEdit"
+        "transposeLabel transposeEdit . ."
+        "sampleLengthLabel sampleLengthEdit sampleRateLabel sampleRateEdit"
+        "baseNoteLabel baseNoteEdit fineTuneLabel fineTuneEdit"
         "sampleRepeatsLabel sampleRepeatsEdit sampleRepeatsEdit sampleRepeatsEdit"
-        "repeatStartLabel repeatStartEdit repeatStartEdit repeatStartEdit"
-        "repeatEndLabel repeatEndEdit repeatEndEdit repeatEndEdit"
+        "repeatStartLabel repeatStartEdit repeatEndLabel repeatEndEdit"
         "saveCloseButtons saveCloseButtons saveCloseButtons saveCloseButtons"
 }
 
@@ -50,6 +50,14 @@
     grid-area: baseNoteEdit;
 }
 
+.fineTuneLabel {
+    grid-area: fineTuneLabel;
+}
+
+.fineTuneEdit {
+    grid-area: fineTuneEdit;
+}
+
 .transposeLabel {
     grid-area: transposeLabel;
 }
@@ -64,6 +72,14 @@
 
 .sampleLengthEdit {
     grid-area: sampleLengthEdit;
+}
+
+.sampleRateLabel {
+    grid-area: sampleRateLabel;
+}
+
+.sampleRateEdit {
+    grid-area: sampleRateEdit;
 }
 
 .sampleRepeatsLabel {
@@ -140,6 +156,27 @@
 
 .sampleEditField input:focus {
     outline: none;
+}
+
+.transposeEdit .spinnerButtons button, .fineTuneEdit .spinnerButtons button {
+    display: block;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 20px;
+    height: 13px;
+    color: var(--colour-sample-edit-input-text);
+}
+
+.transposeEdit .spinnerButtons button.increment svg, .fineTuneEdit .spinnerButtons button.increment svg {
+    transform: translateY(-4.5px);
+    pointer-events: none;
+}
+
+.transposeEdit .spinnerButtons button.decrement svg, .fineTuneEdit .spinnerButtons button.decrement svg {
+    transform: translateY(-6.5px);
+    pointer-events: none;
 }
 
 .sampleRepeatsEdit {

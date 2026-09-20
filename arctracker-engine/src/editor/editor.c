@@ -107,10 +107,11 @@ edit_result_t editor_update_instrument(
     return EDIT_SUCCESS;
 }
 
-void editor_update_sample(const module_t *module, const int sample_index, const int base_note)
+void editor_update_sample(const module_t *module, const int sample_index, const int base_note, const int fine_tuning)
 {
     sample_t *sample = &module->samples[sample_index];
     sample->base_note = base_note;
+    sample->finetune = (int8_t) fine_tuning;
 }
 
 edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length)

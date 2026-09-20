@@ -162,6 +162,9 @@ pub struct PlayerCommand {
 pub struct UiSampleInfo {
     pub sample_index: c_int,
     pub sample_length: c_int,
+    pub sample_rate: f32,
+    pub base_note: c_int,
+    pub fine_tuning: c_int,
 }
 
 #[repr(C)]
@@ -169,7 +172,6 @@ pub struct UiInstrumentInfo {
     pub assigned: bool,
     pub name: [c_char; 33],
     pub default_volume: c_int,
-    pub base_note: c_int,
     pub transpose: c_int,
     pub repeats: bool,
     pub repeat_offset: c_int,
@@ -183,6 +185,7 @@ pub struct UiInstrumentUpdate {
     pub name: [c_char; 33],
     pub default_volume: c_int,
     pub base_note: c_int,
+    pub fine_tuning: c_int,
     pub transpose: c_int,
     pub sample_index: c_int,
     pub repeats: bool,

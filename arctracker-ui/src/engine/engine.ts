@@ -15,6 +15,7 @@ export type InstrumentUpdate = {
   name: string;
   defaultVolume: number;
   baseNote: number;
+  fineTuning: number;
   transpose: number;
   repeats: boolean;
   repeatOffset: number;

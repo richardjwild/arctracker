@@ -140,6 +140,9 @@ pub struct PlayerCommand {
 pub struct Sample {
     pub sample_index: i32,
     pub sample_length: i32,
+    pub sample_rate: f32,
+    pub base_note: i32,
+    pub fine_tuning: i32,
 }
 
 #[derive(Serialize)]
@@ -148,7 +151,6 @@ pub struct Instrument {
     pub assigned: bool,
     pub(crate) name: String,
     pub default_volume: i32,
-    pub base_note: i32,
     pub transpose: i32,
     pub repeats: bool,
     pub repeat_offset: i32,
@@ -163,6 +165,7 @@ pub struct InstrumentUpdate {
     pub(crate) name: String,
     pub default_volume: i32,
     pub base_note: i32,
+    pub fine_tuning: i32,
     pub transpose: i32,
     pub sample_index: i32,
     pub repeats: bool,
@@ -648,7 +651,6 @@ impl Arctracker {
             assigned: instrument.assigned,
             name: c_string_to_rust(&instrument.name),
             default_volume: instrument.default_volume,
-            base_note: instrument.base_note,
             transpose: instrument.transpose,
             repeats: instrument.repeats,
             repeat_offset: instrument.repeat_offset,
@@ -656,6 +658,9 @@ impl Arctracker {
             sample: Sample {
                 sample_index: instrument.sample_info.sample_index,
                 sample_length: instrument.sample_info.sample_length,
+                sample_rate: instrument.sample_info.sample_rate,
+                base_note: instrument.sample_info.base_note,
+                fine_tuning: instrument.sample_info.fine_tuning,
             },
         })
     }
@@ -1039,6 +1044,7 @@ impl Arctracker {
             name: [0; 33],
             default_volume: instrument.default_volume,
             base_note: instrument.base_note,
+            fine_tuning: instrument.fine_tuning,
             transpose: instrument.transpose,
             repeats: instrument.repeats,
             repeat_offset: instrument.repeat_offset,
@@ -1078,6 +1084,9 @@ impl Arctracker {
         Ok(Sample {
             sample_index: sample_info.sample_index,
             sample_length: sample_info.sample_length,
+            sample_rate: sample_info.sample_rate,
+            base_note: sample_info.base_note,
+            fine_tuning: sample_info.fine_tuning,
         })
     }
 

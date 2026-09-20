@@ -10,6 +10,7 @@ const messages = {
     invalidDefaultPatternLength:
       "Default pattern length must be a number between 1 and 1000.",
     invalidTranspose: "Transpose must be between -12 and 12.",
+    invalidFineTune: "Fine tuning must be between -128 and 127.",
     invalidRepeatStartWithRepeatEnd:
       "Repeat start must be between 0 and repeat end.",
     invalidRepeatStartWithoutRepeatEnd:
@@ -47,8 +48,10 @@ const messages = {
     instrumentNameLabel: "Name:",
     instrumentDefaultVolumeLabel: "Default Volume:",
     instrumentBaseNoteLabel: "Base Note:",
+    instrumentFineTuneLabel: "Fine Tuning:",
     instrumentTransposeLabel: "Transpose:",
     instrumentSampleLengthLabel: "Sample Length:",
+    sampleRateLabel: "Sample Rate:",
     instrumentSampleLoopsLabel: "Sample Loops:",
     instrumentLoopStartLabel: "Loop Start:",
     instrumentLoopEndLabel: "Loop End:",

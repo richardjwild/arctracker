@@ -732,6 +732,10 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         return failure(INVALID_REPEAT_OFFSET);
     if (instrument_update.repeat_offset + instrument_update.repeat_length >= sample.sample_length)
         return failure(INVALID_REPEAT_LENGTH);
+    if (instrument_update.base_note < LOWEST_NOTE || instrument_update.base_note > HIGHEST_NOTE)
+        return failure(INVALID_BASE_NOTE);
+    if (instrument_update.fine_tuning < -128 || instrument_update.fine_tuning > 127)
+        return failure(INVALID_FINE_TUNING);
     const edit_result_t result = editor_update_instrument(
         arctracker->module,
         slot,
@@ -745,7 +749,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         instrument_update.sample_index);
     if (!result.success)
         return failure(result.error_message);
-    editor_update_sample(arctracker->module, instrument_update.sample_index, instrument_update.base_note);
+    editor_update_sample(arctracker->module, instrument_update.sample_index, instrument_update.base_note, instrument_update.fine_tuning);
     player_update_instruments(arctracker->playback.player);
     return SUCCESS;
 }

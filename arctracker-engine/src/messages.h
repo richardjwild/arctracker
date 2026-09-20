@@ -55,6 +55,8 @@
 #define INVALID_SAMPLE_INDEX "Invalid sample index"
 #define INVALID_REPEAT_OFFSET "Invalid sample repeat offset"
 #define INVALID_REPEAT_LENGTH "Invalid sample repeat length"
+#define INVALID_BASE_NOTE "Invalid base note"
+#define INVALID_FINE_TUNING "Invalid fine tuning value"
 #define RIFF_HEADER_NOT_FOUND "RIFF header chunk not found"
 #define SIZE_MISMATCH "Reported size of file does not match actual size"
 #define NOT_WAVE_FORMAT "RIFF file is not WAVE format"

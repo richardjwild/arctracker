@@ -37,7 +37,7 @@ edit_result_t editor_update_instrument(
     int sample_index
 );
 
-void editor_update_sample(const module_t *module, int sample_index, int base_note);
+void editor_update_sample(const module_t *module, int sample_index, int base_note, int fine_tuning);
 
 edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length);
 

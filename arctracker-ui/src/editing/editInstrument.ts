@@ -10,7 +10,6 @@ export type Instrument = {
   assigned: boolean;
   name: string;
   defaultVolume: number;
-  baseNote: number;
   transpose: number;
   repeats: boolean;
   repeatOffset: number;
@@ -21,6 +20,9 @@ export type Instrument = {
 export type Sample = {
   sampleIndex: number;
   sampleLength: number;
+  sampleRate: number;
+  baseNote: number;
+  fineTuning: number;
 };
 
 export const SampleNameMaxLength = 33;
@@ -30,7 +32,6 @@ export function emptyInstrument(): Instrument {
     name: "",
     assigned: false,
     defaultVolume: 255,
-    baseNote: 24,
     transpose: 0,
     repeats: false,
     repeatOffset: 0,
@@ -38,22 +39,11 @@ export function emptyInstrument(): Instrument {
     sample: {
       sampleIndex: 0,
       sampleLength: 0,
+      sampleRate: 0,
+      baseNote: 24,
+      fineTuning: 0,
     },
   };
-}
-
-function instrumentsEqual(a: Instrument, b: Instrument): boolean {
-  return (
-    a.assigned === b.assigned &&
-    a.name === b.name &&
-    a.defaultVolume === b.defaultVolume &&
-    a.baseNote === b.baseNote &&
-    a.transpose === b.transpose &&
-    a.repeats === b.repeats &&
-    a.repeatOffset === b.repeatOffset &&
-    a.repeatLength === b.repeatLength &&
-    a.sample.sampleIndex === b.sample.sampleIndex
-  );
 }
 
 export const editInstrument = {
@@ -97,21 +87,19 @@ export const editInstrument = {
     const {
       draftInstrument,
       selectedInstrument,
-      module: { instruments },
     } = useStore.getState();
     if (selectedInstrument === null) return;
-    const instrument = instruments[selectedInstrument] || emptyInstrument();
-    if (instrumentsEqual(instrument, draftInstrument)) return;
     const update: InstrumentUpdate = {
       assigned: draftInstrument.assigned,
       name: draftInstrument.name,
       defaultVolume: draftInstrument.defaultVolume,
-      baseNote: draftInstrument.baseNote,
       transpose: draftInstrument.transpose,
       repeats: draftInstrument.repeats,
       repeatOffset: draftInstrument.repeatOffset,
       repeatLength: draftInstrument.repeatLength,
       sampleIndex: draftInstrument.sample.sampleIndex,
+      baseNote: draftInstrument.sample.baseNote,
+      fineTuning: draftInstrument.sample.fineTuning,
     };
     void engine.updateInstrument(selectedInstrument, update);
   },
@@ -125,23 +113,25 @@ export const editInstrument = {
       assigned: instrument.assigned,
       name: instrument.name,
       defaultVolume: instrument.defaultVolume,
-      baseNote: instrument.baseNote,
       transpose: instrument.transpose,
       repeats: instrument.repeats,
       repeatOffset: instrument.repeatOffset,
       repeatLength: instrument.repeatLength,
       sampleIndex: instrument.sample.sampleIndex,
+      baseNote: instrument.sample.baseNote,
+      fineTuning: instrument.sample.fineTuning,
     };
     const after: InstrumentUpdate = {
       assigned: draftInstrument.assigned,
       name: draftInstrument.name,
       defaultVolume: draftInstrument.defaultVolume,
-      baseNote: draftInstrument.baseNote,
       transpose: draftInstrument.transpose,
       repeats: draftInstrument.repeats,
       repeatOffset: draftInstrument.repeatOffset,
       repeatLength: draftInstrument.repeatLength,
       sampleIndex: draftInstrument.sample.sampleIndex,
+      baseNote: draftInstrument.sample.baseNote,
+      fineTuning: draftInstrument.sample.fineTuning,
     };
     const editCommand: EditCommand = {
       apply: async () => {
@@ -166,12 +156,13 @@ export const editInstrument = {
       assigned: instrument.assigned,
       name: instrument.name,
       defaultVolume: instrument.defaultVolume,
-      baseNote: instrument.baseNote,
       transpose: instrument.transpose,
       repeats: instrument.repeats,
       repeatOffset: instrument.repeatOffset,
       repeatLength: instrument.repeatLength,
       sampleIndex: instrument.sample.sampleIndex,
+      baseNote: instrument.sample.baseNote,
+      fineTuning: instrument.sample.fineTuning,
     };
     await engine.updateInstrument(selectedInstrument, update);
   },

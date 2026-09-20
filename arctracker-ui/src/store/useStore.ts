@@ -120,7 +120,6 @@ const initialInstrument: Instrument = {
   name: "",
   assigned: false,
   defaultVolume: 255,
-  baseNote: 24,
   transpose: 0,
   repeats: false,
   repeatOffset: 0,
@@ -128,6 +127,9 @@ const initialInstrument: Instrument = {
   sample: {
     sampleIndex: 0,
     sampleLength: 0,
+    sampleRate: 0,
+    baseNote: 24,
+    fineTuning: 0,
   }
 };
 
@@ -272,7 +274,6 @@ export const useStore = create<AppStore>((set) => ({
         assigned: instrument.assigned,
         name: instrument.name,
         defaultVolume: instrument.defaultVolume,
-        baseNote: instrument.baseNote,
         transpose: instrument.transpose,
         repeats: instrument.repeats,
         repeatOffset: instrument.repeatOffset,
@@ -280,6 +281,9 @@ export const useStore = create<AppStore>((set) => ({
         sample: {
           sampleIndex: instrument.sample.sampleIndex,
           sampleLength: instrument.sample.sampleLength,
+          sampleRate: instrument.sample.sampleRate,
+          baseNote: instrument.sample.baseNote,
+          fineTuning: instrument.sample.fineTuning,
         },
       };
       return {
