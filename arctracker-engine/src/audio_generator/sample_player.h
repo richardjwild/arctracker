@@ -7,8 +7,9 @@
 typedef struct {
     float phase_increment_per_period;
     double fine_tuning;
-    bool sample_repeats;
     int sample_end;
+    bool sample_repeats;
+    int repeat_end;
     int repeat_length;
     interpolation_type_t interpolation_type;
     const float *sample_data;

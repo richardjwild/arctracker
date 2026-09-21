@@ -229,8 +229,9 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
         instrument_info->sample_info.base_note = sample.base_note;
         instrument_info->sample_info.fine_tuning = (int) sample.finetune;
         instrument_info->repeats = instrument.repeats;
-        instrument_info->repeat_offset = instrument.repeat_offset;
-        instrument_info->repeat_length = instrument.repeat_length;
+        instrument_info->repeat_start = instrument.repeat_offset;
+        // Minus one because the sample at repeat_end is included in the loop:
+        instrument_info->repeat_end = instrument.repeat_offset + instrument.repeat_length - 1;
     }
     else
     {
@@ -243,8 +244,8 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
         instrument_info->sample_info.base_note = 24;
         instrument_info->sample_info.fine_tuning = 0;
         instrument_info->repeats = false;
-        instrument_info->repeat_offset = 0;
-        instrument_info->repeat_length = 0;
+        instrument_info->repeat_start = 0;
+        instrument_info->repeat_end = 0;
     }
 }
 

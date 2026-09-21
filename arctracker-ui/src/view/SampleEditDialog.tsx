@@ -47,10 +47,8 @@ export default function SampleEditDialog() {
     setInputState({
       transpose: (draftInstrument.transpose).toString(),
       fineTuning: (draftInstrument.sample.fineTuning).toString(),
-      repeatStart: draftInstrument.repeatOffset.toString(),
-      repeatEnd: (
-        draftInstrument.repeatOffset + draftInstrument.repeatLength
-      ).toString(),
+      repeatStart: draftInstrument.repeatStart.toString(),
+      repeatEnd: draftInstrument.repeatEnd.toString(),
     });
   };
 
@@ -109,8 +107,8 @@ export default function SampleEditDialog() {
     updateDraftInstrument({
       ...draftInstrument,
       repeats: true,
-      repeatOffset: 0,
-      repeatLength: draftInstrument.sample.sampleLength,
+      repeatStart: 0,
+      repeatEnd: draftInstrument.sample.sampleLength - 1,
     });
   };
 
@@ -118,45 +116,25 @@ export default function SampleEditDialog() {
     updateDraftInstrument({
       ...draftInstrument,
       repeats: false,
-      repeatOffset: 0,
-      repeatLength: 0,
+      repeatStart: 0,
+      repeatEnd: 0,
     });
-  };
-
-  const setRepeatOffsetAndLength = (repeatStart: number) => {
-    if (draftInstrument.repeatLength === 0) {
-      updateDraftInstrument({
-        ...draftInstrument,
-        repeatOffset: repeatStart,
-        repeatLength: draftInstrument.sample.sampleLength - (repeatStart + 1),
-      });
-    } else {
-      const delta = repeatStart - draftInstrument.repeatOffset;
-      updateDraftInstrument({
-        ...draftInstrument,
-        repeatOffset: repeatStart,
-        repeatLength: draftInstrument.repeatLength - delta,
-      });
-    }
   };
 
   const updateRepeatStart = () => {
     const repeatStart = Number(inputState.repeatStart);
-    const maxValue =
-      draftInstrument.repeatLength === 0
-        ? draftInstrument.sample.sampleLength - 2
-        : draftInstrument.repeatOffset + draftInstrument.repeatLength - 1;
     if (
       Number.isInteger(repeatStart) &&
       repeatStart >= 0 &&
-      repeatStart <= maxValue
+      repeatStart <= draftInstrument.repeatEnd - 1
     ) {
-      setRepeatOffsetAndLength(repeatStart);
+      updateDraftInstrument({
+        ...draftInstrument,
+        repeatStart,
+      });
     } else {
       syncInputStateWithDraft();
-      if (draftInstrument.repeatLength === 0)
-        void alerting.showInfo(message("invalidRepeatStartWithoutRepeatEnd"));
-      else void alerting.showInfo(message("invalidRepeatStartWithRepeatEnd"));
+      void alerting.showInfo(message("invalidRepeatStart"));
     }
     loseFocus();
   };
@@ -165,12 +143,12 @@ export default function SampleEditDialog() {
     const repeatEnd = Number(inputState.repeatEnd);
     if (
       Number.isInteger(repeatEnd) &&
-      repeatEnd > draftInstrument.repeatOffset &&
-      repeatEnd < draftInstrument.sample.sampleLength
+      repeatEnd > draftInstrument.repeatStart &&
+      repeatEnd <= draftInstrument.sample.sampleLength - 1
     ) {
       updateDraftInstrument({
         ...draftInstrument,
-        repeatLength: repeatEnd - draftInstrument.repeatOffset,
+        repeatEnd,
       });
     } else {
       syncInputStateWithDraft();

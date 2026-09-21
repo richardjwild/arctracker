@@ -3,14 +3,13 @@
 #include "loader.h"
 #include "memory/bits.h"
 #include "memory/heap.h"
-#include "src/vidc/vidc.h"
+#include "vidc/vidc.h"
 #include "io/error.h"
 
 #define MAX_LEN_TUNENAME_DSKT 64
 #define MAX_LEN_AUTHOR_DSKT 64
+
 #define MAX_LEN_SAMPLENAME_DSKT 32
-#define IS_MULTIPLE_EFFECT(raw_event) \
-    ((raw_event) & (0x1f << 17)) > 0
 
 static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
@@ -82,6 +81,7 @@ static bool is_desktop_tracker_format(mapped_file_t);
 static module_t *read_desktop_tracker_module(mapped_file_t);
 static bool decode_dtt_patterns(uint8_t *, const uint32_t *, module_t *, const int *);
 static size_t decode_desktop_tracker_event(const uint8_t *, event_t *);
+static bool is_multiple_effect(uint32_t);
 static effect_t effect(uint8_t, uint8_t);
 static command_t desktop_tracker_command(uint8_t, uint8_t);
 static void copy_int_array(const uint8_t *, int *, int);
@@ -191,7 +191,7 @@ static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *deco
     decoded->instrument_no = MASK_6_SHIFT_RIGHT(*raw, 0);
     const int note = MASK_6_SHIFT_RIGHT(*raw, 6);
     decoded->note = note == 0 ? 0 : note + 12;
-    if (IS_MULTIPLE_EFFECT(*raw))
+    if (is_multiple_effect(*raw))
     {
         decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*(raw + 1), 0));
         decoded->effects[1] = effect(MASK_5_SHIFT_RIGHT(*raw, 17), MASK_8_SHIFT_RIGHT(*(raw + 1), 8));
@@ -204,6 +204,11 @@ static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *deco
     decoded->effects[2] = effect(0, 0);
     decoded->effects[3] = effect(0, 0);
     return EVENT_SIZE_SINGLE_EFFECT;
+}
+
+static bool is_multiple_effect(const uint32_t raw_event)
+{
+    return (raw_event & 0x3e0000) > 0;
 }
 
 static effect_t effect(const uint8_t code, const uint8_t data)
@@ -280,7 +285,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == NOTECUT_COMMAND) return SILENCE_SAMPLE_AFTER_DELAY;
     if (code == NOTEDELAY_COMMAND) return DELAY_SAMPLE;
     if (code == PATTERNDELAY_COMMAND) return DELAY_NEXT_EVENT;
-    // command 0x1F (call linked code) is unimplementable.
+    // Command 0x1F (call linked code) is, obviously, impossible to implement.
     return NO_EFFECT;
 }
 
@@ -306,20 +311,16 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
             sample_data[s] = vidc_to_linear(sample_data_mu_law[s]);
         }
         sample->sample_data = sample_data;
-        //
-        // TODO:
-        // I believe this sample rate (usually 8400) is stored in the file_sample.period field
-        // but I do not yet know how it's encoded. Usually it has the value 0x1DC30C.
-        //
-        sample->sample_rate = 8400.0f;
-        sample->base_note = 24;
+        const float period = (float) file_sample.period / 4096; // Period is stored as 20.12 fixed point.
+        sample->sample_rate = (float) VIDC_SYSTEM_CLOCK_MULTIPLE / period;
+        sample->base_note = file_sample.note + 11;
         sample->finetune = 0;
         if (sample->sample_length > 0)
         {
             instrument->assigned = true;
             strncpy(instrument->name, file_sample.name, MAX_LEN_SAMPLENAME_DSKT);
             instrument->sample_index = i;
-            instrument->transpose = 13 - file_sample.note;
+            instrument->transpose = 0;
             instrument->default_volume = file_sample.volume * 2;
         }
         else

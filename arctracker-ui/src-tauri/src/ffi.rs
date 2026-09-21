@@ -174,8 +174,8 @@ pub struct UiInstrumentInfo {
     pub default_volume: c_int,
     pub transpose: c_int,
     pub repeats: bool,
-    pub repeat_offset: c_int,
-    pub repeat_length: c_int,
+    pub repeat_start: c_int,
+    pub repeat_end: c_int,
     pub sample_info: UiSampleInfo,
 }
 
@@ -189,8 +189,8 @@ pub struct UiInstrumentUpdate {
     pub transpose: c_int,
     pub sample_index: c_int,
     pub repeats: bool,
-    pub repeat_offset: c_int,
-    pub repeat_length: c_int,
+    pub repeat_start: c_int,
+    pub repeat_end: c_int,
 }
 
 #[repr(C)]

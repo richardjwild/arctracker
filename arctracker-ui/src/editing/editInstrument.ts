@@ -12,8 +12,8 @@ export type Instrument = {
   defaultVolume: number;
   transpose: number;
   repeats: boolean;
-  repeatOffset: number;
-  repeatLength: number;
+  repeatStart: number;
+  repeatEnd: number;
   sample: Sample;
 };
 
@@ -34,8 +34,8 @@ export function emptyInstrument(): Instrument {
     defaultVolume: 255,
     transpose: 0,
     repeats: false,
-    repeatOffset: 0,
-    repeatLength: 0,
+    repeatStart: 0,
+    repeatEnd: 0,
     sample: {
       sampleIndex: 0,
       sampleLength: 0,
@@ -95,8 +95,8 @@ export const editInstrument = {
       defaultVolume: draftInstrument.defaultVolume,
       transpose: draftInstrument.transpose,
       repeats: draftInstrument.repeats,
-      repeatOffset: draftInstrument.repeatOffset,
-      repeatLength: draftInstrument.repeatLength,
+      repeatStart: draftInstrument.repeatStart,
+      repeatEnd: draftInstrument.repeatEnd,
       sampleIndex: draftInstrument.sample.sampleIndex,
       baseNote: draftInstrument.sample.baseNote,
       fineTuning: draftInstrument.sample.fineTuning,
@@ -115,8 +115,8 @@ export const editInstrument = {
       defaultVolume: instrument.defaultVolume,
       transpose: instrument.transpose,
       repeats: instrument.repeats,
-      repeatOffset: instrument.repeatOffset,
-      repeatLength: instrument.repeatLength,
+      repeatStart: instrument.repeatStart,
+      repeatEnd: instrument.repeatEnd,
       sampleIndex: instrument.sample.sampleIndex,
       baseNote: instrument.sample.baseNote,
       fineTuning: instrument.sample.fineTuning,
@@ -127,8 +127,8 @@ export const editInstrument = {
       defaultVolume: draftInstrument.defaultVolume,
       transpose: draftInstrument.transpose,
       repeats: draftInstrument.repeats,
-      repeatOffset: draftInstrument.repeatOffset,
-      repeatLength: draftInstrument.repeatLength,
+      repeatStart: draftInstrument.repeatStart,
+      repeatEnd: draftInstrument.repeatEnd,
       sampleIndex: draftInstrument.sample.sampleIndex,
       baseNote: draftInstrument.sample.baseNote,
       fineTuning: draftInstrument.sample.fineTuning,
@@ -158,8 +158,8 @@ export const editInstrument = {
       defaultVolume: instrument.defaultVolume,
       transpose: instrument.transpose,
       repeats: instrument.repeats,
-      repeatOffset: instrument.repeatOffset,
-      repeatLength: instrument.repeatLength,
+      repeatStart: instrument.repeatStart,
+      repeatEnd: instrument.repeatEnd,
       sampleIndex: instrument.sample.sampleIndex,
       baseNote: instrument.sample.baseNote,
       fineTuning: instrument.sample.fineTuning,

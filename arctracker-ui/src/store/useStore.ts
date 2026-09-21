@@ -122,8 +122,8 @@ const initialInstrument: Instrument = {
   defaultVolume: 255,
   transpose: 0,
   repeats: false,
-  repeatOffset: 0,
-  repeatLength: 0,
+  repeatStart: 0,
+  repeatEnd: 0,
   sample: {
     sampleIndex: 0,
     sampleLength: 0,
@@ -276,8 +276,8 @@ export const useStore = create<AppStore>((set) => ({
         defaultVolume: instrument.defaultVolume,
         transpose: instrument.transpose,
         repeats: instrument.repeats,
-        repeatOffset: instrument.repeatOffset,
-        repeatLength: instrument.repeatLength,
+        repeatStart: instrument.repeatStart,
+        repeatEnd: instrument.repeatEnd,
         sample: {
           sampleIndex: instrument.sample.sampleIndex,
           sampleLength: instrument.sample.sampleLength,

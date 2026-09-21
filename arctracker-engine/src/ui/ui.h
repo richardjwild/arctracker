@@ -21,8 +21,8 @@ typedef struct ui_instrument_info {
     int default_volume;
     int transpose;
     bool repeats;
-    int repeat_offset;
-    int repeat_length;
+    int repeat_start;
+    int repeat_end;
     ui_sample_info_t sample_info;
 } ui_instrument_info_t;
 
@@ -35,8 +35,8 @@ typedef struct ui_instrument_update {
     int transpose;
     int sample_index;
     bool repeats;
-    int repeat_offset;
-    int repeat_length;
+    int repeat_start;
+    int repeat_end;
 } ui_instrument_update_t;
 
 typedef struct ui_track_state {

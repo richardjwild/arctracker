@@ -110,8 +110,9 @@ void player_update_instruments(player_t *player)
         const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
         player->instruments[i].sample.phase_increment_per_period = phase_increment_per_period;
         player->instruments[i].sample.fine_tuning = fine_tuning[128 + sample.finetune];
+        player->instruments[i].sample.sample_end = sample.sample_length - 1;
         player->instruments[i].sample.sample_repeats = instrument.repeats;
-        player->instruments[i].sample.sample_end = sample.sample_length;
+        player->instruments[i].sample.repeat_end = instrument.repeat_offset + instrument.repeat_length - 1;
         player->instruments[i].sample.repeat_length = instrument.repeat_length;
         player->instruments[i].sample.interpolation_type = player->audio_out.interpolation_type;
         player->instruments[i].sample.sample_data = sample.sample_data;

@@ -153,8 +153,8 @@ pub struct Instrument {
     pub default_volume: i32,
     pub transpose: i32,
     pub repeats: bool,
-    pub repeat_offset: i32,
-    pub repeat_length: i32,
+    pub repeat_start: i32,
+    pub repeat_end: i32,
     pub sample: Sample,
 }
 
@@ -169,8 +169,8 @@ pub struct InstrumentUpdate {
     pub transpose: i32,
     pub sample_index: i32,
     pub repeats: bool,
-    pub repeat_offset: i32,
-    pub repeat_length: i32,
+    pub repeat_start: i32,
+    pub repeat_end: i32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -653,8 +653,8 @@ impl Arctracker {
             default_volume: instrument.default_volume,
             transpose: instrument.transpose,
             repeats: instrument.repeats,
-            repeat_offset: instrument.repeat_offset,
-            repeat_length: instrument.repeat_length,
+            repeat_start: instrument.repeat_start,
+            repeat_end: instrument.repeat_end,
             sample: Sample {
                 sample_index: instrument.sample_info.sample_index,
                 sample_length: instrument.sample_info.sample_length,
@@ -1047,8 +1047,8 @@ impl Arctracker {
             fine_tuning: instrument.fine_tuning,
             transpose: instrument.transpose,
             repeats: instrument.repeats,
-            repeat_offset: instrument.repeat_offset,
-            repeat_length: instrument.repeat_length,
+            repeat_start: instrument.repeat_start,
+            repeat_end: instrument.repeat_end,
             sample_index: instrument.sample_index,
         };
         rust_string_to_c_buffer(&instrument.name, &mut instrument_update.name);

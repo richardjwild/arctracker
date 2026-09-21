@@ -11,12 +11,10 @@ const messages = {
       "Default pattern length must be a number between 1 and 1000.",
     invalidTranspose: "Transpose must be between -12 and 12.",
     invalidFineTune: "Fine tuning must be between -128 and 127.",
-    invalidRepeatStartWithRepeatEnd:
+    invalidRepeatStart:
       "Repeat start must be between 0 and repeat end.",
-    invalidRepeatStartWithoutRepeatEnd:
-      "Repeat start must be between 0 and sample length.",
     invalidRepeatEnd:
-      "Repeat end must be between repeat start and sample length.",
+      "Repeat end must be between repeat start and sample length minus one.",
     invalidLinesPerBeat: "Lines per beat must be a number between 0 and 255.",
     tempoUndefinedWithoutLinesPerBeat:
       "Lines per beat must be set for tempo to be valid.",

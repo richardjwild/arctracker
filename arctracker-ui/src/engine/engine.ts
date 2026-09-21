@@ -18,8 +18,8 @@ export type InstrumentUpdate = {
   fineTuning: number;
   transpose: number;
   repeats: boolean;
-  repeatOffset: number;
-  repeatLength: number;
+  repeatStart: number;
+  repeatEnd: number;
   sampleIndex: number;
 };
 

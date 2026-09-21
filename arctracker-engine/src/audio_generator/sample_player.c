@@ -47,6 +47,7 @@ audio_generator_t init_sampler(const int note, const player_sample_t *sample, co
     const float period = period_for_note(note, sample->fine_tuning);
     memset(sampler_state, 0, sizeof(sampler_state_t));
     sampler_state->sample = sample;
+    // Copy the sample end so we can modify it if we are playing a slice, because we do not want to modify the sample.
     sampler_state->sample_end = sample->sample_end;
     sampler_state->arpeggio.enabled = false;
     sampler_state->period = period;
@@ -115,9 +116,9 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     const player_sample_t *sample = sampler->sample;
     const float *sample_data = sample->sample_data;
     const float phase_increment = sample->phase_increment_per_period / (float) period;
-    const float sample_end = (float) sampler->sample_end;
-    const float repeat_length = (float) sample->repeat_length;
     const bool sample_repeats = sample->sample_repeats && !sampler->repeat_cleared;
+    const float repeat_length = (float) sample->repeat_length;
+    const float sample_end = sample_repeats ? (float) sampler->sample->repeat_end : (float) sampler->sample_end;
     float phase_accumulator = sampler->phase_accumulator;
     int offset = 0;
     const float gain = sampler->gain_curve[volume];
@@ -126,7 +127,7 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
         channel_buffer[offset++] = interpolate(sample_data, phase_accumulator) * gain;
         frames_to_write--;
         phase_accumulator += phase_increment;
-        if (phase_accumulator >= sample_end)
+        if (phase_accumulator > sample_end)
         {
             if (!sample_repeats || repeat_length <= 0) break;
             phase_accumulator -= repeat_length;

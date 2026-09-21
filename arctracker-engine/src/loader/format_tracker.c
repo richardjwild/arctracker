@@ -1,7 +1,7 @@
 #include "format_tracker.h"
 #include <string.h>
 #include "io/error.h"
-#include "src/vidc/vidc.h"
+#include "vidc/vidc.h"
 #include "memory/heap.h"
 #include "memory/bits.h"
 #include "player/period.h"
