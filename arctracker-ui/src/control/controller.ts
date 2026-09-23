@@ -42,7 +42,7 @@ async function processCommands() {
         });
         return; // Don't execute any more commands if we have created a new module.
       case "Load module":
-        void module.load().then((success) => {
+        void module.selectAndLoad().then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have loaded a new module.

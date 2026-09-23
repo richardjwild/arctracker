@@ -98,12 +98,14 @@ export function useMenuActions() {
     void Promise.all(
       menuActions.map(async ({ eventId, action }) => {
         const unlisten = await listen(eventId, () => {
-          void Promise.resolve(action()).catch((error) => {
+          try {
+            action();
+          } catch (error) {
             userMessages.logMessage({
               type: "warning",
               message: messageFn2("menuActionFailed")(eventId, error as string),
             });
-          });
+          }
         });
         if (disposed) {
           unlisten();

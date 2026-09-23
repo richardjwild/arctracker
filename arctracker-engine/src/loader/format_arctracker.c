@@ -546,7 +546,7 @@ static bool read_pattern_chunk(const uint8_t *data, const size_t data_size, modu
         error(INVALID_PATTERN_CHUNK_LENGTH);
         return false;
     }
-    if (!module_create_pattern(module, pattern_no, num_lines))
+    if (!module_create_pattern(module, (int) pattern_no, num_lines))
     {
         error(FAILED_TO_CREATE_PATTERN);
         return false;
@@ -639,7 +639,7 @@ static bool read_empty_pattern_chunk(const uint8_t *data, const size_t data_size
         error(INVALID_EPAT_CHUNK_LENGTH);
         return false;
     }
-    if (!module_create_pattern(module, pattern_no, num_lines))
+    if (!module_create_pattern(module, (int) pattern_no, num_lines))
     {
         error(FAILED_TO_CREATE_PATTERN);
         return false;
@@ -684,7 +684,7 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
     instrument->assigned = true;
     snprintf(instrument->name, sizeof instrument->name, "%s", instrument_name);
     instrument->default_volume = instrument_volume;
-    instrument->transpose = transpose + 13;
+    instrument->transpose = (int) transpose;
     instrument->repeats = sample_loop_flag == 1;
     instrument->repeat_offset = (int) sample_loop_start;
     instrument->repeat_length = (int) sample_loop_length;
@@ -1002,7 +1002,7 @@ static bool write_instrument_chunk(const module_t *module, const uint8_t instrum
     if (!write_cc(fp, instrument_name, INSTRUMENT_NAME_LEN)) return false;
     if (!write_u8(fp, INSTRUMENT_TYPE_SAMPLE)) return false;
     if (!write_u8(fp, instrument.default_volume)) return false;
-    if (!write_s8(fp, instrument.transpose - 13)) return false;
+    if (!write_s8(fp, (int8_t) instrument.transpose)) return false;
     if (!write_u8(fp, instrument.repeats ? 1 : 0)) return false;
     if (!write_u32_le(fp, instrument.sample_index)) return false;
     if (!write_u32_le(fp, instrument.repeat_offset)) return false;
@@ -1074,9 +1074,9 @@ static uint32_t write_gain(const float gain)
 {
     if (gain < 0.0f) return 0;
     if (gain > 1.0f) return MASTER_GAIN_MAX;
-    return (uint32_t) (gain * MASTER_GAIN_MAX);
+    return (uint32_t) (gain * (float) MASTER_GAIN_MAX);
 }
-
+    
 static bool write_fourcc(FILE *fp, const char *ch)
 {
     return write_cc(fp, ch, 4);

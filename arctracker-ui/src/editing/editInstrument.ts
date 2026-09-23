@@ -179,13 +179,14 @@ export const editInstrument = {
         name: filePicker.leafName(path).substring(0, SampleNameMaxLength),
         assigned: true,
         defaultVolume: 255,
-        transpose: 12,
+        transpose: 0,
         repeats: false,
         repeatOffset: 0,
         repeatLength: 0,
         sample,
       };
       setDraftInstrument(updatedDraft);
+      void editInstrument.auditionInstrument();
     } catch (e) {
       void alerting.showErrorWithContext(message("sampleLoadFailed"), e as string);
     }

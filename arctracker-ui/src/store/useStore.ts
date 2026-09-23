@@ -183,7 +183,7 @@ export const useStore = create<AppStore>((set) => ({
   hexCalculatorActive: false,
 
   replaceModule: (result) => {
-    console.log('volume mapping', result.volumeMapping);
+    console.log("volume mapping", result.volumeMapping);
     set((state) => ({
       moduleId: state.moduleId + 1,
       patternRevision: 0,
@@ -212,14 +212,23 @@ export const useStore = create<AppStore>((set) => ({
     })),
 
   setModuleFilename: (fileName: string) =>
-    set((state) => ({
-      module: {
-        ...state.module,
-        fileName,
-      },
-    })),
+    set((state) => {
+      if (fileName === state.module.fileName) return state;
+      return {
+        module: {
+          ...state.module,
+          fileName,
+        },
+      };
+    }),
 
-  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType, volumeMapping: VolumeMappingType) =>
+  setModuleMetaData: (
+    name: string,
+    author: string,
+    defaultPatternLength: number,
+    interpolationType: InterpolationType,
+    volumeMapping: VolumeMappingType,
+  ) =>
     set((state) => ({
       module: {
         ...state.module,
@@ -237,7 +246,7 @@ export const useStore = create<AppStore>((set) => ({
         ...state.module,
         linesPerBeat,
         beatsPerMinute,
-      }
+      },
     })),
 
   updateTracks: (numTracks: number) =>
@@ -263,7 +272,7 @@ export const useStore = create<AppStore>((set) => ({
       module: {
         ...state.module,
         tuneLength: sequence.length,
-      }
+      },
     })),
 
   setInstrument: (instrumentIndex: number, instrument: Instrument) =>
@@ -298,7 +307,8 @@ export const useStore = create<AppStore>((set) => ({
 
   setDraftInstrument: (draftInstrument) => set({ draftInstrument }),
 
-  setDraftModuleMetaData: (draftModuleTitle) => set({ draftModuleMetaData: draftModuleTitle }),
+  setDraftModuleMetaData: (draftModuleTitle) =>
+    set({ draftModuleMetaData: draftModuleTitle }),
 
   setDraftTempo: (draftTempo) => set({ draftTempo }),
 
@@ -392,7 +402,7 @@ export const useStore = create<AppStore>((set) => ({
       return {
         ...state,
         userMessages,
-      }
+      };
     }),
 
   setHexCalculatorActive: (hexCalculatorActive: boolean) =>

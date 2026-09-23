@@ -236,7 +236,7 @@ audio_t wav_read_audio(const uint8_t *wav_data, const size_t loaded_data_size)
         error(INCONSISTENT_WAV_BLOCK_ALIGNMENT);
         return output;
     }
-    output.sample_rate = wav_file_in.sample_rate;
+    output.sample_rate = (int) wav_file_in.sample_rate;
     if (wav_file_in.bits_per_sample % 8 != 0 || wav_file_in.bits_per_sample > 32)
     {
         fprintf(stderr, "Invalid bits per sample: %d\n", wav_file_in.bits_per_sample);
