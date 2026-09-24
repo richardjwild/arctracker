@@ -40,12 +40,44 @@ export type NewModuleParams = {
   author: string;
 };
 
-
 const FormatArctracker = 0;
 
 async function okToDiscardModule() {
   if (!editor.hasUnsavedChanges()) return true;
   return await alerting.askConfirmation(message("unsavedChanges"));
+}
+
+async function loadModule(filePath: string) {
+  const { setLoadingModule, replaceModule } = useStore.getState();
+  try {
+    let module = await engine.loadModule(filePath);
+    if (module) {
+      module.fileName = filePath;
+      replaceModule(module);
+      userMessages.logMessage({
+        type: "info",
+        message: messageFn("moduleLoadedSuccessfully")(module.fileName),
+      });
+    }
+  } catch (err) {
+    throw err;
+  } finally {
+    setLoadingModule(false);
+  }
+}
+
+async function saveModule(filePath: string) {
+  try {
+    await engine.saveModule(filePath, FormatArctracker);
+    useStore.getState().setModuleFilename(filePath);
+    editor.allChangesSaved();
+    userMessages.logMessage({
+      type: "info",
+      message: messageFn("moduleSavedSuccessfully")(filePath),
+    });
+  } catch (err) {
+    void alerting.showError(err as string);
+  }
 }
 
 export const module = {
@@ -55,10 +87,8 @@ export const module = {
       .then((module) => useStore.getState().replaceModule(module));
   },
 
-  load: async (): Promise<boolean> => {
+  selectAndLoad: async (): Promise<boolean> => {
     if (!(await okToDiscardModule())) return false;
-    const { setLoadingModule, replaceModule } = useStore.getState();
-    setLoadingModule(true);
     try {
       const selected = await filePicker.chooseFileToOpen(
         [
@@ -70,22 +100,12 @@ export const module = {
         message("moduleFileFilterDescription"),
       );
       if (selected) {
-        let module = await engine.loadModule(selected);
-        if (module) {
-          module.fileName = selected;
-          replaceModule(module);
-          userMessages.logMessage({
-            type: "info",
-            message: messageFn("moduleLoadedSuccessfully")(module.fileName),
-          });
-        }
+        await loadModule(selected);
       }
       return true;
     } catch (err) {
       await alerting.showError(err as string);
       return false;
-    } finally {
-      setLoadingModule(false);
     }
   },
 
@@ -95,16 +115,7 @@ export const module = {
       module.fileName &&
       module.fileName.endsWith(`.${ARCTRACKER_MODFILE_EXTENSION}`)
     ) {
-      try {
-        await engine.saveModule(module.fileName, FormatArctracker);
-        editor.allChangesSaved();
-        userMessages.logMessage({
-          type: "info",
-          message: messageFn("moduleSavedSuccessfully")(module.fileName),
-        });
-      } catch (err) {
-        void alerting.showError(err as string);
-      }
+      await saveModule(module.fileName);
     } else {
       commands.saveModuleAs();
     }
@@ -122,17 +133,7 @@ export const module = {
       message("moduleFileFilterDescription")
     );
     if (!filePath) return;
-    try {
-      await engine.saveModule(filePath, FormatArctracker);
-      useStore.getState().setModuleFilename(filePath);
-      editor.allChangesSaved();
-      userMessages.logMessage({
-        type: "info",
-        message: messageFn("moduleSavedSuccessfully")(filePath),
-      });
-    } catch (err) {
-      void alerting.showError(err as string);
-    }
+    await saveModule(filePath);
   },
 
   create: async (usingDefaults: boolean): Promise<boolean> => {

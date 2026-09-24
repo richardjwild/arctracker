@@ -43,6 +43,7 @@ const menuActions: MenuAction[] = [
   { eventId: "cut-pattern-requested", action: commands.cutPattern },
   { eventId: "copy-pattern-requested", action: commands.copyPattern },
   { eventId: "paste-pattern-requested", action: commands.pastePattern },
+  { eventId: "set-multiple-effects-requested", action: commands.openSetMultipleEffects },
   { eventId: "play-pause-requested", action: commands.togglePlay },
   { eventId: "toggle-loop-requested", action: commands.toggleLoop },
   { eventId: "seek-forwards-requested", action: commands.sequenceSeekForwards },
@@ -98,12 +99,14 @@ export function useMenuActions() {
     void Promise.all(
       menuActions.map(async ({ eventId, action }) => {
         const unlisten = await listen(eventId, () => {
-          void Promise.resolve(action()).catch((error) => {
+          try {
+            action();
+          } catch (error) {
             userMessages.logMessage({
               type: "warning",
               message: messageFn2("menuActionFailed")(eventId, error as string),
             });
-          });
+          }
         });
         if (disposed) {
           unlisten();

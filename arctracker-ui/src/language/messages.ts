@@ -74,6 +74,7 @@ const messages = {
     setTempoButtonLabel: "Set tempo",
     saveButtonLabel: "Save",
     cancelButtonLabel: "Cancel",
+    applyButtonLabel: "Apply",
     outputDeviceLabel: "Audio Output Device:",
     midiInputDeviceLabel: "MIDI Input Device:",
     defaultOutputDevice: "Default",
@@ -93,6 +94,10 @@ const messages = {
     hexCalculatorButtonTooltip: "Open hex calculator",
     decimalValueLabel: "Decimal:",
     hexValueLabel: "Hex:",
+    effectLaneLabel: "Effect Lane:",
+    effectValueLabel: "Effect Value:",
+    onlyNoteOnsLabel: "Note-ons Only:",
+    invalidEffectValue: "Effect value must use only numbers 0-9 and letters A-F."
   },
 } as const;
 

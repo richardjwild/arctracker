@@ -114,19 +114,18 @@ void editor_update_sample(const module_t *module, const int sample_index, const 
     sample->finetune = (int8_t) fine_tuning;
 }
 
-edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, int *sample_length)
+edit_result_t editor_load_sample(module_t *module, const char *filename, int *sample_index, sample_t *linked_sample)
 {
     const load_sample_result_t load_result = load_sample(filename);
     if (!load_result.file_read)
         return failure(FILE_OPEN_FAILED);
     if (!load_result.file_valid)
         return failure(SAMPLE_LOAD_FAILED);
-    if (!module_link_sample(module, load_result.sample_data, load_result.sample_length, load_result.sample_rate, sample_index))
+    if (!module_link_sample(module, load_result.sample_data, load_result.sample_length, load_result.sample_rate, sample_index, linked_sample))
     {
         deallocate(MODULE, load_result.sample_data);
         return failure(SAMPLE_LINK_FAILED);
     }
-    *sample_length = load_result.sample_length;
     return EDIT_SUCCESS;
 }
 

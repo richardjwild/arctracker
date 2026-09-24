@@ -1,5 +1,6 @@
 import { CursorField } from "../editing/cursor.ts";
 import { AppConfig } from "../config/appConfig.ts";
+import { Effect } from "../editing/patternEvents.ts";
 
 type SampleCursorField = Extract<
   CursorField,
@@ -122,7 +123,9 @@ export type Command =
   | { type: "Shift keyboard octave up" }
   | { type: "Shift keyboard octave down" }
   | { type: "Open hex calculator" }
-  | { type: "Close hex calculator" };
+  | { type: "Close hex calculator" }
+  | { type: "Open set multiple effects" }
+  | { type: "Set multiple effects"; effectLane: number; effect: Effect; noteOnsOnly: boolean };
 
 const queue: Command[] = [];
 
@@ -291,4 +294,8 @@ export const commands = {
     commandQueue.push({ type: "Shift keyboard octave down" }),
   openHexCalculator: () => commandQueue.push({ type: "Open hex calculator" }),
   closeHexCalculator: () => commandQueue.push({ type: "Close hex calculator" }),
+  openSetMultipleEffects: () =>
+    commandQueue.push({ type: "Open set multiple effects" }),
+  setMultipleEffects: (effectLane: number, effect: Effect, noteOnsOnly: boolean) =>
+    commandQueue.push({ type: "Set multiple effects", effectLane, effect, noteOnsOnly }),
 };

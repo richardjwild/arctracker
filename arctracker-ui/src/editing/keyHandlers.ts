@@ -9,6 +9,7 @@ import { moduleMetaData } from "./moduleMetaData.ts";
 import { tempo } from "./tempo.ts";
 import { appConfig } from "../config/appConfig.ts";
 import { useStore } from "../store/useStore.ts";
+import { editor } from "./editor.ts";
 
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
@@ -18,6 +19,7 @@ export const editorKeyHandlers: {
   handleTempoInput: KeyHandler,
   handleAppConfigInput: KeyHandler,
   handleHexCalculatorInput: KeyHandler,
+  handleSetMultipleEffectsInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -119,4 +121,14 @@ export const editorKeyHandlers: {
     }
     return false;
   },
+
+  handleSetMultipleEffectsInput: (e) => {
+    if (useStore.getState().editorState.editMode !== "setMultipleEffects")
+      return false;
+    if (e.code === 'Escape') {
+      editor.setEditMode("none");
+      return true;
+    }
+    return false;
+  }
 };

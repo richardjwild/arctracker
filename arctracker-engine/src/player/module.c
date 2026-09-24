@@ -254,7 +254,7 @@ void module_set_instrument(module_t *module, const int instrument_index, const i
     module->instruments[instrument_index] = instrument_update;
 }
 
-bool module_link_sample(module_t *module, const float *sample_data, const int sample_length, const float sample_rate, int *sample_index)
+bool module_link_sample(module_t *module, const float *sample_data, const int sample_length, const float sample_rate, int *sample_index, sample_t *linked_sample)
 {
     bool found_empty_slot = false;
     int new_sample_index = 0;
@@ -274,13 +274,12 @@ bool module_link_sample(module_t *module, const float *sample_data, const int sa
             return false;
         module->sample_slots++;
     }
-    module->samples[new_sample_index] = (sample_t) {
-        .sample_data = sample_data,
-        .sample_length = sample_length,
-        .sample_rate = sample_rate,
-        .base_note = 24,
-        .finetune = 0,
-    };
+    linked_sample->sample_data = sample_data;
+    linked_sample->sample_length = sample_length;
+    linked_sample->sample_rate = sample_rate;
+    linked_sample->base_note = 24;
+    linked_sample->finetune = 0;
+    module->samples[new_sample_index] = *linked_sample;
     *sample_index = new_sample_index;
     return true;
 }

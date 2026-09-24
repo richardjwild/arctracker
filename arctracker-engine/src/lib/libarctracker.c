@@ -770,12 +770,15 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
     if (sample_info == NULL)
         return failure(BAD_BUFFER);
     int sample_index;
-    int sample_length;
-    const edit_result_t result = editor_load_sample(arctracker->module, filename, &sample_index, &sample_length);
+    sample_t linked_sample;
+    const edit_result_t result = editor_load_sample(arctracker->module, filename, &sample_index, &linked_sample);
     if (!result.success)
         return failure(result.error_message);
     sample_info->sample_index = sample_index;
-    sample_info->sample_length = sample_length;
+    sample_info->sample_length = linked_sample.sample_length;
+    sample_info->sample_rate = linked_sample.sample_rate;
+    sample_info->base_note = linked_sample.base_note;
+    sample_info->fine_tuning = (int) linked_sample.finetune;
     return SUCCESS;
 }
 

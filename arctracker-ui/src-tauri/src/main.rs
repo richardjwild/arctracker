@@ -1,7 +1,6 @@
 use arctracker_ui_lib::arctracker::{default_module_params, initialise, NewModuleParams};
 use arctracker_ui_lib::AppState;
 use std::error::Error;
-use std::ops::Sub;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{App, AppHandle, Emitter, Manager, RunEvent, Runtime, WindowEvent};
@@ -40,6 +39,7 @@ const PASTE_TRACK_MENU_ID: &str = "paste-track";
 const CUT_PATTERN_MENU_ID: &str = "cut-pattern";
 const COPY_PATTERN_MENU_ID: &str = "copy-pattern";
 const PASTE_PATTERN_MENU_ID: &str = "paste-pattern";
+const SET_MULTIPLE_EFFECTS_MENU_ID: &str = "set-multiple-effects";
 const INCREMENT_PATTERN_MENU_ID: &str = "increment-pattern";
 const DECREMENT_PATTERN_MENU_ID: &str = "decrement-pattern";
 const INSERT_SEQUENCE_BEFORE_MENU_ID: &str = "insert-sequence-before";
@@ -93,6 +93,7 @@ const PASTE_TRACK_REQUESTED_EVENT: &str = "paste-track-requested";
 const CUT_PATTERN_REQUESTED_EVENT: &str = "cut-pattern-requested";
 const COPY_PATTERN_REQUESTED_EVENT: &str = "copy-pattern-requested";
 const PASTE_PATTERN_REQUESTED_EVENT: &str = "paste-pattern-requested";
+const SET_MULTIPLE_EFFECTS_REQUESTED_EVENT: &str = "set-multiple-effects-requested";
 const INCREMENT_PATTERN_REQUESTED_EVENT: &str = "increment-pattern-requested";
 const DECREMENT_PATTERN_REQUESTED_EVENT: &str = "decrement-pattern-requested";
 const INSERT_SEQUENCE_BEFORE_REQUESTED_EVENT: &str = "insert-sequence-before-requested";
@@ -172,6 +173,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         CUT_PATTERN_MENU_ID => request_event(app_handle, CUT_PATTERN_REQUESTED_EVENT),
         COPY_PATTERN_MENU_ID => request_event(app_handle, COPY_PATTERN_REQUESTED_EVENT),
         PASTE_PATTERN_MENU_ID => request_event(app_handle, PASTE_PATTERN_REQUESTED_EVENT),
+        SET_MULTIPLE_EFFECTS_MENU_ID => request_event(app_handle, SET_MULTIPLE_EFFECTS_REQUESTED_EVENT),
         INCREMENT_PATTERN_MENU_ID => request_event(app_handle, INCREMENT_PATTERN_REQUESTED_EVENT),
         DECREMENT_PATTERN_MENU_ID => request_event(app_handle, DECREMENT_PATTERN_REQUESTED_EVENT),
         INSERT_SEQUENCE_BEFORE_MENU_ID => {
@@ -307,6 +309,7 @@ fn build_file_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         &[
             &new_module,
             &new_module_using_defaults,
+            &separator,
             &open_module,
             &save_module,
             &save_module_as,
@@ -391,6 +394,13 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("CmdOrCtrl+F5"),
     )?;
+    let set_multiple_effects = MenuItem::with_id(
+        app,
+        SET_MULTIPLE_EFFECTS_MENU_ID,
+        "Set Multiple Effects",
+        true,
+        Some("CmdOrCtrl+E"),
+    )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(
         app,
@@ -416,6 +426,8 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
             &cut_pattern,
             &copy_pattern,
             &paste_pattern,
+            &separator,
+            &set_multiple_effects,
         ],
     )
 }

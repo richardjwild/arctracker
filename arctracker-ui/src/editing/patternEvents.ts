@@ -1,9 +1,11 @@
 import { useStore } from "../store/useStore.ts";
 import { engine } from "../engine/engine.ts";
 import { editor, EditCommand } from "./editor.ts";
-import { Cursor, CursorField } from "./cursor.ts";
+import { cursor, Cursor, CursorField } from "./cursor.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { patternGrid } from "./patternGrid.ts";
+import { selection } from "./selection.ts";
+import { sequence } from "./sequence.ts";
 
 export type Effect = {
   effectCode: number[];
@@ -343,5 +345,40 @@ export const patternEvents = {
     }
     const eventEditCommand = buildMultipleEventEditCommand(eventEdits);
     await editor.applyEdit(eventEditCommand);
+  },
+
+  setMultipleEffects: async (effectLane: number, effect: Effect, noteOnsOnly: boolean) => {
+    const moduleSequence = useStore.getState().sequence;
+    const patternNo = moduleSequence[sequence.currentPosition()];
+    const cursorPosition = cursor.currentPosition();
+    const selectedBounds = selection.patternSelectionBounds() || {
+      top: cursorPosition.patternIndex,
+      bottom: cursorPosition.patternIndex,
+      left: cursorPosition.track,
+      right: cursorPosition.track,
+    };
+    console.log('setMultipleEffects', patternNo, selectedBounds, effectLane, effect, noteOnsOnly);
+    const updatedEvents: { location: EventLocation; event: PatternEvent }[] = [];
+    for (let track = selectedBounds.left; track <= selectedBounds.right; track++) {
+      for (let patternIndex = selectedBounds.top; patternIndex <= selectedBounds.bottom; patternIndex++) {
+        const event = await patternEvents.getEvent(patternNo, patternIndex, track);
+        if (!noteOnsOnly || event.note > 0) {
+          const location = {
+            patternNo,
+            patternIndex,
+            track,
+          }
+          const effects = [ ...event.effects ];
+          effects[effectLane] = effect;
+          const updatedEvent = {
+            ...event,
+            effects,
+          };
+          updatedEvents.push({ location, event: updatedEvent });
+        }
+      }
+    }
+    console.log('updatedEvents', updatedEvents);
+    void patternEvents.setEvents(updatedEvents);
   },
 };

@@ -42,7 +42,7 @@ async function processCommands() {
         });
         return; // Don't execute any more commands if we have created a new module.
       case "Load module":
-        void module.load().then((success) => {
+        void module.selectAndLoad().then((success) => {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have loaded a new module.
@@ -319,6 +319,12 @@ async function processCommands() {
         break;
       case "Close hex calculator":
         useStore.getState().setHexCalculatorActive(false);
+        break;
+      case "Open set multiple effects":
+        editor.setEditMode("setMultipleEffects");
+        break;
+      case "Set multiple effects":
+        void patternEvents.setMultipleEffects(command.effectLane, command.effect, command.noteOnsOnly);
         break;
     }
   }
