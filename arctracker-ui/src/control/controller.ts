@@ -320,6 +320,12 @@ async function processCommands() {
       case "Close hex calculator":
         useStore.getState().setHexCalculatorActive(false);
         break;
+      case "Open set multiple effects":
+        editor.setEditMode("setMultipleEffects");
+        break;
+      case "Set multiple effects":
+        void patternEvents.setMultipleEffects(command.effectLane, command.effect, command.noteOnsOnly);
+        break;
     }
   }
 }

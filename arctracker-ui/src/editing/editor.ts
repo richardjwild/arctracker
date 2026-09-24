@@ -12,6 +12,7 @@ export type EditMode =
   | "moduleMetaData"
   | "trackCount"
   | "tempo"
+  | "setMultipleEffects"
   | "appConfig";
 
 export type EditorState = {

@@ -16,6 +16,7 @@ import EditAppConfig from "./view/EditAppConfig.tsx";
 import KeyboardOctave from "./view/KeyboardOctave.tsx";
 import UserMessages from "./view/UserMessages.tsx";
 import HexCalculator from "./view/HexCalculator.tsx";
+import SetMultipleEffects from "./view/SetMultipleEffects.tsx";
 
 export default function AppLayout() {
   return (
@@ -36,6 +37,7 @@ export default function AppLayout() {
       <EditTrackCount />
       <EditTempo />
       <EditAppConfig />
+      <SetMultipleEffects />
     </main>
   );
 }

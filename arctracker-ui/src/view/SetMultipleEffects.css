@@ -1,0 +1,85 @@
+.setMultipleEffects {
+    width: 302px;
+    height: 225px;
+    display: grid;
+    grid-template-columns: 145px 1fr;
+    grid-template-rows: 50px 50px 50px 50px;
+    gap: 10px;
+    grid-template-areas:
+        "effectLaneLabel effectLaneEdit"
+        "effectValueLabel effectValueEdit"
+        "onlyNoteOnsLabel onlyNoteOnsEdit"
+        "saveCloseButtons saveCloseButtons"
+}
+
+.effectLaneLabel {
+    grid-area: effectLaneLabel;
+}
+
+.effectLaneEdit {
+    grid-area: effectLaneEdit;
+}
+
+.effectValueLabel {
+    grid-area: effectValueLabel;
+}
+
+.effectValueEdit {
+    grid-area: effectValueEdit;
+}
+
+.onlyNoteOnsLabel {
+    grid-area: onlyNoteOnsLabel;
+}
+
+.onlyNoteOnsEdit {
+    grid-area: onlyNoteOnsEdit;
+}
+
+.saveCloseButtons {
+    grid-area: saveCloseButtons;
+}
+
+.setMultipleEffects label {
+    display: block;
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-label);
+    padding-top: 13px;
+}
+
+.setMultipleEffects input[type='text'], .setMultipleEffects input[type='number'] {
+    width: 100%;
+    height: 28px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    font-family: SplineSansMono, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--colour-sample-edit-input-text);
+    caret-shape: block;
+    caret-color: var(--colour-sample-edit-input-text);
+    accent-color: var(--colour-sample-edit-input-text);
+}
+
+.setMultipleEffects input[type='text']:focus, .setMultipleEffects input[type='number']:focus {
+    outline: none;
+}
+
+.onlyNoteOnsEdit {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.onlyNoteOnsEdit label {
+    display: inline;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    color: var(--colour-sample-edit-input-text);
+    margin-left: 5px;
+    margin-right: 10px;
+}
