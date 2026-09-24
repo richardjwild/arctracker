@@ -357,7 +357,6 @@ export const patternEvents = {
       left: cursorPosition.track,
       right: cursorPosition.track,
     };
-    console.log('setMultipleEffects', patternNo, selectedBounds, effectLane, effect, noteOnsOnly);
     const updatedEvents: { location: EventLocation; event: PatternEvent }[] = [];
     for (let track = selectedBounds.left; track <= selectedBounds.right; track++) {
       for (let patternIndex = selectedBounds.top; patternIndex <= selectedBounds.bottom; patternIndex++) {
@@ -378,7 +377,6 @@ export const patternEvents = {
         }
       }
     }
-    console.log('updatedEvents', updatedEvents);
     void patternEvents.setEvents(updatedEvents);
   },
 };
