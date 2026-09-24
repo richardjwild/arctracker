@@ -43,6 +43,7 @@ const menuActions: MenuAction[] = [
   { eventId: "cut-pattern-requested", action: commands.cutPattern },
   { eventId: "copy-pattern-requested", action: commands.copyPattern },
   { eventId: "paste-pattern-requested", action: commands.pastePattern },
+  { eventId: "set-multiple-effects-requested", action: commands.openSetMultipleEffects },
   { eventId: "play-pause-requested", action: commands.togglePlay },
   { eventId: "toggle-loop-requested", action: commands.toggleLoop },
   { eventId: "seek-forwards-requested", action: commands.sequenceSeekForwards },
