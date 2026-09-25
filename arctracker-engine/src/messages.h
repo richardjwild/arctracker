@@ -72,6 +72,7 @@
 #define ADJUST_TRACK_COUNT_FAILED "Failed to adjust track count"
 #define INVALID_TRACK_COUNT "Invalid track count"
 #define BAD_FORMAT "Bad module format"
+#define TOO_MANY_SAMPLE_SLICES "Module requires too many sample slices"
 #define UNSUPPORTED_MODULE_FILE_VERSION "File format is a later version than that supported by this program"
 #define MODULE_METADATA_MISSING "File corrupt: module metadata not found"
 #define CHUNK_HEADER_EXTENDS_BEYOND_EOF "File corrupt: chunk header extends beyond EOF"

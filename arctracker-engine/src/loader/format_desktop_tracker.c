@@ -1,6 +1,7 @@
 #include <string.h>
 #include "format_desktop_tracker.h"
 #include "loader.h"
+#include "messages.h"
 #include "memory/bits.h"
 #include "memory/heap.h"
 #include "vidc/vidc.h"
@@ -79,13 +80,16 @@ static const int PANNING[] = {1, 43, 86, 128, 170, 213, 255};
 
 static bool is_desktop_tracker_format(mapped_file_t);
 static module_t *read_desktop_tracker_module(mapped_file_t);
-static bool decode_dtt_patterns(uint8_t *, const uint32_t *, module_t *, const int *);
-static size_t decode_desktop_tracker_event(const uint8_t *, event_t *);
-static bool is_multiple_effect(uint32_t);
+static bool decode_dtt_patterns(const uint8_t *, const uint32_t *, module_t *, const int *);
+static bool decode_desktop_tracker_event(const uint8_t *, instrument_t *, const sample_t *, event_t *, size_t *);
+static bool is_single_effect(uint32_t);
+static bool decode_single_effect(uint32_t, instrument_t *, const sample_t *, effect_t *);
+static bool decode_multiple_effects(const uint32_t *raw, instrument_t *, const sample_t *, effect_t *);
 static effect_t effect(uint8_t, uint8_t);
 static command_t desktop_tracker_command(uint8_t, uint8_t);
 static void copy_int_array(const uint8_t *, int *, int);
 static bool get_samples(module_t *, dtt_sample_format_t *, uint8_t *);
+static bool find_or_create_sample_slice(uint32_t, instrument_t *, const sample_t *, uint8_t *);
 
 format_t desktop_tracker_format(void)
 {
@@ -143,10 +147,10 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     if (pattern_lengths == NULL)
         goto fail;
     copy_int_array(pattern_lengths_start, pattern_lengths, module->num_patterns);
-    if (!decode_dtt_patterns(file.addr, (uint32_t *) pattern_offsets_start, module, pattern_lengths))
-        goto fail;
     uint8_t *samples_start = pattern_lengths_start + align_to_word(module->num_patterns);
     if (!get_samples(module, (dtt_sample_format_t *) samples_start, file.addr))
+        goto fail;
+    if (!decode_dtt_patterns(file.addr, (uint32_t *) pattern_offsets_start, module, pattern_lengths))
         goto fail;
     deallocate(MODULE, pattern_lengths);
     return module;
@@ -159,7 +163,7 @@ fail:
     return NULL;
 }
 
-static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_offsets, module_t *module, const int *pattern_lengths)
+static bool decode_dtt_patterns(const uint8_t *base_address, const uint32_t *pattern_offsets, module_t *module, const int *pattern_lengths)
 {
     for (int pno = 0; pno < module->num_patterns; pno++)
     {
@@ -168,7 +172,7 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
         {
             return false;
         }
-        uint8_t *raw_pattern_data = base_address + pattern_offsets[pno];
+        const uint8_t *raw_pattern_data = base_address + pattern_offsets[pno];
         for (int line = 0; line < pattern_length; line++)
         {
             for (uint32_t track = 0; track < module->track_capacity; track++)
@@ -176,7 +180,14 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
                 const uint32_t event_index = (line * module->track_capacity) + track;
                 event_t *event = module->patterns[pno].events + event_index;
                 if (track < (uint32_t) module->num_tracks)
-                    raw_pattern_data += decode_desktop_tracker_event(raw_pattern_data, event);
+                {
+                    size_t event_size = 0;
+                    if (!decode_desktop_tracker_event(raw_pattern_data, module->instruments, module->samples, event, &event_size))
+                    {
+                        return false;
+                    }
+                    raw_pattern_data += event_size;
+                }
                 else
                     *event = (event_t) {0};
             }
@@ -185,30 +196,110 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
     return true;
 }
 
-static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *decoded)
+/*
+ * An event in Desktop Tracker may have either one effect slot or four. The data is packed differently accordingly.
+ * For one effect slot (32 bits):
+ *  0...5 Sample number
+ *  6..11 Note
+ * 12..16 Effect code
+ * 17..23 Unused (zero)
+ * 24..31 Effect data
+ *
+ * For four effect slots (64 bits):
+ *  0...5 Sample number
+ *  6..11 Note
+ * 12..16 Effect 1 code
+ * 17..21 Effect 2 code
+ * 22..26 Effect 3 code
+ * 27..31 Effect 4 code
+ * 32..39 Effect 1 data
+ * 40..47 Effect 2 data
+ * 48..55 Effect 3 data
+ * 56..63 Effect 4 data
+ */
+static bool decode_desktop_tracker_event(const uint8_t *event_p, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
 {
     const uint32_t *raw = (uint32_t *) event_p;
     decoded->instrument_no = (int) mask_6_shift_right(*raw, 0);
+    instrument_t *instrument = &instruments[decoded->instrument_no];
     const int note = (int) mask_6_shift_right(*raw, 6);
     decoded->note = note == 0 ? 0 : note + 12;
-    if (is_multiple_effect(*raw))
+    if (is_single_effect(*raw))
     {
-        decoded->effects[0] = effect(mask_5_shift_right(*raw, 12), mask_8_shift_right(*(raw + 1), 0));
-        decoded->effects[1] = effect(mask_5_shift_right(*raw, 17), mask_8_shift_right(*(raw + 1), 8));
-        decoded->effects[2] = effect(mask_5_shift_right(*raw, 22), mask_8_shift_right(*(raw + 1), 16));
-        decoded->effects[3] = effect(mask_5_shift_right(*raw, 27), mask_8_shift_right(*(raw + 1), 24));
-        return EVENT_SIZE_MULTIPLE_EFFECT;
+        *event_size = EVENT_SIZE_SINGLE_EFFECT;
+        for (int slot = 1; slot <= 3; slot++) decoded->effects[slot] = effect(0, 0);
+        return decode_single_effect(*raw, instrument, samples, &decoded->effects[0]);
     }
-    decoded->effects[0] = effect(mask_5_shift_right(*raw, 12), mask_8_shift_right(*raw, 24));
-    decoded->effects[1] = effect(0, 0);
-    decoded->effects[2] = effect(0, 0);
-    decoded->effects[3] = effect(0, 0);
-    return EVENT_SIZE_SINGLE_EFFECT;
+    *event_size = EVENT_SIZE_MULTIPLE_EFFECT;
+    return decode_multiple_effects(raw, instrument, samples, decoded->effects);
 }
 
-static bool is_multiple_effect(const uint32_t raw_event)
+/*
+ * The Desktop Tracker manual states the recommended method of detecting 1 or 4 effects is thus:
+ * ; R0 is event data
+ * TST R0,#&1F<<17
+ * BEQ is_1_effect
+ * BNE is_4_effects
+ */
+static bool is_single_effect(const uint32_t raw_event)
 {
-    return (raw_event & 0x3e0000) > 0;
+    return (raw_event & 0x1f << 17) == 0;
+}
+
+static bool decode_single_effect(const uint32_t raw, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
+{
+    *decoded_effect = effect(mask_5_shift_right(raw, 12), mask_8_shift_right(raw, 24));
+    if (decoded_effect->command == USE_SAMPLE_SLICE)
+    {
+        const uint32_t required_offset = decoded_effect->data * 256;
+        if (!find_or_create_sample_slice(required_offset, instrument, samples, &decoded_effect->data))
+        {
+            error(TOO_MANY_SAMPLE_SLICES);
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool decode_multiple_effects(const uint32_t *raw, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
+{
+    for (int slot = 0; slot <= 3; slot++)
+    {
+        const int code_offset = 12 + slot * 5;
+        const int data_offset = slot * 8;
+        const uint8_t code = mask_5_shift_right(raw[0], code_offset);
+        const uint8_t data = mask_8_shift_right(raw[1], data_offset);
+        effect_t decoded_effect = effect(code, data);
+        if (decoded_effect.command != USE_SAMPLE_SLICE)
+        {
+            decoded_effects[slot] = decoded_effect;
+            continue;
+        }
+        uint8_t most_significant_bits = 0;
+        uint8_t least_significant_bits = 0;
+        if (slot < 3)
+        {
+            // Desktop Tracker 0x6 (play end part of sample) command consumes the following effect slot as extra data.
+            // The data is packed in this strange way so that it behaves the same way the Protracker 0x9 command does
+            // if the 0x6 command is in the last slot, or if the event is single effect.
+            const int next_slot = slot + 1;
+            most_significant_bits = mask_5_shift_right(raw[0], 12 + next_slot * 5);
+            least_significant_bits = mask_8_shift_right(raw[1], next_slot * 8);
+        }
+        const uint32_t required_offset = least_significant_bits | (uint32_t) data << 8 | (uint32_t) most_significant_bits << 16;
+        if (!find_or_create_sample_slice(required_offset, instrument, samples, &decoded_effect.data))
+        {
+            error(TOO_MANY_SAMPLE_SLICES);
+            return false;
+        }
+        if (slot < 3)
+        {
+            // Clear the next effect lane and increment the slot number to ensure it is skipped over.
+            slot += 1;
+            decoded_effects[slot] = effect(0, 0);
+        }
+    }
+    return true;
 }
 
 static effect_t effect(const uint8_t code, const uint8_t data)
@@ -236,12 +327,6 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     {
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
-    }
-    if (command == USE_SAMPLE_SLICE)
-    {
-        // TODO:
-        // If the effect is in one of slots 0-2 and the effect in the following slot is non-zero,
-        // use the effect in the following slot and its data as part of the sample slice offset.
     }
     if (command == DELAY_NEXT_EVENT)
     {
@@ -337,3 +422,42 @@ static void copy_int_array(const uint8_t *source, int *dest, int num_elements)
         dest[i] = source[i];
 }
 
+static bool find_or_create_sample_slice(const uint32_t required_offset, instrument_t *instrument, const sample_t *samples, uint8_t *slice_index)
+{
+    if (!instrument->assigned)
+    {
+        // Don't worry about it because it won't be played anyway.
+        *slice_index = 0;
+        return true;
+    }
+    for (int candidate = 0; candidate <= 255; candidate++)
+    {
+        const sample_slice_t *slice = &instrument->sample_slices[candidate];
+        if (slice->length > 0 && slice->offset == required_offset)
+        {
+            *slice_index = candidate;
+            return true;
+        }
+    }
+    //
+    // No slice with the required offset exists yet, create one if possible.
+    //
+    const int sample_length = samples[instrument->sample_index].sample_length;
+    if (required_offset >= sample_length)
+    {
+        // TODO: Figure out what Desktop Tracker does in this case.
+        // Use that to inform the correct behaviour here.
+    }
+    for (int candidate = 0; candidate <= 255; candidate++)
+    {
+        sample_slice_t *slice = &instrument->sample_slices[candidate];
+        if (slice->length == 0)
+        {
+            slice->offset = required_offset;
+            slice->length = sample_length - required_offset;
+            *slice_index = candidate;
+            return true;
+        }
+    }
+    return false;
+}
