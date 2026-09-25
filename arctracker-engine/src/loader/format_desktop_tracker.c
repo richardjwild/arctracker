@@ -137,7 +137,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     }
     uint8_t *positions_start = file.addr + sizeof(dtt_file_format_t);
     copy_int_array(positions_start, module->sequence, module->sequence_length);
-    uint8_t *pattern_offsets_start = positions_start + ALIGN_TO_WORD(module->sequence_length);
+    uint8_t *pattern_offsets_start = positions_start + align_to_word(module->sequence_length);
     uint8_t *pattern_lengths_start = pattern_offsets_start + (module->num_patterns * sizeof(uint32_t));
     pattern_lengths = allocate_array(MODULE, module->num_patterns, sizeof(int));
     if (pattern_lengths == NULL)
@@ -145,7 +145,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     copy_int_array(pattern_lengths_start, pattern_lengths, module->num_patterns);
     if (!decode_dtt_patterns(file.addr, (uint32_t *) pattern_offsets_start, module, pattern_lengths))
         goto fail;
-    uint8_t *samples_start = pattern_lengths_start + ALIGN_TO_WORD(module->num_patterns);
+    uint8_t *samples_start = pattern_lengths_start + align_to_word(module->num_patterns);
     if (!get_samples(module, (dtt_sample_format_t *) samples_start, file.addr))
         goto fail;
     deallocate(MODULE, pattern_lengths);
@@ -188,18 +188,18 @@ static bool decode_dtt_patterns(uint8_t *base_address, const uint32_t *pattern_o
 static size_t decode_desktop_tracker_event(const uint8_t *event_p, event_t *decoded)
 {
     const uint32_t *raw = (uint32_t *) event_p;
-    decoded->instrument_no = MASK_6_SHIFT_RIGHT(*raw, 0);
-    const int note = MASK_6_SHIFT_RIGHT(*raw, 6);
+    decoded->instrument_no = (int) mask_6_shift_right(*raw, 0);
+    const int note = (int) mask_6_shift_right(*raw, 6);
     decoded->note = note == 0 ? 0 : note + 12;
     if (is_multiple_effect(*raw))
     {
-        decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*(raw + 1), 0));
-        decoded->effects[1] = effect(MASK_5_SHIFT_RIGHT(*raw, 17), MASK_8_SHIFT_RIGHT(*(raw + 1), 8));
-        decoded->effects[2] = effect(MASK_5_SHIFT_RIGHT(*raw, 22), MASK_8_SHIFT_RIGHT(*(raw + 1), 16));
-        decoded->effects[3] = effect(MASK_5_SHIFT_RIGHT(*raw, 27), MASK_8_SHIFT_RIGHT(*(raw + 1), 24));
+        decoded->effects[0] = effect(mask_5_shift_right(*raw, 12), mask_8_shift_right(*(raw + 1), 0));
+        decoded->effects[1] = effect(mask_5_shift_right(*raw, 17), mask_8_shift_right(*(raw + 1), 8));
+        decoded->effects[2] = effect(mask_5_shift_right(*raw, 22), mask_8_shift_right(*(raw + 1), 16));
+        decoded->effects[3] = effect(mask_5_shift_right(*raw, 27), mask_8_shift_right(*(raw + 1), 24));
         return EVENT_SIZE_MULTIPLE_EFFECT;
     }
-    decoded->effects[0] = effect(MASK_5_SHIFT_RIGHT(*raw, 12), MASK_8_SHIFT_RIGHT(*raw, 24));
+    decoded->effects[0] = effect(mask_5_shift_right(*raw, 12), mask_8_shift_right(*raw, 24));
     decoded->effects[1] = effect(0, 0);
     decoded->effects[2] = effect(0, 0);
     decoded->effects[3] = effect(0, 0);

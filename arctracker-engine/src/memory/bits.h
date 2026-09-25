@@ -1,25 +1,43 @@
 #ifndef ARCTRACKER_BITS_H
 #define ARCTRACKER_BITS_H
 
-#define MASK_AND_SHIFT_RIGHT(value, mask, shift) \
-(((unsigned int) (value) >> (unsigned int) (shift)) & (unsigned int) (mask))
+#include <stddef.h>
+#include <stdint.h>
 
-#define MASK_5_SHIFT_RIGHT(value, shift) \
-(uint8_t) MASK_AND_SHIFT_RIGHT(value, 0x1f, shift)
+static inline unsigned int mask_and_shift_right(const unsigned int value, const unsigned int mask, const unsigned int shift)
+{
+    return value >> shift & mask;
+}
 
-#define MASK_6_SHIFT_RIGHT(value, shift) \
-(uint8_t) MASK_AND_SHIFT_RIGHT(value, 0x3f, shift)
+static inline unsigned int mask_5_shift_right(const unsigned int value, const unsigned int shift)
+{
+    return mask_and_shift_right(value, 0x1f, shift);
+}
 
-#define MASK_8_SHIFT_RIGHT(value, shift) \
-(uint8_t) MASK_AND_SHIFT_RIGHT(value, 0xff, shift)
+static inline unsigned int mask_6_shift_right(const unsigned int value, const unsigned int shift)
+{
+    return mask_and_shift_right(value, 0x3f, shift);
+}
 
-#define HIGH_NYBBLE(value) \
-(uint8_t) MASK_AND_SHIFT_RIGHT(value, 0xf, 4)
+static inline unsigned int mask_8_shift_right(const unsigned int value, const unsigned int shift)
+{
+    return mask_and_shift_right(value, 0xff, shift);
+}
 
-#define LOW_NYBBLE(value) \
-(uint8_t) MASK_AND_SHIFT_RIGHT(value, 0xf, 0)
+static inline unsigned int high_nybble(const unsigned int value)
+{
+    return mask_and_shift_right(value, 0xf, 4);
+}
 
-#define ALIGN_TO_WORD(length) ((length % 4) ? (length) + (4 - ((length) % 4)) : (length))
+static inline unsigned int low_nybble(const unsigned int value)
+{
+    return value & 0xf;
+}
+
+static inline size_t align_to_word(const size_t length)
+{
+    return length % 4 ? length + (4 - length % 4) : length;
+}
 
 static inline uint32_t round_up_to_power_of_two(uint32_t n)
 {
