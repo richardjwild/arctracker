@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "memory/heap.h"
-#include "src/vidc/vidc.h"
 
 /*
  * Documentation lifted from Andrew Scott's website: https://www.aes.id.au/modformat.html
