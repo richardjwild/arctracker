@@ -7,49 +7,48 @@
 #include "vidc/vidc.h"
 #include "io/error.h"
 
-#define MAX_LEN_TUNENAME_DSKT 64
+#define MAX_LEN_TUNE_NAME_DSKT 64
 #define MAX_LEN_AUTHOR_DSKT 64
-
-#define MAX_LEN_SAMPLENAME_DSKT 32
+#define MAX_LEN_SAMPLE_NAME_DSKT 32
 
 static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 static const uint8_t VOLUME_VALUE_MASK = 0x7f;
 
-static const uint8_t ARPEGGIO_COMMAND = 0x0;
-static const uint8_t PORTUP_COMMAND = 0x1;
-static const uint8_t PORTDOWN_COMMAND = 0x2;
-static const uint8_t TONEPORT_COMMAND = 0x3;
-static const uint8_t VIBRATO_COMMAND = 0x4;
-// static const uint8_t DELAYEDNOTE_COMMAND = 0x5; not implemented yet
-static const uint8_t RELEASESAMP_COMMAND = 0x6;
-static const uint8_t TREMOLO_COMMAND = 0x7;
-static const uint8_t PHASOR_COMMAND2 = 0x8;
-static const uint8_t PHASOR_COMMAND1 = 0x9;
-static const uint8_t VOLSLIDE_COMMAND = 0xa;
-static const uint8_t JUMP_COMMAND = 0xb;
-static const uint8_t VOLUME_COMMAND = 0xc;
-static const uint8_t STEREO_COMMAND = 0xd;
-// static const uint8_t STEREOSLIDE_COMMAND = 0xe; not implemented yet
-static const uint8_t SPEED_COMMAND = 0xf;
-static const uint8_t ARPEGGIOSPEED_COMMAND = 0x10;
-static const uint8_t FINEPORTAMENTO_COMMAND = 0x11;
-static const uint8_t CLEAREPEAT_COMMAND = 0x12;
-static const uint8_t SETVIBRATOWAVEFORM_COMMAND = 0x14;
-static const uint8_t LOOP_COMMAND = 0x16;
-static const uint8_t SETTREMOLOWAVEFORM_COMMAND = 0x17;
-static const uint8_t SETFINETEMPO_COMMAND = 0x18;
-static const uint8_t RETRIGGERSAMPLE_COMMAND = 0x19;
-static const uint8_t FINEVOLSLIDE_COMMAND = 0x1a;
-// static const uint8_t HOLD_COMMAND = 0x1b; not implemented yet
-static const uint8_t NOTECUT_COMMAND = 0x1c;
-static const uint8_t NOTEDELAY_COMMAND = 0x1d;
-static const uint8_t PATTERNDELAY_COMMAND = 0x1e;
+static const uint8_t ARPEGGIO_CMD_DSKT = 0x0;
+static const uint8_t PORTAMENTO_UP_CMD_DSKT = 0x1;
+static const uint8_t PORTAMENTO_DOWN_CMD_DSKT = 0x2;
+static const uint8_t TONE_PORTAMENTO_CMD_DSKT = 0x3;
+static const uint8_t VIBRATO_CMD_DSKT = 0x4;
+// static const uint8_t DELAYED_NOTE_CMD_DSKT = 0x5; not implemented yet
+static const uint8_t RELEASE_SAMPLE_CMD_DSKT = 0x6;
+static const uint8_t TREMOLO_CMD_DSKT = 0x7;
+static const uint8_t PHASOR_2_CMD_DSKT = 0x8;
+static const uint8_t PHASOR_CMD_1_DSKT = 0x9;
+static const uint8_t VOLUME_SLIDE_CMD_DSKT = 0xa;
+static const uint8_t JUMP_CMD_DSKT = 0xb;
+static const uint8_t SET_VOLUME_CMD_DSKT = 0xc;
+static const uint8_t SET_STEREO_CMD_DSKT = 0xd;
+// static const uint8_t STEREO_SLIDE_CMD_DSKT = 0xe; not implemented yet
+static const uint8_t SET_SPEED_CMD_DSKT = 0xf;
+static const uint8_t SET_ARPEGGIO_SPEED_CMD_DSKT = 0x10;
+static const uint8_t FINE_PORTAMENTO_CMD_DSKT = 0x11;
+static const uint8_t CLEAR_REPEAT_CMD_DSKT = 0x12;
+static const uint8_t SET_VIBRATO_WAVEFORM_CMD_DSKT = 0x14;
+static const uint8_t SET_LOOP_CMD_DSKT = 0x16;
+static const uint8_t SET_TREMOLO_WAVEFORM_CMD_DSKT = 0x17;
+static const uint8_t SET_FINE_TEMPO_CMD_DSKT = 0x18;
+static const uint8_t RETRIGGER_SAMPLE_CMD_DSKT = 0x19;
+static const uint8_t FINE_VOLUME_SLIDE_CMD_DSKT = 0x1a;
+// static const uint8_t HOLD_CMD_DSKT = 0x1b; not implemented yet
+static const uint8_t NOTE_CUT_CMD_DSKT = 0x1c;
+static const uint8_t NOTE_DELAY_CMD_DSKT = 0x1d;
+static const uint8_t PATTERN_DELAY_CMD_DSKT = 0x1e;
 
 typedef struct
 {
     uint32_t identifier;
-    char name[MAX_LEN_TUNENAME_DSKT];
+    char name[MAX_LEN_TUNE_NAME_DSKT];
     char author[MAX_LEN_AUTHOR_DSKT];
     uint32_t flags;
     uint32_t num_tracks;
@@ -72,7 +71,7 @@ typedef struct
     uint32_t repeat_offset;
     uint32_t repeat_length;
     uint32_t sample_length;
-    char name[MAX_LEN_SAMPLENAME_DSKT];
+    char name[MAX_LEN_SAMPLE_NAME_DSKT];
     uint32_t sample_data_offset;
 } dtt_sample_format_t;
 
@@ -125,7 +124,7 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module->default_pattern_length = 64;
     module->interpolation_type = NONE;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
-    strncpy(module->name, file_format->name, MAX_LEN_TUNENAME_DSKT);
+    strncpy(module->name, file_format->name, MAX_LEN_TUNE_NAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     for (int track = 0; track < module->num_tracks; track++)
     {
@@ -342,34 +341,34 @@ static effect_t effect(const uint8_t code, const uint8_t data)
 
 static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
 {
-    if (code == ARPEGGIO_COMMAND) return (data == 0) ? NO_EFFECT : ARPEGGIO;
-    if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
-    if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
-    if (code == TONEPORT_COMMAND) return PORTAMENTO;
-    if (code == VIBRATO_COMMAND) return VIBRATO;
-    if (code == RELEASESAMP_COMMAND) return USE_SAMPLE_SLICE;
-    if (code == TREMOLO_COMMAND) return TREMOLO;
-    if (code == PHASOR_COMMAND2) return FINE_ADVANCE_PHASE;
-    if (code == PHASOR_COMMAND1) return ADVANCE_PHASE;
-    if (code == VOLSLIDE_COMMAND) return VOLUME_SLIDE;
-    if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
-    if (code == VOLUME_COMMAND) return SET_VOLUME;
-    if (code == STEREO_COMMAND) return SET_PANNING;
-    if (code == SPEED_COMMAND) return SET_TEMPO;
-    if (code == ARPEGGIOSPEED_COMMAND) return SET_ARPEGGIO_SPEED;
-    if (code == FINEPORTAMENTO_COMMAND && (data & 0x80) == 0) return FINE_PORTAMENTO_UP;
-    if (code == FINEPORTAMENTO_COMMAND && (data & 0x80) > 0) return FINE_PORTAMENTO_DOWN;
-    if (code == CLEAREPEAT_COMMAND) return CLEAR_REPEAT;
-    if (code == SETVIBRATOWAVEFORM_COMMAND) return SET_VIBRATO_WAVEFORM;
-    if (code == LOOP_COMMAND) return SET_LOOP;
-    if (code == SETTREMOLOWAVEFORM_COMMAND) return SET_TREMOLO_WAVEFORM;
-    if (code == SETFINETEMPO_COMMAND) return SET_TICKS_PER_SECOND;
-    if (code == RETRIGGERSAMPLE_COMMAND) return RETRIGGER_SAMPLE;
-    if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) == 0) return FINE_CRESCENDO;
-    if (code == FINEVOLSLIDE_COMMAND && (data & 0x80) > 0) return FINE_DECRESCENDO;
-    if (code == NOTECUT_COMMAND) return SILENCE_SAMPLE_AFTER_DELAY;
-    if (code == NOTEDELAY_COMMAND) return DELAY_SAMPLE;
-    if (code == PATTERNDELAY_COMMAND) return DELAY_NEXT_EVENT;
+    if (code == ARPEGGIO_CMD_DSKT) return (data == 0) ? NO_EFFECT : ARPEGGIO;
+    if (code == PORTAMENTO_UP_CMD_DSKT) return PITCH_SLIDE_UP;
+    if (code == PORTAMENTO_DOWN_CMD_DSKT) return PITCH_SLIDE_DOWN;
+    if (code == TONE_PORTAMENTO_CMD_DSKT) return PORTAMENTO;
+    if (code == VIBRATO_CMD_DSKT) return VIBRATO;
+    if (code == RELEASE_SAMPLE_CMD_DSKT) return USE_SAMPLE_SLICE;
+    if (code == TREMOLO_CMD_DSKT) return TREMOLO;
+    if (code == PHASOR_2_CMD_DSKT) return FINE_ADVANCE_PHASE;
+    if (code == PHASOR_CMD_1_DSKT) return ADVANCE_PHASE;
+    if (code == VOLUME_SLIDE_CMD_DSKT) return VOLUME_SLIDE;
+    if (code == JUMP_CMD_DSKT) return SEQUENCE_JUMP;
+    if (code == SET_VOLUME_CMD_DSKT) return SET_VOLUME;
+    if (code == SET_STEREO_CMD_DSKT) return SET_PANNING;
+    if (code == SET_SPEED_CMD_DSKT) return SET_TEMPO;
+    if (code == SET_ARPEGGIO_SPEED_CMD_DSKT) return SET_ARPEGGIO_SPEED;
+    if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) == 0) return FINE_PORTAMENTO_UP;
+    if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) > 0) return FINE_PORTAMENTO_DOWN;
+    if (code == CLEAR_REPEAT_CMD_DSKT) return CLEAR_REPEAT;
+    if (code == SET_VIBRATO_WAVEFORM_CMD_DSKT) return SET_VIBRATO_WAVEFORM;
+    if (code == SET_LOOP_CMD_DSKT) return SET_LOOP;
+    if (code == SET_TREMOLO_WAVEFORM_CMD_DSKT) return SET_TREMOLO_WAVEFORM;
+    if (code == SET_FINE_TEMPO_CMD_DSKT) return SET_TICKS_PER_SECOND;
+    if (code == RETRIGGER_SAMPLE_CMD_DSKT) return RETRIGGER_SAMPLE;
+    if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) == 0) return FINE_CRESCENDO;
+    if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) > 0) return FINE_DECRESCENDO;
+    if (code == NOTE_CUT_CMD_DSKT) return SILENCE_SAMPLE_AFTER_DELAY;
+    if (code == NOTE_DELAY_CMD_DSKT) return DELAY_SAMPLE;
+    if (code == PATTERN_DELAY_CMD_DSKT) return DELAY_NEXT_EVENT;
     // Command 0x1F (call linked code) is, obviously, impossible to implement.
     return NO_EFFECT;
 }
@@ -403,7 +402,7 @@ static bool get_samples(module_t *module, dtt_sample_format_t *file_samples, uin
         if (sample->sample_length > 0)
         {
             instrument->assigned = true;
-            strncpy(instrument->name, file_sample.name, MAX_LEN_SAMPLENAME_DSKT);
+            strncpy(instrument->name, file_sample.name, MAX_LEN_SAMPLE_NAME_DSKT);
             instrument->sample_index = i;
             instrument->transpose = 0;
             instrument->default_volume = file_sample.volume * 2;

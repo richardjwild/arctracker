@@ -36,18 +36,18 @@ static const char *ROFS_CHUNK = "ROFS";
 static const char *RLEN_CHUNK = "RLEN";
 static const char *SDAT_CHUNK = "SDAT";
 
-static const uint8_t ARPEGGIO_COMMAND = 0;      // 0
-static const uint8_t PORTUP_COMMAND = 1;        // 1
-static const uint8_t PORTDOWN_COMMAND = 2;      // 2
-static const uint8_t TONEPORT_COMMAND = 3;      // 3
-static const uint8_t VIBRATO_COMMAND = 4;       // 4
+static const uint8_t ARPEGGIO_CMD_DSKT = 0;      // 0
+static const uint8_t PORTAMENTO_UP_CMD_DSKT = 1;        // 1
+static const uint8_t PORTAMENTO_DOWN_CMD_DSKT = 2;      // 2
+static const uint8_t TONE_PORTAMENTO_CMD_DSKT = 3;      // 3
+static const uint8_t VIBRATO_CMD_DSKT = 4;       // 4
 static const uint8_t BREAK_COMMAND = 11;        // B
-static const uint8_t STEREO_COMMAND = 14;       // E
+static const uint8_t SET_STEREO_CMD_DSKT = 14;       // E
 static const uint8_t VOLSLIDEUP_COMMAND = 16;   // G
 static const uint8_t VOLSLIDEDOWN_COMMAND = 17; // H
-static const uint8_t JUMP_COMMAND = 19;         // J
-static const uint8_t SPEED_COMMAND = 28;        // S
-static const uint8_t VOLUME_COMMAND = 31;       // V
+static const uint8_t JUMP_CMD_DSKT = 19;         // J
+static const uint8_t SET_SPEED_CMD_DSKT = 28;        // S
+static const uint8_t SET_VOLUME_CMD_DSKT = 31;       // V
 
 static const int PANNING[] = {1, 43, 86, 128, 170, 213, 255};
 
@@ -189,18 +189,18 @@ static uint8_t *search_tff(uint8_t *array_start, const long array_end, const cha
 
 static command_t tracker_command(const int code, const uint8_t data)
 {
-    if (code == VOLUME_COMMAND) return SET_VOLUME;
-    if (code == SPEED_COMMAND) return SET_TEMPO;
-    if (code == STEREO_COMMAND) return SET_PANNING;
+    if (code == SET_VOLUME_CMD_DSKT) return SET_VOLUME;
+    if (code == SET_SPEED_CMD_DSKT) return SET_TEMPO;
+    if (code == SET_STEREO_CMD_DSKT) return SET_PANNING;
     if (code == VOLSLIDEUP_COMMAND) return VOLUME_SLIDE;
     if (code == VOLSLIDEDOWN_COMMAND) return VOLUME_SLIDE;
-    if (code == PORTUP_COMMAND) return PITCH_SLIDE_UP;
-    if (code == PORTDOWN_COMMAND) return PITCH_SLIDE_DOWN;
-    if (code == TONEPORT_COMMAND) return PORTAMENTO;
-    if (code == VIBRATO_COMMAND) return VIBRATO;
+    if (code == PORTAMENTO_UP_CMD_DSKT) return PITCH_SLIDE_UP;
+    if (code == PORTAMENTO_DOWN_CMD_DSKT) return PITCH_SLIDE_DOWN;
+    if (code == TONE_PORTAMENTO_CMD_DSKT) return PORTAMENTO;
+    if (code == VIBRATO_CMD_DSKT) return VIBRATO;
     if (code == BREAK_COMMAND) return PATTERN_BREAK;
-    if (code == JUMP_COMMAND) return SEQUENCE_JUMP;
-    if (code == ARPEGGIO_COMMAND && data > 0) return ARPEGGIO;
+    if (code == JUMP_CMD_DSKT) return SEQUENCE_JUMP;
+    if (code == ARPEGGIO_CMD_DSKT && data > 0) return ARPEGGIO;
     return NO_EFFECT;
 }
 
