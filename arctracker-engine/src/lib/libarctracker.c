@@ -489,10 +489,10 @@ static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event)
     for (int effect_no = 0; effect_no < 4; effect_no++)
     {
         const effect_t effect = event->effects[effect_no];
-        event_buffer->effects[effect_no].effect_code[0] = HIGH_NYBBLE(effect.command);
-        event_buffer->effects[effect_no].effect_code[1] = LOW_NYBBLE(effect.command);
-        event_buffer->effects[effect_no].effect_data[0] = HIGH_NYBBLE(effect.data);
-        event_buffer->effects[effect_no].effect_data[1] = LOW_NYBBLE(effect.data);
+        event_buffer->effects[effect_no].effect_code[0] = (int) high_nybble(effect.command);
+        event_buffer->effects[effect_no].effect_code[1] = (int) low_nybble(effect.command);
+        event_buffer->effects[effect_no].effect_data[0] = (int) high_nybble(effect.data);
+        event_buffer->effects[effect_no].effect_data[1] = (int) low_nybble(effect.data);
     }
 }
 
