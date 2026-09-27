@@ -16,8 +16,6 @@
 #define MAX_EFFECTS 4
 #define NUM_INSTRUMENT_SLOTS 256
 
-static const int EVENT_SIZE_SINGLE_EFFECT = 4;
-static const int EVENT_SIZE_MULTIPLE_EFFECT = 8;
 static const int INTERNAL_GAIN_MAX = 255;
 
 typedef enum

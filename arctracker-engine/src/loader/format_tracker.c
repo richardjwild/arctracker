@@ -15,6 +15,7 @@ static const int MAX_LEN_TUNENAME_TRK = 32;
 static const int MAX_LEN_AUTHOR_TRK = 32;
 static const int MAX_LEN_SAMPLENAME_TRK = 20;
 static const int NUM_SAMPLES = 36;
+static const int EVENT_SIZE = 4;
 
 static const char *MUSX_CHUNK = "MUSX";
 static const char *MVOX_CHUNK = "MVOX";
@@ -51,7 +52,7 @@ static bool is_tracker_format(mapped_file_t);
 static module_t *read_tracker_module(mapped_file_t);
 static uint8_t *search_tff(uint8_t *, long, const char *);
 static bool decode_patterns(uint8_t *, long, module_t *, const int *);
-static size_t decode_tracker_event(const uint8_t *, event_t *);
+static void decode_tracker_event(const uint8_t *, event_t *);
 static effect_t effect(uint8_t code, uint8_t);
 static int get_samples(void *, long, sample_t *, instrument_t *, int);
 static bool get_sample_info(void *, long, sample_t *, instrument_t *, int);
@@ -217,7 +218,10 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
                 const uint32_t event_index = (line * module->track_capacity) + track;
                 event_t *event = module->patterns[pno].events + event_index;
                 if (track < (uint32_t) module->num_tracks)
-                    raw_pattern_data += decode_tracker_event(raw_pattern_data, event);
+                {
+                    decode_tracker_event(raw_pattern_data, event);
+                    raw_pattern_data += EVENT_SIZE;
+                }
                 else
                     *event = (event_t) {0};
             }
@@ -232,7 +236,7 @@ static bool decode_patterns(uint8_t *array_start, const long array_end, module_t
     return true;
 }
 
-static size_t decode_tracker_event(const uint8_t *event_p, event_t *decoded)
+static void decode_tracker_event(const uint8_t *event_p, event_t *decoded)
 {
     const uint32_t *raw = (uint32_t *) event_p;
     decoded->instrument_no = (int) mask_8_shift_right(*raw, 16);
@@ -243,7 +247,6 @@ static size_t decode_tracker_event(const uint8_t *event_p, event_t *decoded)
     {
         decoded->effects[i] = effect(0, 0);
     }
-    return EVENT_SIZE_SINGLE_EFFECT;
 }
 
 static effect_t effect(const uint8_t code, const uint8_t data)

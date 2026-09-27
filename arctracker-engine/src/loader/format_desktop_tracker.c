@@ -13,6 +13,8 @@
 
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 static const uint8_t VOLUME_VALUE_MASK = 0x7f;
+static const int EVENT_SIZE_SINGLE_EFFECT = 4;
+static const int EVENT_SIZE_MULTIPLE_EFFECT = 8;
 
 static const uint8_t ARPEGGIO_CMD_DSKT = 0x0;
 static const uint8_t PORTAMENTO_UP_CMD_DSKT = 0x1;
