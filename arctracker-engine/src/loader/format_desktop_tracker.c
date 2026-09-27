@@ -11,7 +11,6 @@
 #define MAX_LEN_AUTHOR_DSKT 64
 #define MAX_LEN_SAMPLE_NAME_DSKT 32
 
-static const char *DESKTOP_TRACKER_FORMAT = "DESKTOP TRACKER";
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 static const uint8_t VOLUME_VALUE_MASK = 0x7f;
 
@@ -118,7 +117,6 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module = module_create(file_format->num_tracks, file_format->tune_length, file_format->num_patterns, file_format->num_samples);
     if (module == NULL)
         goto fail;
-    module->format = DESKTOP_TRACKER_FORMAT;
     module->initial_ticks_per_event = file_format->initial_speed;
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;

@@ -1283,8 +1283,6 @@ static module_t *read_module(mapped_file_t file)
     if (module == NULL)
         return NULL;
 
-    module->format = "MOD";
-
     copy_mod_string(
         module->name,
         sizeof module->name,

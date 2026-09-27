@@ -111,7 +111,6 @@ typedef struct {
 
 typedef struct
 {
-    const char *format;
     char name[MAX_LEN_TUNE_NAME];
     char author[MAX_LEN_AUTHOR];
     int sequence_length;

@@ -16,8 +16,6 @@ static const int MAX_LEN_AUTHOR_TRK = 32;
 static const int MAX_LEN_SAMPLENAME_TRK = 20;
 static const int NUM_SAMPLES = 36;
 
-static const char *TRACKER_FORMAT = "TRACKER";
-
 static const char *MUSX_CHUNK = "MUSX";
 static const char *MVOX_CHUNK = "MVOX";
 static const char *STER_CHUNK = "STER";
@@ -106,7 +104,6 @@ static module_t *read_tracker_module(mapped_file_t file)
     {
         goto fail;
     }
-    module->format = TRACKER_FORMAT;
     module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;
