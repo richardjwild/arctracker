@@ -756,23 +756,23 @@ static void decode_effect(
     switch (mod_effect) {
         case 0x0:
             if (mod_data != 0) {
-                effects[0].command = ARPEGGIO;
+                effects[0].command = CHIPTUNE_ARPEGGIO;
                 effects[0].data = mod_data;
             }
             break;
 
         case 0x1:
-            effects[0].command = PITCH_SLIDE_UP;
+            effects[0].command = PORTAMENTO_UP;
             effects[0].data = mod_data;
             break;
 
         case 0x2:
-            effects[0].command = PITCH_SLIDE_DOWN;
+            effects[0].command = PORTAMENTO_DOWN;
             effects[0].data = mod_data;
             break;
 
         case 0x3:
-            effects[0].command = PORTAMENTO;
+            effects[0].command = TONE_PORTAMENTO;
             effects[0].data = mod_data;
             break;
 
@@ -782,7 +782,7 @@ static void decode_effect(
             break;
 
         case 0x5:
-            effects[0].command = PORTAMENTO;
+            effects[0].command = TONE_PORTAMENTO;
             effects[0].data = 0;
             effects[1].command = VOLUME_SLIDE;
             if ((mod_data & 0xf0) != 0) {
@@ -810,7 +810,7 @@ static void decode_effect(
             break;
 
         case 0x8:
-            effects[0].command = SET_PANNING;
+            effects[0].command = SET_STEREO;
             // Arctracker uses both 0x00 and 0x80 to mean pan centre; hard left is 0x01 and hard right is 0xff.
             // FastTracker panning ranges from 0x00 for hard left to 0xff for hard right, so we need to correct
             // value 0 in order to not inadvertently pan hard left as centre by mistake.
@@ -844,7 +844,7 @@ static void decode_effect(
 
         case 0xD:
             // ProTracker Dxx represents the target pattern line as decimal, not hex.
-            effects[0].command = PATTERN_BREAK;
+            effects[0].command = BREAK_TO_NEXT_PATTERN;
             effects[0].data = 10 * (mod_data >> 4) + (mod_data & 0xf);
             break;
 
@@ -855,12 +855,12 @@ static void decode_effect(
                 // E0x (set filter on/off) not implemented.
                 if (e_cmd == 1)
                 {
-                    effects[0].command = FINE_PORTAMENTO_UP;
+                    effects[0].command = PORTAMENTO_UP_FINE;
                     effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 2)
                 {
-                    effects[0].command = FINE_PORTAMENTO_DOWN;
+                    effects[0].command = PORTAMENTO_DOWN_FINE;
                     effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 3)
@@ -881,7 +881,7 @@ static void decode_effect(
                 }
                 if (e_cmd == 6)
                 {
-                    effects[0].command = SET_LOOP;
+                    effects[0].command = DEFINE_PATTERN_LOOP;
                     effects[0].data = e_cmd_data;
                 }
                 if (e_cmd == 7)
@@ -897,12 +897,12 @@ static void decode_effect(
                 }
                 if (e_cmd == 10)
                 {
-                    effects[0].command = FINE_CRESCENDO;
+                    effects[0].command = VOLUME_SLIDE_UP_FINE;
                     effects[0].data = e_cmd_data * 4;
                 }
                 if (e_cmd == 11)
                 {
-                    effects[0].command = FINE_DECRESCENDO;
+                    effects[0].command = VOLUME_SLIDE_DOWN_FINE;
                     effects[0].data = e_cmd_data * 4;
                 }
                 if (e_cmd == 12)
@@ -931,7 +931,7 @@ static void decode_effect(
             } else
             {
                 const float ticks_per_second = (float) mod_data * 2.0f / 5.0f;
-                effects[0].command = SET_TICKS_PER_SECOND;
+                effects[0].command = SET_TICK_RATE;
                 // Unfortunately we cannot accurately represent the calculated ticks_per_second in an effect data field.
                 // This is the best we can do without redesigning Arctracker's timing system just for Protracker.
                 effects[0].data = (uint8_t) ticks_per_second + 0.5f;

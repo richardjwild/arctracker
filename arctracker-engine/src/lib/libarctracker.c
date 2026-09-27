@@ -260,7 +260,7 @@ api_result_t arctracker_module_create(arctracker_t *arctracker, const new_module
     module_t *module = module_create(params.num_tracks, 1, 1, 0);
     if (module == NULL || !module_init(module, params.default_pattern_length, params.lines_per_beat, params.beats_per_minute))
         return failure(MODULE_CREATE_FAILED);
-    strncpy(module->name, NEW_MODULE_TITLE, MAX_LEN_TUNENAME);
+    strncpy(module->name, NEW_MODULE_TITLE, MAX_LEN_TUNE_NAME);
     strncpy(module->author, params.author, MAX_LEN_AUTHOR);
     if (arctracker->playback.thread_active)
         arctracker_player_shutdown(arctracker);
@@ -796,7 +796,7 @@ api_result_t arctracker_edit_set_module_meta_data(
         return failure(NO_MODULE_LOADED);
     if (name == NULL)
         return failure(MODULE_NAME_MISSING);
-    if (strlen(name) > MAX_LEN_TUNENAME)
+    if (strlen(name) > MAX_LEN_TUNE_NAME)
         return failure(MODULE_NAME_TOO_LONG);
     if (author == NULL)
         return failure(AUTHOR_MISSING);

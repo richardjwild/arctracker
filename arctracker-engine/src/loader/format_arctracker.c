@@ -589,29 +589,29 @@ static command_t decode_command(const uint8_t code)
 {
     switch (code)
     {
-        case 0x30: return ARPEGGIO;
-        case 0x31: return PITCH_SLIDE_UP;
-        case 0x32: return PITCH_SLIDE_DOWN;
-        case 0x33: return PORTAMENTO;
+        case 0x30: return CHIPTUNE_ARPEGGIO;
+        case 0x31: return PORTAMENTO_UP;
+        case 0x32: return PORTAMENTO_DOWN;
+        case 0x33: return TONE_PORTAMENTO;
         case 0x34: return VIBRATO;
         case 0x37: return TREMOLO;
-        case 0x42: return PATTERN_BREAK;
+        case 0x42: return BREAK_TO_NEXT_PATTERN;
         case 0x43: return VOLUME_SLIDE;
-        case 0x45: return FINE_CRESCENDO;
-        case 0x46: return FINE_DECRESCENDO;
-        case 0x47: return FINE_PORTAMENTO_UP;
-        case 0x48: return FINE_PORTAMENTO_DOWN;
+        case 0x45: return VOLUME_SLIDE_UP_FINE;
+        case 0x46: return VOLUME_SLIDE_DOWN_FINE;
+        case 0x47: return PORTAMENTO_UP_FINE;
+        case 0x48: return PORTAMENTO_DOWN_FINE;
         case 0x4a: return SEQUENCE_JUMP;
         case 0x4c: return DELAY_NEXT_EVENT;
         case 0x4f: return USE_SAMPLE_SLICE;
-        case 0x50: return SET_PANNING;
+        case 0x50: return SET_STEREO;
         case 0x51: return DELAY_SAMPLE;
         case 0x52: return RETRIGGER_SAMPLE;
         case 0x53: return SET_TEMPO;
-        case 0x54: return SET_TICKS_PER_SECOND;
+        case 0x54: return SET_TICK_RATE;
         case 0x55: return SET_GLISSANDO_MODE;
         case 0x56: return SET_VOLUME;
-        case 0x57: return SET_LOOP;
+        case 0x57: return DEFINE_PATTERN_LOOP;
         case 0x58: return SILENCE_SAMPLE_AFTER_DELAY;
         case 0x59: return SET_VIBRATO_WAVEFORM;
         case 0x5a: return SET_TREMOLO_WAVEFORM;
@@ -951,29 +951,29 @@ static uint8_t encode_command(const command_t command)
 {
     switch (command)
     {
-        case ARPEGGIO: return 0x30;
-        case PITCH_SLIDE_UP: return 0x31;
-        case PITCH_SLIDE_DOWN: return 0x32;
-        case PORTAMENTO: return 0x33;
+        case CHIPTUNE_ARPEGGIO: return 0x30;
+        case PORTAMENTO_UP: return 0x31;
+        case PORTAMENTO_DOWN: return 0x32;
+        case TONE_PORTAMENTO: return 0x33;
         case VIBRATO: return 0x34;
         case TREMOLO: return 0x37;
-        case PATTERN_BREAK: return 0x42;
+        case BREAK_TO_NEXT_PATTERN: return 0x42;
         case VOLUME_SLIDE: return 0x43;
-        case FINE_CRESCENDO: return 0x45;
-        case FINE_DECRESCENDO: return 0x46;
-        case FINE_PORTAMENTO_UP: return 0x47;
-        case FINE_PORTAMENTO_DOWN: return 0x48;
+        case VOLUME_SLIDE_UP_FINE: return 0x45;
+        case VOLUME_SLIDE_DOWN_FINE: return 0x46;
+        case PORTAMENTO_UP_FINE: return 0x47;
+        case PORTAMENTO_DOWN_FINE: return 0x48;
         case SEQUENCE_JUMP: return 0x4a;
         case DELAY_NEXT_EVENT: return 0x4c;
         case USE_SAMPLE_SLICE: return 0x4f;
-        case SET_PANNING: return 0x50;
+        case SET_STEREO: return 0x50;
         case DELAY_SAMPLE: return 0x51;
         case RETRIGGER_SAMPLE: return 0x52;
         case SET_TEMPO: return 0x53;
-        case SET_TICKS_PER_SECOND: return 0x54;
+        case SET_TICK_RATE: return 0x54;
         case SET_GLISSANDO_MODE: return 0x55;
         case SET_VOLUME: return 0x56;
-        case SET_LOOP: return 0x57;
+        case DEFINE_PATTERN_LOOP: return 0x57;
         case SILENCE_SAMPLE_AFTER_DELAY: return 0x58;
         case SET_VIBRATO_WAVEFORM: return 0x59;
         case SET_TREMOLO_WAVEFORM: return 0x5a;

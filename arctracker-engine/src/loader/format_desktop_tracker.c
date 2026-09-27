@@ -307,22 +307,22 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     uint8_t effect_data = data;
     if (command == SET_VOLUME)
         effect_data = (data & VOLUME_VALUE_MASK) * 2;
-    if (command == FINE_CRESCENDO || (command == VOLUME_SLIDE && data < 128))
+    if (command == VOLUME_SLIDE_UP_FINE || (command == VOLUME_SLIDE && data < 128))
     {
         // DSKT volume slide parameter has half the resolution of the equivalent Tracker effect.
         effect_data = (data * 2) | 0x80;
     }
-    if (command == FINE_DECRESCENDO || (command == VOLUME_SLIDE && data >= 128))
+    if (command == VOLUME_SLIDE_DOWN_FINE || (command == VOLUME_SLIDE && data >= 128))
     {
         // DSKT volume slide command data is a signed integer: negative values slide the volume down.
         const int amount = (256 - data) * 2;
         effect_data = amount > UINT8_MAX ? UINT8_MAX : amount;
     }
-    if (code == FINE_PORTAMENTO_DOWN)
+    if (code == PORTAMENTO_DOWN_FINE)
     {
         effect_data = 256 - data;
     }
-    if (command == SET_PANNING)
+    if (command == SET_STEREO)
     {
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
@@ -341,31 +341,31 @@ static effect_t effect(const uint8_t code, const uint8_t data)
 
 static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
 {
-    if (code == ARPEGGIO_CMD_DSKT) return (data == 0) ? NO_EFFECT : ARPEGGIO;
-    if (code == PORTAMENTO_UP_CMD_DSKT) return PITCH_SLIDE_UP;
-    if (code == PORTAMENTO_DOWN_CMD_DSKT) return PITCH_SLIDE_DOWN;
-    if (code == TONE_PORTAMENTO_CMD_DSKT) return PORTAMENTO;
+    if (code == ARPEGGIO_CMD_DSKT) return (data == 0) ? NO_EFFECT : CHIPTUNE_ARPEGGIO;
+    if (code == PORTAMENTO_UP_CMD_DSKT) return PORTAMENTO_UP;
+    if (code == PORTAMENTO_DOWN_CMD_DSKT) return PORTAMENTO_DOWN;
+    if (code == TONE_PORTAMENTO_CMD_DSKT) return TONE_PORTAMENTO;
     if (code == VIBRATO_CMD_DSKT) return VIBRATO;
     if (code == RELEASE_SAMPLE_CMD_DSKT) return USE_SAMPLE_SLICE;
     if (code == TREMOLO_CMD_DSKT) return TREMOLO;
-    if (code == PHASOR_2_CMD_DSKT) return FINE_ADVANCE_PHASE;
+    if (code == PHASOR_2_CMD_DSKT) return ADVANCE_PHASE_FINE;
     if (code == PHASOR_CMD_1_DSKT) return ADVANCE_PHASE;
     if (code == VOLUME_SLIDE_CMD_DSKT) return VOLUME_SLIDE;
     if (code == JUMP_CMD_DSKT) return SEQUENCE_JUMP;
     if (code == SET_VOLUME_CMD_DSKT) return SET_VOLUME;
-    if (code == SET_STEREO_CMD_DSKT) return SET_PANNING;
+    if (code == SET_STEREO_CMD_DSKT) return SET_STEREO;
     if (code == SET_SPEED_CMD_DSKT) return SET_TEMPO;
     if (code == SET_ARPEGGIO_SPEED_CMD_DSKT) return SET_ARPEGGIO_SPEED;
-    if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) == 0) return FINE_PORTAMENTO_UP;
-    if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) > 0) return FINE_PORTAMENTO_DOWN;
-    if (code == CLEAR_REPEAT_CMD_DSKT) return CLEAR_REPEAT;
+    if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) == 0) return PORTAMENTO_UP_FINE;
+    if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) > 0) return PORTAMENTO_DOWN_FINE;
+    if (code == CLEAR_REPEAT_CMD_DSKT) return RELEASE_SAMPLE_LOOP;
     if (code == SET_VIBRATO_WAVEFORM_CMD_DSKT) return SET_VIBRATO_WAVEFORM;
-    if (code == SET_LOOP_CMD_DSKT) return SET_LOOP;
+    if (code == SET_LOOP_CMD_DSKT) return DEFINE_PATTERN_LOOP;
     if (code == SET_TREMOLO_WAVEFORM_CMD_DSKT) return SET_TREMOLO_WAVEFORM;
-    if (code == SET_FINE_TEMPO_CMD_DSKT) return SET_TICKS_PER_SECOND;
+    if (code == SET_FINE_TEMPO_CMD_DSKT) return SET_TICK_RATE;
     if (code == RETRIGGER_SAMPLE_CMD_DSKT) return RETRIGGER_SAMPLE;
-    if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) == 0) return FINE_CRESCENDO;
-    if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) > 0) return FINE_DECRESCENDO;
+    if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) == 0) return VOLUME_SLIDE_UP_FINE;
+    if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) > 0) return VOLUME_SLIDE_DOWN_FINE;
     if (code == NOTE_CUT_CMD_DSKT) return SILENCE_SAMPLE_AFTER_DELAY;
     if (code == NOTE_DELAY_CMD_DSKT) return DELAY_SAMPLE;
     if (code == PATTERN_DELAY_CMD_DSKT) return DELAY_NEXT_EVENT;

@@ -77,18 +77,18 @@ void process_instrument_commands(const event_t *event, const player_instrument_t
 
 static bool is_pitch_slide_cmd(const command_t command)
 {
-    return command == PITCH_SLIDE_UP ||
-           command == PITCH_SLIDE_DOWN ||
-           command == PORTAMENTO ||
-           command == FINE_PORTAMENTO_UP ||
-           command == FINE_PORTAMENTO_DOWN;
+    return command == PORTAMENTO_UP ||
+           command == PORTAMENTO_DOWN ||
+           command == TONE_PORTAMENTO ||
+           command == PORTAMENTO_UP_FINE ||
+           command == PORTAMENTO_DOWN_FINE;
 }
 
 static bool is_volume_slide_cmd(const command_t command)
 {
     return command == VOLUME_SLIDE ||
-           command == FINE_CRESCENDO ||
-           command == FINE_DECRESCENDO;
+           command == VOLUME_SLIDE_UP_FINE ||
+           command == VOLUME_SLIDE_DOWN_FINE;
 }
 
 static const effect_t *get_priority_cmd(const event_t *event, bool (*is_of_group)(command_t))
@@ -110,21 +110,21 @@ static void process_pitch_slide_cmd(const effect_t *effect, audio_generator_t *g
         generator->tone_portamento_off(&generator->state);
         return;
     }
-    if (effect->command == PITCH_SLIDE_UP || effect->command == FINE_PORTAMENTO_UP)
+    if (effect->command == PORTAMENTO_UP || effect->command == PORTAMENTO_UP_FINE)
     {
-        const bool fine = effect->command == FINE_PORTAMENTO_UP;
+        const bool fine = effect->command == PORTAMENTO_UP_FINE;
         generator->pitch_slide_on(&generator->state, -effect->data, fine);
     }
-    else if (effect->command == PITCH_SLIDE_DOWN || effect->command == FINE_PORTAMENTO_DOWN)
+    else if (effect->command == PORTAMENTO_DOWN || effect->command == PORTAMENTO_DOWN_FINE)
     {
-        const bool fine = effect->command == FINE_PORTAMENTO_DOWN;
+        const bool fine = effect->command == PORTAMENTO_DOWN_FINE;
         generator->pitch_slide_on(&generator->state, effect->data, fine);
     }
     else
     {
         generator->pitch_slide_off(&generator->state);
     }
-    if (effect->command == PORTAMENTO)
+    if (effect->command == TONE_PORTAMENTO)
     {
         int slide_rate = effect->data;
         if (slide_rate == 0) slide_rate = command_state->effect_memory.tone_portamento_speed;
@@ -153,10 +153,10 @@ static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *
             generator->volume_slide_on(&generator->state, slide_rate, false);
             break;
         }
-        case FINE_CRESCENDO:
+        case VOLUME_SLIDE_UP_FINE:
             generator->volume_slide_on(&generator->state, effect->data, true);
             break;
-        case FINE_DECRESCENDO:
+        case VOLUME_SLIDE_DOWN_FINE:
             generator->volume_slide_on(&generator->state, effect->data * -1, true);
             break;
         default:
@@ -278,7 +278,7 @@ static void process_set_tremolo_waveform_cmd(const event_t *event, track_command
 
 static void process_arpeggio_cmd(const event_t *event, const player_instrument_t *instrument, const player_track_t *track, audio_generator_t *generator)
 {
-    const effect_t *effect = get_effect(event, ARPEGGIO);
+    const effect_t *effect = get_effect(event, CHIPTUNE_ARPEGGIO);
     if (effect == NULL)
     {
         generator->arpeggio_off(&generator->state);
@@ -315,7 +315,7 @@ static void process_silence_after_delay_cmd(const event_t *event, audio_generato
 static void process_advance_phase_cmd(const event_t *event, audio_generator_t *generator)
 {
     const effect_t *effect = NULL;
-    if ((effect = get_effect(event, FINE_ADVANCE_PHASE)) != NULL)
+    if ((effect = get_effect(event, ADVANCE_PHASE_FINE)) != NULL)
         generator->advance_phase(&generator->state, effect->data);
     if ((effect = get_effect(event, ADVANCE_PHASE)) != NULL)
         generator->advance_phase(&generator->state, (int) effect->data * 256);
@@ -323,7 +323,7 @@ static void process_advance_phase_cmd(const event_t *event, audio_generator_t *g
 
 static void process_clear_repeat_cmd(const event_t *event, audio_generator_t *generator)
 {
-    const effect_t *effect = get_effect(event, CLEAR_REPEAT);
+    const effect_t *effect = get_effect(event, RELEASE_SAMPLE_LOOP);
     if (effect == NULL)
         generator->cancel_clear_repeat(&generator->state);
     else
@@ -332,7 +332,7 @@ static void process_clear_repeat_cmd(const event_t *event, audio_generator_t *ge
 
 bool portamento(const event_t *event)
 {
-    return get_effect(event, PORTAMENTO) != NULL;
+    return get_effect(event, TONE_PORTAMENTO) != NULL;
 }
 
 void handle_effects_before_note(const event_t *event, const player_track_t *track, player_t *player)
@@ -359,17 +359,17 @@ void process_non_instrument_commands(const event_t *event, audio_channel_t *chan
     const effect_t *effect = NULL;
     if ((effect = get_effect(event, SET_TEMPO)) != NULL)
         set_tempo(player, effect->data);
-    if ((effect = get_effect(event, SET_PANNING)) != NULL)
+    if ((effect = get_effect(event, SET_STEREO)) != NULL)
         set_panning(channel, effect->data);
-    if ((effect = get_effect(event, PATTERN_BREAK)) != NULL)
+    if ((effect = get_effect(event, BREAK_TO_NEXT_PATTERN)) != NULL)
         pattern_break(&player->sequence, effect->data);
     if ((effect = get_effect(event, SEQUENCE_JUMP)) != NULL)
         set_jump_target(effect->data, 0, &player->sequence);
-    if ((effect = get_effect(event, SET_TICKS_PER_SECOND)) != NULL)
+    if ((effect = get_effect(event, SET_TICK_RATE)) != NULL)
         set_tempo_fine(&player->tick_scheduler, effect->data);
     if ((effect = get_effect(event, DELAY_NEXT_EVENT)) != NULL)
         delay_next_event(&player->tick_scheduler, effect->data);
-    if ((effect = get_effect(event, SET_LOOP)) != NULL)
+    if ((effect = get_effect(event, DEFINE_PATTERN_LOOP)) != NULL)
         define_loop(track, &player->sequence, effect->data);
 }
 

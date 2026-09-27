@@ -8,7 +8,7 @@
 #include "audio_out/volume_mapping_type.h"
 #include "ui/ui.h"
 
-#define MAX_LEN_TUNENAME 65
+#define MAX_LEN_TUNE_NAME 65
 #define MAX_LEN_AUTHOR 65
 #define MAX_LEN_SAMPLENAME 33
 #define MAX_TRACKS 256
@@ -23,34 +23,34 @@ static const int INTERNAL_GAIN_MAX = 255;
 typedef enum
 {
     NO_EFFECT = 0x0,
-    PITCH_SLIDE_UP = 0x1,
-    PITCH_SLIDE_DOWN = 0x2,
-    PORTAMENTO = 0x3,
+    PORTAMENTO_UP = 0x1,
+    PORTAMENTO_DOWN = 0x2,
+    TONE_PORTAMENTO = 0x3,
     VIBRATO = 0x4,
-    FINE_ADVANCE_PHASE = 0x5,
+    ADVANCE_PHASE_FINE = 0x5,
     ADVANCE_PHASE = 0x6,
     TREMOLO = 0x7,
-    SET_PANNING = 0x8,
+    SET_STEREO = 0x8,
     USE_SAMPLE_SLICE = 0x9,
     VOLUME_SLIDE = 0xA,
     SEQUENCE_JUMP = 0xB,
     SET_VOLUME = 0xC,
-    PATTERN_BREAK = 0xD,
+    BREAK_TO_NEXT_PATTERN = 0xD,
     SET_TEMPO = 0xF,
-    CLEAR_REPEAT = 0x12,
-    SET_TICKS_PER_SECOND = 0x18,
-    ARPEGGIO = 0xE0,
-    FINE_PORTAMENTO_UP = 0xE1,
-    FINE_PORTAMENTO_DOWN = 0xE2,
+    RELEASE_SAMPLE_LOOP = 0x12,
+    SET_TICK_RATE = 0x18,
+    CHIPTUNE_ARPEGGIO = 0xE0,
+    PORTAMENTO_UP_FINE = 0xE1,
+    PORTAMENTO_DOWN_FINE = 0xE2,
     SET_GLISSANDO_MODE = 0xE3,
     SET_VIBRATO_WAVEFORM = 0xE4,
     SET_FINETUNE = 0xE5,
-    SET_LOOP = 0xE6,
+    DEFINE_PATTERN_LOOP = 0xE6,
     SET_TREMOLO_WAVEFORM = 0xE7,
     SET_ARPEGGIO_SPEED = 0xE8,
     RETRIGGER_SAMPLE = 0xE9,
-    FINE_CRESCENDO = 0xEA,
-    FINE_DECRESCENDO = 0xEB,
+    VOLUME_SLIDE_UP_FINE = 0xEA,
+    VOLUME_SLIDE_DOWN_FINE = 0xEB,
     SILENCE_SAMPLE_AFTER_DELAY = 0xEC,
     DELAY_SAMPLE = 0xED,
     DELAY_NEXT_EVENT = 0xEE,
@@ -112,7 +112,7 @@ typedef struct {
 typedef struct
 {
     const char *format;
-    char name[MAX_LEN_TUNENAME];
+    char name[MAX_LEN_TUNE_NAME];
     char author[MAX_LEN_AUTHOR];
     int sequence_length;
     int *sequence;

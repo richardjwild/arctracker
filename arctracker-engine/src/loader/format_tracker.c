@@ -187,11 +187,11 @@ static uint8_t *search_tff(uint8_t *array_start, const long array_end, const cha
 
 static command_t tracker_command(const int code, const uint8_t data)
 {
-    if (code == ARPEGGIO_CMD_MUSX && data > 0) return ARPEGGIO;
-    if (code == PORTAMENTO_UP_CMD_MUSX) return PITCH_SLIDE_UP;
-    if (code == PORTAMENTO_DOWN_CMD_MUSX) return PITCH_SLIDE_DOWN;
-    if (code == BREAK_CMD_MUSX) return PATTERN_BREAK;
-    if (code == SET_STEREO_CMD_MUSX) return SET_PANNING;
+    if (code == ARPEGGIO_CMD_MUSX && data > 0) return CHIPTUNE_ARPEGGIO;
+    if (code == PORTAMENTO_UP_CMD_MUSX) return PORTAMENTO_UP;
+    if (code == PORTAMENTO_DOWN_CMD_MUSX) return PORTAMENTO_DOWN;
+    if (code == BREAK_CMD_MUSX) return BREAK_TO_NEXT_PATTERN;
+    if (code == SET_STEREO_CMD_MUSX) return SET_STEREO;
     if (code == VOLUME_SLIDE_UP_CMD_MUSX) return VOLUME_SLIDE;
     if (code == VOLUME_SLIDE_DOWN_CMD_MUSX) return VOLUME_SLIDE;
     if (code == JUMP_CMD_MUSX) return SEQUENCE_JUMP;
@@ -253,12 +253,12 @@ static effect_t effect(const uint8_t code, const uint8_t data)
 {
     const command_t command = tracker_command(code, data);
     uint8_t effect_data = data;
-    if (command == SET_PANNING)
+    if (command == SET_STEREO)
     {
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
     }
-    if (command == PATTERN_BREAK)
+    if (command == BREAK_TO_NEXT_PATTERN)
     {
         // Tracker always breaks to the next pattern at line 0, but Arctracker interprets the data as the line to begin
         // the next pattern at, so zero it here.
