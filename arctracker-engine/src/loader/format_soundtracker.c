@@ -873,12 +873,7 @@ static void decode_effect(
                     effects[0].command = SET_VIBRATO_WAVEFORM;
                     effects[0].data = e_cmd_data;
                 }
-                if (e_cmd == 5)
-                {
-                    effects[0].command = SET_FINETUNE;
-                    const uint8_t finetune = e_cmd_data & 0xF;
-                    effects[0].data = 16 * (finetune < 8 ? finetune : finetune - 16);
-                }
+                // E5x (set finetune) not implemented.
                 if (e_cmd == 6)
                 {
                     effects[0].command = DEFINE_PATTERN_LOOP;

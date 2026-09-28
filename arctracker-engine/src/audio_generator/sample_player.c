@@ -362,6 +362,7 @@ static void cancel_clear_repeat(audio_generator_state_t *state)
 static void tick(audio_generator_state_t *state, const int tick, const int ticks_per_event)
 {
     (void) ticks_per_event;
+    if (tick == 0) return;
     sampler_state_t *sampler = state->sampler;
     if (sampler->volume_slide_rate != 0)
         apply_volume_slide(sampler);

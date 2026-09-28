@@ -24,6 +24,7 @@ typedef struct {
 
 typedef struct {
     bool looping;
+    bool defined;
     int start;
     int counter;
 } pt_loop_state_t;
@@ -51,7 +52,6 @@ typedef struct {
     int track_no;
     int instrument_no;
     int current_note;
-    pt_loop_state_t loop_state;
     effect_memory_t effect_memory;
     track_command_state_t command_state;
     sampler_state_t sampler_state[2];
@@ -89,6 +89,7 @@ typedef struct player {
     module_t *module;
     scheduled_note_t *scheduled_notes;
     sequence_t sequence;
+    pt_loop_state_t loop_state;
     player_instrument_t instruments[256];
     tick_scheduler_t tick_scheduler;
     audio_out_t audio_out;
@@ -107,8 +108,6 @@ typedef struct {
 player_t *player_create(module_t *module, audio_api_t audio_api, player_event_queue_t *player_event_queue);
 
 void player_update_instruments(player_t *);
-
-void player_set_sample_finetune(player_t *player, int instrument_no, int8_t finetune);
 
 bool player_run(player_t *);
 
