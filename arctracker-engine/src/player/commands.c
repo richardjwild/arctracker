@@ -1,33 +1,6 @@
 #include "commands.h"
-#include <stdlib.h>
 #include "sequencer.h"
 #include "period.h"
-
-/******************************************************************************
- * Commands are processed in right-to-left priority order, which means that   *
- * when the same command appears twice or more in the same event, the one     *
- * with the highest index wins; that is, the one furthest to the right from   *
- * the user's point of view.                                                  *
- *                                                                            *
- * Some commands are grouped together because they all modify the same state  *
- * variable(s) and there is no practical reason to be using them at the same  *
- * time: they would simply fight each other. For these commands, the one out  *
- * of the group with the highest index wins. The groups are:                  *
- *                                                                            *
- * Pitch slide command group:                                                 *
- *   - PITCH_SLIDE_UP (0x1)                                                   *
- *   - PITCH_SLIDE_DOWN (0x2)                                                 *
- *   - PORTAMENTO (0x3)                                                       *
- *   - FINE_PORTAMENTO_UP (0xE1)                                              *
- *   - FINE_PORTAMENTO_DOWN (0xE2)                                            *
- *                                                                            *
- * Volume slide command group:                                                *
- *   - VOLUME_SLIDE (0xA)                                                     *
- *   - FINE_CRESCENDO (0xEA)                                                  *
- *   - FINE_DECRESCENDO (0xEB)                                                *
- *                                                                            *
- * The other commands are all orthogonal and may be applied simultaneously.   *
- *****************************************************************************/
 
 static const uint8_t PAN_CENTRE = 0x80;
 
@@ -53,12 +26,37 @@ static void process_clear_repeat_cmd(const event_t *, audio_generator_t *);
 static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channel);
 static void define_loop(pt_loop_state_t *, sequence_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
-static void set_panning(audio_channel_t *, uint8_t);
 static void pattern_break(sequence_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
 static void delay_next_event(tick_scheduler_t *, uint8_t);
 
-void process_track_commands(const event_t *event, const player_instrument_t *instrument, player_track_t *track)
+/******************************************************************************
+ * Track commands are processed in right-to-left priority order, which means  *
+ * that when the same command appears twice or more in the same event, the    *
+ * one with the highest index wins; that is, the one furthest to the right    *
+ * from the user's point of view.                                             *
+ *                                                                            *
+ * Some commands are grouped together because they all modify the same state  *
+ * variable and there is no practical reason to be using them at the same     *
+ * time. They would simply fight each other. For such commands, the one out   *
+ * of the group with the highest effect index wins. The groups are:           *
+ *                                                                            *
+ * Pitch slide command group:                                                 *
+ *   - PITCH_SLIDE_UP (0x1)                                                   *
+ *   - PITCH_SLIDE_DOWN (0x2)                                                 *
+ *   - PORTAMENTO (0x3)                                                       *
+ *   - FINE_PORTAMENTO_UP (0xE1)                                              *
+ *   - FINE_PORTAMENTO_DOWN (0xE2)                                            *
+ *                                                                            *
+ * Volume slide command group:                                                *
+ *   - VOLUME_SLIDE (0xA)                                                     *
+ *   - FINE_CRESCENDO (0xEA)                                                  *
+ *   - FINE_DECRESCENDO (0xEB)                                                *
+ *                                                                            *
+ * The other track commands are all orthogonal and may be applied together.   *
+ *****************************************************************************/
+
+void process_track_event_commands(const event_t *event, const player_instrument_t *instrument, player_track_t *track)
 {
     audio_channel_t *channel = track->audio_channel;
     audio_generator_t *generator = &channel->audio_generator;
@@ -300,11 +298,6 @@ static void process_arpeggio_cmd(const event_t *event, const player_instrument_t
         generator->arpeggio_off(&generator->state);
         return;
     }
-    if (instrument == NULL)
-    {
-        // This can happen when an arpeggio command appears on a track that has not yet played a note.
-        return;
-    }
     const int root_note = event->note == 0 ? track->current_note : event->note - 1;
     const int interval_1 = effect->data >> 4;
     const int interval_2 = effect->data & 0xf;
@@ -355,7 +348,7 @@ static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channe
 {
     const effect_t *effect = get_track_effect(event, SET_STEREO);
     if (effect != NULL)
-        set_panning(channel, effect->data);
+        channel->panning = effect->data == 0 ? PAN_CENTRE : effect->data;
 }
 
 bool portamento(const event_t *event)
@@ -375,7 +368,18 @@ uint8_t get_sample_slice(const event_t *event)
     return effect != NULL ? effect->data : 0;
 }
 
-void process_global_commands(const event_t *events, const int num_tracks, player_t *player)
+/******************************************************************************
+ * Global commands are those that apply to the song as a whole, not to an     *
+ * individual track, although they may appear on any track. Global commands   *
+ * are processed in right-to-left priority order, which means that when the   *
+ * same command appears twice or more in the same pattern line, the one with  *
+ * the highest track index wins; that is, the one furthest to the right from  *
+ * the user's point of view. If the same global command appears twice or more *
+ * in the same track, then the one with the highest effect index wins; once   *
+ * again, the one furthest to the right.                                      *
+ *****************************************************************************/
+
+void process_global_event_commands(const event_t *events, const int num_tracks, player_t *player)
 {
     const effect_t *effect = NULL;
     if ((effect = get_global_effect(events, num_tracks, SET_TEMPO)) != NULL)
@@ -391,6 +395,56 @@ void process_global_commands(const event_t *events, const int num_tracks, player
     if ((effect = get_global_effect(events, num_tracks, DEFINE_PATTERN_LOOP)) != NULL)
         define_loop(&player->loop_state, &player->sequence, effect->data);
 }
+
+static void set_tempo(player_t *player, const uint8_t data)
+{
+    if (data <= 32)
+        player->tick_scheduler.event_scheduler.ticks_per_event = data;
+    else if (player->module->lines_per_beat > 0)
+        player_set_bpm(player, data);
+}
+
+static void pattern_break(sequence_t *sequence, const uint8_t data)
+{
+    break_to_next_position(sequence, data);
+}
+
+static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
+{
+    if (data > 0)
+        tick_scheduler->audio_accumulator.ticks_per_second = data;
+}
+
+static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t data)
+{
+    if (data > 0)
+        tick_scheduler->event_scheduler.event_delay = data * tick_scheduler->event_scheduler.ticks_per_event;
+}
+
+/******************************************************************************
+ * Semantics of the E6 (define pattern loop) command:                         *
+ * 1. An E600 command defines the start of a loop.                            *
+ * 2. There is only one loop start defined in a pattern at a time, or none.   *
+ * 3. An E6xy command where xy > 0 causes the playhead to jump back to the    *
+ *    previously defined loop start. The command data xy specifies how many   *
+ *    times the jump will occur before the playhead is able to move past the  *
+ *    non-zero E6 command location.                                           *
+ * 4. A non-zero E6 command has no effect if no loop start has been defined.  *
+ * 5. A non-zero E6 command causes the loop start to become undefined after   *
+ *    it jumps back for the final time. This means that a subsequent non-zero *
+ *    E6 command in the same pattern has no effect unless another zero E6     *
+ *    command has defined a new loop start on a pattern line in between.      *
+ *    Therefore, multiple loops in the same pattern are possible but they may *
+ *    not overlap.                                                            *
+ * 6. A loop start is implicitly defined whenever a pattern is entered. This  *
+ *    occurs when the sequence advances, or when a pattern break/sequence     *
+ *    jump command is executed. The implicit loop start is defined at the     *
+ *    line the pattern was entered at.                                        *
+ * 7. If multiple E6 commands appear in the same pattern line - whether zero  *
+ *    or otherwise - they are prioritised in the same rightmost-command-wins  *
+ *    order as the other global commands. Thus, only one E6 command per line  *
+ *    will be evaluated.                                                      *
+ *****************************************************************************/
 
 static void define_loop(pt_loop_state_t *loop_state, sequence_t *sequence, const uint8_t data)
 {
@@ -415,34 +469,4 @@ static void define_loop(pt_loop_state_t *loop_state, sequence_t *sequence, const
         loop_state->looping = true;
         loop_state->counter = data;
     }
-}
-
-static void set_panning(audio_channel_t *channel, const uint8_t data)
-{
-    channel->panning = data == 0 ? PAN_CENTRE : data;
-}
-
-static void pattern_break(sequence_t *sequence, const uint8_t data)
-{
-    break_to_next_position(sequence, data);
-}
-
-static void set_tempo(player_t *player, const uint8_t data)
-{
-    if (data <= 32)
-        player->tick_scheduler.event_scheduler.ticks_per_event = data;
-    else if (player->module->lines_per_beat > 0)
-        player_set_bpm(player, data);
-}
-
-static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
-{
-    if (data > 0)
-        tick_scheduler->audio_accumulator.ticks_per_second = data;
-}
-
-static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t data)
-{
-    if (data > 0)
-        tick_scheduler->event_scheduler.event_delay = data * tick_scheduler->event_scheduler.ticks_per_event;
 }

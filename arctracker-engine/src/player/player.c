@@ -13,16 +13,19 @@
 #define DEFAULT_TICKS_PER_SECOND 50
 
 static double fine_tuning[256] = {0};
+static const int NULL_INSTRUMENT_INDEX = NUM_INSTRUMENT_SLOTS;
 
+static void init_null_instrument(player_t *);
 static void calculate_fine_tuning(void);
 static bool player_tick(player_t *);
-static void process_commands(player_t *player);
-static void process_command(player_t *player, player_command_t command);
+static void process_player_commands(player_t *player);
+static void process_player_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
 static void process_seek_command(player_t *player, seek_command_t data);
 static void process_midi_note_on_command(const player_t *player, midi_note_on_command_t data);
 static void process_keyboard_note_on_command(const player_t *player, keyboard_note_on_command_t data);
 static void process_note_off_command(const player_t *player, note_off_command_t data);
+static const player_instrument_t *get_player_instrument(const player_t *, int);
 static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
@@ -36,6 +39,7 @@ static event_t *get_events(const player_t *);
 static void play_scheduled_notes(const player_t *);
 static void note_on(int, const player_instrument_t *, uint8_t, player_track_t *, const event_t *);
 static audio_generator_t init_audio_generator(int, player_track_t *track, const player_instrument_t *, uint8_t, uint8_t);
+static sampler_state_t *get_available_sample_player(player_track_t *);
 static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
 static bool audio_consume(player_t *);
@@ -59,7 +63,6 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->module = module;
     player->playing = false;
     player->player_event_queue = player_event_queue;
-    player->module = module;
     player->master_gain = module->master_gain;
     player->current_bpm = module->initial_bpm;
     const tempo_t initial_tempo = module_get_initial_tempo(module);
@@ -94,6 +97,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     }
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true);
+    init_null_instrument(player);
     calculate_fine_tuning();
     player_update_instruments(player);
     reset_loop_state(player);
@@ -222,6 +226,11 @@ void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
     }
 }
 
+static void init_null_instrument(player_t *player)
+{
+    player->instruments[NULL_INSTRUMENT_INDEX] = (player_instrument_t) {0};
+}
+
 static void calculate_fine_tuning(void)
 {
     for (int finetune = -128; finetune <= 127; finetune++)
@@ -232,7 +241,7 @@ static void calculate_fine_tuning(void)
 
 static bool player_tick(player_t *player)
 {
-    process_commands(player);
+    process_player_commands(player);
     if (player->bouncing && player->sequence.song_ended)
     {
         player_shutdown(player);
@@ -251,7 +260,7 @@ static bool player_tick(player_t *player)
     player_step(player);
     if (player->current_frame.row_advanced)
     {
-        process_global_commands(player->current_frame.events, player->module->num_tracks, player);
+        process_global_event_commands(player->current_frame.events, player->module->num_tracks, player);
         handle_pattern_events(player);
     }
     play_scheduled_notes(player);
@@ -260,16 +269,16 @@ static bool player_tick(player_t *player)
     return true;
 }
 
-static void process_commands(player_t *player)
+static void process_player_commands(player_t *player)
 {
     player_command_t command;
     while (command_queue_read(player->command_queue, &command))
     {
-        process_command(player, command);
+        process_player_command(player, command);
     }
 }
 
-static void process_command(player_t *player, const player_command_t command)
+static void process_player_command(player_t *player, const player_command_t command)
 {
     switch (command.cmd_type)
     {
@@ -332,7 +341,7 @@ static void process_midi_note_on_command(const player_t *player, const midi_note
         note_off(channel);
         return;
     }
-    note_on(data.note, player->instruments + data.instrument_no, 0, track, NULL);
+    note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL);
 }
 
 static void process_keyboard_note_on_command(const player_t *player, const keyboard_note_on_command_t data)
@@ -345,7 +354,7 @@ static void process_keyboard_note_on_command(const player_t *player, const keybo
         note_off(channel);
         return;
     }
-    note_on(data.note, player->instruments + data.instrument_no, 0, track, NULL);
+    note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL);
 }
 
 static void process_note_off_command(const player_t *player, const note_off_command_t data)
@@ -356,6 +365,15 @@ static void process_note_off_command(const player_t *player, const note_off_comm
     {
         note_off(channel);
     }
+}
+
+static const player_instrument_t *get_player_instrument(const player_t *player, const int instrument_no)
+{
+    if (instrument_no >= 0 && instrument_no < NUM_INSTRUMENT_SLOTS)
+    {
+        return &player->instruments[instrument_no];
+    }
+    return &player->instruments[NULL_INSTRUMENT_INDEX];
 }
 
 static void process_toggle_loop_command(player_t *player)
@@ -440,7 +458,7 @@ static void set_current_frame(player_t *player, const bool row_advanced)
 
 static void reset_loop_state(player_t *player)
 {
-    player->loop_state.start = 0;
+    player->loop_state.start = player->current_frame.pattern_pos;
     player->loop_state.defined = true;
     player->loop_state.counter = 0;
     player->loop_state.looping = false;
@@ -449,11 +467,11 @@ static void reset_loop_state(player_t *player)
 static void player_step(player_t *player)
 {
     bool row_advanced = false;
-    bool sequence_advanced = false;
+    bool pattern_entered = false;
     if (tick_scheduler_is_new_event(&player->tick_scheduler.event_scheduler))
     {
         row_advanced = true;
-        pattern_step(&player->sequence, &sequence_advanced);
+        pattern_step(&player->sequence, &pattern_entered);
     }
     else if (tick_scheduler_just_started(&player->tick_scheduler.event_scheduler))
     {
@@ -461,7 +479,7 @@ static void player_step(player_t *player)
     }
     set_current_frame(player, row_advanced);
     if (row_advanced) clear_scheduled_notes(player);
-    if (sequence_advanced) reset_loop_state(player);
+    if (pattern_entered) reset_loop_state(player);
 }
 
 static event_t *get_events(const player_t *player)
@@ -506,11 +524,11 @@ static void on_pattern_event(const player_t *player, event_t *event, const uint8
     {
         track->instrument_no = event->instrument_no;
     }
-    const player_instrument_t *instrument = track->instrument_no == 0 ? NULL : &player->instruments[track->instrument_no - 1];
+    const player_instrument_t *instrument = get_player_instrument(player, track->instrument_no - 1);
     if (event->note)
     {
         const int note = event->note - 1;
-        if (instrument != NULL && !instrument_changed && portamento(event))
+        if (!instrument_changed && portamento(event))
         {
             audio_channel_t *channel = player->tracks[track_no].audio_channel;
             audio_generator_t *audio_generator = &channel->audio_generator;
@@ -529,14 +547,14 @@ static void on_pattern_event(const player_t *player, event_t *event, const uint8
             };
         }
     }
-    else if (event->instrument_no && instrument != NULL && instrument->assigned)
+    else if (event->instrument_no && instrument->assigned)
     {
         set_volume(track, instrument->default_volume);
     }
     if (!scheduler->scheduled)
     {
         // If a note has been scheduled then the track commands will be applied when the note-on happens.
-        process_track_commands(event, instrument, track);
+        process_track_event_commands(event, instrument, track);
     }
 }
 
@@ -564,46 +582,49 @@ static void play_scheduled_notes(const player_t *player)
     }
 }
 
-static void note_on(const int note, const player_instrument_t *instrument, const uint8_t slice, player_track_t *track, const event_t *event)
+static void note_on(const int note, const player_instrument_t *instrument, const uint8_t slice_index, player_track_t *track, const event_t *event)
 {
     //
     // The event argument will be NULL when the note-on is due to a user MIDI action. In this case we must use the
     // default volume, and we must not try to process track commands.
     //
-    // The instrument argument will be NULL when the event has no instrument no, and the track has no previously
-    // selected instrument. In this case we must silence the channel, but we must still process the track commands.
-    //
-    uint8_t volume = instrument == NULL ? 0 : instrument->default_volume;
+    uint8_t volume = instrument->default_volume;
     if (event != NULL)
     {
-        if (event->instrument_no && instrument != NULL)
+        if (event->instrument_no)
             track->command_state.volume = instrument->default_volume;
         else
             volume = track->command_state.volume;
     }
-    if (instrument != NULL && instrument->assigned)
-    {
-        track->audio_channel->audio_generator = init_audio_generator(note + instrument->transpose, track, instrument, slice, volume);
-    }
-    else
-    {
-        silence_channel(track->audio_channel);
-    }
+    track->audio_channel->audio_generator = init_audio_generator(note, track, instrument, slice_index, volume);
     if (event != NULL)
     {
-        process_track_commands(event, instrument, track);
+        process_track_event_commands(event, instrument, track);
     }
 }
 
-static audio_generator_t init_audio_generator(const int note, player_track_t *track, const player_instrument_t *instrument, const uint8_t slice, const uint8_t volume)
+static audio_generator_t init_audio_generator(const int note, player_track_t *track, const player_instrument_t *instrument, const uint8_t slice_index, const uint8_t volume)
 {
+    if (!instrument->assigned)
+    {
+        return null_audio_generator();
+    }
     //
     // When we introduce different instrument types, this is where we will distinguish between them
     // and return the appropriate audio generator.
     //
-    const player_sample_slice_t sample_slice = instrument->sample_slices[slice];
+    const int note_to_play = note + instrument->transpose;
+    const player_sample_t *sample = &instrument->sample;
+    const player_sample_slice_t slice = instrument->sample_slices[slice_index];
+    const float *gain_curve = instrument->gain_curve;
+    sampler_state_t *sampler_state = get_available_sample_player(track);
+    return init_sampler(note_to_play, sample, slice, volume, gain_curve, sampler_state);
+}
+
+static sampler_state_t *get_available_sample_player(player_track_t *track)
+{
     track->active_sampler = track->active_sampler == 0 ? 1 : 0;
-    return init_sampler(note, &instrument->sample, sample_slice, volume, instrument->gain_curve, &track->sampler_state[track->active_sampler]);
+    return &track->sampler_state[track->active_sampler];
 }
 
 static void clear_scheduled_notes(const player_t *player)

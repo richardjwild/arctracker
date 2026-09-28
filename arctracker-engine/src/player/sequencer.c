@@ -49,12 +49,15 @@ sequence_t reinitialise_sequence(const module_t *module, const sequence_t *old_s
     return sequence;
 }
 
-void pattern_step(sequence_t *sequence, bool *sequence_advanced)
+void pattern_step(sequence_t *sequence, bool *pattern_entered)
 {
     if (sequence->jump_target == NO_JUMP || sequence->looping_state.looping)
-        advance_pattern_event(sequence, sequence_advanced);
+        advance_pattern_event(sequence, pattern_entered);
     else
+    {
         go_to_jump_target(sequence);
+        *pattern_entered = true;
+    }
 }
 
 void set_jump_target(const int next_position, const int jump_pattern_index, sequence_t *sequence)
@@ -122,7 +125,7 @@ static bool end_of_sequence(const sequence_t *sequence)
     return sequence->sequence_pos == sequence->tune_length;
 }
 
-static void advance_pattern_event(sequence_t *sequence, bool *sequence_advanced)
+static void advance_pattern_event(sequence_t *sequence, bool *pattern_entered)
 {
     if (sequence->looping_state.looping && end_of_loop(sequence))
     {
@@ -133,7 +136,7 @@ static void advance_pattern_event(sequence_t *sequence, bool *sequence_advanced)
     if (end_of_pattern(sequence))
     {
         advance_sequence_position(sequence);
-        *sequence_advanced = true;
+        *pattern_entered = true;
     }
 }
 

@@ -3,6 +3,9 @@
 #include "memory/heap.h"
 #include "player/module.h"
 #include "player/period.h"
+#ifdef DEBUG_SAMPLER
+#include <stdio.h>
+#endif
 
 static bool generate_audio(audio_generator_state_t *, float *, int);
 static float interpolate_linear(const float *, float);
@@ -38,7 +41,13 @@ static void apply_silence_after_delay(sampler_state_t *, int);
 static void apply_retrigger(sampler_state_t *, int);
 static void apply_clear_repeat(sampler_state_t *, int);
 
-audio_generator_t init_sampler(const int note, const player_sample_t *sample, const player_sample_slice_t slice, const uint8_t volume, const float *gain_curve, sampler_state_t *sampler_state)
+audio_generator_t init_sampler(
+    const int note,
+    const player_sample_t *sample,
+    const player_sample_slice_t slice,
+    const uint8_t volume,
+    const float *gain_curve,
+    sampler_state_t *sampler_state)
 {
     if (note_out_of_range(note))
     {
@@ -331,7 +340,7 @@ static void advance_phase(audio_generator_state_t *state, const int frames)
     }
 }
 
-static void clear_repeat(audio_generator_state_t *state, int ticks)
+static void clear_repeat(audio_generator_state_t *state, const int ticks)
 {
     sampler_state_t *sampler = state->sampler;
     if (ticks == 0)
@@ -346,24 +355,29 @@ static void cancel_clear_repeat(audio_generator_state_t *state)
     sampler->clear_repeat_delay = 0;
 }
 
-// static void print_state(const sampler_state_t *sampler, const int tick, const int ticks_per_event)
-// {
-//     printf("(%02d/%02d) %s %s %s %s %s %s\n",
-//         tick,
-//         ticks_per_event,
-//         sampler->volume_slide_rate != 0 ? "[VOL]" : " VOL ",
-//         sampler->pitch_slide_rate != 0 ? "[PIT]" : " PIT ",
-//         sampler->tone_portamento_on ? "[POR]" : " POR ",
-//         sampler->vibrato.enabled ? "[VIB]" : " VIB ",
-//         sampler->tremolo.enabled ? "[TRE]" : " TRE ",
-//         sampler->arpeggio.enabled ? "[ARP]" : " ARP ");
-// }
+#ifdef DEBUG_SAMPLER
+static void print_state(const sampler_state_t *sampler, const int tick, const int ticks_per_event)
+{
+    printf("(%02d/%02d) %s %s %s %s %s %s\n",
+        tick,
+        ticks_per_event,
+        sampler->volume_slide_rate != 0 ? "[VOL]" : " VOL ",
+        sampler->pitch_slide_rate != 0 ? "[PIT]" : " PIT ",
+        sampler->tone_portamento_on ? "[POR]" : " POR ",
+        sampler->vibrato.enabled ? "[VIB]" : " VIB ",
+        sampler->tremolo.enabled ? "[TRE]" : " TRE ",
+        sampler->arpeggio.enabled ? "[ARP]" : " ARP ");
+}
+#endif
 
 static void tick(audio_generator_state_t *state, const int tick, const int ticks_per_event)
 {
     (void) ticks_per_event;
     if (tick == 0) return;
     sampler_state_t *sampler = state->sampler;
+    #ifdef DEBUG_SAMPLER
+    print_state(sampler, tick, ticks_per_event);
+    #endif
     if (sampler->volume_slide_rate != 0)
         apply_volume_slide(sampler);
     if (sampler->pitch_slide_rate != 0)

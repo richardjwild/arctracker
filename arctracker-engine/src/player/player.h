@@ -90,7 +90,7 @@ typedef struct player {
     scheduled_note_t *scheduled_notes;
     sequence_t sequence;
     pt_loop_state_t loop_state;
-    player_instrument_t instruments[256];
+    player_instrument_t instruments[NUM_INSTRUMENT_SLOTS + 1];
     tick_scheduler_t tick_scheduler;
     audio_out_t audio_out;
     ui_event_consumer_t ui_event_consumer;
