@@ -95,30 +95,36 @@ static bool fill_audio_buffer(audio_out_t *audio_out, audio_channel_t *channels,
 
 static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_t *channel, const int frames_to_fill)
 {
+    audio_generator_t *audio_generator = &channel->audio_generator;
+    audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     float *mono_channel_buffer = audio_out->mono_channel_buffer;
     //
     // Generate channel audio.
     //
-    audio_generator_t *audio_generator = &channel->audio_generator;
     const bool has_more_audio = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
     if (!has_more_audio)
     {
         audio_channel_silence(channel);
     }
     //
-    // This is the point where we would apply mono effects: filtering, compression, distortion, etc.
+    // This is the point where we may apply mono effects: filtering, compression, distortion, etc.
     //
     // Spatialise the mono audio data into the stereo channel buffer.
     //
     stereo_frame_t *stereo_channel_buffer = audio_out->stereo_channel_buffer;
-    channel->audio_spatialiser.spatialise(&channel->audio_spatialiser.state, mono_channel_buffer, stereo_channel_buffer, frames_to_fill);
+    spatialiser->spatialise(&spatialiser->state, mono_channel_buffer, stereo_channel_buffer, frames_to_fill);
     //
-    // This is the point where we would apply stereo effects, such as delay.
+    // This is the point where we may apply stereo effects, such as delay.
     //
-    // Now mix the stereo channel buffer into the master output buffer.
+    if (channel->muted)
+    {
+        return;
+    }
+    //
+    // We are not muted, so now mix the stereo channel buffer into the master output buffer.
     //
     stereo_frame_t *output_buffer = audio_out->output_buffer + audio_out->frames_filled;
-    const float channel_gain = channel->muted ? 0.0f : channel->gain;
+    const float channel_gain = channel->gain;
     for (int frame = 0; frame < frames_to_fill; frame++)
     {
         output_buffer[frame].l += stereo_channel_buffer[frame].l * channel_gain;
