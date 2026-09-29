@@ -73,32 +73,35 @@ void sequencer_set_next_sequence_index(sequence_t *sequence, const int sequence_
     }
 }
 
-void sequencer_set_pattern_loop(sequence_t *sequence)
+void sequencer_set_whole_pattern_loop(sequence_t *sequence)
 {
     const int current_sequence_index = sequence->sequence_index;
     const int current_pattern = sequence->sequence[current_sequence_index];
-    sequencer_set_loop(sequence, 0, sequence->patterns[current_pattern].num_lines - 1, true);
+    const int last_pattern_index = sequence->patterns[current_pattern].num_lines - 1;
+    sequencer_set_loop(sequence, 0, last_pattern_index, true);
 }
 
-void sequencer_set_loop(sequence_t *sequence, const int loop_pattern_start, const int loop_pattern_end, const bool commanded_by_ui)
+void sequencer_set_loop(sequence_t *sequence, const int start_index, const int end_index, const bool commanded_by_ui)
 {
     sequence->looping_state.looping = true;
-    sequence->looping_state.loop_sequence_index = sequence->sequence_index;
-    sequence->looping_state.loop_pattern_start = loop_pattern_start;
-    sequence->looping_state.loop_pattern_end = loop_pattern_end;
+    sequence->looping_state.sequence_index = sequence->sequence_index;
+    sequence->looping_state.start_pattern_index = start_index;
+    sequence->looping_state.end_pattern_index = end_index;
     sequence->looping_state.commanded_by_ui = commanded_by_ui;
 }
 
-void sequencer_clear_pattern_loop(sequence_t *sequence)
+void sequencer_clear_loop(sequence_t *sequence)
 {
     sequence->looping_state = NOT_LOOPING;
 }
 
 void sequencer_break_pattern(sequence_t *sequence, const int entry_pattern_index)
 {
-    if (sequence->looping_state.looping)
+    if (sequence->looping_state.looping && sequence->looping_state.commanded_by_ui)
     {
-        sequence->looping_state.loop_pattern_end = sequence->pattern_index;
+        // The sequence should not advance because we are in a loop commanded by the UI, but we also do not want the
+        // playhead to progress past the break command. So we set the end of the loop to location of the pattern break.
+        sequence->looping_state.end_pattern_index = sequence->pattern_index;
         return;
     }
     sequence->pattern_break.commanded = true;
@@ -133,7 +136,7 @@ static void advance_pattern_event(sequence_t *sequence, bool *pattern_entered)
 {
     if (sequence->looping_state.looping && end_of_loop(sequence))
     {
-        sequence->pattern_index = sequence->looping_state.loop_pattern_start;
+        sequence->pattern_index = sequence->looping_state.start_pattern_index;
         return;
     }
     sequence->pattern_index += 1;
@@ -153,7 +156,7 @@ static bool end_of_pattern(const sequence_t *sequence)
 
 static bool end_of_loop(const sequence_t *sequence)
 {
-    return sequence->pattern_index == sequence->looping_state.loop_pattern_end;
+    return sequence->pattern_index == sequence->looping_state.end_pattern_index;
 }
 
 static void execute_commanded_pattern_entry(sequence_t *sequence)

@@ -26,7 +26,6 @@ static void process_clear_repeat_cmd(const event_t *, audio_generator_t *);
 static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channel);
 static void define_loop(pt_loop_state_t *, sequence_t *, uint8_t);
 static void set_tempo(player_t *, uint8_t);
-static void pattern_break(sequence_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
 static void delay_next_event(tick_scheduler_t *, uint8_t);
 
@@ -385,7 +384,7 @@ void process_global_event_commands(const event_t *events, const int num_tracks, 
     if ((effect = get_global_effect(events, num_tracks, SET_TEMPO)) != NULL)
         set_tempo(player, effect->data);
     if ((effect = get_global_effect(events, num_tracks, BREAK_TO_NEXT_PATTERN)) != NULL)
-        pattern_break(&player->sequence, effect->data);
+        sequencer_break_pattern(&player->sequence, effect->data);
     if ((effect = get_global_effect(events, num_tracks, SEQUENCE_JUMP)) != NULL)
         sequencer_set_next_sequence_index(&player->sequence, effect->data);
     if ((effect = get_global_effect(events, num_tracks, SET_TICK_RATE)) != NULL)
@@ -402,11 +401,6 @@ static void set_tempo(player_t *player, const uint8_t data)
         player->tick_scheduler.event_scheduler.ticks_per_event = data;
     else if (player->module->lines_per_beat > 0)
         player_set_bpm(player, data);
-}
-
-static void pattern_break(sequence_t *sequence, const uint8_t data)
-{
-    sequencer_break_pattern(sequence, data);
 }
 
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
@@ -444,6 +438,9 @@ static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t dat
  *    or otherwise - they are prioritised in the same rightmost-command-wins  *
  *    order as the other global commands. Thus, only one E6 command per line  *
  *    will be evaluated.                                                      *
+ * 8. If a non-zero E6 command commences a loop on the same pattern line as a *
+ *    pattern break and/or sequence jump command, the break/jump commands     *
+ *    will be executed after the final iteration of the loop.                 *
  *****************************************************************************/
 
 static void define_loop(pt_loop_state_t *loop_state, sequence_t *sequence, const uint8_t data)
@@ -458,7 +455,7 @@ static void define_loop(pt_loop_state_t *loop_state, sequence_t *sequence, const
         loop_state->counter -= 1;
         if (loop_state->counter == 0)
         {
-            sequencer_clear_pattern_loop(sequence);
+            sequencer_clear_loop(sequence);
             loop_state->looping = false;
             loop_state->defined = false;
         }

@@ -378,8 +378,8 @@ static const player_instrument_t *get_player_instrument(const player_t *player, 
 
 static void process_toggle_loop_command(player_t *player)
 {
-    if (player->sequence.looping_state.looping) sequencer_clear_pattern_loop(&player->sequence);
-    else sequencer_set_pattern_loop(&player->sequence);
+    if (player->sequence.looping_state.looping) sequencer_clear_loop(&player->sequence);
+    else sequencer_set_whole_pattern_loop(&player->sequence);
 }
 
 static void process_set_master_gain_command(player_t *player, const master_gain_command_t data)
@@ -657,7 +657,7 @@ static void player_start(player_t *player)
     clear_loop_state(player);
     if (player->sequence.looping_state.looping && !player->sequence.looping_state.commanded_by_ui)
     {
-        sequencer_clear_pattern_loop(&player->sequence);
+        sequencer_clear_loop(&player->sequence);
     }
 }
 
