@@ -387,7 +387,7 @@ void process_global_event_commands(const event_t *events, const int num_tracks, 
     if ((effect = get_global_effect(events, num_tracks, BREAK_TO_NEXT_PATTERN)) != NULL)
         pattern_break(&player->sequence, effect->data);
     if ((effect = get_global_effect(events, num_tracks, SEQUENCE_JUMP)) != NULL)
-        sequencer_set_next_sequence_index(effect->data, &player->sequence);
+        sequencer_set_next_sequence_index(&player->sequence, effect->data);
     if ((effect = get_global_effect(events, num_tracks, SET_TICK_RATE)) != NULL)
         set_tempo_fine(&player->tick_scheduler, effect->data);
     if ((effect = get_global_effect(events, num_tracks, DELAY_NEXT_EVENT)) != NULL)

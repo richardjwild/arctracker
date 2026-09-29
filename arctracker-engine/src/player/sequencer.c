@@ -2,9 +2,14 @@
 
 static const looping_state_t NOT_LOOPING = {
     .looping = false,
-    .loop_sequence_index = 0,
-    .loop_pattern_start = 0,
-    .loop_pattern_end = 0,
+};
+
+static const sequence_jump_t NO_SEQUENCE_JUMP = {
+    .commanded = false,
+};
+
+static const pattern_break_t NO_PATTERN_BREAK = {
+    .commanded = false,
 };
 
 static bool end_of_sequence(const sequence_t *);
@@ -18,18 +23,14 @@ static bool jump_permitted(int, const sequence_t *);
 sequence_t sequencer_initialise(const module_t *module, const bool bouncing)
 {
     return (sequence_t) {
-        .sequence_index = 0,
-        .looping_state = NOT_LOOPING,
-        .pattern_index = 0,
-        .sequence_jump = (sequence_jump_t) {
-            .commanded = false,
-        },
-        .pattern_break = (pattern_break_t) {
-            .commanded = false,
-        },
         .sequence = module->sequence,
         .tune_length = module->sequence_length,
         .patterns = module->patterns,
+        .sequence_index = 0,
+        .pattern_index = 0,
+        .looping_state = NOT_LOOPING,
+        .sequence_jump = NO_SEQUENCE_JUMP,
+        .pattern_break = NO_PATTERN_BREAK,
         .continuous_play = !bouncing,
     };
 }
@@ -37,18 +38,14 @@ sequence_t sequencer_initialise(const module_t *module, const bool bouncing)
 sequence_t sequencer_reinitialise(const module_t *module, const sequence_t *old_sequence, const bool bouncing)
 {
     sequence_t sequence = (sequence_t) {
-        .sequence_index = old_sequence->sequence_index,
-        .looping_state = old_sequence->looping_state,
-        .pattern_index = 0,
-        .sequence_jump = (sequence_jump_t) {
-            .commanded = false,
-        },
-        .pattern_break = (pattern_break_t) {
-            .commanded = false,
-        },
         .sequence = module->sequence,
         .tune_length = module->sequence_length,
         .patterns = module->patterns,
+        .sequence_index = old_sequence->sequence_index,
+        .pattern_index = 0,
+        .looping_state = old_sequence->looping_state,
+        .sequence_jump = NO_SEQUENCE_JUMP,
+        .pattern_break = NO_PATTERN_BREAK,
         .continuous_play = !bouncing,
     };
     if (sequence.sequence_index >= sequence.tune_length)
@@ -67,7 +64,7 @@ void sequencer_advance(sequence_t *sequence, bool *pattern_entered)
         advance_pattern_event(sequence, pattern_entered);
 }
 
-void sequencer_set_next_sequence_index(const int sequence_index, sequence_t *sequence)
+void sequencer_set_next_sequence_index(sequence_t *sequence, const int sequence_index)
 {
     if (jump_permitted(sequence_index, sequence))
     {

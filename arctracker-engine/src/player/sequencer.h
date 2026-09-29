@@ -24,35 +24,35 @@ typedef struct {
 
 typedef struct {
     const int *sequence;
-    looping_state_t looping_state;
     int tune_length;
     pattern_t *patterns;
     int sequence_index;
     int pattern_index;
+    looping_state_t looping_state;
     sequence_jump_t sequence_jump;
     pattern_break_t pattern_break;
     bool song_ended;
     bool continuous_play;
 } sequence_t;
 
-sequence_t sequencer_initialise(const module_t *module, bool bouncing);
+sequence_t sequencer_initialise(const module_t *, bool bouncing);
 
-sequence_t sequencer_reinitialise(const module_t *module, const sequence_t *old_sequence, bool bouncing);
+sequence_t sequencer_reinitialise(const module_t *, const sequence_t *old_sequence, bool bouncing);
 
-void sequencer_advance(sequence_t *, bool *);
+void sequencer_advance(sequence_t *, bool *pattern_entered);
 
 void sequencer_seek(sequence_t *, int sequence_index, int pattern_index);
 
 void sequencer_break_pattern(sequence_t *, int entry_pattern_index);
 
-void sequencer_set_next_sequence_index(int sequence_index, sequence_t *sequence);
+void sequencer_set_next_sequence_index(sequence_t *, int sequence_index);
 
 void sequencer_set_pattern_loop(sequence_t *);
 
-void sequencer_set_loop(sequence_t *, int, int, bool);
+void sequencer_set_loop(sequence_t *, int loop_pattern_start, int loop_pattern_end, bool commanded_by_ui);
 
 void sequencer_clear_pattern_loop(sequence_t *);
 
-void sequencer_destroy(sequence_t *sequence);
+void sequencer_destroy(sequence_t *);
 
 #endif //ARCTRACKER_SEQUENCE_H
