@@ -8,6 +8,7 @@
 #include "memory/heap.h"
 #include "messages.h"
 #include "../audio_generator/sample_player.h"
+#include "audio_spatialiser/panner.h"
 #include "io/error.h"
 
 #define DEFAULT_TICKS_PER_SECOND 50
@@ -34,6 +35,7 @@ static void reset_loop_state(player_t *);
 static void player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
+static void initialise_spatialisers(const player_t *player);
 static scheduled_note_t *initialise_note_schedulers(const player_t *);
 static event_t *get_events(const player_t *);
 static void play_scheduled_notes(const player_t *);
@@ -84,6 +86,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     {
         goto init_failed;
     }
+    initialise_spatialisers(player);
     player->scheduled_notes = initialise_note_schedulers(player);
     if (player->scheduled_notes == NULL)
     {
@@ -411,7 +414,6 @@ static audio_channel_t *initialise_audio_channels(const module_t *module)
     {
         audio_channel_silence(&channels[channel]);
         channels[channel].muted = module->tracks[channel].muted;
-        channels[channel].panning = module->tracks[channel].panning - 1;
         channels[channel].gain = 1.0f;
     }
     return channels;
@@ -431,6 +433,15 @@ static player_track_t *initialise_tracks(const int num_tracks, audio_channel_t *
         tracks[track].command_state.arpeggio_speed = 1;
     }
     return tracks;
+}
+
+static void initialise_spatialisers(const player_t *player)
+{
+    for (int track = 0; track < player->module->num_tracks; track++)
+    {
+        audio_channel_t *audio_channel = player->tracks[track].audio_channel;
+        audio_channel->audio_spatialiser = init_panner(&player->tracks[track].panner, player->module->tracks[track].panning);
+    }
 }
 
 static scheduled_note_t *initialise_note_schedulers(const player_t *player)

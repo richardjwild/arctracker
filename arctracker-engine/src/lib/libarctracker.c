@@ -374,7 +374,7 @@ void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *trac
     track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
     track_state->muted = arctracker->module->tracks[track].muted;
     if (arctracker->playback.thread_active && arctracker->playback.player->running)
-        track_state->panning = arctracker->playback.player->audio_channels[track].panning;
+        track_state->panning = audio_channel_get_stereo(arctracker->playback.player->tracks[track].audio_channel);
     else
         track_state->panning = arctracker->module->tracks[track].panning;
 }

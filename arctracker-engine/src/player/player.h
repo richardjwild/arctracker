@@ -8,6 +8,7 @@
 #include "audio_generator/sample_player.h"
 #include "audio_api/audio_api.h"
 #include "audio_out/audio_out.h"
+#include "audio_spatialiser/panner.h"
 #include "ui/player_event_queue.h"
 
 typedef struct {
@@ -55,6 +56,7 @@ typedef struct {
     effect_memory_t effect_memory;
     track_command_state_t command_state;
     sampler_state_t sampler_state[2];
+    panner_state_t panner;
     int active_sampler;
     audio_channel_t *audio_channel;
 } player_track_t;

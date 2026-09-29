@@ -111,22 +111,13 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     //
     // This is the point where we would apply mono effects: filtering, compression, distortion, etc.
     //
-    float left_gain = 0.0f;
-    float right_gain = 0.0f;
-    if (!channel->muted)
-    {
-        left_gain = (PAN_HARD_RIGHT - (float) channel->panning) / 254.0f;
-        right_gain = ((float) channel->panning - PAN_HARD_LEFT) / 254.0f;
-    }
-    //
     // Copy the mono channel buffer to the stereo channel buffer, applying panning as we go.
     //
     stereo_frame_t *stereo_channel_buffer = audio_out->stereo_channel_buffer;
     for (int frame = 0; frame < frames_to_fill; frame++)
     {
         const float pcm = mono_channel_buffer[frame];
-        stereo_channel_buffer[frame].l = pcm * left_gain;
-        stereo_channel_buffer[frame].r = pcm * right_gain;
+        channel->audio_spatialiser.spatialise(&channel->audio_spatialiser.state, pcm, &stereo_channel_buffer[frame]);
     }
     //
     // This is the point where we would apply stereo effects, such as delay.
@@ -134,7 +125,7 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     // Now mix the stereo channel buffer into the master output buffer.
     //
     stereo_frame_t *output_buffer = audio_out->output_buffer + audio_out->frames_filled;
-    const float channel_gain = channel->gain;
+    const float channel_gain = channel->muted ? 0.0f : channel->gain;
     for (int frame = 0; frame < frames_to_fill; frame++)
     {
         output_buffer[frame].l += stereo_channel_buffer[frame].l * channel_gain;
