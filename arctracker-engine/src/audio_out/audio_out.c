@@ -7,9 +7,6 @@
 #include "memory/heap.h"
 #include "src/vidc/vidc.h"
 
-static const float PAN_HARD_LEFT = 1.0f;
-static const float PAN_HARD_RIGHT = 255.0f;
-
 static void calculate_gain_curve(float *, volume_mapping_type_t);
 static bool fill_audio_buffer(audio_out_t *, audio_channel_t *, int);
 static void write_audio_for_channel(const audio_out_t *, audio_channel_t *, int);
@@ -111,14 +108,10 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     //
     // This is the point where we would apply mono effects: filtering, compression, distortion, etc.
     //
-    // Copy the mono channel buffer to the stereo channel buffer, applying panning as we go.
+    // Spatialise the mono audio data into the stereo channel buffer.
     //
     stereo_frame_t *stereo_channel_buffer = audio_out->stereo_channel_buffer;
-    for (int frame = 0; frame < frames_to_fill; frame++)
-    {
-        const float pcm = mono_channel_buffer[frame];
-        channel->audio_spatialiser.spatialise(&channel->audio_spatialiser.state, pcm, &stereo_channel_buffer[frame]);
-    }
+    channel->audio_spatialiser.spatialise(&channel->audio_spatialiser.state, mono_channel_buffer, stereo_channel_buffer, frames_to_fill);
     //
     // This is the point where we would apply stereo effects, such as delay.
     //

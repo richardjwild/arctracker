@@ -7,7 +7,7 @@ static const float PAN_HARD_RIGHT = 255.0f;
 static const uint8_t PAN_CENTRE = 0x80;
 
 static void calculate_gain(uint8_t panning, float *left_gain, float *right_gain);
-static void spatialise(audio_spatialiser_state_t *state, float mono, stereo_frame_t *stereo);
+static void spatialise(audio_spatialiser_state_t *state, const float *mono, stereo_frame_t *stereo, int num_frames);
 static void set_amount(audio_spatialiser_state_t *state, uint8_t amount);
 static uint8_t get_amount(audio_spatialiser_state_t *state);
 
@@ -31,11 +31,15 @@ static void calculate_gain(const uint8_t panning, float *left_gain, float *right
     *right_gain = ((float) panning - PAN_HARD_LEFT) / 254.0f;
 }
 
-static void spatialise(audio_spatialiser_state_t *state, const float mono, stereo_frame_t *stereo)
+static void spatialise(audio_spatialiser_state_t *state, const float *mono, stereo_frame_t *stereo, const int num_frames)
 {
-    const panner_state_t *panner = state->panner;
-    stereo->l = mono * panner->left_gain;
-    stereo->r = mono * panner->right_gain;
+    const float left_gain = state->panner->left_gain;
+    const float right_gain = state->panner->right_gain;
+    for (int frame = 0; frame < num_frames; frame++)
+    {
+        stereo[frame].l = mono[frame] * left_gain;
+        stereo[frame].r = mono[frame] * right_gain;
+    }
 }
 
 static void set_amount(audio_spatialiser_state_t *state, const uint8_t amount)
