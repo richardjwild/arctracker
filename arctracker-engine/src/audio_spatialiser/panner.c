@@ -1,12 +1,9 @@
 #include "panner.h"
 
-#include "../../../../../../../Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/AudioToolbox.framework/Headers/AudioUnitProperties.h"
-
 static const float PAN_HARD_LEFT = 1.0f;
 static const float PAN_HARD_RIGHT = 255.0f;
 static const uint8_t PAN_CENTRE = 0x80;
 
-static void calculate_gain(uint8_t panning, float *left_gain, float *right_gain);
 static void spatialise(audio_spatialiser_state_t *state, const float *mono, stereo_frame_t *stereo, int num_frames);
 static void set_amount(audio_spatialiser_state_t *state, uint8_t amount);
 static uint8_t get_amount(audio_spatialiser_state_t *state);
@@ -25,12 +22,6 @@ audio_spatialiser_t init_panner(panner_state_t *panner_state, const uint8_t init
     };
 }
 
-static void calculate_gain(const uint8_t panning, float *left_gain, float *right_gain)
-{
-    *left_gain = (PAN_HARD_RIGHT - (float) panning) / 254.0f;
-    *right_gain = ((float) panning - PAN_HARD_LEFT) / 254.0f;
-}
-
 static void spatialise(audio_spatialiser_state_t *state, const float *mono, stereo_frame_t *stereo, const int num_frames)
 {
     const float left_gain = state->panner->left_gain;
@@ -46,7 +37,8 @@ static void set_amount(audio_spatialiser_state_t *state, const uint8_t amount)
 {
     panner_state_t *panner = state->panner;
     panner->panning = amount == 0 ? PAN_CENTRE : amount;
-    calculate_gain(panner->panning, &panner->left_gain, &panner->right_gain);
+    panner->left_gain = (PAN_HARD_RIGHT - (float) panner->panning) / 254.0f;
+    panner->right_gain = ((float) panner->panning - PAN_HARD_LEFT) / 254.0f;
 }
 
 static uint8_t get_amount(audio_spatialiser_state_t *state)
