@@ -409,7 +409,7 @@ static audio_channel_t *initialise_audio_channels(const module_t *module)
     }
     for (int channel = 0; channel < module->num_tracks; channel++)
     {
-        silence_channel(&channels[channel]);
+        audio_channel_silence(&channels[channel]);
         channels[channel].muted = module->tracks[channel].muted;
         channels[channel].panning = module->tracks[channel].panning - 1;
         channels[channel].gain = 1.0f;
@@ -637,7 +637,7 @@ static void clear_scheduled_notes(const player_t *player)
 
 static void note_off(audio_channel_t *channel)
 {
-    silence_channel(channel);
+    audio_channel_silence(channel);
 }
 
 static void player_stop(player_t *player)
@@ -645,7 +645,7 @@ static void player_stop(player_t *player)
     player->playing = false;
     for (int track = 0; track < player->module->num_tracks; track++)
     {
-        silence_channel(player->tracks[track].audio_channel);
+        audio_channel_silence(player->tracks[track].audio_channel);
     }
 }
 

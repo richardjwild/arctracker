@@ -2,8 +2,6 @@
 #include "sequencer.h"
 #include "period.h"
 
-static const uint8_t PAN_CENTRE = 0x80;
-
 static bool is_pitch_slide_cmd(command_t);
 static bool is_volume_slide_cmd(command_t);
 static const effect_t *get_priority_cmd(const event_t *, bool (*is_of_group)(command_t));
@@ -30,15 +28,17 @@ static void delay_next_event(tick_scheduler_t *, uint8_t);
 static void define_loop(pt_loop_state_t *, sequence_t *, uint8_t);
 
 /******************************************************************************
- * Track commands are processed in right-to-left priority order, which means  *
- * that when the same command appears twice or more in the same event, the    *
- * one with the highest index wins; that is, the one furthest to the right    *
- * from the user's point of view.                                             *
+ * Track commands only affect the track they appear on, whether that pertains *
+ * to the instrument playing on it or to the track itself. The effect lanes   *
+ * are processed in right-to-left priority order, which means that when the   *
+ * same command appears twice or more in the same event, the one with the     *
+ * highest index wins; that is, the one furthest to the right from the user's *
+ * point of view.                                                             *
  *                                                                            *
- * Some commands are grouped together because they all modify the same state  *
- * variable and there is no practical reason to be using them at the same     *
- * time. They would simply fight each other. For such commands, the one out   *
- * of the group with the highest effect index wins. The groups are:           *
+ * Some of the commands are grouped together because they all modify the same *
+ * state variable and there is no practical reason to be using them at the    *
+ * same time (they would merely fight each other). For such commands, the one *
+ * out of the group with the highest effect index wins. The groups are:       *
  *                                                                            *
  * Pitch slide command group:                                                 *
  *   - PITCH_SLIDE_UP (0x1)                                                   *
@@ -336,7 +336,7 @@ static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channe
 {
     const effect_t *effect = get_track_effect(event, SET_STEREO);
     if (effect != NULL)
-        channel->panning = effect->data == 0 ? PAN_CENTRE : effect->data;
+        audio_channel_set_stereo(channel, effect->data);
 }
 
 /******************************************************************************

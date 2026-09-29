@@ -106,7 +106,7 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     const bool has_more_audio = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
     if (!has_more_audio)
     {
-        silence_channel(channel);
+        audio_channel_silence(channel);
     }
     //
     // This is the point where we would apply mono effects: filtering, compression, distortion, etc.
