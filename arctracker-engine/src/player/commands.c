@@ -7,10 +7,9 @@ static const uint8_t PAN_CENTRE = 0x80;
 static bool is_pitch_slide_cmd(command_t);
 static bool is_volume_slide_cmd(command_t);
 static const effect_t *get_priority_cmd(const event_t *, bool (*is_of_group)(command_t));
+static const effect_t *get_track_effect(const event_t *, command_t);
 static void process_pitch_slide_cmd(const effect_t *, audio_generator_t *, track_command_state_t *);
 static void process_volume_slide_cmd(const effect_t *, audio_generator_t *);
-static const effect_t *get_track_effect(const event_t *, command_t);
-static const effect_t *get_global_effect(const event_t *, int, command_t);
 static void process_vibrato_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
 static void process_tremolo_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
 static void process_set_volume_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
@@ -24,10 +23,11 @@ static void process_silence_after_delay_cmd(const event_t *, audio_generator_t *
 static void process_advance_phase_cmd(const event_t *, audio_generator_t *);
 static void process_clear_repeat_cmd(const event_t *, audio_generator_t *);
 static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channel);
-static void define_loop(pt_loop_state_t *, sequence_t *, uint8_t);
+static const effect_t *get_global_effect(const event_t *, int, command_t);
 static void set_tempo(player_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
 static void delay_next_event(tick_scheduler_t *, uint8_t);
+static void define_loop(pt_loop_state_t *, sequence_t *, uint8_t);
 
 /******************************************************************************
  * Track commands are processed in right-to-left priority order, which means  *
@@ -77,6 +77,17 @@ void process_track_event_commands(const event_t *event, const player_instrument_
     process_set_stereo_cmd(event, channel);
 }
 
+static const effect_t *get_priority_cmd(const event_t *event, bool (*is_of_group)(command_t))
+{
+    for (int effect_no = MAX_EFFECTS - 1; effect_no >= 0; effect_no--)
+    {
+        const effect_t *effect = &event->effects[effect_no];
+        if (is_of_group(effect->command))
+            return effect;
+    }
+    return NULL;
+}
+
 static bool is_pitch_slide_cmd(const command_t command)
 {
     return command == PORTAMENTO_UP ||
@@ -93,13 +104,12 @@ static bool is_volume_slide_cmd(const command_t command)
            command == VOLUME_SLIDE_DOWN_FINE;
 }
 
-static const effect_t *get_priority_cmd(const event_t *event, bool (*is_of_group)(command_t))
+static const effect_t *get_track_effect(const event_t *event, const command_t command)
 {
     for (int effect_no = MAX_EFFECTS - 1; effect_no >= 0; effect_no--)
     {
-        const effect_t *effect = &event->effects[effect_no];
-        if (is_of_group(effect->command))
-            return effect;
+        if (event->effects[effect_no].command == command)
+            return &event->effects[effect_no];
     }
     return NULL;
 }
@@ -165,27 +175,6 @@ static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *
             generator->volume_slide_off(&generator->state);
             break;
     }
-}
-
-static const effect_t *get_track_effect(const event_t *event, const command_t command)
-{
-    for (int effect_no = MAX_EFFECTS - 1; effect_no >= 0; effect_no--)
-    {
-        if (event->effects[effect_no].command == command)
-            return &event->effects[effect_no];
-    }
-    return NULL;
-}
-
-static const effect_t *get_global_effect(const event_t *events, const int num_tracks, const command_t command)
-{
-    for (int track_no = num_tracks - 1; track_no >= 0; track_no--)
-    {
-        const effect_t *effect = get_track_effect(&events[track_no], command);
-        if (effect != NULL)
-            return effect;
-    }
-    return NULL;
 }
 
 static void process_vibrato_cmd(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
@@ -350,23 +339,6 @@ static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channe
         channel->panning = effect->data == 0 ? PAN_CENTRE : effect->data;
 }
 
-bool portamento(const event_t *event)
-{
-    return get_track_effect(event, TONE_PORTAMENTO) != NULL;
-}
-
-uint8_t get_note_delay(const event_t *event)
-{
-    const effect_t *effect = get_track_effect(event, DELAY_SAMPLE);
-    return effect != NULL ? effect->data : 0;
-}
-
-uint8_t get_sample_slice(const event_t *event)
-{
-    const effect_t *effect = get_track_effect(event, USE_SAMPLE_SLICE);
-    return effect != NULL ? effect->data : 0;
-}
-
 /******************************************************************************
  * Global commands are those that apply to the song as a whole, not to an     *
  * individual track, although they may appear on any track. Global commands   *
@@ -393,6 +365,17 @@ void process_global_event_commands(const event_t *events, const int num_tracks, 
         delay_next_event(&player->tick_scheduler, effect->data);
     if ((effect = get_global_effect(events, num_tracks, DEFINE_PATTERN_LOOP)) != NULL)
         define_loop(&player->loop_state, &player->sequence, effect->data);
+}
+
+static const effect_t *get_global_effect(const event_t *events, const int num_tracks, const command_t command)
+{
+    for (int track_no = num_tracks - 1; track_no >= 0; track_no--)
+    {
+        const effect_t *effect = get_track_effect(&events[track_no], command);
+        if (effect != NULL)
+            return effect;
+    }
+    return NULL;
 }
 
 static void set_tempo(player_t *player, const uint8_t data)
@@ -466,4 +449,21 @@ static void define_loop(pt_loop_state_t *loop_state, sequence_t *sequence, const
         loop_state->looping = true;
         loop_state->counter = data;
     }
+}
+
+bool is_tone_portamento(const event_t *event)
+{
+    return get_track_effect(event, TONE_PORTAMENTO) != NULL;
+}
+
+uint8_t get_note_delay(const event_t *event)
+{
+    const effect_t *effect = get_track_effect(event, DELAY_SAMPLE);
+    return effect != NULL ? effect->data : 0;
+}
+
+uint8_t get_sample_slice(const event_t *event)
+{
+    const effect_t *effect = get_track_effect(event, USE_SAMPLE_SLICE);
+    return effect != NULL ? effect->data : 0;
 }

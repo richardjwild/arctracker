@@ -528,7 +528,7 @@ static void on_pattern_event(const player_t *player, event_t *event, const uint8
     if (event->note)
     {
         const int note = event->note - 1;
-        if (!instrument_changed && portamento(event))
+        if (!instrument_changed && is_tone_portamento(event))
         {
             audio_channel_t *channel = player->tracks[track_no].audio_channel;
             audio_generator_t *audio_generator = &channel->audio_generator;
