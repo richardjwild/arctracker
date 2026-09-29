@@ -67,7 +67,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->current_bpm = module->initial_bpm;
     const tempo_t initial_tempo = module_get_initial_tempo(module);
     player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.info.sample_rate);
-    player->sequence = initialise_sequence(module, audio_api.info.bouncing);
+    player->sequence = sequencer_initialise(module, audio_api.info.bouncing);
     player->bouncing = audio_api.info.bouncing;
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
@@ -182,7 +182,7 @@ void player_shutdown(player_t *player)
 
 void player_sequence_changed(player_t *player, const module_t *module)
 {
-    player->sequence = reinitialise_sequence(module, &player->sequence, false);
+    player->sequence = sequencer_reinitialise(module, &player->sequence, false);
 }
 
 player_restore_state_t player_get_restore_state(const player_t *player)
@@ -378,8 +378,8 @@ static const player_instrument_t *get_player_instrument(const player_t *player, 
 
 static void process_toggle_loop_command(player_t *player)
 {
-    if (player->sequence.looping_state.looping) clear_pattern_loop(&player->sequence);
-    else set_pattern_loop(&player->sequence);
+    if (player->sequence.looping_state.looping) sequencer_clear_pattern_loop(&player->sequence);
+    else sequencer_set_pattern_loop(&player->sequence);
 }
 
 static void process_set_master_gain_command(player_t *player, const master_gain_command_t data)
@@ -451,7 +451,7 @@ static void set_current_frame(player_t *player, const bool row_advanced)
 {
     player->current_frame.events = get_events(player);
     player->current_frame.row_advanced = row_advanced;
-    player->current_frame.sequence_pos = player->sequence.sequence_pos;
+    player->current_frame.sequence_pos = player->sequence.sequence_index;
     player->current_frame.pattern_pos = player->sequence.pattern_index;
     player->current_frame.num_tracks = player->module->num_tracks;
 }
@@ -471,7 +471,7 @@ static void player_step(player_t *player)
     if (tick_scheduler_is_new_event(&player->tick_scheduler.event_scheduler))
     {
         row_advanced = true;
-        pattern_step(&player->sequence, &pattern_entered);
+        sequencer_advance(&player->sequence, &pattern_entered);
     }
     else if (tick_scheduler_just_started(&player->tick_scheduler.event_scheduler))
     {
@@ -486,7 +486,7 @@ static event_t *get_events(const player_t *player)
 {
     const int track_capacity = (int) player->module->track_capacity;
     const sequence_t *sequence = &player->sequence;
-    const int pattern_no = sequence->sequence[sequence->sequence_pos];
+    const int pattern_no = sequence->sequence[sequence->sequence_index];
     const pattern_t pattern = player->module->patterns[pattern_no];
     return pattern.events + sequence->pattern_index * track_capacity;
 }
@@ -657,13 +657,13 @@ static void player_start(player_t *player)
     clear_loop_state(player);
     if (player->sequence.looping_state.looping && !player->sequence.looping_state.commanded_by_ui)
     {
-        clear_pattern_loop(&player->sequence);
+        sequencer_clear_pattern_loop(&player->sequence);
     }
 }
 
 static void player_seek(player_t *player, const int new_sequence_pos, const int new_pattern_pos)
 {
-    sequence_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
+    sequencer_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
     set_current_frame(player, true);
 }
 

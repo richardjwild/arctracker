@@ -425,7 +425,7 @@ void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *ex
     else
     {
         export_state->completed = false;
-        export_state->percent_complete = (arctracker->export.player->sequence.sequence_pos * 100) / (arctracker->module->sequence_length);
+        export_state->percent_complete = (arctracker->export.player->sequence.sequence_index * 100) / (arctracker->module->sequence_length);
     }
 }
 
@@ -433,12 +433,12 @@ static void get_player_transport_state(const audio_subsystem_t *playback, module
 {
     const player_t *player = playback->player;
     const sequence_t sequence = player->sequence;
-    const int pattern_no = module->sequence[sequence.sequence_pos];
+    const int pattern_no = module->sequence[sequence.sequence_index];
     transport_state->playing = player->playing;
     transport_state->playback_available = playback->thread_active;
     transport_state->current_bpm = player->current_bpm;
     transport_state->looping = player->sequence.looping_state.looping;
-    transport_state->sequence_pos = sequence.sequence_pos;
+    transport_state->sequence_pos = sequence.sequence_index;
     transport_state->pattern_index = sequence.pattern_index;
     transport_state->pattern_no = pattern_no;
     transport_state->pattern_length = module->patterns[pattern_no].num_lines;

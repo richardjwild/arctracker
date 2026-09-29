@@ -387,7 +387,7 @@ void process_global_event_commands(const event_t *events, const int num_tracks, 
     if ((effect = get_global_effect(events, num_tracks, BREAK_TO_NEXT_PATTERN)) != NULL)
         pattern_break(&player->sequence, effect->data);
     if ((effect = get_global_effect(events, num_tracks, SEQUENCE_JUMP)) != NULL)
-        set_jump_target(effect->data, 0, &player->sequence);
+        sequencer_set_next_sequence_index(effect->data, &player->sequence);
     if ((effect = get_global_effect(events, num_tracks, SET_TICK_RATE)) != NULL)
         set_tempo_fine(&player->tick_scheduler, effect->data);
     if ((effect = get_global_effect(events, num_tracks, DELAY_NEXT_EVENT)) != NULL)
@@ -406,7 +406,7 @@ static void set_tempo(player_t *player, const uint8_t data)
 
 static void pattern_break(sequence_t *sequence, const uint8_t data)
 {
-    break_to_next_position(sequence, data);
+    sequencer_break_pattern(sequence, data);
 }
 
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
@@ -458,14 +458,14 @@ static void define_loop(pt_loop_state_t *loop_state, sequence_t *sequence, const
         loop_state->counter -= 1;
         if (loop_state->counter == 0)
         {
-            clear_pattern_loop(sequence);
+            sequencer_clear_pattern_loop(sequence);
             loop_state->looping = false;
             loop_state->defined = false;
         }
     }
     else if (loop_state->defined)
     {
-        set_loop(sequence, loop_state->start, sequence->pattern_index, false);
+        sequencer_set_loop(sequence, loop_state->start, sequence->pattern_index, false);
         loop_state->looping = true;
         loop_state->counter = data;
     }
