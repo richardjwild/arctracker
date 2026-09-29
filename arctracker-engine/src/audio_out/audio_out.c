@@ -7,9 +7,6 @@
 #include "memory/heap.h"
 #include "src/vidc/vidc.h"
 
-static const float PAN_HARD_LEFT = 1.0f;
-static const float PAN_HARD_RIGHT = 255.0f;
-
 static void calculate_gain_curve(float *, volume_mapping_type_t);
 static bool fill_audio_buffer(audio_out_t *, audio_channel_t *, int);
 static void write_audio_for_channel(const audio_out_t *, audio_channel_t *, int);
@@ -98,40 +95,33 @@ static bool fill_audio_buffer(audio_out_t *audio_out, audio_channel_t *channels,
 
 static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_t *channel, const int frames_to_fill)
 {
+    audio_generator_t *audio_generator = &channel->audio_generator;
+    audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     float *mono_channel_buffer = audio_out->mono_channel_buffer;
     //
     // Generate channel audio.
     //
-    audio_generator_t *audio_generator = &channel->audio_generator;
     const bool has_more_audio = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
     if (!has_more_audio)
     {
-        silence_channel(channel);
+        audio_channel_silence(channel);
     }
     //
-    // This is the point where we would apply mono effects: filtering, compression, distortion, etc.
+    // This is the point where we may apply mono effects: filtering, compression, distortion, etc.
     //
-    float left_gain = 0.0f;
-    float right_gain = 0.0f;
-    if (!channel->muted)
-    {
-        left_gain = (PAN_HARD_RIGHT - (float) channel->panning) / 254.0f;
-        right_gain = ((float) channel->panning - PAN_HARD_LEFT) / 254.0f;
-    }
-    //
-    // Copy the mono channel buffer to the stereo channel buffer, applying panning as we go.
+    // Spatialise the mono audio data into the stereo channel buffer.
     //
     stereo_frame_t *stereo_channel_buffer = audio_out->stereo_channel_buffer;
-    for (int frame = 0; frame < frames_to_fill; frame++)
+    spatialiser->spatialise(&spatialiser->state, mono_channel_buffer, stereo_channel_buffer, frames_to_fill);
+    //
+    // This is the point where we may apply stereo effects, such as delay.
+    //
+    if (channel->muted)
     {
-        const float pcm = mono_channel_buffer[frame];
-        stereo_channel_buffer[frame].l = pcm * left_gain;
-        stereo_channel_buffer[frame].r = pcm * right_gain;
+        return;
     }
     //
-    // This is the point where we would apply stereo effects, such as delay.
-    //
-    // Now mix the stereo channel buffer into the master output buffer.
+    // We are not muted, so now mix the stereo channel buffer into the master output buffer.
     //
     stereo_frame_t *output_buffer = audio_out->output_buffer + audio_out->frames_filled;
     const float channel_gain = channel->gain;

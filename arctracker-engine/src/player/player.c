@@ -8,6 +8,7 @@
 #include "memory/heap.h"
 #include "messages.h"
 #include "../audio_generator/sample_player.h"
+#include "audio_spatialiser/panner.h"
 #include "io/error.h"
 
 #define DEFAULT_TICKS_PER_SECOND 50
@@ -34,6 +35,7 @@ static void reset_loop_state(player_t *);
 static void player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
+static void initialise_spatialisers(const player_t *player);
 static scheduled_note_t *initialise_note_schedulers(const player_t *);
 static event_t *get_events(const player_t *);
 static void play_scheduled_notes(const player_t *);
@@ -67,7 +69,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->current_bpm = module->initial_bpm;
     const tempo_t initial_tempo = module_get_initial_tempo(module);
     player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.info.sample_rate);
-    player->sequence = initialise_sequence(module, audio_api.info.bouncing);
+    player->sequence = sequencer_initialise(module, audio_api.info.bouncing);
     player->bouncing = audio_api.info.bouncing;
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
@@ -84,6 +86,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     {
         goto init_failed;
     }
+    initialise_spatialisers(player);
     player->scheduled_notes = initialise_note_schedulers(player);
     if (player->scheduled_notes == NULL)
     {
@@ -182,7 +185,7 @@ void player_shutdown(player_t *player)
 
 void player_sequence_changed(player_t *player, const module_t *module)
 {
-    player->sequence = reinitialise_sequence(module, &player->sequence, false);
+    player->sequence = sequencer_reinitialise(module, &player->sequence, false);
 }
 
 player_restore_state_t player_get_restore_state(const player_t *player)
@@ -378,8 +381,8 @@ static const player_instrument_t *get_player_instrument(const player_t *player, 
 
 static void process_toggle_loop_command(player_t *player)
 {
-    if (player->sequence.looping_state.looping) clear_pattern_loop(&player->sequence);
-    else set_pattern_loop(&player->sequence);
+    if (player->sequence.looping_state.looping) sequencer_clear_loop(&player->sequence);
+    else sequencer_set_whole_pattern_loop(&player->sequence);
 }
 
 static void process_set_master_gain_command(player_t *player, const master_gain_command_t data)
@@ -409,9 +412,8 @@ static audio_channel_t *initialise_audio_channels(const module_t *module)
     }
     for (int channel = 0; channel < module->num_tracks; channel++)
     {
-        silence_channel(&channels[channel]);
+        audio_channel_silence(&channels[channel]);
         channels[channel].muted = module->tracks[channel].muted;
-        channels[channel].panning = module->tracks[channel].panning - 1;
         channels[channel].gain = 1.0f;
     }
     return channels;
@@ -433,6 +435,15 @@ static player_track_t *initialise_tracks(const int num_tracks, audio_channel_t *
     return tracks;
 }
 
+static void initialise_spatialisers(const player_t *player)
+{
+    for (int track = 0; track < player->module->num_tracks; track++)
+    {
+        audio_channel_t *audio_channel = player->tracks[track].audio_channel;
+        audio_channel->audio_spatialiser = init_panner(&player->tracks[track].panner, player->module->tracks[track].panning);
+    }
+}
+
 static scheduled_note_t *initialise_note_schedulers(const player_t *player)
 {
     scheduled_note_t *note_schedulers = allocate_array(PLAYER, player->module->num_tracks, sizeof(scheduled_note_t));
@@ -451,7 +462,7 @@ static void set_current_frame(player_t *player, const bool row_advanced)
 {
     player->current_frame.events = get_events(player);
     player->current_frame.row_advanced = row_advanced;
-    player->current_frame.sequence_pos = player->sequence.sequence_pos;
+    player->current_frame.sequence_pos = player->sequence.sequence_index;
     player->current_frame.pattern_pos = player->sequence.pattern_index;
     player->current_frame.num_tracks = player->module->num_tracks;
 }
@@ -471,7 +482,7 @@ static void player_step(player_t *player)
     if (tick_scheduler_is_new_event(&player->tick_scheduler.event_scheduler))
     {
         row_advanced = true;
-        pattern_step(&player->sequence, &pattern_entered);
+        sequencer_advance(&player->sequence, &pattern_entered);
     }
     else if (tick_scheduler_just_started(&player->tick_scheduler.event_scheduler))
     {
@@ -486,7 +497,7 @@ static event_t *get_events(const player_t *player)
 {
     const int track_capacity = (int) player->module->track_capacity;
     const sequence_t *sequence = &player->sequence;
-    const int pattern_no = sequence->sequence[sequence->sequence_pos];
+    const int pattern_no = sequence->sequence[sequence->sequence_index];
     const pattern_t pattern = player->module->patterns[pattern_no];
     return pattern.events + sequence->pattern_index * track_capacity;
 }
@@ -528,7 +539,7 @@ static void on_pattern_event(const player_t *player, event_t *event, const uint8
     if (event->note)
     {
         const int note = event->note - 1;
-        if (!instrument_changed && portamento(event))
+        if (!instrument_changed && is_tone_portamento(event))
         {
             audio_channel_t *channel = player->tracks[track_no].audio_channel;
             audio_generator_t *audio_generator = &channel->audio_generator;
@@ -637,7 +648,7 @@ static void clear_scheduled_notes(const player_t *player)
 
 static void note_off(audio_channel_t *channel)
 {
-    silence_channel(channel);
+    audio_channel_silence(channel);
 }
 
 static void player_stop(player_t *player)
@@ -645,7 +656,7 @@ static void player_stop(player_t *player)
     player->playing = false;
     for (int track = 0; track < player->module->num_tracks; track++)
     {
-        silence_channel(player->tracks[track].audio_channel);
+        audio_channel_silence(player->tracks[track].audio_channel);
     }
 }
 
@@ -657,13 +668,13 @@ static void player_start(player_t *player)
     clear_loop_state(player);
     if (player->sequence.looping_state.looping && !player->sequence.looping_state.commanded_by_ui)
     {
-        clear_pattern_loop(&player->sequence);
+        sequencer_clear_loop(&player->sequence);
     }
 }
 
 static void player_seek(player_t *player, const int new_sequence_pos, const int new_pattern_pos)
 {
-    sequence_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
+    sequencer_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
     set_current_frame(player, true);
 }
 
