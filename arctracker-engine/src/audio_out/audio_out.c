@@ -10,6 +10,7 @@
 static void calculate_gain_curve(float *, volume_mapping_type_t);
 static bool fill_audio_buffer(audio_out_t *, audio_channel_t *, int);
 static void write_audio_for_channel(const audio_out_t *, audio_channel_t *, int);
+static void mix_to_output_buffer(const stereo_frame_t *, stereo_frame_t *, int, float);
 static void apply_master_gain(const audio_out_t *);
 static void find_peak_levels(const audio_out_t *, atomic_uint *, atomic_uint *);
 static void atomic_peak_max(atomic_uint *, float);
@@ -96,11 +97,7 @@ static bool fill_audio_buffer(audio_out_t *audio_out, audio_channel_t *channels,
 static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_t *channel, const int frames_to_fill)
 {
     audio_generator_t *audio_generator = &channel->audio_generator;
-    audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     float *mono_channel_buffer = audio_out->mono_channel_buffer;
-    //
-    // Generate channel audio.
-    //
     const bool has_more_audio = audio_generator->generate_audio(&audio_generator->state, mono_channel_buffer, frames_to_fill);
     if (!has_more_audio)
     {
@@ -111,24 +108,25 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     //
     // Spatialise the mono audio data into the stereo channel buffer.
     //
+    audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     stereo_frame_t *stereo_channel_buffer = audio_out->stereo_channel_buffer;
     spatialiser->spatialise(&spatialiser->state, mono_channel_buffer, stereo_channel_buffer, frames_to_fill);
     //
     // This is the point where we may apply stereo effects, such as delay.
     //
-    if (channel->muted)
+    if (!channel->muted)
     {
-        return;
+        stereo_frame_t *output_buffer = audio_out->output_buffer + audio_out->frames_filled;
+        mix_to_output_buffer(stereo_channel_buffer, output_buffer, frames_to_fill, channel->gain);
     }
-    //
-    // We are not muted, so now mix the stereo channel buffer into the master output buffer.
-    //
-    stereo_frame_t *output_buffer = audio_out->output_buffer + audio_out->frames_filled;
-    const float channel_gain = channel->gain;
-    for (int frame = 0; frame < frames_to_fill; frame++)
+}
+
+static void mix_to_output_buffer(const stereo_frame_t *channel_buffer, stereo_frame_t *output_buffer, const int frames, const float gain)
+{
+    for (int frame = 0; frame < frames; frame++)
     {
-        output_buffer[frame].l += stereo_channel_buffer[frame].l * channel_gain;
-        output_buffer[frame].r += stereo_channel_buffer[frame].r * channel_gain;
+        output_buffer[frame].l += channel_buffer[frame].l * gain;
+        output_buffer[frame].r += channel_buffer[frame].r * gain;
     }
 }
 
