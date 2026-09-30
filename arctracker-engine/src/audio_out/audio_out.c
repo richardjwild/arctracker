@@ -106,8 +106,6 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     //
     // This is the point where we may apply mono effects: filtering, compression, distortion, etc.
     //
-    // Spatialise the mono audio data into the stereo channel buffer.
-    //
     audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     stereo_frame_t *stereo_channel_buffer = audio_out->stereo_channel_buffer;
     spatialiser->spatialise(&spatialiser->state, mono_channel_buffer, stereo_channel_buffer, frames_to_fill);
