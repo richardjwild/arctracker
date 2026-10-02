@@ -229,8 +229,10 @@ static void close_audio_stream(const audio_api_info_t *info)
     (void) info;
     if (stream != NULL)
     {
-        Pa_StopStream(stream);
-        Pa_CloseStream(stream);
+        printf("Closing PortAudio stream...");
+        const PaError err = Pa_CloseStream(stream);
+        if (err == paNoError) printf("closed successfully\n");
+        else printf("error: %s\n", Pa_GetErrorText(err));
     }
     destroy_output_buffer();
 }

@@ -30,9 +30,9 @@ static const player_instrument_t *get_player_instrument(const player_t *, int);
 static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
-static void set_current_frame(player_t *, bool);
-static void reset_loop_state(player_t *);
-static void player_step(player_t *player);
+static void set_current_frame(player_t *, bool, bool);
+static void define_implicit_loop_start(player_t *);
+static bool player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
 static void initialise_spatialisers(const player_t *player);
@@ -47,7 +47,7 @@ static void note_off(audio_channel_t *);
 static bool audio_consume(player_t *);
 static void handle_pattern_events(const player_t *);
 static void on_pattern_event(const player_t *, event_t *, uint8_t, scheduled_note_t *);
-static void tick_audio_generators(const player_t *, const event_scheduler_t *);
+static void tick_audio_dsps(const player_t *, const event_scheduler_t *);
 static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
@@ -99,11 +99,11 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
         goto init_failed;
     }
     tick_scheduler_restart(&player->tick_scheduler);
-    set_current_frame(player, true);
+    set_current_frame(player, true, true);
     init_null_instrument(player);
     calculate_fine_tuning();
     player_update_instruments(player);
-    reset_loop_state(player);
+    define_implicit_loop_start(player);
     lfo_init_waveforms();
     return player;
 
@@ -256,19 +256,19 @@ static bool player_tick(player_t *player)
     {
         return false;
     }
-    if (!player->playing)
+    if (player->playing)
     {
-        return true;
+        if (player_step(player))
+        {
+            clear_scheduled_notes(player);
+            if (player->current_frame.pattern_entered) define_implicit_loop_start(player);
+            process_global_event_commands(player->current_frame.events, player->module->num_tracks, player);
+            handle_pattern_events(player);
+        }
+        play_scheduled_notes(player);
+        tick_audio_dsps(player, &tick_scheduler->event_scheduler);
+        tick_scheduler_advance_tick(&tick_scheduler->event_scheduler);
     }
-    player_step(player);
-    if (player->current_frame.row_advanced)
-    {
-        process_global_event_commands(player->current_frame.events, player->module->num_tracks, player);
-        handle_pattern_events(player);
-    }
-    play_scheduled_notes(player);
-    tick_audio_generators(player, &tick_scheduler->event_scheduler);
-    tick_scheduler_advance_tick(&tick_scheduler->event_scheduler);
     return true;
 }
 
@@ -458,16 +458,17 @@ static scheduled_note_t *initialise_note_schedulers(const player_t *player)
     return note_schedulers;
 }
 
-static void set_current_frame(player_t *player, const bool row_advanced)
+static void set_current_frame(player_t *player, const bool row_advanced, const bool pattern_entered)
 {
     player->current_frame.events = get_events(player);
     player->current_frame.row_advanced = row_advanced;
+    player->current_frame.pattern_entered = pattern_entered;
     player->current_frame.sequence_pos = player->sequence.sequence_index;
     player->current_frame.pattern_pos = player->sequence.pattern_index;
     player->current_frame.num_tracks = player->module->num_tracks;
 }
 
-static void reset_loop_state(player_t *player)
+static void define_implicit_loop_start(player_t *player)
 {
     player->loop_state.start = player->current_frame.pattern_pos;
     player->loop_state.defined = true;
@@ -475,7 +476,7 @@ static void reset_loop_state(player_t *player)
     player->loop_state.looping = false;
 }
 
-static void player_step(player_t *player)
+static bool player_step(player_t *player)
 {
     bool row_advanced = false;
     bool pattern_entered = false;
@@ -488,9 +489,8 @@ static void player_step(player_t *player)
     {
         row_advanced = true;
     }
-    set_current_frame(player, row_advanced);
-    if (row_advanced) clear_scheduled_notes(player);
-    if (pattern_entered) reset_loop_state(player);
+    set_current_frame(player, row_advanced, pattern_entered);
+    return row_advanced;
 }
 
 static event_t *get_events(const player_t *player)
@@ -569,7 +569,7 @@ static void on_pattern_event(const player_t *player, event_t *event, const uint8
     }
 }
 
-static void tick_audio_generators(const player_t *player, const event_scheduler_t *event_scheduler)
+static void tick_audio_dsps(const player_t *player, const event_scheduler_t *event_scheduler)
 {
     for (int track_no = 0; track_no < player->module->num_tracks; track_no++)
     {
@@ -623,8 +623,8 @@ static audio_generator_t init_audio_generator(const int note, player_track_t *tr
         return null_audio_generator();
     }
     //
-    // When we introduce different instrument types, this is where we will distinguish between them
-    // and return the appropriate audio generator.
+    // When we introduce different instrument types, this is where we will distinguish between them and return the
+    // appropriate audio generator.
     //
     const int note_to_play = note + instrument->transpose;
     const player_sample_t *sample = &instrument->sample;
@@ -676,8 +676,9 @@ static void player_start(player_t *player)
 
 static void player_seek(player_t *player, const int new_sequence_pos, const int new_pattern_pos)
 {
+    const bool pattern_entered = new_sequence_pos != player->current_frame.sequence_pos;
     sequencer_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
-    set_current_frame(player, true);
+    set_current_frame(player, true, pattern_entered);
 }
 
 static void clear_loop_state(player_t *player)

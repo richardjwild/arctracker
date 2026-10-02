@@ -16,6 +16,6 @@ struct panner_state {
     float right_gain;
 };
 
-audio_spatialiser_t init_panner(panner_state_t *panner_state, int8_t initial_amount);
+audio_spatialiser_t init_panner(panner_state_t *panner_state, uint8_t initial_amount);
 
 #endif //ARCTRACKER_ENGINE_PANNER_H

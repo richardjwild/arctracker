@@ -17,6 +17,7 @@ typedef struct {
     int sequence_pos;
     int pattern_pos;
     bool row_advanced;
+    bool pattern_entered;
 } frame_t;
 
 typedef struct {

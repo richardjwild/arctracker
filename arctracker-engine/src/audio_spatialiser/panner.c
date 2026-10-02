@@ -11,7 +11,7 @@ static void slide_on(audio_spatialiser_state_t *state, int slide_rate, int slide
 static void slide_off(audio_spatialiser_state_t *state);
 static void tick(audio_spatialiser_state_t *state, int tick, int ticks_per_event);
 
-audio_spatialiser_t init_panner(panner_state_t *panner_state, const int8_t initial_amount)
+audio_spatialiser_t init_panner(panner_state_t *panner_state, const uint8_t initial_amount)
 {
     audio_spatialiser_state_t spatialiser_state = {
         .panner = panner_state,

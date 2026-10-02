@@ -569,11 +569,16 @@ api_result_t arctracker_player_shutdown(arctracker_t *arctracker)
         return failure(BAD_ARCTRACKER_HANDLE);
     if (!arctracker->playback.thread_active)
         return failure(PLAYER_NOT_RUNNING);
+    printf("Shutting down player\n");
     player_shutdown(arctracker->playback.player);
+    printf("Waiting for audio thread\n");
     pthread_join(arctracker->playback.audio_thread, NULL);
+    printf("Player thread exited\n");
     arctracker->playback.thread_active = false;
+    printf("Destroying player\n");
     player_destroy(arctracker->playback.player);
     arctracker->playback.player = NULL;
+    printf("Player destroyed\n");
     return SUCCESS;
 }
 
