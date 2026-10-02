@@ -615,6 +615,7 @@ static command_t decode_command(const uint8_t code)
         case 0x58: return SILENCE_SAMPLE_AFTER_DELAY;
         case 0x59: return SET_VIBRATO_WAVEFORM;
         case 0x5a: return SET_TREMOLO_WAVEFORM;
+        case 0x5b: return DSKT_STEREO_SLIDE;
         default: return 0;
     }
 }
@@ -976,6 +977,7 @@ static uint8_t encode_command(const command_t command)
         case SILENCE_SAMPLE_AFTER_DELAY: return 0x58;
         case SET_VIBRATO_WAVEFORM: return 0x59;
         case SET_TREMOLO_WAVEFORM: return 0x5a;
+        case DSKT_STEREO_SLIDE: return 0x5b;
         default: return 0;
     }
 }

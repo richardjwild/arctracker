@@ -575,7 +575,9 @@ static void tick_audio_generators(const player_t *player, const event_scheduler_
     {
         audio_channel_t *channel = player->tracks[track_no].audio_channel;
         audio_generator_t *audio_generator = &channel->audio_generator;
+        audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
         audio_generator->tick(&audio_generator->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
+        spatialiser->tick(&spatialiser->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
     }
 }
 

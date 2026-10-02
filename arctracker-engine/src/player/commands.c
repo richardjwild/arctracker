@@ -20,7 +20,8 @@ static void process_retrigger_sample_cmd(const event_t *, audio_generator_t *);
 static void process_silence_after_delay_cmd(const event_t *, audio_generator_t *);
 static void process_advance_phase_cmd(const event_t *, audio_generator_t *);
 static void process_clear_repeat_cmd(const event_t *, audio_generator_t *);
-static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channel);
+static void process_set_stereo_cmd(const event_t *event, audio_spatialiser_t *spatialiser);
+static void process_stereo_slide_cmd(const event_t *event, audio_spatialiser_t *spatialiser);
 static const effect_t *get_global_effect(const event_t *, int, command_t);
 static void set_tempo(player_t *, uint8_t);
 static void set_tempo_fine(tick_scheduler_t *, uint8_t);
@@ -59,6 +60,7 @@ void process_track_event_commands(const event_t *event, const player_instrument_
 {
     audio_channel_t *channel = track->audio_channel;
     audio_generator_t *generator = &channel->audio_generator;
+    audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     track_command_state_t *command_state = &track->command_state;
     process_pitch_slide_cmd(get_priority_cmd(event, is_pitch_slide_cmd), generator, command_state);
     process_volume_slide_cmd(get_priority_cmd(event, is_volume_slide_cmd), generator);
@@ -74,7 +76,8 @@ void process_track_event_commands(const event_t *event, const player_instrument_
     process_silence_after_delay_cmd(event, generator);
     process_advance_phase_cmd(event, generator);
     process_clear_repeat_cmd(event, generator);
-    process_set_stereo_cmd(event, channel);
+    process_set_stereo_cmd(event, spatialiser);
+    process_stereo_slide_cmd(event, spatialiser);
 }
 
 static const effect_t *get_priority_cmd(const event_t *event, bool (*is_of_group)(command_t))
@@ -332,11 +335,25 @@ static void process_clear_repeat_cmd(const event_t *event, audio_generator_t *ge
         generator->clear_repeat(&generator->state, effect->data);
 }
 
-static void process_set_stereo_cmd(const event_t *event, audio_channel_t *channel)
+static void process_set_stereo_cmd(const event_t *event, audio_spatialiser_t *spatialiser)
 {
     const effect_t *effect = get_track_effect(event, SET_STEREO);
     if (effect != NULL)
-        audio_channel_set_stereo(channel, effect->data);
+        spatialiser->set_amount(&spatialiser->state, effect->data);
+}
+
+static void process_stereo_slide_cmd(const event_t *event, audio_spatialiser_t *spatialiser)
+{
+    const effect_t *effect = get_track_effect(event, DSKT_STEREO_SLIDE);
+    if (effect == NULL)
+    {
+        spatialiser->slide_off(&spatialiser->state);
+        return;
+    }
+    const int slide_rate = effect->data >> 4;
+    int slide_amount = effect->data & 0xf;
+    if (slide_amount > 7) slide_amount -= 16;
+    spatialiser->slide_on(&spatialiser->state, slide_rate, slide_amount, true);
 }
 
 /******************************************************************************
