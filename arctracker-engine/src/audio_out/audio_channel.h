@@ -15,8 +15,6 @@ typedef struct {
 
 void audio_channel_silence(audio_channel_t *);
 
-void audio_channel_set_stereo(audio_channel_t *, uint8_t stereo);
-
 uint8_t audio_channel_get_stereo(audio_channel_t *);
 
 #endif //ARCTRACKER_AUDIO_CHANNEL_H

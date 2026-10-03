@@ -21,7 +21,6 @@ static const uint8_t PORTAMENTO_UP_CMD_DSKT = 0x1;
 static const uint8_t PORTAMENTO_DOWN_CMD_DSKT = 0x2;
 static const uint8_t TONE_PORTAMENTO_CMD_DSKT = 0x3;
 static const uint8_t VIBRATO_CMD_DSKT = 0x4;
-// static const uint8_t DELAYED_NOTE_CMD_DSKT = 0x5; not implemented yet
 static const uint8_t RELEASE_SAMPLE_CMD_DSKT = 0x6;
 static const uint8_t TREMOLO_CMD_DSKT = 0x7;
 static const uint8_t PHASOR_2_CMD_DSKT = 0x8;
@@ -30,7 +29,7 @@ static const uint8_t VOLUME_SLIDE_CMD_DSKT = 0xa;
 static const uint8_t JUMP_CMD_DSKT = 0xb;
 static const uint8_t SET_VOLUME_CMD_DSKT = 0xc;
 static const uint8_t SET_STEREO_CMD_DSKT = 0xd;
-// static const uint8_t STEREO_SLIDE_CMD_DSKT = 0xe; not implemented yet
+static const uint8_t STEREO_SLIDE_CMD_DSKT = 0xe;
 static const uint8_t SET_SPEED_CMD_DSKT = 0xf;
 static const uint8_t SET_ARPEGGIO_SPEED_CMD_DSKT = 0x10;
 static const uint8_t FINE_PORTAMENTO_CMD_DSKT = 0x11;
@@ -346,6 +345,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == PORTAMENTO_DOWN_CMD_DSKT) return PORTAMENTO_DOWN;
     if (code == TONE_PORTAMENTO_CMD_DSKT) return TONE_PORTAMENTO;
     if (code == VIBRATO_CMD_DSKT) return VIBRATO;
+    // Command 0x5 (delayed note on another track) is not implemented.
     if (code == RELEASE_SAMPLE_CMD_DSKT) return USE_SAMPLE_SLICE;
     if (code == TREMOLO_CMD_DSKT) return TREMOLO;
     if (code == PHASOR_2_CMD_DSKT) return ADVANCE_PHASE_FINE;
@@ -354,6 +354,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == JUMP_CMD_DSKT) return SEQUENCE_JUMP;
     if (code == SET_VOLUME_CMD_DSKT) return SET_VOLUME;
     if (code == SET_STEREO_CMD_DSKT) return SET_STEREO;
+    if (code == STEREO_SLIDE_CMD_DSKT) return DSKT_STEREO_SLIDE;
     if (code == SET_SPEED_CMD_DSKT) return SET_TEMPO;
     if (code == SET_ARPEGGIO_SPEED_CMD_DSKT) return SET_ARPEGGIO_SPEED;
     if (code == FINE_PORTAMENTO_CMD_DSKT && (data & 0x80) == 0) return PORTAMENTO_UP_FINE;
@@ -366,10 +367,11 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == RETRIGGER_SAMPLE_CMD_DSKT) return RETRIGGER_SAMPLE;
     if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) == 0) return VOLUME_SLIDE_UP_FINE;
     if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) > 0) return VOLUME_SLIDE_DOWN_FINE;
+    // Command 0x1B (hold) is not implemented yet.
     if (code == NOTE_CUT_CMD_DSKT) return SILENCE_SAMPLE_AFTER_DELAY;
     if (code == NOTE_DELAY_CMD_DSKT) return DELAY_SAMPLE;
     if (code == PATTERN_DELAY_CMD_DSKT) return DELAY_NEXT_EVENT;
-    // Command 0x1F (call linked code) is, obviously, impossible to implement.
+    // Command 0x1F (call linked code) is not possible to implement.
     return NO_EFFECT;
 }
 
