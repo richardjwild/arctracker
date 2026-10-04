@@ -45,8 +45,8 @@ static sampler_state_t *get_available_sample_player(player_track_t *);
 static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
 static bool audio_consume(player_t *);
-static void handle_pattern_events(const player_t *);
-static void on_pattern_event(const player_t *, event_t *, uint8_t, scheduled_note_t *);
+static void on_new_pattern_line(player_t *);
+static void on_new_event(const player_t *, event_t *, uint8_t, scheduled_note_t *);
 static void tick_audio_dsps(const player_t *, const event_scheduler_t *);
 static void player_start(player_t *);
 static void player_stop(player_t *);
@@ -250,23 +250,20 @@ static bool player_tick(player_t *player)
         player_shutdown(player);
         return true;
     }
-    tick_scheduler_t *tick_scheduler = &player->tick_scheduler;
     if (!audio_consume(player))
     {
         return false;
     }
+    event_scheduler_t *event_scheduler = &player->tick_scheduler.event_scheduler;
     if (player->playing)
     {
         if (player_step(player))
         {
-            clear_scheduled_notes(player);
-            if (player->current_frame.pattern_entered) define_implicit_loop_start(player);
-            process_global_event_commands(player->current_frame.events, player->module->num_tracks, player);
-            handle_pattern_events(player);
+            on_new_pattern_line(player);
         }
         play_scheduled_notes(player);
-        tick_audio_dsps(player, &tick_scheduler->event_scheduler);
-        tick_scheduler_advance_tick(&tick_scheduler->event_scheduler);
+        tick_audio_dsps(player, event_scheduler);
+        tick_scheduler_advance_tick(event_scheduler);
     }
     return true;
 }
@@ -513,16 +510,22 @@ static bool audio_consume(player_t *player)
     return success;
 }
 
-static void handle_pattern_events(const player_t *player)
+static void on_new_pattern_line(player_t *player)
 {
+    clear_scheduled_notes(player);
+    if (player->current_frame.pattern_entered)
+    {
+        define_implicit_loop_start(player);
+    }
+    process_global_event_commands(player->current_frame.events, player->module->num_tracks, player);
     for (int track_no = 0; track_no < player->module->num_tracks; track_no++)
     {
         event_t *event = &player->current_frame.events[track_no];
-        on_pattern_event(player, event, track_no, &player->scheduled_notes[track_no]);
+        on_new_event(player, event, track_no, &player->scheduled_notes[track_no]);
     }
 }
 
-static void on_pattern_event(const player_t *player, event_t *event, const uint8_t track_no, scheduled_note_t *scheduler)
+static void on_new_event(const player_t *player, event_t *event, const uint8_t track_no, scheduled_note_t *scheduler)
 {
     player_track_t *track = player->tracks + track_no;
     const bool instrument_changed = event->instrument_no > 0 && event->instrument_no != track->instrument_no;
