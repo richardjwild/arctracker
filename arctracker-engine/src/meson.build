@@ -9,7 +9,7 @@ subdir('audio_file')
 subdir('audio_generator')
 subdir('audio_spatialiser')
 subdir('audio_out')
-subdir('bresenham')
+subdir('fraction')
 subdir('editor')
 subdir('loader')
 subdir('io')
@@ -27,7 +27,7 @@ libarctracker_sources += audio_file_sources
 libarctracker_sources += audio_generator_sources
 libarctracker_sources += audio_spatialiser_sources
 libarctracker_sources += audio_out_sources
-libarctracker_sources += bresenham_sources
+libarctracker_sources += fraction_sources
 libarctracker_sources += loader_sources
 libarctracker_sources += editor_sources
 libarctracker_sources += io_sources

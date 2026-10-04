@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include "tempo.h"
-#include "bresenham/fraction.h"
+#include "fraction/fraction.h"
 
 typedef struct {
     int sample_rate;
