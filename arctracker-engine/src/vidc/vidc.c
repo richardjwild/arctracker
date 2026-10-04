@@ -1,10 +1,10 @@
 #include "vidc.h"
 #include <assert.h>
 
-const int BIAS = 0x84;
-const unsigned int QUANTIZATION_BITS_MASK = 0xf;
-const unsigned int SEGMENT_NUMBER_MASK = 0x70;
-const float EXPANDED_MAX = 32124.0f;
+static const int BIAS = 0x84;
+static const unsigned int QUANTIZATION_BITS_MASK = 0xf;
+static const unsigned int SEGMENT_NUMBER_MASK = 0x70;
+static const float EXPANDED_MAX = 32124.0f;
 
 static float mu_law_to_linear(int);
 
