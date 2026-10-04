@@ -406,7 +406,7 @@ static void set_tempo(player_t *player, const uint8_t data)
 static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
 {
     if (data > 0)
-        tick_scheduler->audio_accumulator.ticks_per_second = data;
+        tick_scheduler_set_ticks_per_second(tick_scheduler, data);
 }
 
 static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t data)

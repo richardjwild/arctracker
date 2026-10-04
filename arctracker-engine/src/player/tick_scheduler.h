@@ -2,13 +2,13 @@
 #define ARCTRACKER_CLOCK_H
 
 #include <stdbool.h>
-
 #include "tempo.h"
+#include "bresenham/fraction.h"
 
 typedef struct {
-    int accumulator;
-    int ticks_per_second;
     int sample_rate;
+    int ticks_per_second;
+    fraction_t sample_fraction;
 } audio_accumulator_t;
 
 typedef struct {
@@ -27,13 +27,11 @@ tick_scheduler_t tick_scheduler_create(tempo_t tempo, int sample_rate_in);
 
 void tick_scheduler_set_tempo(tick_scheduler_t *, tempo_t);
 
+void tick_scheduler_set_ticks_per_second(tick_scheduler_t *tick_scheduler, int new_ticks_per_second);
+
 void tick_scheduler_restart(tick_scheduler_t *);
 
-void tick_scheduler_accumulate(audio_accumulator_t *);
-
-int tick_scheduler_samples_to_write(const audio_accumulator_t *);
-
-void tick_scheduler_consume_samples(audio_accumulator_t *);
+int tick_scheduler_samples_next_tick(audio_accumulator_t *);
 
 void tick_scheduler_advance_tick(event_scheduler_t *);
 

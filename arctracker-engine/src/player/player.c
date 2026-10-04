@@ -251,7 +251,6 @@ static bool player_tick(player_t *player)
         return true;
     }
     tick_scheduler_t *tick_scheduler = &player->tick_scheduler;
-    tick_scheduler_accumulate(&tick_scheduler->audio_accumulator);
     if (!audio_consume(player))
     {
         return false;
@@ -505,13 +504,9 @@ static event_t *get_events(const player_t *player)
 static bool audio_consume(player_t *player)
 {
     audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
-    const int samples_to_write = tick_scheduler_samples_to_write(audio_accumulator);
+    const int samples_to_write = tick_scheduler_samples_next_tick(audio_accumulator);
     const bool success = write_audio_data(&player->audio_out, player->audio_channels, samples_to_write);
-    if (success)
-    {
-        tick_scheduler_consume_samples(audio_accumulator);
-    }
-    else
+    if (!success)
     {
         player->error_message = get_error_message();
     }
