@@ -36,7 +36,6 @@ static bool player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
 static void initialise_spatialisers(const player_t *player);
-static scheduled_note_t *initialise_note_schedulers(const player_t *);
 static event_t *get_events(const player_t *);
 static void play_scheduled_notes(const player_t *);
 static void note_on(int, const player_instrument_t *, uint8_t, player_track_t *, const event_t *);
@@ -46,7 +45,7 @@ static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
 static bool audio_consume(player_t *);
 static void on_new_pattern_line(player_t *);
-static void on_new_event(const player_t *, event_t *, uint8_t, scheduled_note_t *);
+static void on_new_event(const player_t *, event_t *, player_track_t *);
 static void tick_audio_dsps(const player_t *, const event_scheduler_t *);
 static void player_start(player_t *);
 static void player_stop(player_t *);
@@ -87,11 +86,6 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
         goto init_failed;
     }
     initialise_spatialisers(player);
-    player->scheduled_notes = initialise_note_schedulers(player);
-    if (player->scheduled_notes == NULL)
-    {
-        goto init_failed;
-    }
     const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain, module->volume_mapping_type);
     if (!audio_init_result)
     {
@@ -207,7 +201,6 @@ void player_destroy(player_t *player)
     command_queue_destroy(player->command_queue);
     deallocate(PLAYER, player->audio_channels);
     deallocate(PLAYER, player->tracks);
-    deallocate(PLAYER, player->scheduled_notes);
     deallocate(PLAYER, player);
 }
 
@@ -427,6 +420,7 @@ static player_track_t *initialise_tracks(const int num_tracks, audio_channel_t *
         tracks[track].track_no = track;
         tracks[track].audio_channel = &audio_channels[track];
         tracks[track].command_state.arpeggio_speed = 1;
+        tracks[track].scheduler.scheduled = false;
     }
     return tracks;
 }
@@ -438,20 +432,6 @@ static void initialise_spatialisers(const player_t *player)
         audio_channel_t *audio_channel = player->tracks[track].audio_channel;
         audio_channel->audio_spatialiser = init_panner(&player->tracks[track].panner, player->module->tracks[track].panning);
     }
-}
-
-static scheduled_note_t *initialise_note_schedulers(const player_t *player)
-{
-    scheduled_note_t *note_schedulers = allocate_array(PLAYER, player->module->num_tracks, sizeof(scheduled_note_t));
-    if (note_schedulers == NULL)
-    {
-        return NULL;
-    }
-    for (int channel = 0; channel < player->module->num_tracks; channel++)
-    {
-        note_schedulers[channel].scheduled = false;
-    }
-    return note_schedulers;
 }
 
 static void set_current_frame(player_t *player, const bool row_advanced, const bool pattern_entered)
@@ -518,16 +498,14 @@ static void on_new_pattern_line(player_t *player)
         define_implicit_loop_start(player);
     }
     process_global_event_commands(player->current_frame.events, player->module->num_tracks, player);
-    for (int track_no = 0; track_no < player->module->num_tracks; track_no++)
+    for (int track = 0; track < player->module->num_tracks; track++)
     {
-        event_t *event = &player->current_frame.events[track_no];
-        on_new_event(player, event, track_no, &player->scheduled_notes[track_no]);
+        on_new_event(player, &player->current_frame.events[track], &player->tracks[track]);
     }
 }
 
-static void on_new_event(const player_t *player, event_t *event, const uint8_t track_no, scheduled_note_t *scheduler)
+static void on_new_event(const player_t *player, event_t *event, player_track_t *track)
 {
-    player_track_t *track = player->tracks + track_no;
     const bool instrument_changed = event->instrument_no > 0 && event->instrument_no != track->instrument_no;
     if (instrument_changed)
     {
@@ -539,19 +517,18 @@ static void on_new_event(const player_t *player, event_t *event, const uint8_t t
         const int note = event->note - 1;
         if (!instrument_changed && is_tone_portamento(event))
         {
-            audio_channel_t *channel = player->tracks[track_no].audio_channel;
+            audio_channel_t *channel = track->audio_channel;
             audio_generator_t *audio_generator = &channel->audio_generator;
             audio_generator->set_tone_portamento_target(&audio_generator->state, note + instrument->transpose);
         }
         else
         {
-            *scheduler = (scheduled_note_t) {
+            track->scheduler = (scheduled_note_t) {
                 .scheduled = true,
                 .delay = get_note_delay(event),
                 .slice = get_sample_slice(event),
                 .instrument = instrument,
                 .note = note,
-                .track = track,
                 .event = event,
             };
         }
@@ -560,7 +537,7 @@ static void on_new_event(const player_t *player, event_t *event, const uint8_t t
     {
         set_volume(track, instrument->default_volume);
     }
-    if (!scheduler->scheduled)
+    if (!track->scheduler.scheduled)
     {
         // If a note has been scheduled then the track commands will be applied when the note-on happens.
         process_track_event_commands(event, instrument, track);
@@ -583,10 +560,10 @@ static void play_scheduled_notes(const player_t *player)
 {
     for (int track = 0; track < player->module->num_tracks; track++)
     {
-        scheduled_note_t *s = player->scheduled_notes + track;
+        scheduled_note_t *s = &player->tracks[track].scheduler;
         if (s->scheduled && s->delay == player->tick_scheduler.event_scheduler.ticks)
         {
-            note_on(s->note, s->instrument, s->slice, s->track, s->event);
+            note_on(s->note, s->instrument, s->slice, &player->tracks[track], s->event);
             player->tracks[track].current_note = s->note;
             s->scheduled = false;
         }
@@ -642,7 +619,7 @@ static void clear_scheduled_notes(const player_t *player)
 {
     for (int track = 0; track < player->module->num_tracks; track++)
     {
-        player->scheduled_notes[track].scheduled = false;
+        player->tracks[track].scheduler.scheduled = false;
     }
 }
 

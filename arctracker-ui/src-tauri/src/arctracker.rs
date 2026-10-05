@@ -57,7 +57,7 @@ pub struct NewModuleParams {
 
 pub fn default_module_params() -> NewModuleParams {
     NewModuleParams {
-        num_tracks: 4,
+        num_tracks: 8,
         default_pattern_length: 64,
         lines_per_beat: 0,
         beats_per_minute: 0,

@@ -31,6 +31,7 @@ sequence_t sequencer_initialise(const module_t *module, const bool bouncing)
         .looping_state = NOT_LOOPING,
         .sequence_jump = NO_SEQUENCE_JUMP,
         .pattern_break = NO_PATTERN_BREAK,
+        .restart_position = module->restart_position,
         .continuous_play = !bouncing,
     };
 }
@@ -120,7 +121,7 @@ static void advance_sequence_index(sequence_t *sequence)
     if (end_of_sequence(sequence))
     {
         if (sequence->continuous_play)
-            sequence->sequence_index = 0;
+            sequence->sequence_index = sequence->restart_position;
         else
             sequence->song_ended = true;
     }

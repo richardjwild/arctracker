@@ -31,6 +31,7 @@ typedef struct {
     looping_state_t looping_state;
     sequence_jump_t sequence_jump;
     pattern_break_t pattern_break;
+    int restart_position;
     bool song_ended;
     bool continuous_play;
 } sequence_t;

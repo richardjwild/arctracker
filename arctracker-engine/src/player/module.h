@@ -114,6 +114,7 @@ typedef struct
     int sequence_length;
     int *sequence;
     int sequence_capacity;
+    int restart_position;
     int num_tracks;
     track_t *tracks;
     uint32_t track_capacity;

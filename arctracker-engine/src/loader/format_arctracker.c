@@ -72,6 +72,9 @@
  *   - u16 default pattern length (1-1000)                                   *
  *   - u8 interpolation type (0=native, 1=Archimedes)                        *
  *   - u8 volume mapping (0=native/Archimedes, 1=Amiga)                      *
+ *   - u16 restart position (0-65534)                                        *
+ *   - u8 reserved for future use                                            *
+ *   - u8 reserved for future use                                            *
  *                                                                           *
  * Track chunk                                                               *
  * -----------                                                               *
@@ -222,7 +225,8 @@ static const char *INSTRUMENT_CHUNK_ID = "INST";
 static const char *SAMPLE_SLICES_CHUNK_ID = "SSLC";
 static const uint32_t CHUNK_HEADER_SIZE = 8;
 static const uint32_t FORMAT_CHUNK_LEN = 4;
-static const uint32_t META_CHUNK_LEN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 12;
+static const uint32_t META_CHUNK_LEN_MIN = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 12;
+static const uint32_t META_CHUNK_LEN_MAX = MODULE_NAME_LEN + AUTHOR_NAME_LEN + 16;
 static const uint32_t TRACK_CHUNK_LEN = TRACK_NAME_LEN + 8;
 static const uint32_t EMPTY_PATTERN_CHUNK_LEN = 8;
 static const uint32_t INSTRUMENT_CHUNK_LEN = 20 + INSTRUMENT_NAME_LEN;
@@ -366,7 +370,7 @@ read_arctracker_module_failed:
 
 static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_size)
 {
-    if (data_size < META_CHUNK_LEN)
+    if (data_size < META_CHUNK_LEN_MIN)
     {
         error(INVALID_META_CHUNK_LENGTH);
         return NULL;
@@ -427,9 +431,20 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         error(MODFILE_INVALID_VOLUME_MAPPING);
         goto read_module_metadata_failed;
     }
+    uint16_t restart_position = 0;
+    if (data_size > META_CHUNK_LEN_MIN && data_size <= META_CHUNK_LEN_MAX)
+    {
+        restart_position = read_u16_le(meta_data + 12 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+        if (restart_position >= sequence_length)
+        {
+            error(MODFILE_CORRUPT_INVALID_RESTART_POSITION);
+            goto read_module_metadata_failed;
+        }
+    }
     module->default_pattern_length = default_pattern_length;
     module->interpolation_type = interpolation_type == 0 ? LINEAR : NONE;
     module->volume_mapping_type = volume_mapping == 0 ? VOLUME_ARCHIMEDES : VOLUME_AMIGA;
+    module->restart_position = restart_position;
     return module;
 
 read_module_metadata_failed:
@@ -809,7 +824,7 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     snprintf(module_name, sizeof module_name, "%s", module->name);
     snprintf(author, sizeof author, "%s", module->author);
     if (!write_fourcc(fp, META_CHUNK_ID)) return false;
-    if (!write_u32_le(fp, META_CHUNK_LEN)) return false;
+    if (!write_u32_le(fp, META_CHUNK_LEN_MAX)) return false;
     if (!write_cc(fp, module_name, sizeof module_name)) return false;
     if (!write_cc(fp, author, sizeof author)) return false;
     if (!write_u8(fp, module->num_tracks - 1)) return false;
@@ -821,6 +836,9 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u16_le(fp, module->default_pattern_length)) return false;
     if (!write_u8(fp, module->interpolation_type == LINEAR ? 0 : 1)) return false;
     if (!write_u8(fp, module->volume_mapping_type == VOLUME_ARCHIMEDES ? 0 : 1)) return false;
+    if (!write_u16_le(fp, module->restart_position)) return false;
+    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, 0)) return false;
     return true;
 }
 

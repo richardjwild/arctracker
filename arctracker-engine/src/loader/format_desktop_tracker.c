@@ -40,16 +40,19 @@ static const uint8_t SET_TREMOLO_WAVEFORM_CMD_DSKT = 0x17;
 static const uint8_t SET_FINE_TEMPO_CMD_DSKT = 0x18;
 static const uint8_t RETRIGGER_SAMPLE_CMD_DSKT = 0x19;
 static const uint8_t FINE_VOLUME_SLIDE_CMD_DSKT = 0x1a;
-// static const uint8_t HOLD_CMD_DSKT = 0x1b; not implemented yet
 static const uint8_t NOTE_CUT_CMD_DSKT = 0x1c;
 static const uint8_t NOTE_DELAY_CMD_DSKT = 0x1d;
 static const uint8_t PATTERN_DELAY_CMD_DSKT = 0x1e;
 
 typedef struct
 {
+    // The identifier is fourcc "DskT".
     uint32_t identifier;
     char name[MAX_LEN_TUNE_NAME_DSKT];
     char author[MAX_LEN_AUTHOR_DSKT];
+    // Flags:
+    // bit 0 - Amiga volume on (1) or off (0)
+    // bit 1 - Amiga portamento on (1) or off (0) (TODO)
     uint32_t flags;
     uint32_t num_tracks;
     uint32_t tune_length;
@@ -64,8 +67,10 @@ typedef struct
 {
     uint8_t note;
     uint8_t volume;
+    // The manual states these two bytes are not used and are always zero.
     uint16_t unused;
     uint32_t period;
+    // Sustain start and end are unused because the 1B command is not implemented.
     uint32_t sustain_start;
     uint32_t sustain_end;
     uint32_t repeat_offset;
@@ -123,6 +128,8 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module->default_pattern_length = 64;
     module->interpolation_type = NONE;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
+    module->restart_position = (int) file_format->restart;
+    module->volume_mapping_type = file_format->flags & 0x1 ? VOLUME_AMIGA : VOLUME_ARCHIMEDES;
     strncpy(module->name, file_format->name, MAX_LEN_TUNE_NAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     for (int track = 0; track < module->num_tracks; track++)
@@ -304,8 +311,16 @@ static effect_t effect(const uint8_t code, const uint8_t data)
 {
     const command_t command = desktop_tracker_command(code, data);
     uint8_t effect_data = data;
+    //
+    // Now we have to fiddle with some of the command parameter values.
+    //
     if (command == SET_VOLUME)
+    {
+        // DSKT volume resolution (0-127) is half that of Arctracker (0-255). (Tracker purports to run from 0 to 255
+        // but it does not really: odd numbered values are the same volume as [value-1] but the polarity is inverted.
+        // Arctracker actually does have 256 discrete volume values).
         effect_data = (data & VOLUME_VALUE_MASK) * 2;
+    }
     if (command == VOLUME_SLIDE_UP_FINE || (command == VOLUME_SLIDE && data < 128))
     {
         // DSKT volume slide parameter has half the resolution of the equivalent Tracker effect.
@@ -326,12 +341,6 @@ static effect_t effect(const uint8_t code, const uint8_t data)
         if (data == 0 || data > 7) effect_data = 128; // Pathological value, centre it.
         else effect_data = PANNING[data - 1];
     }
-    if (command == DELAY_NEXT_EVENT)
-    {
-        // TODO:
-        // Find out whether command 0x1E really delays the next pattern, as it says in the manual,
-        // or whether it actually works the same way as the Protracker EEy command (as I suspect).
-    }
     return (effect_t) {
         .data = effect_data,
         .command = command,
@@ -345,7 +354,8 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == PORTAMENTO_DOWN_CMD_DSKT) return PORTAMENTO_DOWN;
     if (code == TONE_PORTAMENTO_CMD_DSKT) return TONE_PORTAMENTO;
     if (code == VIBRATO_CMD_DSKT) return VIBRATO;
-    // Command 0x5 (delayed note on another track) is not implemented.
+    // Command 0x5 (delayed note on another track) is not implemented, because it is essentially incompatible with the
+    // Arctracker model of globally-scoped and track-scoped commands.
     if (code == RELEASE_SAMPLE_CMD_DSKT) return USE_SAMPLE_SLICE;
     if (code == TREMOLO_CMD_DSKT) return TREMOLO;
     if (code == PHASOR_2_CMD_DSKT) return ADVANCE_PHASE_FINE;
@@ -367,9 +377,12 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     if (code == RETRIGGER_SAMPLE_CMD_DSKT) return RETRIGGER_SAMPLE;
     if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) == 0) return VOLUME_SLIDE_UP_FINE;
     if (code == FINE_VOLUME_SLIDE_CMD_DSKT && (data & 0x80) > 0) return VOLUME_SLIDE_DOWN_FINE;
-    // Command 0x1B (hold) is not implemented yet.
+    // Command 0x1B (hold) is not implemented, because its behaviour in DTT differs substantially from the manual and
+    // empirical testing found behaviour dependent on unrelated playback state, with no sensible semantics to reproduce.
     if (code == NOTE_CUT_CMD_DSKT) return SILENCE_SAMPLE_AFTER_DELAY;
     if (code == NOTE_DELAY_CMD_DSKT) return DELAY_SAMPLE;
+    // Although the manual says otherwise, the pattern delay command's behaviour has been found to be the same as the
+    // Arctracker delay next event command.
     if (code == PATTERN_DELAY_CMD_DSKT) return DELAY_NEXT_EVENT;
     // Command 0x1F (call linked code) is not possible to implement.
     return NO_EFFECT;

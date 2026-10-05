@@ -51,18 +51,6 @@ typedef struct {
 } track_command_state_t;
 
 typedef struct {
-    int track_no;
-    int instrument_no;
-    int current_note;
-    effect_memory_t effect_memory;
-    track_command_state_t command_state;
-    sampler_state_t sampler_state[2];
-    panner_state_t panner;
-    int active_sampler;
-    audio_channel_t *audio_channel;
-} player_track_t;
-
-typedef struct {
     bool assigned;
     int transpose;
     uint8_t default_volume;
@@ -77,9 +65,21 @@ typedef struct {
     int note;
     const player_instrument_t *instrument;
     uint8_t slice;
-    player_track_t *track;
     event_t *event;
 } scheduled_note_t;
+
+typedef struct {
+    int track_no;
+    int instrument_no;
+    int current_note;
+    scheduled_note_t scheduler;
+    effect_memory_t effect_memory;
+    track_command_state_t command_state;
+    sampler_state_t sampler_state[2];
+    panner_state_t panner;
+    int active_sampler;
+    audio_channel_t *audio_channel;
+} player_track_t;
 
 typedef struct player {
     bool running;
@@ -90,7 +90,6 @@ typedef struct player {
     audio_channel_t *audio_channels;
     player_track_t *tracks;
     module_t *module;
-    scheduled_note_t *scheduled_notes;
     sequence_t sequence;
     pt_loop_state_t loop_state;
     player_instrument_t instruments[NUM_INSTRUMENT_SLOTS + 1];
