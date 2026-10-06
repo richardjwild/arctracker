@@ -89,6 +89,7 @@ pub enum PlayerCommandType {
     ToggleLoop = 6,
     SetMasterGain = 7,
     TrackMuteStateChanged = 8,
+    InstrumentUpdated = 9,
 }
 
 #[repr(C)]

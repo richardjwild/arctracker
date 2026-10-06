@@ -122,6 +122,8 @@ void player_shutdown(player_t *);
 
 void player_sequence_changed(player_t *, const module_t *);
 
+void player_instrument_changed(player_t *, int instrument_no);
+
 player_restore_state_t player_get_restore_state(const player_t *);
 
 void player_restore_state(player_t *player, player_restore_state_t state);

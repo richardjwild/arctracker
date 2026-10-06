@@ -722,8 +722,6 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
-        return failure(PLAYER_PLAYING);
     if (instrument_update.assigned)
     {
         if (instrument_update.sample_index >= arctracker->module->sample_slots)

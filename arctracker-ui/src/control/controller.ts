@@ -252,11 +252,9 @@ async function processCommands() {
         const instruments = useStore.getState().module.instruments;
         const setSelectedInstrument = useStore.getState().setSelectedInstrument;
         setSelectedInstrument(instruments.length);
-        if (transport.playing()) transport.togglePlay();
         editInstrument.showDialog();
         break;
       case "Open instrument editor":
-        if (transport.playing()) transport.togglePlay();
         editInstrument.showDialog();
         break;
       case "Save and close instrument editor":
