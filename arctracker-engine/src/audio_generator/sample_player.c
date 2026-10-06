@@ -55,8 +55,12 @@ audio_generator_t init_sampler(
     }
     const float period = period_for_note(note, sample->fine_tuning);
     memset(sampler_state, 0, sizeof(sampler_state_t));
-    sampler_state->sample = sample;
-    // We do not want to modify the player sample, so copy the sample end to be modifiable when we are playing a slice.
+    sampler_state->sample_data = sample->sample_data;
+    sampler_state->phase_increment_per_period = sample->phase_increment_per_period;
+    sampler_state->fine_tuning = sample->fine_tuning;
+    sampler_state->sample_repeats = sample->sample_repeats;
+    sampler_state->repeat_length = sample->repeat_length;
+    sampler_state->repeat_end = sample->repeat_end;
     sampler_state->sample_end = sample->sample_end;
     sampler_state->arpeggio.enabled = false;
     sampler_state->period = period;
@@ -127,12 +131,11 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     if (volume > 255) volume = 255;
     if (volume < 0) volume = 0;
     float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
-    const player_sample_t *sample = sampler->sample;
-    const float *sample_data = sample->sample_data;
-    const float phase_increment = sample->phase_increment_per_period / (float) period;
-    const bool sample_repeats = sample->sample_repeats && !sampler->repeat_cleared;
-    const float repeat_length = (float) sample->repeat_length;
-    const float sample_end = sample_repeats ? (float) sampler->sample->repeat_end : (float) sampler->sample_end;
+    const float *sample_data = sampler->sample_data;
+    const float phase_increment = sampler->phase_increment_per_period / (float) period;
+    const bool sample_repeats = sampler->sample_repeats && !sampler->repeat_cleared;
+    const float repeat_length = (float) sampler->repeat_length;
+    const float sample_end = sample_repeats ? (float) sampler->repeat_end : (float) sampler->sample_end;
     float phase_accumulator = sampler->phase_accumulator;
     int offset = 0;
     const float gain = sampler->gain_curve[volume];
@@ -225,8 +228,7 @@ static void pitch_slide_off(audio_generator_state_t *state)
 static void set_tone_portamento_target(audio_generator_state_t *state, const int target_note)
 {
     sampler_state_t *sampler = state->sampler;
-    const double fine_tuning = sampler->sample->fine_tuning;
-    sampler->tone_portamento_target_period = period_for_note(target_note, fine_tuning);
+    sampler->tone_portamento_target_period = period_for_note(target_note, sampler->fine_tuning);
 }
 
 static void tone_portamento_on(audio_generator_state_t *state, const int slide_rate)
@@ -317,7 +319,7 @@ static void arpeggio_on(audio_generator_state_t *state, const int bottom_note, c
     uint16_t top_note = bottom_note + interval_2;
     if (note_out_of_range(middle_note)) middle_note = bottom_note;
     if (note_out_of_range(top_note)) top_note = bottom_note;
-    const double fine_tuning = sampler->sample->fine_tuning;
+    const double fine_tuning = sampler->fine_tuning;
     sampler->arpeggio.chord[0] = period_for_note(bottom_note, fine_tuning) - sampler->period;
     sampler->arpeggio.chord[1] = period_for_note(middle_note, fine_tuning) - sampler->period;
     sampler->arpeggio.chord[2] = period_for_note(top_note, fine_tuning) - sampler->period;
@@ -355,11 +357,11 @@ static void advance_phase(audio_generator_state_t *state, const int frames)
     {
         sampler->phase_accumulator += (float) frames;
     }
-    else if (sampler->sample->sample_repeats)
+    else if (sampler->sample_repeats)
     {
         sampler->phase_accumulator += (float) frames;
         while ((int) sampler->phase_accumulator >= sampler->sample_end)
-            sampler->phase_accumulator -= (float) sampler->sample->repeat_length;
+            sampler->phase_accumulator -= (float) sampler->repeat_length;
     }
 }
 
@@ -473,7 +475,7 @@ static void apply_tone_portamento(sampler_state_t *sampler)
     }
     if (sampler->glissando_on)
     {
-        const float snapped_period = nearest_note_period(new_period, sampler->sample->fine_tuning);
+        const float snapped_period = nearest_note_period(new_period, sampler->fine_tuning);
         sampler->glissando_period_modulation = snapped_period - new_period;
     }
     else

@@ -40,8 +40,16 @@ typedef struct {
 } pt_arpeggiator_state_t;
 
 struct sampler_state {
-    const player_sample_t *sample;
+    const float *sample_data;
+    float phase_increment_per_period;
+    double fine_tuning;
+    uint8_t volume;
     int sample_end;
+    bool sample_repeats;
+    bool repeat_cleared;
+    int clear_repeat_delay;
+    int repeat_length;
+    int repeat_end;
     interpolation_type_t interpolation_type;
     bool relative_pitch_bend;
     float phase_accumulator;
@@ -49,6 +57,7 @@ struct sampler_state {
     float vibrato_period_modulation;
     float arpeggio_period_modulation;
     float glissando_period_modulation;
+    int volume_modulation;
     bool pitch_slide_on;
     int pitch_slide_rate;
     float pitch_slide_factor;
@@ -56,14 +65,10 @@ struct sampler_state {
     bool tone_portamento_on;
     float tone_portamento_target_period;
     bool glissando_on;
-    uint8_t volume;
     int volume_slide_rate;
     bool volume_slide_fine;
     int silence_delay;
     int retrigger_delay;
-    bool repeat_cleared;
-    int clear_repeat_delay;
-    int volume_modulation;
     pt_arpeggiator_state_t arpeggio;
     lfo_effect_t vibrato;
     lfo_effect_t tremolo;
