@@ -112,6 +112,8 @@ player_t *player_create(module_t *module, audio_api_t audio_api, player_event_qu
 
 void player_update_instruments(player_t *);
 
+void player_update_instrument(player_t *player, int instrument_index);
+
 bool player_run(player_t *);
 
 bool player_queue_command(const player_t *, player_command_t);

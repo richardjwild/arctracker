@@ -112,32 +112,46 @@ init_failed:
 
 void player_update_instruments(player_t *player)
 {
-    const module_t *module = player->module;
-    for (int i = 0; i < 256; i++)
+    for (int instrument_index = 0; instrument_index < NUM_INSTRUMENT_SLOTS; instrument_index++)
     {
-        const instrument_t instrument = module->instruments[i];
-        const sample_t sample = module->samples[instrument.sample_index];
-        player->instruments[i].assigned = instrument.assigned || note_out_of_range(sample.base_note);
-        if (!instrument.assigned)
-        {
-            continue;
-        }
-        player->instruments[i].transpose = instrument.transpose;
-        player->instruments[i].default_volume = instrument.default_volume;
-        const float base_period = period_for_note(sample.base_note, 1.0f);
-        const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
-        player->instruments[i].sample.phase_increment_per_period = phase_increment_per_period;
-        player->instruments[i].sample.fine_tuning = fine_tuning[128 + sample.finetune];
-        player->instruments[i].sample.sample_end = sample.sample_length - 1;
-        player->instruments[i].sample.sample_repeats = instrument.repeats;
-        player->instruments[i].sample.repeat_end = instrument.repeat_offset + instrument.repeat_length - 1;
-        player->instruments[i].sample.repeat_length = instrument.repeat_length;
-        player->instruments[i].sample.sample_data = sample.sample_data;
-        for (int j = 0; j < 256; j++)
-        {
-            player->instruments[i].sample_slices[j].offset = module->instruments[i].sample_slices[j].offset;
-            player->instruments[i].sample_slices[j].length = module->instruments[i].sample_slices[j].length;
-        }
+        player_update_instrument(player, instrument_index);
+    }
+}
+
+void player_update_instrument(player_t *player, const int instrument_index)
+{
+    const module_t *module = player->module;
+    const instrument_t instrument = module->instruments[instrument_index];
+    const sample_t sample = module->samples[instrument.sample_index];
+    if (!instrument.assigned || note_out_of_range(sample.base_note))
+    {
+        player->instruments[instrument_index].assigned = false;
+        return;
+    }
+    const float base_period = period_for_note(sample.base_note, 1.0f);
+    const float output_rate = (float) player->audio_out.api.info.sample_rate;
+    const float phase_increment_per_period = base_period * sample.sample_rate / output_rate;
+    player->instruments[instrument_index] = (player_instrument_t) {
+        .assigned = true,
+        .transpose = instrument.transpose,
+        .default_volume = instrument.default_volume,
+        .sample = (player_sample_t) {
+            .phase_increment_per_period = phase_increment_per_period,
+            .fine_tuning = fine_tuning[128 + sample.finetune],
+            .sample_end = sample.sample_length - 1,
+            .sample_repeats = instrument.repeats,
+            .repeat_end = instrument.repeat_offset + instrument.repeat_length - 1,
+            .repeat_length = instrument.repeat_length,
+            .sample_data = sample.sample_data,
+        },
+    };
+    for (int slice_index = 0; slice_index < NUM_SAMPLE_SLICES; slice_index++)
+    {
+        const sample_slice_t slice = module->instruments[instrument_index].sample_slices[slice_index];
+        player->instruments[instrument_index].sample_slices[slice_index] = (player_sample_slice_t) {
+            .offset = slice.offset,
+            .length = slice.length,
+        };
     }
 }
 
