@@ -441,7 +441,7 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
             error(MODFILE_CORRUPT_INVALID_RESTART_POSITION);
             goto read_module_metadata_failed;
         }
-        pitch_bend_mode = read_u8(meta_data + 13 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+        pitch_bend_mode = read_u8(meta_data + 14 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
         if (pitch_bend_mode != 0 && pitch_bend_mode != 1)
         {
             error(MODFILE_CORRUPT_INVALID_PITCH_BEND_MODE);

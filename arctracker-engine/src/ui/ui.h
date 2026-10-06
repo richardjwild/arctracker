@@ -65,6 +65,7 @@ typedef struct ui_module_info {
     int initial_bpm;
     ui_interpolation_type_t interpolation_type;
     ui_volume_mapping_type_t volume_mapping_type;
+    bool relative_pitch_bend;
 } ui_module_info_t;
 
 typedef struct ui_effect {

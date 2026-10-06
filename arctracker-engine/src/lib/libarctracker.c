@@ -307,7 +307,7 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     if (arctracker->playback.player == NULL)
         return failure(PLAYER_INIT_FAILED);
     pthread_t audio_thread;
-    int err = pthread_create(&audio_thread, NULL, run_player, arctracker->playback.player);
+    const int err = pthread_create(&audio_thread, NULL, run_player, arctracker->playback.player);
     if (err != 0)
     {
         error(strerror(err));
@@ -793,7 +793,8 @@ api_result_t arctracker_edit_set_module_meta_data(
     const char *author,
     const int default_pattern_length,
     const ui_interpolation_type_t interpolation_type,
-    const ui_volume_mapping_type_t volume_mapping_type)
+    const ui_volume_mapping_type_t volume_mapping_type,
+    const bool relative_pitch_bend)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -833,6 +834,11 @@ api_result_t arctracker_edit_set_module_meta_data(
         arctracker->module->volume_mapping_type = VOLUME_AMIGA;
         restart_required = true;
     }
+    if (relative_pitch_bend != arctracker->module->relative_pitch_bend)
+    {
+        arctracker->module->relative_pitch_bend = relative_pitch_bend;
+        restart_required = true;
+    }
     if (restart_required)
     {
         api_result_t player_result = SUCCESS;
@@ -845,11 +851,15 @@ api_result_t arctracker_edit_set_module_meta_data(
             player_result = arctracker_player_shutdown(arctracker);
         }
         if (!player_result.success)
+        {
             return player_result;
+        }
         arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
         player_result = arctracker_player_start(arctracker);
         if (restore && player_result.success)
+        {
             player_restore_state(arctracker->playback.player, player_state);
+        }
         return player_result;
     }
     return SUCCESS;

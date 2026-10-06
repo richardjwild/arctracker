@@ -347,14 +347,15 @@ export const engine = {
     defaultPatternLength: number,
     interpolationType: InterpolationType,
     volumeMappingType: VolumeMappingType,
+    relativePitchBend: boolean,
   ) => {
-    console.log('setModuleMetaData', name, author, defaultPatternLength, interpolationType, volumeMappingType);
     return await invoke("edit_set_module_meta_data", {
       name,
       author,
       defaultPatternLength,
       interpolationType,
       volumeMappingType,
+      relativePitchBend,
     });
   },
 

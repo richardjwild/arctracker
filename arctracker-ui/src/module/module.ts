@@ -30,6 +30,7 @@ export type Module = {
   beatsPerMinute: number;
   interpolationType: InterpolationType;
   volumeMapping: VolumeMappingType;
+  relativePitchBend: boolean;
 };
 
 export type NewModuleParams = {

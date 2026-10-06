@@ -218,6 +218,7 @@ pub struct UiModuleInfo {
     pub initial_bpm: c_int,
     pub interpolation_type: UiInterpolationType,
     pub volume_mapping_type: UiVolumeMappingType,
+    pub relative_pitch_bend: bool,
 }
 
 #[repr(C)]
@@ -436,6 +437,7 @@ extern "C" {
         default_pattern_length: c_int,
         interpolation_type: UiInterpolationType,
         volume_mapping_type: UiVolumeMappingType,
+        relative_pitch_bend: bool,
     ) -> ApiResult;
     pub fn arctracker_edit_set_num_tracks(
         handle: *mut ArctrackerHandle,

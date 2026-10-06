@@ -13,6 +13,7 @@ export type ModuleMetaData = {
   defaultPatternLength: number;
   interpolationType: InterpolationType;
   volumeMappingType: VolumeMappingType;
+  relativePitchBend: boolean;
 };
 
 export const moduleMetaData = {
@@ -36,7 +37,8 @@ export const moduleMetaData = {
       module.author === draftModuleMetaData.author &&
       module.defaultPatternLength === draftModuleMetaData.defaultPatternLength &&
       module.interpolationType === draftModuleMetaData.interpolationType &&
-      module.volumeMapping === draftModuleMetaData.volumeMappingType
+      module.volumeMapping === draftModuleMetaData.volumeMappingType &&
+      module.relativePitchBend === draftModuleMetaData.relativePitchBend
     )
       return;
     void editor.applyEdit({
@@ -47,6 +49,7 @@ export const moduleMetaData = {
           draftModuleMetaData.defaultPatternLength,
           draftModuleMetaData.interpolationType,
           draftModuleMetaData.volumeMappingType,
+          draftModuleMetaData.relativePitchBend,
         );
         useStore.getState().setModuleMetaData(
           draftModuleMetaData.moduleName,
@@ -54,6 +57,7 @@ export const moduleMetaData = {
           draftModuleMetaData.defaultPatternLength,
           draftModuleMetaData.interpolationType,
           draftModuleMetaData.volumeMappingType,
+          draftModuleMetaData.relativePitchBend,
         );
         return true;
       },
@@ -64,6 +68,7 @@ export const moduleMetaData = {
           module.defaultPatternLength,
           module.interpolationType,
           module.volumeMapping,
+          module.relativePitchBend,
         );
         useStore.getState().setModuleMetaData(
           module.name,
@@ -71,6 +76,7 @@ export const moduleMetaData = {
           module.defaultPatternLength,
           module.interpolationType,
           module.volumeMapping,
+          module.relativePitchBend,
         );
       },
     });

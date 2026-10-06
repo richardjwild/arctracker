@@ -221,6 +221,7 @@ pub struct Module {
     pub instruments: Vec<Instrument>,
     pub interpolation_type: InterpolationType,
     pub volume_mapping: VolumeMappingType,
+    pub relative_pitch_bend: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -465,6 +466,7 @@ impl Arctracker {
             instruments,
             interpolation_type: InterpolationType::from(module.interpolation_type),
             volume_mapping: VolumeMappingType::from(module.volume_mapping_type),
+            relative_pitch_bend: module.relative_pitch_bend,
         })
     }
 
@@ -533,6 +535,7 @@ impl Arctracker {
             instruments,
             interpolation_type: InterpolationType::from(module.interpolation_type),
             volume_mapping: VolumeMappingType::from(module.volume_mapping_type),
+            relative_pitch_bend: module.relative_pitch_bend,
         })
     }
 
@@ -633,6 +636,7 @@ impl Arctracker {
             instruments: Vec::new(),
             interpolation_type: InterpolationType::from(module_info.interpolation_type),
             volume_mapping: VolumeMappingType::from(module_info.volume_mapping_type),
+            relative_pitch_bend: module_info.relative_pitch_bend,
         })
     }
 
@@ -1097,6 +1101,7 @@ impl Arctracker {
         default_pattern_length: u16,
         interpolation_type: InterpolationType,
         volume_mapping_type: VolumeMappingType,
+        relative_pitch_bend: bool,
     ) -> Result<(), ArctrackerError> {
         let c_name = CString::new(name).map_err(|_| ArctrackerError {
             message: "Invalid module name".parse().unwrap(),
@@ -1120,6 +1125,7 @@ impl Arctracker {
                 default_pattern_length as c_int,
                 ui_interpolation_type,
                 ui_volume_mapping_type,
+                relative_pitch_bend,
             )
         };
         if !result.success {
