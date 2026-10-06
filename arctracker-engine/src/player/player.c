@@ -17,6 +17,8 @@
 static double fine_tuning[256] = {0};
 static const int NULL_INSTRUMENT_INDEX = NUM_INSTRUMENT_SLOTS;
 
+static void synchronise_instrument(player_t *, int);
+static void synchronise_playback_policy(player_t *player);
 static void init_null_instrument(player_t *);
 static void calculate_fine_tuning(void);
 static bool player_tick(player_t *);
@@ -71,9 +73,6 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.info.sample_rate);
     player->sequence = sequencer_initialise(module, audio_api.info.bouncing);
     player->bouncing = audio_api.info.bouncing;
-    player->playback_policy.interpolation_type = module->interpolation_type;
-    player->playback_policy.relative_pitch_bend = module->relative_pitch_bend;
-    calculate_gain_curve(player->playback_policy.gain_curve, module->volume_mapping_type);
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
     {
@@ -90,12 +89,13 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
         goto init_failed;
     }
     initialise_spatialisers(player);
-    const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain, module->volume_mapping_type);
+    const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain);
     if (!audio_init_result)
     {
         error_with_detail(AUDIO_INIT_FAILED, get_error_message());
         goto init_failed;
     }
+    synchronise_playback_policy(player);
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true, true);
     init_null_instrument(player);
@@ -114,44 +114,7 @@ void player_update_instruments(player_t *player)
 {
     for (int instrument_index = 0; instrument_index < NUM_INSTRUMENT_SLOTS; instrument_index++)
     {
-        player_update_instrument(player, instrument_index);
-    }
-}
-
-void player_update_instrument(player_t *player, const int instrument_index)
-{
-    const module_t *module = player->module;
-    const instrument_t instrument = module->instruments[instrument_index];
-    const sample_t sample = module->samples[instrument.sample_index];
-    if (!instrument.assigned || note_out_of_range(sample.base_note))
-    {
-        player->instruments[instrument_index].assigned = false;
-        return;
-    }
-    const float base_period = period_for_note(sample.base_note, 1.0f);
-    const float output_rate = (float) player->audio_out.api.info.sample_rate;
-    const float phase_increment_per_period = base_period * sample.sample_rate / output_rate;
-    player->instruments[instrument_index] = (player_instrument_t) {
-        .assigned = true,
-        .transpose = instrument.transpose,
-        .default_volume = instrument.default_volume,
-        .sample = (player_sample_t) {
-            .phase_increment_per_period = phase_increment_per_period,
-            .fine_tuning = fine_tuning[128 + sample.finetune],
-            .sample_end = sample.sample_length - 1,
-            .sample_repeats = instrument.repeats,
-            .repeat_end = instrument.repeat_offset + instrument.repeat_length - 1,
-            .repeat_length = instrument.repeat_length,
-            .sample_data = sample.sample_data,
-        },
-    };
-    for (int slice_index = 0; slice_index < NUM_SAMPLE_SLICES; slice_index++)
-    {
-        const sample_slice_t slice = module->instruments[instrument_index].sample_slices[slice_index];
-        player->instruments[instrument_index].sample_slices[slice_index] = (player_sample_slice_t) {
-            .offset = slice.offset,
-            .length = slice.length,
-        };
+        synchronise_instrument(player, instrument_index);
     }
 }
 
@@ -209,6 +172,13 @@ void player_instrument_changed(player_t *player, const int instrument_no)
     player_queue_command(player, command);
 }
 
+void player_playback_policy_changed(player_t *player)
+{
+    player_queue_command(player, (player_command_t) {
+        .cmd_type = PLAYBACK_POLICY_UPDATED,
+    });
+}
+
 player_restore_state_t player_get_restore_state(const player_t *player)
 {
     return (player_restore_state_t) {
@@ -247,6 +217,53 @@ void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
         const tempo_t tempo = player->module->tempo_lookup[beats_per_minute];
         tick_scheduler_set_tempo(&player->tick_scheduler, tempo);
     }
+}
+
+static void synchronise_instrument(player_t *player, const int instrument_index)
+{
+    const module_t *module = player->module;
+    const instrument_t instrument = module->instruments[instrument_index];
+    const sample_t sample = module->samples[instrument.sample_index];
+    if (!instrument.assigned || note_out_of_range(sample.base_note))
+    {
+        player->instruments[instrument_index].assigned = false;
+        return;
+    }
+    const float base_period = period_for_note(sample.base_note, 1.0f);
+    const float output_rate = (float) player->audio_out.api.info.sample_rate;
+    const float phase_increment_per_period = base_period * sample.sample_rate / output_rate;
+    player->instruments[instrument_index] = (player_instrument_t) {
+        .assigned = true,
+        .transpose = instrument.transpose,
+        .default_volume = instrument.default_volume,
+        .sample = (player_sample_t) {
+            .phase_increment_per_period = phase_increment_per_period,
+            .fine_tuning = fine_tuning[128 + sample.finetune],
+            .sample_end = sample.sample_length - 1,
+            .sample_repeats = instrument.repeats,
+            .repeat_end = instrument.repeat_offset + instrument.repeat_length - 1,
+            .repeat_length = instrument.repeat_length,
+            .sample_data = sample.sample_data,
+        },
+    };
+    for (int slice_index = 0; slice_index < NUM_SAMPLE_SLICES; slice_index++)
+    {
+        const sample_slice_t slice = module->instruments[instrument_index].sample_slices[slice_index];
+        player->instruments[instrument_index].sample_slices[slice_index] = (player_sample_slice_t) {
+            .offset = slice.offset,
+            .length = slice.length,
+        };
+    }
+}
+
+static void synchronise_playback_policy(player_t *player)
+{
+    const module_t *module = player->module;
+    player->playback_policy = (playback_policy_t) {
+        .relative_pitch_bend = module->relative_pitch_bend,
+        .interpolation_type = module->interpolation_type,
+    };
+    calculate_gain_curve(player->playback_policy.gain_curve, module->volume_mapping_type);
 }
 
 static void init_null_instrument(player_t *player)
@@ -328,7 +345,10 @@ static void process_player_command(player_t *player, const player_command_t comm
             process_track_mute_state_changed_command(player, command.data.track_mute);
             break;
         case INSTRUMENT_UPDATED:
-            player_update_instrument(player, command.data.instrument_updated.instrument_no);
+            synchronise_instrument(player, command.data.instrument_updated.instrument_no);
+            break;
+        case PLAYBACK_POLICY_UPDATED:
+            synchronise_playback_policy(player);
             break;
         default:
             break;

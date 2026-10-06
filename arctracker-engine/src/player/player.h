@@ -112,8 +112,6 @@ player_t *player_create(module_t *module, audio_api_t audio_api, player_event_qu
 
 void player_update_instruments(player_t *);
 
-void player_update_instrument(player_t *player, int instrument_index);
-
 bool player_run(player_t *);
 
 bool player_queue_command(const player_t *, player_command_t);
@@ -123,6 +121,8 @@ void player_shutdown(player_t *);
 void player_sequence_changed(player_t *, const module_t *);
 
 void player_instrument_changed(player_t *, int instrument_no);
+
+void player_playback_policy_changed(player_t *);
 
 player_restore_state_t player_get_restore_state(const player_t *);
 

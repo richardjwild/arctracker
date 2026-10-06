@@ -1,7 +1,6 @@
 import { editor } from "./editor.ts";
 import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
-import { transport } from "../transport/transport.ts";
 
 export type InterpolationType = "ARCTRACKER" | "ARCHIMEDES";
 
@@ -20,7 +19,6 @@ export const moduleMetaData = {
   editing: () => useStore.getState().editorState.editMode === "moduleMetaData",
 
   showDialog: () => {
-    if (transport.playing()) transport.togglePlay();
     editor.setEditMode("moduleMetaData");
   },
 

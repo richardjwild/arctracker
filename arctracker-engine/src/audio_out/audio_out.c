@@ -11,7 +11,7 @@ static void apply_master_gain(const audio_out_t *);
 static void find_peak_levels(const audio_out_t *, atomic_uint *, atomic_uint *);
 static void atomic_peak_max(atomic_uint *, float);
 
-bool initialise_audio(audio_out_t *audio_out, const audio_api_t audio_api, const int num_channels, const float master_gain, const volume_mapping_type_t volume_mapping_type)
+bool initialise_audio(audio_out_t *audio_out, const audio_api_t audio_api, const int num_channels, const float master_gain)
 {
     audio_out->api = audio_api;
     audio_out->num_channels = num_channels;
@@ -23,7 +23,6 @@ bool initialise_audio(audio_out_t *audio_out, const audio_api_t audio_api, const
     audio_out->frames_filled = 0;
     audio_out->peak_l = 0;
     audio_out->peak_r = 0;
-    audio_out->volume_mapping_type = volume_mapping_type;
     audio_out->api.info.healthy = true;
     return audio_out->api.init(&audio_api.info);
 }

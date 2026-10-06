@@ -90,6 +90,7 @@ pub enum PlayerCommandType {
     SetMasterGain = 7,
     TrackMuteStateChanged = 8,
     InstrumentUpdated = 9,
+    PlaybackPolicyUpdated = 10,
 }
 
 #[repr(C)]

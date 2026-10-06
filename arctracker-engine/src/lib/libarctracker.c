@@ -758,7 +758,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
     if (!result.success)
         return failure(result.error_message);
     editor_update_sample(arctracker->module, instrument_update.sample_index, instrument_update.base_note, instrument_update.fine_tuning);
-    player_update_instrument(arctracker->playback.player, slot);
+    player_instrument_changed(arctracker->playback.player, slot);
     return SUCCESS;
 }
 
@@ -811,54 +811,35 @@ api_result_t arctracker_edit_set_module_meta_data(
     const edit_result_t result = editor_set_module_title(arctracker->module, name, author, default_pattern_length);
     if (!result.success)
         return failure(result.error_message);
-    bool restart_required = false;
+    bool playback_policy_changed = false;
     if (interpolation_type == ARCTRACKER && arctracker->module->interpolation_type == NONE)
     {
         arctracker->module->interpolation_type = LINEAR;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     else if (interpolation_type == ARCHIMEDES && arctracker->module->interpolation_type == LINEAR)
     {
         arctracker->module->interpolation_type = NONE;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     if (volume_mapping_type == UI_VOLUME_ARCHIMEDES && arctracker->module->volume_mapping_type == VOLUME_AMIGA)
     {
         arctracker->module->volume_mapping_type = VOLUME_ARCHIMEDES;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     else if (volume_mapping_type == UI_VOLUME_AMIGA && arctracker->module->volume_mapping_type == VOLUME_ARCHIMEDES)
     {
         arctracker->module->volume_mapping_type = VOLUME_AMIGA;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     if (relative_pitch_bend != arctracker->module->relative_pitch_bend)
     {
         arctracker->module->relative_pitch_bend = relative_pitch_bend;
-        restart_required = true;
+        playback_policy_changed = true;
     }
-    if (restart_required)
+    if (playback_policy_changed)
     {
-        api_result_t player_result = SUCCESS;
-        player_restore_state_t player_state = {0};
-        bool restore = false;
-        if (arctracker->playback.thread_active)
-        {
-            player_state = player_get_restore_state(arctracker->playback.player);
-            restore = true;
-            player_result = arctracker_player_shutdown(arctracker);
-        }
-        if (!player_result.success)
-        {
-            return player_result;
-        }
-        arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
-        player_result = arctracker_player_start(arctracker);
-        if (restore && player_result.success)
-        {
-            player_restore_state(arctracker->playback.player, player_state);
-        }
-        return player_result;
+        player_playback_policy_changed(arctracker->playback.player);
     }
     return SUCCESS;
 }

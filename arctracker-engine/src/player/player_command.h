@@ -14,6 +14,7 @@ typedef enum cmd_type {
     SET_MASTER_GAIN = 7,
     TRACK_MUTE_STATE_CHANGED = 8,
     INSTRUMENT_UPDATED = 9,
+    PLAYBACK_POLICY_UPDATED = 10,
 } cmd_type_t;
 
 typedef struct {

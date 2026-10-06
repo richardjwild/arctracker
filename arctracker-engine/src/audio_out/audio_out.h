@@ -6,8 +6,7 @@
 #include "audio_api/audio_api.h"
 #include "audio_out/volume_mapping_type.h"
 
-typedef struct
-{
+typedef struct {
     int num_channels;
     float master_gain;
     float *mono_channel_buffer;
@@ -15,7 +14,6 @@ typedef struct
     stereo_frame_t *output_buffer;
     int frames_filled;
     interpolation_type_t interpolation_type;
-    volume_mapping_type_t volume_mapping_type;
     atomic_uint peak_l;
     atomic_uint peak_r;
     audio_api_t api;
@@ -26,7 +24,7 @@ typedef struct {
     const char *error_message;
 } audio_out_result_t;
 
-bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain, volume_mapping_type_t volume_mapping_type);
+bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain);
 
 bool write_audio_data(audio_out_t *, audio_channel_t *, int);
 
