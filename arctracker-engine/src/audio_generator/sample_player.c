@@ -447,41 +447,40 @@ static void apply_pitch_slide(sampler_state_t *sampler)
 
 static void apply_tone_portamento(sampler_state_t *sampler)
 {
-    const float slide_rate = (float) sampler->pitch_slide_rate;
-    const bool period_increasing = sampler->period < sampler->tone_portamento_target_period;
+    //
+    // sampler->pitch_slide_rate and sampler->pitch_slide_factor are already set for the required slide direction.
+    //
+    const float target_period = sampler->tone_portamento_target_period;
+    const bool period_increasing = sampler->period < target_period;
+    float new_period = sampler->period;
     if (sampler->relative_pitch_bend)
     {
-        sampler->period *= sampler->pitch_slide_factor;
+        new_period *= sampler->pitch_slide_factor;
     }
     else
     {
-        sampler->period += slide_rate;
+        new_period += (float) sampler->pitch_slide_rate;
     }
-    if (period_increasing)
+    if (period_increasing && new_period > target_period)
     {
-        if (sampler->period > sampler->tone_portamento_target_period)
-        {
-            sampler->period = sampler->tone_portamento_target_period;
-            sampler->tone_portamento_on = false;
-        }
+        new_period = target_period;
+        sampler->tone_portamento_on = false;
     }
-    else
+    if (!period_increasing && new_period < target_period)
     {
-        if (sampler->period < sampler->tone_portamento_target_period)
-        {
-            sampler->period = sampler->tone_portamento_target_period;
-            sampler->tone_portamento_on = false;
-        }
+        new_period = target_period;
+        sampler->tone_portamento_on = false;
     }
     if (sampler->glissando_on)
     {
-        const float snapped_period = nearest_note_period(sampler->period, sampler->sample->fine_tuning);
-        sampler->glissando_period_modulation = snapped_period - sampler->period;
+        const float snapped_period = nearest_note_period(new_period, sampler->sample->fine_tuning);
+        sampler->glissando_period_modulation = snapped_period - new_period;
     }
     else
     {
         sampler->glissando_period_modulation = 0;
     }
+    sampler->period = new_period;
 }
 
 static void apply_vibrato(sampler_state_t *sampler)
