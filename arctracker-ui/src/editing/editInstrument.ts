@@ -222,6 +222,6 @@ export const editInstrument = {
   },
 
   closeDialog: () => {
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   },
 };

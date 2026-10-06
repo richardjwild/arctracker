@@ -126,7 +126,7 @@ export const editorKeyHandlers: {
     if (useStore.getState().editorState.editMode !== "setMultipleEffects")
       return false;
     if (e.code === 'Escape') {
-      editor.setEditMode("none");
+      editor.restorePreviousEditMode();
       return true;
     }
     return false;

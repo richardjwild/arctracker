@@ -185,6 +185,6 @@ export const module = {
         },
       });
     }
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   },
 };

@@ -104,7 +104,7 @@ export const appConfig = {
 
   showDialog: () => editor.setEditMode("appConfig"),
 
-  hideDialog: () => editor.setEditMode("none"),
+  hideDialog: () => editor.restorePreviousEditMode(),
 
   load: async (): Promise<AppConfig> => {
     const configExists = await exists(configFileName, {

@@ -12,7 +12,7 @@ export const tempo = {
   },
 
   hideDialog: () => {
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   },
 
   setTempo: async () => {

@@ -260,7 +260,6 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->interpolation_type = module->interpolation_type == LINEAR ? ARCTRACKER : ARCHIMEDES;
     module_info->volume_mapping_type = module->volume_mapping_type == VOLUME_ARCHIMEDES ? UI_VOLUME_ARCHIMEDES : UI_VOLUME_AMIGA;
     module_info->relative_pitch_bend = module->relative_pitch_bend;
-    printf("relative pitch bend: %s\n", module_info->relative_pitch_bend ? "on" : "off");
 }
 
 void module_get_instrument_info(const module_t *module, const int instrument_index, ui_instrument_info_t *instrument_info)

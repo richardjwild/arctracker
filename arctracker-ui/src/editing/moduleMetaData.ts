@@ -25,7 +25,7 @@ export const moduleMetaData = {
   },
 
   hideDialog: () => {
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   },
 
   setModuleMetaData() {

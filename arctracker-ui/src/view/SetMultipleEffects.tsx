@@ -45,7 +45,7 @@ export default function SetMultipleEffects() {
   };
 
   const cancel = () => {
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   };
 
   return (
