@@ -132,6 +132,7 @@ typedef struct
     uint16_t default_pattern_length;
     interpolation_type_t interpolation_type;
     volume_mapping_type_t volume_mapping_type;
+    bool relative_pitch_bend;
 } module_t;
 
 module_t *module_create(int num_tracks, int sequence_len, int num_patterns, int num_samples);

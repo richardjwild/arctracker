@@ -1,7 +1,7 @@
 #include "sample_player.h"
+#include <math.h>
 #include <string.h>
 #include "memory/heap.h"
-#include "player/module.h"
 #include "player/period.h"
 #ifdef DEBUG_SAMPLER
 #include <stdio.h>
@@ -56,18 +56,23 @@ audio_generator_t init_sampler(
     const float period = period_for_note(note, sample->fine_tuning);
     memset(sampler_state, 0, sizeof(sampler_state_t));
     sampler_state->sample = sample;
-    // Copy the sample end so we can modify it if we are playing a slice, because we do not want to modify the sample.
+    // We do not want to modify the player sample, so copy the sample end to be modifiable when we are playing a slice.
     sampler_state->sample_end = sample->sample_end;
     sampler_state->arpeggio.enabled = false;
     sampler_state->period = period;
     sampler_state->tone_portamento_on = false;
     sampler_state->tone_portamento_target_period = period;
-    sampler_state->tone_portamento_slide_rate = 0;
+    sampler_state->pitch_slide_on = false;
+    sampler_state->pitch_slide_rate = 0;
+    sampler_state->pitch_slide_factor = 1.0f;
     sampler_state->interpolation_type = playback_policy->interpolation_type;
+    sampler_state->relative_pitch_bend = playback_policy->relative_pitch_bend;
     sampler_state->gain_curve = playback_policy->gain_curve;
     sampler_state->volume = volume;
     sampler_state->volume_slide_rate = 0;
     sampler_state->vibrato_period_modulation = 0.0f;
+    sampler_state->arpeggio_period_modulation = 0.0f;
+    sampler_state->glissando_period_modulation = 0.0f;
     sampler_state->vibrato = (lfo_effect_t) {0};
     sampler_state->tremolo = (lfo_effect_t) {0};
     sampler_state->repeat_cleared = false;
@@ -111,7 +116,7 @@ audio_generator_t init_sampler(
 static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, int frames_to_write)
 {
     sampler_state_t *sampler = state->sampler;
-    const float period = sampler->period + sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation;
+    const float period = sampler->period + sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation + sampler->glissando_period_modulation;
     if (period <= 0.0f)
     {
         // Fill the buffer with silence.
@@ -197,20 +202,24 @@ static void pitch_slide_on(audio_generator_state_t *state, const int slide_rate,
 {
     sampler_state_t *sampler = state->sampler;
     sampler->pitch_slide_rate = slide_rate;
+    if (sampler->relative_pitch_bend)
+    {
+        // Relative pitch bend runs at a rate of (slide_rate / 32) semitones per tick. Hence 384 = 32 * 12.
+        sampler->pitch_slide_factor = powf(2.0f, (float) slide_rate / 384.0f);
+    }
     sampler->pitch_slide_fine = fine;
     if (sampler->pitch_slide_fine)
     {
-        float new_period = sampler->period + (float) slide_rate;
-        if (new_period < PERIOD_MIN) new_period = PERIOD_MIN;
-        if (new_period > PERIOD_MAX) new_period = PERIOD_MAX;
-        sampler->period = new_period;
+        apply_pitch_slide(sampler);
     }
+    sampler->pitch_slide_on = true;
 }
 
 static void pitch_slide_off(audio_generator_state_t *state)
 {
     sampler_state_t *sampler = state->sampler;
     sampler->pitch_slide_rate = 0;
+    sampler->pitch_slide_on = false;
 }
 
 static void set_tone_portamento_target(audio_generator_state_t *state, const int target_note)
@@ -224,7 +233,21 @@ static void tone_portamento_on(audio_generator_state_t *state, const int slide_r
 {
     sampler_state_t *sampler = state->sampler;
     sampler->tone_portamento_on = true;
-    sampler->tone_portamento_slide_rate = slide_rate;
+    if (sampler->relative_pitch_bend)
+    {
+        // Relative pitch bend runs at a rate of (slide_rate / 32) semitones per tick. Hence 384 = 32 * 12.
+        if (sampler->tone_portamento_target_period > sampler->period)
+            sampler->pitch_slide_factor = powf(2.0f, (float) slide_rate / 384.0f);
+        else
+            sampler->pitch_slide_factor = powf(2.0f, (float) -slide_rate / 384.0f);
+    }
+    else
+    {
+        if (sampler->tone_portamento_target_period > sampler->period)
+            sampler->pitch_slide_rate = slide_rate;
+        else
+            sampler->pitch_slide_rate = -slide_rate;
+    }
 }
 
 static void tone_portamento_off(audio_generator_state_t *state)
@@ -378,9 +401,9 @@ static void tick(audio_generator_state_t *state, const int tick, const int ticks
     #ifdef DEBUG_SAMPLER
     print_state(sampler, tick, ticks_per_event);
     #endif
-    if (sampler->volume_slide_rate != 0)
+    if (sampler->volume_slide_rate != 0 && !sampler->volume_slide_fine)
         apply_volume_slide(sampler);
-    if (sampler->pitch_slide_rate != 0)
+    if (sampler->pitch_slide_on && !sampler->pitch_slide_fine)
         apply_pitch_slide(sampler);
     if (sampler->tone_portamento_on)
         apply_tone_portamento(sampler);
@@ -400,7 +423,6 @@ static void tick(audio_generator_state_t *state, const int tick, const int ticks
 
 static void apply_volume_slide(sampler_state_t *sampler)
 {
-    if (sampler->volume_slide_fine) return;
     int new_volume = sampler->volume + sampler->volume_slide_rate;
     if (new_volume < 0) new_volume = 0;
     if (new_volume > 255) new_volume = 255;
@@ -409,8 +431,15 @@ static void apply_volume_slide(sampler_state_t *sampler)
 
 static void apply_pitch_slide(sampler_state_t *sampler)
 {
-    if (sampler->pitch_slide_fine) return;
-    float new_period = sampler->period + (float) sampler->pitch_slide_rate;
+    float new_period = sampler->period;
+    if (sampler->relative_pitch_bend)
+    {
+        new_period *= sampler->pitch_slide_factor;
+    }
+    else
+    {
+        new_period += (float) sampler->pitch_slide_rate;
+    }
     if (new_period < PERIOD_MIN) new_period = PERIOD_MIN;
     if (new_period > PERIOD_MAX) new_period = PERIOD_MAX;
     sampler->period = new_period;
@@ -418,10 +447,18 @@ static void apply_pitch_slide(sampler_state_t *sampler)
 
 static void apply_tone_portamento(sampler_state_t *sampler)
 {
-    const float slide_rate = (float) sampler->tone_portamento_slide_rate;
-    if (sampler->period < sampler->tone_portamento_target_period)
+    const float slide_rate = (float) sampler->pitch_slide_rate;
+    const bool period_increasing = sampler->period < sampler->tone_portamento_target_period;
+    if (sampler->relative_pitch_bend)
+    {
+        sampler->period *= sampler->pitch_slide_factor;
+    }
+    else
     {
         sampler->period += slide_rate;
+    }
+    if (period_increasing)
+    {
         if (sampler->period > sampler->tone_portamento_target_period)
         {
             sampler->period = sampler->tone_portamento_target_period;
@@ -430,7 +467,6 @@ static void apply_tone_portamento(sampler_state_t *sampler)
     }
     else
     {
-        sampler->period -= slide_rate;
         if (sampler->period < sampler->tone_portamento_target_period)
         {
             sampler->period = sampler->tone_portamento_target_period;
@@ -440,11 +476,11 @@ static void apply_tone_portamento(sampler_state_t *sampler)
     if (sampler->glissando_on)
     {
         const float snapped_period = nearest_note_period(sampler->period, sampler->sample->fine_tuning);
-        sampler->vibrato_period_modulation = snapped_period - sampler->period;
+        sampler->glissando_period_modulation = snapped_period - sampler->period;
     }
     else
     {
-        sampler->vibrato_period_modulation = 0;
+        sampler->glissando_period_modulation = 0;
     }
 }
 

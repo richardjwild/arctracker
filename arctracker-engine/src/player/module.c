@@ -79,6 +79,7 @@ bool module_init(module_t *module, const int default_pattern_length, const int l
     module->default_pattern_length = default_pattern_length;
     module->interpolation_type = LINEAR;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
+    module->relative_pitch_bend = true;
     for (int i = 0; i < module->num_tracks; i++)
     {
         module->tracks[i].panning = 0x80; // Centre

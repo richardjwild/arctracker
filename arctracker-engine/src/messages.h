@@ -93,6 +93,7 @@
 #define MODFILE_INVALID_INTERPOLATION_TYPE "File corrupt: invalid interpolation type"
 #define MODFILE_INVALID_VOLUME_MAPPING "File corrupt: invalid volume mapping"
 #define MODFILE_CORRUPT_INVALID_RESTART_POSITION "File corrupt: invalid restart position"
+#define MODFILE_CORRUPT_INVALID_PITCH_BEND_MODE "File corrupt: invalid pitch bend mode"
 #define INVALID_SEQUENCE_CHUNK_LENGTH "File corrupt: sequence data size does not match tune length"
 #define FAILED_TO_SET_SEQUENCE "Failed to set sequence"
 #define INVALID_TRACK_CHUNK_LENGTH "File corrupt: invalid track data size"

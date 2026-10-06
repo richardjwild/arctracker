@@ -72,7 +72,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->sequence = sequencer_initialise(module, audio_api.info.bouncing);
     player->bouncing = audio_api.info.bouncing;
     player->playback_policy.interpolation_type = module->interpolation_type;
-    player->playback_policy.relative_pitch_bend = false;
+    player->playback_policy.relative_pitch_bend = module->relative_pitch_bend;
     calculate_gain_curve(player->playback_policy.gain_curve, module->volume_mapping_type);
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
