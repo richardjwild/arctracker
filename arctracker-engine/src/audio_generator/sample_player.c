@@ -46,7 +46,7 @@ audio_generator_t init_sampler(
     const player_sample_t *sample,
     const player_sample_slice_t slice,
     const uint8_t volume,
-    const float *gain_curve,
+    const playback_policy_t *playback_policy,
     sampler_state_t *sampler_state)
 {
     if (note_out_of_range(note))
@@ -63,8 +63,8 @@ audio_generator_t init_sampler(
     sampler_state->tone_portamento_on = false;
     sampler_state->tone_portamento_target_period = period;
     sampler_state->tone_portamento_slide_rate = 0;
-    sampler_state->interpolation_type = sample->interpolation_type;
-    sampler_state->gain_curve = gain_curve;
+    sampler_state->interpolation_type = playback_policy->interpolation_type;
+    sampler_state->gain_curve = playback_policy->gain_curve;
     sampler_state->volume = volume;
     sampler_state->volume_slide_rate = 0;
     sampler_state->vibrato_period_modulation = 0.0f;

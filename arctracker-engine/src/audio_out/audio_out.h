@@ -10,7 +10,6 @@ typedef struct
 {
     int num_channels;
     float master_gain;
-    float gain_curve[256];
     float *mono_channel_buffer;
     stereo_frame_t *stereo_channel_buffer;
     stereo_frame_t *output_buffer;

@@ -1,6 +1,7 @@
 #ifndef ARCTRACKER_RESAMPLE_H
 #define ARCTRACKER_RESAMPLE_H
 
+#include "playback_policy.h"
 #include "audio_out/audio_channel.h"
 #include "audio_out/interpolation_type.h"
 
@@ -11,7 +12,6 @@ typedef struct {
     bool sample_repeats;
     int repeat_end;
     int repeat_length;
-    interpolation_type_t interpolation_type;
     const float *sample_data;
 } player_sample_t;
 
@@ -72,7 +72,7 @@ audio_generator_t init_sampler(
     const player_sample_t *sample,
     player_sample_slice_t slice,
     uint8_t volume,
-    const float *gain_curve,
+    const playback_policy_t *playback_policy,
     sampler_state_t *sampler_state
 );
 

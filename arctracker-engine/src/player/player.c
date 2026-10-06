@@ -3,11 +3,12 @@
 #include <math.h>
 #include "sequencer.h"
 #include "commands.h"
+#include "gain_curve.h"
 #include "lfo.h"
 #include "period.h"
 #include "memory/heap.h"
 #include "messages.h"
-#include "../audio_generator/sample_player.h"
+#include "audio_generator/sample_player.h"
 #include "audio_spatialiser/panner.h"
 #include "io/error.h"
 
@@ -38,8 +39,8 @@ static player_track_t *initialise_tracks(int, audio_channel_t *);
 static void initialise_spatialisers(const player_t *player);
 static event_t *get_events(const player_t *);
 static void play_scheduled_notes(const player_t *);
-static void note_on(int, const player_instrument_t *, uint8_t, player_track_t *, const event_t *);
-static audio_generator_t init_audio_generator(int, player_track_t *track, const player_instrument_t *, uint8_t, uint8_t);
+static void note_on(int, const player_instrument_t *, uint8_t, player_track_t *, const event_t *, const playback_policy_t *);
+static audio_generator_t init_audio_generator(int, player_track_t *track, const player_instrument_t *, uint8_t, uint8_t, const playback_policy_t *);
 static sampler_state_t *get_available_sample_player(player_track_t *);
 static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
@@ -70,6 +71,9 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.info.sample_rate);
     player->sequence = sequencer_initialise(module, audio_api.info.bouncing);
     player->bouncing = audio_api.info.bouncing;
+    player->playback_policy.interpolation_type = module->interpolation_type;
+    player->playback_policy.relative_pitch_bend = false;
+    calculate_gain_curve(player->playback_policy.gain_curve, module->volume_mapping_type);
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
     {
@@ -120,7 +124,6 @@ void player_update_instruments(player_t *player)
         }
         player->instruments[i].transpose = instrument.transpose;
         player->instruments[i].default_volume = instrument.default_volume;
-        player->instruments[i].gain_curve = player->audio_out.gain_curve;
         const float base_period = period_for_note(sample.base_note, 1.0f);
         const float phase_increment_per_period = sample.sample_rate * base_period / (float) player->audio_out.api.info.sample_rate;
         player->instruments[i].sample.phase_increment_per_period = phase_increment_per_period;
@@ -129,7 +132,6 @@ void player_update_instruments(player_t *player)
         player->instruments[i].sample.sample_repeats = instrument.repeats;
         player->instruments[i].sample.repeat_end = instrument.repeat_offset + instrument.repeat_length - 1;
         player->instruments[i].sample.repeat_length = instrument.repeat_length;
-        player->instruments[i].sample.interpolation_type = player->audio_out.interpolation_type;
         player->instruments[i].sample.sample_data = sample.sample_data;
         for (int j = 0; j < 256; j++)
         {
@@ -333,7 +335,7 @@ static void process_midi_note_on_command(const player_t *player, const midi_note
         note_off(channel);
         return;
     }
-    note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL);
+    note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL, &player->playback_policy);
 }
 
 static void process_keyboard_note_on_command(const player_t *player, const keyboard_note_on_command_t data)
@@ -346,7 +348,7 @@ static void process_keyboard_note_on_command(const player_t *player, const keybo
         note_off(channel);
         return;
     }
-    note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL);
+    note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL, &player->playback_policy);
 }
 
 static void process_note_off_command(const player_t *player, const note_off_command_t data)
@@ -563,14 +565,14 @@ static void play_scheduled_notes(const player_t *player)
         scheduled_note_t *s = &player->tracks[track].scheduler;
         if (s->scheduled && s->delay == player->tick_scheduler.event_scheduler.ticks)
         {
-            note_on(s->note, s->instrument, s->slice, &player->tracks[track], s->event);
+            note_on(s->note, s->instrument, s->slice, &player->tracks[track], s->event, &player->playback_policy);
             player->tracks[track].current_note = s->note;
             s->scheduled = false;
         }
     }
 }
 
-static void note_on(const int note, const player_instrument_t *instrument, const uint8_t slice_index, player_track_t *track, const event_t *event)
+static void note_on(const int note, const player_instrument_t *instrument, const uint8_t slice_index, player_track_t *track, const event_t *event, const playback_policy_t *playback_policy)
 {
     //
     // The event argument will be NULL when the note-on is due to a user MIDI action. In this case we must use the
@@ -584,14 +586,14 @@ static void note_on(const int note, const player_instrument_t *instrument, const
         else
             volume = track->command_state.volume;
     }
-    track->audio_channel->audio_generator = init_audio_generator(note, track, instrument, slice_index, volume);
+    track->audio_channel->audio_generator = init_audio_generator(note, track, instrument, slice_index, volume, playback_policy);
     if (event != NULL)
     {
         process_track_event_commands(event, instrument, track);
     }
 }
 
-static audio_generator_t init_audio_generator(const int note, player_track_t *track, const player_instrument_t *instrument, const uint8_t slice_index, const uint8_t volume)
+static audio_generator_t init_audio_generator(const int note, player_track_t *track, const player_instrument_t *instrument, const uint8_t slice_index, const uint8_t volume, const playback_policy_t *playback_policy)
 {
     if (!instrument->assigned)
     {
@@ -604,9 +606,8 @@ static audio_generator_t init_audio_generator(const int note, player_track_t *tr
     const int note_to_play = note + instrument->transpose;
     const player_sample_t *sample = &instrument->sample;
     const player_sample_slice_t slice = instrument->sample_slices[slice_index];
-    const float *gain_curve = instrument->gain_curve;
     sampler_state_t *sampler_state = get_available_sample_player(track);
-    return init_sampler(note_to_play, sample, slice, volume, gain_curve, sampler_state);
+    return init_sampler(note_to_play, sample, slice, volume, playback_policy, sampler_state);
 }
 
 static sampler_state_t *get_available_sample_player(player_track_t *track)

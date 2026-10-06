@@ -10,6 +10,7 @@
 #include "audio_out/audio_out.h"
 #include "audio_spatialiser/panner.h"
 #include "ui/player_event_queue.h"
+#include "audio_generator/playback_policy.h"
 
 typedef struct {
     event_t *events;
@@ -54,7 +55,6 @@ typedef struct {
     bool assigned;
     int transpose;
     uint8_t default_volume;
-    float *gain_curve;
     player_sample_slice_t sample_slices[256];
     player_sample_t sample;
 } player_instrument_t;
@@ -90,6 +90,7 @@ typedef struct player {
     audio_channel_t *audio_channels;
     player_track_t *tracks;
     module_t *module;
+    playback_policy_t playback_policy;
     sequence_t sequence;
     pt_loop_state_t loop_state;
     player_instrument_t instruments[NUM_INSTRUMENT_SLOTS + 1];

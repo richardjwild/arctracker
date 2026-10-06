@@ -1,13 +1,9 @@
 #include <string.h>
 #include <stdatomic.h>
 #include "audio_out.h"
-
 #include <math.h>
-
 #include "memory/heap.h"
-#include "src/vidc/vidc.h"
 
-static void calculate_gain_curve(float *, volume_mapping_type_t);
 static bool fill_audio_buffer(audio_out_t *, audio_channel_t *, int);
 static void write_audio_for_channel(const audio_out_t *, audio_channel_t *, int);
 static void mix_to_output_buffer(const stereo_frame_t *, stereo_frame_t *, int, float);
@@ -28,27 +24,8 @@ bool initialise_audio(audio_out_t *audio_out, const audio_api_t audio_api, const
     audio_out->peak_l = 0;
     audio_out->peak_r = 0;
     audio_out->volume_mapping_type = volume_mapping_type;
-    calculate_gain_curve(audio_out->gain_curve, audio_out->volume_mapping_type);
     audio_out->api.info.healthy = true;
     return audio_out->api.init(&audio_api.info);
-}
-
-static void calculate_gain_curve(float *gain_curve, const volume_mapping_type_t volume_mapping)
-{
-    if (volume_mapping == VOLUME_AMIGA)
-    {
-        for (int vol = 0; vol <= 255; vol++)
-            gain_curve[vol] = (float) vol / 255.0f;
-    }
-    else
-    {
-        gain_curve[0] = 0.0f;
-        for (int vol = 1; vol <= 255; vol++)
-        {
-            const float exponent = (float) vol / 255.0f;
-            gain_curve[vol] = (powf(256.0f, exponent) - 1.0f) / 255.0f;
-        }
-    }
 }
 
 bool write_audio_data(audio_out_t *audio_out, audio_channel_t *channels, int samples_to_write)
