@@ -31,7 +31,6 @@ static const player_instrument_t *get_player_instrument(const player_t *, int);
 static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
-static void process_instrument_updated_command(player_t *player, instrument_updated_command_t data);
 static void set_current_frame(player_t *, bool, bool);
 static void define_implicit_loop_start(player_t *);
 static bool player_step(player_t *player);
@@ -329,7 +328,7 @@ static void process_player_command(player_t *player, const player_command_t comm
             process_track_mute_state_changed_command(player, command.data.track_mute);
             break;
         case INSTRUMENT_UPDATED:
-            process_instrument_updated_command(player, command.data.instrument_updated);
+            player_update_instrument(player, command.data.instrument_updated.instrument_no);
             break;
         default:
             break;
@@ -421,11 +420,6 @@ static void process_track_mute_state_changed_command(const player_t *player, con
     const bool new_state = player->module->tracks[track].muted;
     audio_channel_t *channel = player->tracks[track].audio_channel;
     channel->muted = new_state;
-}
-
-static void process_instrument_updated_command(player_t *player, const instrument_updated_command_t data)
-{
-    player_update_instrument(player, data.instrument_no);
 }
 
 static audio_channel_t *initialise_audio_channels(const module_t *module)
