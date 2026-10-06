@@ -283,6 +283,9 @@ static bool decode_multiple_effects(const uint32_t *raw, instrument_t *instrumen
             decoded_effects[slot] = decoded_effect;
             continue;
         }
+        //
+        // The bullshit below is only for the 06 (play end part of sample) command.
+        //
         uint8_t most_significant_bits = 0;
         uint8_t least_significant_bits = 0;
         if (slot < 3)
