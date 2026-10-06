@@ -209,6 +209,13 @@ void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r)
     *peak_r = (float) r / 65535.0f;
 }
 
+void player_initial_bpm_changed(player_t *player)
+{
+    player_queue_command(player, (player_command_t) {
+        .cmd_type = INITIAL_BPM_CHANGED,
+    });
+}
+
 void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
 {
     player->current_bpm = beats_per_minute;
@@ -349,6 +356,9 @@ static void process_player_command(player_t *player, const player_command_t comm
             break;
         case PLAYBACK_POLICY_UPDATED:
             synchronise_playback_policy(player);
+            break;
+        case INITIAL_BPM_CHANGED:
+            player_set_bpm(player, player->module->initial_bpm);
             break;
         default:
             break;

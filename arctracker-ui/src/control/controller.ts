@@ -293,7 +293,6 @@ async function processCommands() {
         void module.setTrackCount(command.trackCount);
         break;
       case "Edit tempo":
-        if (transport.playing()) transport.togglePlay();
         tempo.showDialog();
         break;
       case "Set tempo":

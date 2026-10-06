@@ -873,13 +873,11 @@ api_result_t arctracker_edit_set_tempo(arctracker_t *arctracker, const uint8_t l
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
-        return failure(PLAYER_PLAYING);
     if (beats_per_minute > 0 && lines_per_beat == 0)
         return failure(TEMPO_UNDEFINED);
     module_set_lines_per_beat(arctracker->module, lines_per_beat);
     module_set_initial_bpm(arctracker->module, beats_per_minute);
-    player_set_bpm(arctracker->playback.player, beats_per_minute);
+    player_initial_bpm_changed(arctracker->playback.player);
     return SUCCESS;
 }
 
