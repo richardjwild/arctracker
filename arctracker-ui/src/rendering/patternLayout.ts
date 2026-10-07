@@ -17,6 +17,7 @@ export type GridViewportFit = {
   playheadRowHeight: number;
   linesToShow: number;
   lineOffset: number;
+  rowOffset: number;
   firstVisibleTrack: number;
   lastVisibleTrack: number;
   playheadLocationOnScreen: number;
@@ -112,6 +113,7 @@ export const patternLayout = {
       playheadRowHeight,
       linesToShow,
       lineOffset,
+      rowOffset: 0,
       firstVisibleTrack,
       lastVisibleTrack,
       playheadLocationOnScreen: Math.floor(linesToShow / 2),
