@@ -91,10 +91,19 @@ export const patternLayout = {
     // Calculate tracks to show, with the constraint that the cursor must always be visible.
     //
     const cursorTrack = useStore.getState().editorState.cursorPosition.track;
+    //
+    // Is the cursor off the left-hand side or not fully visible?
+    //
     if (cursorTrack < firstVisibleTrack) {
       firstVisibleTrack = cursorTrack;
+      trackOffset = 0;
+    } else if (cursorTrack === firstVisibleTrack && trackOffset < 0) {
+      trackOffset = 0;
     }
-    let displayedWidth = layout.gutterWidth + layout.getEventWidth(firstVisibleTrack);
+    //
+    // Calculate how many tracks may fit in the available space to the right.
+    //
+    let displayedWidth = layout.gutterWidth + layout.getEventWidth(firstVisibleTrack) + trackOffset;
     let lastVisibleTrack = firstVisibleTrack;
     let lastVisibleTrackPartial = false;
     for (let track = firstVisibleTrack + 1; track < numTracks; track++) {
@@ -106,43 +115,41 @@ export const patternLayout = {
       }
     }
     //
-    // Is the cursor off the right-hand edge or not fully visible?
+    // Is the cursor off the right-hand side or not fully visible?
     //
     if (cursorTrack > lastVisibleTrack || (cursorTrack === lastVisibleTrack && lastVisibleTrackPartial)) {
-      // Clamp the cursor track against the right-hand edge and work backwards.
+      // Assume the cursor track is hard up against the right-hand side and work backwards.
       lastVisibleTrack = cursorTrack;
-      displayedWidth = layout.gutterWidth + layout.getEventWidth(lastVisibleTrack);
-      for (let track = lastVisibleTrack - 1; track >= 0; track--) {
+      displayedWidth = layout.gutterWidth;
+      for (let track = lastVisibleTrack; track >= 0; track--) {
         firstVisibleTrack = track;
         displayedWidth += layout.getEventWidth(track);
         if (displayedWidth >= viewportSize.width) {
           break;
         }
       }
+      // Set the track offset so that the cursor track is hard up against the right-hand side.
+      trackOffset = viewportSize.width - displayedWidth;
     }
     //
-    // Do we have room for any more tracks to the left?
+    // Do we have empty space on the right-hand side?
     //
-    if (firstVisibleTrack > 0 && displayedWidth < viewportSize.width)
-    {
-      for (let track = firstVisibleTrack - 1; track >= 0; track--) {
-        firstVisibleTrack = track;
-        displayedWidth += layout.getEventWidth(firstVisibleTrack);
-        if (displayedWidth > viewportSize.width) {
-          break;
-        }
+    if (viewportSize.width > displayedWidth) {
+      // Fill as much of the empty space as we can.
+      const spaceToFill = viewportSize.width - displayedWidth;
+      trackOffset += spaceToFill;
+      while (firstVisibleTrack > 0 && trackOffset > 0) {
+        firstVisibleTrack -= 1;
+        trackOffset -= layout.getEventWidth(firstVisibleTrack);
       }
-    }
-    if (cursorTrack === firstVisibleTrack) {
-      trackOffset = 0;
-    } else {
-      trackOffset = (displayedWidth > viewportSize.width) ? viewportSize.width - displayedWidth : 0;
+      // If the viewport is wider than the pattern, put the empty space on the right-hand side.
+      trackOffset = Math.min(trackOffset, 0);
     }
     return {
       playheadRowHeight,
       linesToShow,
       lineOffset,
-      trackOffset: trackOffset,
+      trackOffset,
       firstVisibleTrack,
       lastVisibleTrack,
       playheadLocationOnScreen: Math.floor(linesToShow / 2),

@@ -173,7 +173,7 @@ export default function PatternView() {
       viewportSize,
       horizontalScroll.current,
     );
-    // Horizontal scroll may have been updated by the new pattern renderer, remember it for next time.
+    // The horizontal scroll may have been updated by the new pattern renderer, remember it for next time.
     horizontalScroll.current = patternRenderer.getHorizontalScroll();
     return () => {
       const { track, field } = useStore.getState().editorState.cursorPosition;
