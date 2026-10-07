@@ -189,7 +189,7 @@ export default function PatternView() {
     }
   };
 
-  const handlePointer = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     event.preventDefault();
     const container = containerRef.current;
     if (!container) return;
@@ -212,10 +212,6 @@ export default function PatternView() {
       case "trackHeader":
         commands.toggleTrackMute(clickedPosition.track);
         break;
-      case "trackFooter":
-        console.log(`You clicked on the footer of track ${clickedPosition.track}`);
-        // I guess this is where I need to initiate my pan drag interaction?
-        break;
       case "patternEvent":
         if (!playing) {
           commands.patternGridJumpToLocation(
@@ -226,6 +222,28 @@ export default function PatternView() {
         }
         break;
     }
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    const container = containerRef.current;
+    if (!container) return;
+    const boundingRect = event.currentTarget.getBoundingClientRect();
+    const pointerX = event.clientX - boundingRect.left;
+    const pointerY = event.clientY - boundingRect.top;
+    const playheadIndex = getPatternIndex();
+    const clickedPosition = patternLayout.pointerClickedOn(
+      pointerX,
+      pointerY,
+      { width: container.clientWidth, height: container.clientHeight },
+      playheadIndex,
+      numTracks,
+      effectsDisplayed,
+      patternLength,
+    );
+    if (!clickedPosition || clickedPosition.objectType !== "trackFooter") return;
+    console.log(`Pointer down on the footer of track ${clickedPosition.track}`);
+    // Okay, *this* is where I need to initiate my pan drag interaction.
   };
 
   useEffect(() => {
@@ -357,7 +375,8 @@ export default function PatternView() {
         className="uiArea"
         ref={canvasRef}
         onWheel={handleWheel}
-        onClick={handlePointer}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
         width="1024"
         height="1024"
       />
