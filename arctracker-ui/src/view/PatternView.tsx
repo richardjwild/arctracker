@@ -66,8 +66,8 @@ export default function PatternView() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const wheelDeltaRef = useRef(0);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const { patternNo, patternLength } = useSequencePosition();
 
   const coloursAtPlayhead = useMemo<Colours>(() => ({
