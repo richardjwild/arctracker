@@ -18,6 +18,7 @@ import { patternEvents } from "../editing/patternEvents.ts";
 type PanDrag = {
   track: number;
   pointerId: number;
+  panning: number;
 };
 
 const wheelScrollThreshold = 40;
@@ -68,6 +69,7 @@ export default function PatternView() {
   const playing = useStore((state) => state.transportState.playing);
   const effectsDisplayed = useStore((state) => state.effectsDisplayed);
   const cursorTrack = useStore((state) => state.editorState.cursorPosition.track);
+  const trackPanning = useStore((state) => state.trackPanning);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
@@ -251,6 +253,7 @@ export default function PatternView() {
       panDragTrack.current = {
         track: clickedPosition.track,
         pointerId: event.pointerId,
+        panning: trackPanning[clickedPosition.track],
       };
       event.currentTarget.setPointerCapture(event.pointerId);
     }
@@ -258,7 +261,10 @@ export default function PatternView() {
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (event.pointerId !== panDragTrack.current?.pointerId) return;
-    console.log(`Pan track ${panDragTrack.current.track} by ${event.movementX}`);
+    const drag = panDragTrack.current;
+    const newPanning = Math.max(1, Math.min(255, drag.panning + event.movementX));
+    drag.panning = newPanning;
+    void engine.setPanning(drag.track, newPanning);
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
