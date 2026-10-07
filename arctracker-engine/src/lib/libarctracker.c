@@ -768,8 +768,6 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
-        return failure(PLAYER_PLAYING);
     if (sample_info == NULL)
         return failure(BAD_BUFFER);
     int sample_index;
