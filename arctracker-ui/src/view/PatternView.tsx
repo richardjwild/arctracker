@@ -23,6 +23,8 @@ type PanDrag = {
 
 const wheelScrollThreshold = 40;
 const panDragSensitivity = 1.75;
+const panCentre = 128;
+const panDetentWidth = 10;
 
 function cssProperty(name: string): string {
   return getComputedStyle(document.documentElement)
@@ -266,7 +268,10 @@ export default function PatternView() {
     const drag = panDragTrack.current;
     const newPanning = Math.max(1, Math.min(255, drag.panning + event.movementX * panDragSensitivity));
     drag.panning = newPanning;
-    void engine.setPanning(drag.track, Math.round(newPanning));
+    const panningWithDetent = newPanning >= panCentre - panDetentWidth && newPanning <= panCentre + panDetentWidth
+      ? panCentre
+      : newPanning;
+    void engine.setPanning(drag.track, Math.round(panningWithDetent));
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
