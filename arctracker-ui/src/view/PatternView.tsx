@@ -241,9 +241,13 @@ export default function PatternView() {
       effectsDisplayed,
       patternLength,
     );
-    if (!clickedPosition || clickedPosition.objectType !== "trackFooter") return;
-    console.log(`Pointer down on the footer of track ${clickedPosition.track}`);
-    // Okay, *this* is where I need to initiate my pan drag interaction.
+    if (clickedPosition && clickedPosition.objectType === "trackFooter") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    console.log(event.movementX);
   };
 
   useEffect(() => {
@@ -377,6 +381,7 @@ export default function PatternView() {
         onWheel={handleWheel}
         onClick={handleClick}
         onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
         width="1024"
         height="1024"
       />
