@@ -255,6 +255,7 @@ export default function PatternView() {
         pointerId: event.pointerId,
         panning: trackPanning[clickedPosition.track],
       };
+      document.body.classList.add("sliderDragging");
       event.currentTarget.setPointerCapture(event.pointerId);
     }
   };
@@ -270,6 +271,7 @@ export default function PatternView() {
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (event.pointerId !== panDragTrack.current?.pointerId) return;
     panDragTrack.current = null;
+    document.body.classList.remove("sliderDragging");
   };
 
   useEffect(() => {
