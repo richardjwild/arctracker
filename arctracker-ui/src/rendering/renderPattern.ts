@@ -11,7 +11,7 @@ import { hexadecimal } from "./hexadecimal.ts";
 import { PatternSelection, selection } from "../editing/selection.ts";
 import { Effect, PatternEvent, patternEvents, PatternLine } from "../editing/patternEvents.ts";
 import { notes } from "./notes.ts";
-import { GridViewportFit, PatternLayout, patternLayout } from "./patternLayout.ts";
+import { GridViewportFit, HorizontalScroll, PatternLayout, patternLayout } from "./patternLayout.ts";
 
 type ViewportSize = { width: number; height: number };
 
@@ -101,6 +101,7 @@ export class PatternRenderer {
     numTracks: number,
     effectsDisplayed: number[],
     viewportSize: ViewportSize,
+    horizontalScroll: HorizontalScroll,
   ) {
     this.ctx = ctx;
     this.coloursAtPlayhead = coloursAtPlayhead;
@@ -111,7 +112,13 @@ export class PatternRenderer {
     this.effectsDisplayed = effectsDisplayed;
     this.viewportSize = viewportSize;
     this.layout = patternLayout.getPatternLayout(viewportSize, effectsDisplayed);
-    this.gridViewportFit = patternLayout.calculateGridViewportFit(viewportSize, this.layout, numTracks);
+    this.gridViewportFit = patternLayout.calculateGridViewportFit(
+      viewportSize,
+      this.layout,
+      numTracks,
+      horizontalScroll.firstVisibleTrack,
+      horizontalScroll.trackOffset,
+    );
     this.ctx.textBaseline = "hanging";
   }
 
@@ -126,9 +133,17 @@ export class PatternRenderer {
       this.renderPatternLines(view);
       this.renderTrackHeaders(view);
       this.renderTrackFooters(view);
+      this.renderRowNumberLane();
     } catch (err) {
       this.renderError(err);
     }
+  }
+
+  public getHorizontalScroll(): HorizontalScroll {
+    return {
+      firstVisibleTrack: this.gridViewportFit.firstVisibleTrack,
+      trackOffset: this.gridViewportFit.trackOffset,
+    };
   }
 
   private clearCanvas() {
@@ -156,30 +171,30 @@ export class PatternRenderer {
   }
 
   private renderTrackLanes() {
-    let x = this.renderRowNumberLane() + this.gridViewportFit.rowOffset;
+    let x = this.layout.gutterWidth + this.gridViewportFit.trackOffset;
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackLane(x, track);
     }
   }
 
   private renderTrackHeaders(view: RenderPatternView) {
-    let x = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
-    this.withFillStyle(this.colours().trackHeaderNotMutedBg)
-      .fillRect(0, 0, x, this.layout.trackHeaderHeight);
+    let x = this.layout.gutterWidth + this.gridViewportFit.trackOffset;
     this.withFont(this.trackHeaderFont);
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackHeader(x, track, view.trackMuteState[track]);
     }
+    this.withFillStyle(this.colours().trackHeaderNotMutedBg)
+      .fillRect(0, 0, this.layout.gutterWidth, this.layout.trackHeaderHeight);
   }
 
   private renderTrackFooters(view: RenderPatternView) {
-    let x = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
-    this.withFillStyle(this.colours().trackFooterNotMutedBg)
-      .fillRect(0, this.layout.viewportSize.height - this.layout.trackFooterHeight, x, this.layout.trackFooterHeight);
+    let x = this.layout.gutterWidth + this.gridViewportFit.trackOffset;
     this.withFont(this.trackHeaderFont);
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackFooter(view, x, track, view.trackMuteState[track]);
     }
+    this.withFillStyle(this.colours().trackFooterNotMutedBg)
+      .fillRect(0, this.layout.viewportSize.height - this.layout.trackFooterHeight, this.layout.gutterWidth, this.layout.trackFooterHeight);
   }
 
   private renderPlayhead() {
@@ -192,7 +207,7 @@ export class PatternRenderer {
   private renderSelection(view: RenderPatternView) {
     const bounds = selection.patternSelectionBounds();
     if (!bounds) return;
-    let boxLeft = this.layout.rowNumberWidth + this.gridViewportFit.rowOffset;
+    let boxLeft = this.layout.rowNumberWidth + this.gridViewportFit.trackOffset;
     for (let track = this.gridViewportFit.firstVisibleTrack; track < bounds.left; track++)
       boxLeft += this.layout.getEventWidth(track);
     let boxWidth = 0;
@@ -210,7 +225,7 @@ export class PatternRenderer {
 
   private renderCursor(view: RenderPatternView) {
     const cursorTrack = view.cursorTrack;
-    let x = this.layout.leftPadding + this.layout.rowNumberWidth + this.gridViewportFit.rowOffset;
+    let x = this.layout.leftPadding + this.layout.rowNumberWidth + this.gridViewportFit.trackOffset;
     for (let track = this.gridViewportFit.firstVisibleTrack; track < cursorTrack; track++) {
       x += this.layout.getEventWidth(track);
     }
@@ -275,18 +290,13 @@ export class PatternRenderer {
     }
   }
 
-  private renderRowNumberLane(): number {
-    const laneWidth =
-      this.layout.leftPadding +
-      this.layout.rowNumberWidth -
-      this.layout.glyphWidth;
+  private renderRowNumberLane() {
     this.withStrokeStyle(this.colours().trackLaneSeparator)
       .withLineWidth(1)
       .strokePath([
-        { x: laneWidth, y: 0 },
-        { x: laneWidth, y: this.viewportSize.height },
+        { x: this.layout.gutterWidth, y: 0 },
+        { x: this.layout.gutterWidth, y: this.viewportSize.height },
       ]);
-    return laneWidth;
   }
 
   private renderTrackLane(trackX: number, track: number): number {
@@ -387,7 +397,7 @@ export class PatternRenderer {
     if (line) {
       const rowNumber = Number(line.row).toString().padStart(3, " ");
       const eventY = atPlayhead ? y + this.layout.playheadPadding : y;
-      let x = this.layout.leftPadding + this.layout.rowNumberWidth + this.gridViewportFit.rowOffset;
+      let x = this.layout.leftPadding + this.layout.rowNumberWidth + this.gridViewportFit.trackOffset;
       let track = 0;
       for (const event of line.events) {
         x += this.renderEvent(view, track, event, x, eventY, atPlayhead);

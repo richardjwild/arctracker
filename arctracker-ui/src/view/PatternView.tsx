@@ -12,7 +12,7 @@ import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
 import useSequencePosition from "../hooks/useSequencePosition.ts";
 import { commands } from "../control/commands.ts";
-import { patternLayout } from "../rendering/patternLayout.ts";
+import { HorizontalScroll, patternLayout } from "../rendering/patternLayout.ts";
 import { patternEvents } from "../editing/patternEvents.ts";
 
 type PanDrag = {
@@ -78,6 +78,7 @@ export default function PatternView() {
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const wheelDeltaRef = useRef(0);
   const panDragTrack = useRef<PanDrag | null>(null);
+  const horizontalScroll = useRef<HorizontalScroll>({ firstVisibleTrack: 0, trackOffset: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const { patternNo, patternLength } = useSequencePosition();
 
@@ -170,7 +171,10 @@ export default function PatternView() {
       numTracks,
       effectsDisplayed,
       viewportSize,
+      horizontalScroll.current,
     );
+    // Horizontal scroll may have been updated by the new pattern renderer, remember it for next time.
+    horizontalScroll.current = patternRenderer.getHorizontalScroll();
     return () => {
       const { track, field } = useStore.getState().editorState.cursorPosition;
       patternRenderer.renderPattern({
@@ -213,6 +217,7 @@ export default function PatternView() {
       pointerX,
       pointerY,
       { width: container.clientWidth, height: container.clientHeight },
+      horizontalScroll.current,
       playheadIndex,
       numTracks,
       effectsDisplayed,
@@ -247,6 +252,7 @@ export default function PatternView() {
       pointerX,
       pointerY,
       { width: container.clientWidth, height: container.clientHeight },
+      horizontalScroll.current,
       playheadIndex,
       numTracks,
       effectsDisplayed,
