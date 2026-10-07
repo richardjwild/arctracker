@@ -136,7 +136,7 @@ export class PatternRenderer {
   }
 
   private renderBeatLines(view: RenderPatternView) {
-    let y = this.layout.trackHeaderHeight;
+    let y = this.layout.trackHeaderHeight + this.gridViewportFit.lineOffset;
     let width = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
     for (let track = this.gridViewportFit.firstVisibleTrack; track <= this.gridViewportFit.lastVisibleTrack; track++) {
       width += this.layout.getEventWidth(track);
@@ -163,23 +163,27 @@ export class PatternRenderer {
   }
 
   private renderTrackHeaders(view: RenderPatternView) {
-    this.withFont(this.trackHeaderFont);
     let x = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
+    this.withFillStyle(this.colours().trackHeaderNotMutedBg)
+      .fillRect(0, 0, x, this.layout.trackHeaderHeight);
+    this.withFont(this.trackHeaderFont);
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackHeader(x, track, view.trackMuteState[track]);
     }
   }
 
   private renderTrackFooters(view: RenderPatternView) {
-    this.withFont(this.trackHeaderFont);
     let x = this.layout.leftPadding + this.layout.rowNumberWidth - this.layout.glyphWidth;
+    this.withFillStyle(this.colours().trackFooterNotMutedBg)
+      .fillRect(0, this.layout.viewportSize.height - this.layout.trackFooterHeight, x, this.layout.trackFooterHeight);
+    this.withFont(this.trackHeaderFont);
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackFooter(view, x, track, view.trackMuteState[track]);
     }
   }
 
   private renderPlayhead() {
-    const y = this.layout.trackHeaderHeight
+    const y = this.layout.trackHeaderHeight + this.gridViewportFit.lineOffset
       + this.gridViewportFit.playheadLocationOnScreen * this.layout.rowHeight;
     this.withFillStyle(this.colours().playheadBackground)
       .fillRect(0, y, this.viewportSize.width, this.layout.rowHeight + this.layout.playheadPadding * 2);
@@ -196,6 +200,7 @@ export class PatternRenderer {
       boxWidth += this.layout.getEventWidth(track);
     const rowOffsetFromPlayhead = bounds.top - view.playheadIndex;
     const top = (this.gridViewportFit.playheadLocationOnScreen + rowOffsetFromPlayhead)
+      + this.gridViewportFit.lineOffset
       * this.layout.rowHeight
       + this.layout.trackHeaderHeight
       + this.layout.playheadPadding;
@@ -210,7 +215,7 @@ export class PatternRenderer {
     for (let track = this.gridViewportFit.firstVisibleTrack; track < cursorTrack; track++) {
       x += this.layout.getEventWidth(track);
     }
-    const y = this.layout.trackHeaderHeight
+    const y = this.layout.trackHeaderHeight + this.gridViewportFit.lineOffset
       + (this.gridViewportFit.playheadLocationOnScreen * this.layout.rowHeight)
       + this.layout.playheadPadding;
     if (view.editing) this.renderEditCursor(x, y, cursorTrack);
@@ -259,7 +264,7 @@ export class PatternRenderer {
 
   private renderPatternLines(view: RenderPatternView) {
     this.withFont(this.patternDataFont);
-    let y = this.layout.trackHeaderHeight;
+    let y = this.layout.trackHeaderHeight + this.gridViewportFit.lineOffset;
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = view.playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
       const patternLine =

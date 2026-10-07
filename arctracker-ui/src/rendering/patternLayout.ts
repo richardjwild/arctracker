@@ -16,6 +16,7 @@ export type PatternLayout = {
 export type GridViewportFit = {
   playheadRowHeight: number;
   linesToShow: number;
+  lineOffset: number;
   firstVisibleTrack: number;
   lastVisibleTrack: number;
   playheadLocationOnScreen: number;
@@ -71,7 +72,10 @@ export const patternLayout = {
       layout.trackHeaderHeight -
       layout.trackFooterHeight -
       playheadRowHeight;
-    const linesToShow = 1 + Math.floor(availableHeight / layout.rowHeight);
+    const spaceEachSide = availableHeight / 2;
+    const linesEachSide = Math.ceil(spaceEachSide / layout.rowHeight);
+    const linesToShow = 1 + linesEachSide * 2;
+    const lineOffset = (availableHeight - linesEachSide * 2 * layout.rowHeight) / 2;
     //
     // Calculate tracks to show, with the constraint that the cursor must always be visible.
     //
@@ -107,6 +111,7 @@ export const patternLayout = {
     return {
       playheadRowHeight,
       linesToShow,
+      lineOffset,
       firstVisibleTrack,
       lastVisibleTrack,
       playheadLocationOnScreen: Math.floor(linesToShow / 2),
