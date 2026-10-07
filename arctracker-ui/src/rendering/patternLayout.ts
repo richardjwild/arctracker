@@ -152,6 +152,12 @@ export const patternLayout = {
         track,
       };
     }
+    if (pointerY >= viewportSize.height - layout.trackFooterHeight) {
+      return {
+        objectType: "trackFooter",
+        track,
+      };
+    }
     let patternIndex = null;
     const playheadY =
       layout.trackHeaderHeight +

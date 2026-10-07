@@ -212,6 +212,10 @@ export default function PatternView() {
       case "trackHeader":
         commands.toggleTrackMute(clickedPosition.track);
         break;
+      case "trackFooter":
+        console.log(`You clicked on the footer of track ${clickedPosition.track}`);
+        // I guess this is where I need to initiate my pan drag interaction?
+        break;
       case "patternEvent":
         if (!playing) {
           commands.patternGridJumpToLocation(
