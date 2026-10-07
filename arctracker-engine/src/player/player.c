@@ -19,6 +19,7 @@ static const int NULL_INSTRUMENT_INDEX = NUM_INSTRUMENT_SLOTS;
 
 static void synchronise_instrument(player_t *, int);
 static void synchronise_playback_policy(player_t *player);
+static void synchronise_track_panning(player_t *player, uint8_t track);
 static void init_null_instrument(player_t *);
 static void calculate_fine_tuning(void);
 static bool player_tick(player_t *);
@@ -216,6 +217,18 @@ void player_initial_bpm_changed(player_t *player)
     });
 }
 
+void player_initial_track_panning_changed(player_t *player, const uint8_t track)
+{
+    player_queue_command(player, (player_command_t) {
+        .cmd_type = INITIAL_PANNING_CHANGED,
+        .data = (player_command_data_t) {
+            .track_panning = (track_panning_command_t) {
+                .track = track,
+            },
+        },
+    });
+}
+
 void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
 {
     player->current_bpm = beats_per_minute;
@@ -271,6 +284,13 @@ static void synchronise_playback_policy(player_t *player)
         .interpolation_type = module->interpolation_type,
     };
     calculate_gain_curve(player->playback_policy.gain_curve, module->volume_mapping_type);
+}
+
+static void synchronise_track_panning(player_t *player, const uint8_t track)
+{
+    const uint8_t panning = player->module->tracks[track].panning;
+    audio_spatialiser_t *spatialiser = &player->tracks[track].audio_channel->audio_spatialiser;
+    spatialiser->set_amount(&spatialiser->state, panning);
 }
 
 static void init_null_instrument(player_t *player)
@@ -359,6 +379,9 @@ static void process_player_command(player_t *player, const player_command_t comm
             break;
         case INITIAL_BPM_CHANGED:
             player_set_bpm(player, player->module->initial_bpm);
+            break;
+        case INITIAL_PANNING_CHANGED:
+            synchronise_track_panning(player, command.data.track_panning.track);
             break;
         default:
             break;

@@ -178,6 +178,8 @@ void module_set_lines_per_beat(module_t *module, uint8_t lines_per_beat);
 
 void module_set_initial_bpm(module_t *module, uint8_t beats_per_minute);
 
+void module_set_initial_panning(module_t *module, uint8_t track, uint8_t panning);
+
 void module_destroy(module_t *module);
 
 #endif //ARCTRACKER_MODULE_H

@@ -879,6 +879,19 @@ api_result_t arctracker_edit_set_tempo(arctracker_t *arctracker, const uint8_t l
     return SUCCESS;
 }
 
+api_result_t arctracker_edit_set_panning(arctracker_t *arctracker, const uint8_t track, const uint8_t panning)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (track >= arctracker->module->num_tracks)
+        return failure(INVALID_TRACK_NUMBER);
+    module_set_initial_panning(arctracker->module, track, panning);
+    player_initial_track_panning_changed(arctracker->playback.player, track);
+    return SUCCESS;
+}
+
 api_result_t arctracker_destroy(arctracker_t *arctracker)
 {
     if (arctracker == NULL)

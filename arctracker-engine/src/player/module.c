@@ -533,6 +533,11 @@ void module_set_initial_bpm(module_t *module, const uint8_t beats_per_minute)
     module->initial_bpm = beats_per_minute;
 }
 
+void module_set_initial_panning(module_t *module, const uint8_t track, const uint8_t panning)
+{
+    module->tracks[track].panning = panning == 0 ? 0x80 : panning;
+}
+
 void module_destroy(module_t *module)
 {
     for (int i = 0; i < module->sample_slots; i++)

@@ -134,6 +134,8 @@ void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r);
 
 void player_initial_bpm_changed(player_t *player);
 
+void player_initial_track_panning_changed(player_t *player, uint8_t track);
+
 void player_set_bpm(player_t *player, uint8_t beats_per_minute);
 
 #endif //ARCTRACKER_PLAY_MOD_H

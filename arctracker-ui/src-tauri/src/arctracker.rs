@@ -1163,6 +1163,23 @@ impl Arctracker {
         }
     }
 
+    pub fn edit_set_panning(
+        &mut self,
+        track: u8,
+        panning: u8,
+    ) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_set_panning(self.handle, track, panning)
+        };
+        if result.success {
+            Ok(())
+        } else {
+            Err(ArctrackerError {
+                message: c_string_to_rust(&result.error_message),
+            })
+        }
+    }
+
     pub fn destroy(&mut self) {
         if !self.handle.is_null() {
             unsafe {
