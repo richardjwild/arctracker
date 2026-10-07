@@ -10,6 +10,8 @@
 #define MAX_LEN_TUNE_NAME_DSKT 64
 #define MAX_LEN_AUTHOR_DSKT 64
 #define MAX_LEN_SAMPLE_NAME_DSKT 32
+#define AMIGA_VOLUME_FLAG 1
+#define AMIGA_PORTAMENTO_FLAG 2
 
 static const char *DTT_FILE_IDENTIFIER = "DskT";
 static const uint8_t VOLUME_VALUE_MASK = 0x7f;
@@ -52,7 +54,7 @@ typedef struct
     char author[MAX_LEN_AUTHOR_DSKT];
     // Flags:
     // bit 0 - Amiga volume on (1) or off (0)
-    // bit 1 - Amiga portamento on (1) or off (0) (TODO)
+    // bit 1 - Amiga portamento on (1) or off (0)
     uint32_t flags;
     uint32_t num_tracks;
     uint32_t tune_length;
@@ -129,7 +131,8 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     module->interpolation_type = NONE;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
     module->restart_position = (int) file_format->restart;
-    module->volume_mapping_type = file_format->flags & 0x1 ? VOLUME_AMIGA : VOLUME_ARCHIMEDES;
+    module->volume_mapping_type = file_format->flags & AMIGA_VOLUME_FLAG ? VOLUME_AMIGA : VOLUME_ARCHIMEDES;
+    module->relative_pitch_bend = (file_format->flags & AMIGA_PORTAMENTO_FLAG) == 0;
     strncpy(module->name, file_format->name, MAX_LEN_TUNE_NAME_DSKT);
     strncpy(module->author, file_format->author, MAX_LEN_AUTHOR_DSKT);
     for (int track = 0; track < module->num_tracks; track++)
@@ -280,6 +283,9 @@ static bool decode_multiple_effects(const uint32_t *raw, instrument_t *instrumen
             decoded_effects[slot] = decoded_effect;
             continue;
         }
+        //
+        // The bullshit below is only for the 06 (play end part of sample) command.
+        //
         uint8_t most_significant_bits = 0;
         uint8_t least_significant_bits = 0;
         if (slot < 3)

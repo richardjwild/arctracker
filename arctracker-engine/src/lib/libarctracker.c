@@ -307,7 +307,7 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     if (arctracker->playback.player == NULL)
         return failure(PLAYER_INIT_FAILED);
     pthread_t audio_thread;
-    int err = pthread_create(&audio_thread, NULL, run_player, arctracker->playback.player);
+    const int err = pthread_create(&audio_thread, NULL, run_player, arctracker->playback.player);
     if (err != 0)
     {
         error(strerror(err));
@@ -722,8 +722,6 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
-        return failure(PLAYER_PLAYING);
     if (instrument_update.assigned)
     {
         if (instrument_update.sample_index >= arctracker->module->sample_slots)
@@ -760,7 +758,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
     if (!result.success)
         return failure(result.error_message);
     editor_update_sample(arctracker->module, instrument_update.sample_index, instrument_update.base_note, instrument_update.fine_tuning);
-    player_update_instruments(arctracker->playback.player);
+    player_instrument_changed(arctracker->playback.player, slot);
     return SUCCESS;
 }
 
@@ -793,7 +791,8 @@ api_result_t arctracker_edit_set_module_meta_data(
     const char *author,
     const int default_pattern_length,
     const ui_interpolation_type_t interpolation_type,
-    const ui_volume_mapping_type_t volume_mapping_type)
+    const ui_volume_mapping_type_t volume_mapping_type,
+    const bool relative_pitch_bend)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -812,45 +811,35 @@ api_result_t arctracker_edit_set_module_meta_data(
     const edit_result_t result = editor_set_module_title(arctracker->module, name, author, default_pattern_length);
     if (!result.success)
         return failure(result.error_message);
-    bool restart_required = false;
+    bool playback_policy_changed = false;
     if (interpolation_type == ARCTRACKER && arctracker->module->interpolation_type == NONE)
     {
         arctracker->module->interpolation_type = LINEAR;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     else if (interpolation_type == ARCHIMEDES && arctracker->module->interpolation_type == LINEAR)
     {
         arctracker->module->interpolation_type = NONE;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     if (volume_mapping_type == UI_VOLUME_ARCHIMEDES && arctracker->module->volume_mapping_type == VOLUME_AMIGA)
     {
         arctracker->module->volume_mapping_type = VOLUME_ARCHIMEDES;
-        restart_required = true;
+        playback_policy_changed = true;
     }
     else if (volume_mapping_type == UI_VOLUME_AMIGA && arctracker->module->volume_mapping_type == VOLUME_ARCHIMEDES)
     {
         arctracker->module->volume_mapping_type = VOLUME_AMIGA;
-        restart_required = true;
+        playback_policy_changed = true;
     }
-    if (restart_required)
+    if (relative_pitch_bend != arctracker->module->relative_pitch_bend)
     {
-        api_result_t player_result = SUCCESS;
-        player_restore_state_t player_state = {0};
-        bool restore = false;
-        if (arctracker->playback.thread_active)
-        {
-            player_state = player_get_restore_state(arctracker->playback.player);
-            restore = true;
-            player_result = arctracker_player_shutdown(arctracker);
-        }
-        if (!player_result.success)
-            return player_result;
-        arctracker->playback_audio_api.info.interpolation_type = arctracker->module->interpolation_type;
-        player_result = arctracker_player_start(arctracker);
-        if (restore && player_result.success)
-            player_restore_state(arctracker->playback.player, player_state);
-        return player_result;
+        arctracker->module->relative_pitch_bend = relative_pitch_bend;
+        playback_policy_changed = true;
+    }
+    if (playback_policy_changed)
+    {
+        player_playback_policy_changed(arctracker->playback.player);
     }
     return SUCCESS;
 }
@@ -884,13 +873,11 @@ api_result_t arctracker_edit_set_tempo(arctracker_t *arctracker, const uint8_t l
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
-        return failure(PLAYER_PLAYING);
     if (beats_per_minute > 0 && lines_per_beat == 0)
         return failure(TEMPO_UNDEFINED);
     module_set_lines_per_beat(arctracker->module, lines_per_beat);
     module_set_initial_bpm(arctracker->module, beats_per_minute);
-    player_set_bpm(arctracker->playback.player, beats_per_minute);
+    player_initial_bpm_changed(arctracker->playback.player);
     return SUCCESS;
 }
 

@@ -58,6 +58,6 @@ export const pattern = {
         },
       });
     }
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   }
 };

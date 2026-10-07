@@ -38,7 +38,6 @@ export default function SampleEditDialog() {
   const instrumentEditing =
     useStore((state) => state.editorState.editMode) === "instrument";
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
-  const [draftModified, setDraftModified] = useState(false);
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
   const loseFocus = () => modalRef.current?.focus();
@@ -59,17 +58,15 @@ export default function SampleEditDialog() {
         ? emptyInstrument()
         : instruments[instrumentIndex];
     setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
-    setDraftModified(false);
   }, [instruments, instrumentIndex, instrumentEditing]);
 
   const updateDraftInstrument = (updatedDraftInstrument: Instrument) => {
     setDraftInstrument(updatedDraftInstrument);
-    setDraftModified(true);
   }
 
   useEffect(() => {
     syncInputStateWithDraft();
-    if (draftModified) {
+    if (editInstrument.draftInstrumentModified()) {
       void editInstrument.auditionInstrument();
     }
   }, [draftInstrument]);

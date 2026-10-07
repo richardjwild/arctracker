@@ -1,6 +1,7 @@
 #ifndef ARCTRACKER_RESAMPLE_H
 #define ARCTRACKER_RESAMPLE_H
 
+#include "playback_policy.h"
 #include "audio_out/audio_channel.h"
 #include "audio_out/interpolation_type.h"
 
@@ -11,7 +12,6 @@ typedef struct {
     bool sample_repeats;
     int repeat_end;
     int repeat_length;
-    interpolation_type_t interpolation_type;
     const float *sample_data;
 } player_sample_t;
 
@@ -40,27 +40,35 @@ typedef struct {
 } pt_arpeggiator_state_t;
 
 struct sampler_state {
-    const player_sample_t *sample;
+    const float *sample_data;
+    float phase_increment_per_period;
+    double fine_tuning;
+    uint8_t volume;
     int sample_end;
+    bool sample_repeats;
+    bool repeat_cleared;
+    int clear_repeat_delay;
+    int repeat_length;
+    int repeat_end;
     interpolation_type_t interpolation_type;
+    bool relative_pitch_bend;
     float phase_accumulator;
     float period;
     float vibrato_period_modulation;
     float arpeggio_period_modulation;
-    bool glissando_on;
+    float glissando_period_modulation;
+    int volume_modulation;
+    bool pitch_slide_on;
     int pitch_slide_rate;
+    float pitch_slide_factor;
     bool pitch_slide_fine;
     bool tone_portamento_on;
     float tone_portamento_target_period;
-    int tone_portamento_slide_rate;
-    uint8_t volume;
+    bool glissando_on;
     int volume_slide_rate;
     bool volume_slide_fine;
     int silence_delay;
     int retrigger_delay;
-    bool repeat_cleared;
-    int clear_repeat_delay;
-    int volume_modulation;
     pt_arpeggiator_state_t arpeggio;
     lfo_effect_t vibrato;
     lfo_effect_t tremolo;
@@ -72,7 +80,7 @@ audio_generator_t init_sampler(
     const player_sample_t *sample,
     player_sample_slice_t slice,
     uint8_t volume,
-    const float *gain_curve,
+    const playback_policy_t *playback_policy,
     sampler_state_t *sampler_state
 );
 

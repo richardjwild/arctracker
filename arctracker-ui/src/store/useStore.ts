@@ -39,7 +39,14 @@ interface AppStore {
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
-  setModuleMetaData: (name: string, author: string, defaultPatternLength: number, interpolationType: InterpolationType, volumeMappingType: VolumeMappingType) => void;
+  setModuleMetaData: (
+    name: string,
+    author: string,
+    defaultPatternLength: number,
+    interpolationType: InterpolationType,
+    volumeMappingType: VolumeMappingType,
+    relativePitchBend: boolean,
+  ) => void;
   updateTempo: (linesPerBeat: number, beatsPerMinute: number) => void;
   updateTracks: (numTracks: number) => void;
   updatePatterns: (numPatterns: number, patternLengths: number[]) => void;
@@ -83,6 +90,7 @@ const initialModule: Module = {
   beatsPerMinute: 0,
   interpolationType: "ARCTRACKER",
   volumeMapping: "ARCHIMEDES",
+  relativePitchBend: true,
 };
 
 const initialTransportState: TransportState = {
@@ -228,6 +236,7 @@ export const useStore = create<AppStore>((set) => ({
     defaultPatternLength: number,
     interpolationType: InterpolationType,
     volumeMapping: VolumeMappingType,
+    relativePitchBend: boolean,
   ) =>
     set((state) => ({
       module: {
@@ -237,6 +246,7 @@ export const useStore = create<AppStore>((set) => ({
         defaultPatternLength,
         interpolationType,
         volumeMapping,
+        relativePitchBend,
       },
     })),
 

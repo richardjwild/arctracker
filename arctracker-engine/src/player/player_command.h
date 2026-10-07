@@ -13,6 +13,9 @@ typedef enum cmd_type {
     TOGGLE_LOOP = 6,
     SET_MASTER_GAIN = 7,
     TRACK_MUTE_STATE_CHANGED = 8,
+    INSTRUMENT_UPDATED = 9,
+    PLAYBACK_POLICY_UPDATED = 10,
+    INITIAL_BPM_CHANGED = 11,
 } cmd_type_t;
 
 typedef struct {
@@ -50,6 +53,10 @@ typedef struct {
     int track;
 } track_mute_command_t;
 
+typedef struct {
+    int instrument_no;
+} instrument_updated_command_t;
+
 typedef union {
     no_data_command_t no_data;
     seek_command_t seek;
@@ -58,6 +65,7 @@ typedef union {
     note_off_command_t note_off;
     master_gain_command_t master_gain;
     track_mute_command_t track_mute;
+    instrument_updated_command_t instrument_updated;
 } player_command_data_t;
 
 typedef struct player_command {

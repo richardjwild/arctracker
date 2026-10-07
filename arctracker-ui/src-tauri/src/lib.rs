@@ -377,10 +377,11 @@ fn edit_set_module_meta_data(
     default_pattern_length: u16,
     interpolation_type: InterpolationType,
     volume_mapping_type: VolumeMappingType,
+    relative_pitch_bend: bool,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .edit_set_module_meta_data(name, author, default_pattern_length, interpolation_type, volume_mapping_type)
+        .edit_set_module_meta_data(name, author, default_pattern_length, interpolation_type, volume_mapping_type, relative_pitch_bend)
         .map_err(|e| e.message)?;
     Ok(())
 }

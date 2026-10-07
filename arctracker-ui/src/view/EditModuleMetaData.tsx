@@ -3,7 +3,12 @@ import "./EditModuleMetaData.css";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
 import { useEffect, useState } from "react";
-import { InterpolationType, ModuleMetaData, moduleMetaData, VolumeMappingType } from "../editing/moduleMetaData.ts";
+import {
+  InterpolationType,
+  ModuleMetaData,
+  moduleMetaData,
+  VolumeMappingType
+} from "../editing/moduleMetaData.ts";
 import { commands } from "../control/commands.ts";
 import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
@@ -17,6 +22,7 @@ const emptyDraft: ModuleMetaData = {
   defaultPatternLength: 64,
   interpolationType: "ARCTRACKER",
   volumeMappingType: "ARCHIMEDES",
+  relativePitchBend: true,
 };
 
 export default function EditModuleMetaData() {
@@ -37,6 +43,7 @@ export default function EditModuleMetaData() {
       defaultPatternLength: module.defaultPatternLength,
       interpolationType: module.interpolationType,
       volumeMappingType: module.volumeMapping,
+      relativePitchBend: module.relativePitchBend,
     });
     setDefaultPatternLengthInput(module.defaultPatternLength.toString());
   }, [module, editing]);
@@ -89,6 +96,13 @@ export default function EditModuleMetaData() {
     setDraftModuleMetaData({
       ...(draftModuleMetaData || emptyDraft),
       volumeMappingType,
+    })
+  }
+
+  const setRelativePitchBend = (relativePitchBend: boolean) => {
+    setDraftModuleMetaData({
+      ...(draftModuleMetaData || emptyDraft),
+      relativePitchBend,
     })
   }
 
@@ -201,6 +215,35 @@ export default function EditModuleMetaData() {
           />
         <label htmlFor="volumeMappingInputAmiga">
           {message("amigaVolumeMapping")}
+        </label>
+      </div>
+      <div className="pitchBendTypeLabel">
+        <label htmlFor="pitchBendInput">
+          {message("pitchBendTypeLabel")}
+        </label>
+      </div>
+      <div className="pitchBendTypeEdit">
+        <input
+          type="radio"
+          name="pitchBendInput"
+          id="pitchBendInputRelative"
+          value="relative"
+          checked={draftModuleMetaData?.relativePitchBend}
+          onClick={() => setRelativePitchBend(true)}
+          />
+        <label htmlFor="pitchBendInputRelative">
+          {message("relativePitchBend")}
+        </label>
+        <input
+          type="radio"
+          name="pitchBendInput"
+          id="pitchBendInputFixed"
+          value="fixed"
+          checked={!draftModuleMetaData?.relativePitchBend}
+          onClick={() => setRelativePitchBend(false)}
+          />
+        <label htmlFor="pitchBendInputFixed">
+          {message("fixedPitchBend")}
         </label>
       </div>
       <div className="saveCloseButtons uiArea padded rounded">

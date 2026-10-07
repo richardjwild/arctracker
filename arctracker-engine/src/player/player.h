@@ -10,6 +10,7 @@
 #include "audio_out/audio_out.h"
 #include "audio_spatialiser/panner.h"
 #include "ui/player_event_queue.h"
+#include "audio_generator/playback_policy.h"
 
 typedef struct {
     event_t *events;
@@ -54,7 +55,6 @@ typedef struct {
     bool assigned;
     int transpose;
     uint8_t default_volume;
-    float *gain_curve;
     player_sample_slice_t sample_slices[256];
     player_sample_t sample;
 } player_instrument_t;
@@ -90,6 +90,7 @@ typedef struct player {
     audio_channel_t *audio_channels;
     player_track_t *tracks;
     module_t *module;
+    playback_policy_t playback_policy;
     sequence_t sequence;
     pt_loop_state_t loop_state;
     player_instrument_t instruments[NUM_INSTRUMENT_SLOTS + 1];
@@ -119,6 +120,10 @@ void player_shutdown(player_t *);
 
 void player_sequence_changed(player_t *, const module_t *);
 
+void player_instrument_changed(player_t *, int instrument_no);
+
+void player_playback_policy_changed(player_t *);
+
 player_restore_state_t player_get_restore_state(const player_t *);
 
 void player_restore_state(player_t *player, player_restore_state_t state);
@@ -126,6 +131,8 @@ void player_restore_state(player_t *player, player_restore_state_t state);
 void player_destroy(player_t *);
 
 void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r);
+
+void player_initial_bpm_changed(player_t *player);
 
 void player_set_bpm(player_t *player, uint8_t beats_per_minute);
 

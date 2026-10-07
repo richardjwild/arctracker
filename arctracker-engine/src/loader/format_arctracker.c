@@ -73,7 +73,7 @@
  *   - u8 interpolation type (0=native, 1=Archimedes)                        *
  *   - u8 volume mapping (0=native/Archimedes, 1=Amiga)                      *
  *   - u16 restart position (0-65534)                                        *
- *   - u8 reserved for future use                                            *
+ *   - u8 portamento mode (0-linear, 1-relative to pitch)                    *
  *   - u8 reserved for future use                                            *
  *                                                                           *
  * Track chunk                                                               *
@@ -432,6 +432,7 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         goto read_module_metadata_failed;
     }
     uint16_t restart_position = 0;
+    uint8_t pitch_bend_mode = 0;
     if (data_size > META_CHUNK_LEN_MIN && data_size <= META_CHUNK_LEN_MAX)
     {
         restart_position = read_u16_le(meta_data + 12 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
@@ -440,10 +441,17 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
             error(MODFILE_CORRUPT_INVALID_RESTART_POSITION);
             goto read_module_metadata_failed;
         }
+        pitch_bend_mode = read_u8(meta_data + 14 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+        if (pitch_bend_mode != 0 && pitch_bend_mode != 1)
+        {
+            error(MODFILE_CORRUPT_INVALID_PITCH_BEND_MODE);
+            goto read_module_metadata_failed;
+        }
     }
     module->default_pattern_length = default_pattern_length;
     module->interpolation_type = interpolation_type == 0 ? LINEAR : NONE;
     module->volume_mapping_type = volume_mapping == 0 ? VOLUME_ARCHIMEDES : VOLUME_AMIGA;
+    module->relative_pitch_bend = pitch_bend_mode == 1;
     module->restart_position = restart_position;
     return module;
 
@@ -837,7 +845,7 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u8(fp, module->interpolation_type == LINEAR ? 0 : 1)) return false;
     if (!write_u8(fp, module->volume_mapping_type == VOLUME_ARCHIMEDES ? 0 : 1)) return false;
     if (!write_u16_le(fp, module->restart_position)) return false;
-    if (!write_u8(fp, 0)) return false;
+    if (!write_u8(fp, module->relative_pitch_bend ? 1 : 0)) return false;
     if (!write_u8(fp, 0)) return false;
     return true;
 }

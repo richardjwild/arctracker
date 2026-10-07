@@ -35,16 +35,29 @@ type HistoryEntry = {
 
 const undoStack: HistoryEntry[] = [];
 const redoStack: HistoryEntry[] = [];
+const editModeStack: EditMode[] = [];
 let nextRevisionId = 1;
 let currentRevisionId = 0;
 let savedRevisionId = 0;
 
 export const editor = {
   setEditMode: (editMode: EditMode) => {
+    const currentMode = useStore.getState().editorState.editMode;
+    if (currentMode !== "none") editModeStack.push(currentMode);
+    if (editMode === "none") editModeStack.length = 0;
     const editorState = useStore.getState().editorState;
     useStore.getState().setEditorState({
       ...editorState,
       editMode,
+    });
+  },
+
+  restorePreviousEditMode: () => {
+    const previousMode = editModeStack.pop() || "none";
+    const editorState = useStore.getState().editorState;
+    useStore.getState().setEditorState({
+      ...editorState,
+      editMode: previousMode,
     });
   },
 

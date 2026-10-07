@@ -121,7 +121,8 @@ api_result_t arctracker_edit_set_module_meta_data(
     const char *author,
     int default_pattern_length,
     ui_interpolation_type_t interpolation_type,
-    ui_volume_mapping_type_t volume_mapping_type);
+    ui_volume_mapping_type_t volume_mapping_type,
+    bool relative_pitch_bend);
 
 api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, int num_tracks);
 

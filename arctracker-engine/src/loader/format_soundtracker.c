@@ -1292,6 +1292,7 @@ static module_t *read_module(mapped_file_t file)
     module->master_gain = 0.25f;
     module->interpolation_type = NONE;
     module->volume_mapping_type = VOLUME_AMIGA;
+    module->relative_pitch_bend = false;
 
     for (int track = 0; track < module->num_tracks; track++)
     {

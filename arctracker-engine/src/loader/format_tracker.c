@@ -110,6 +110,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     module->default_pattern_length = 64;
     module->interpolation_type = NONE;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
+    module->relative_pitch_bend = false;
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
     {
         error("Modfile corrupt - STER chunk not found");

@@ -1,7 +1,6 @@
 import { editor } from "./editor.ts";
 import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
-import { transport } from "../transport/transport.ts";
 
 export type InterpolationType = "ARCTRACKER" | "ARCHIMEDES";
 
@@ -13,18 +12,18 @@ export type ModuleMetaData = {
   defaultPatternLength: number;
   interpolationType: InterpolationType;
   volumeMappingType: VolumeMappingType;
+  relativePitchBend: boolean;
 };
 
 export const moduleMetaData = {
   editing: () => useStore.getState().editorState.editMode === "moduleMetaData",
 
   showDialog: () => {
-    if (transport.playing()) transport.togglePlay();
     editor.setEditMode("moduleMetaData");
   },
 
   hideDialog: () => {
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   },
 
   setModuleMetaData() {
@@ -36,7 +35,8 @@ export const moduleMetaData = {
       module.author === draftModuleMetaData.author &&
       module.defaultPatternLength === draftModuleMetaData.defaultPatternLength &&
       module.interpolationType === draftModuleMetaData.interpolationType &&
-      module.volumeMapping === draftModuleMetaData.volumeMappingType
+      module.volumeMapping === draftModuleMetaData.volumeMappingType &&
+      module.relativePitchBend === draftModuleMetaData.relativePitchBend
     )
       return;
     void editor.applyEdit({
@@ -47,6 +47,7 @@ export const moduleMetaData = {
           draftModuleMetaData.defaultPatternLength,
           draftModuleMetaData.interpolationType,
           draftModuleMetaData.volumeMappingType,
+          draftModuleMetaData.relativePitchBend,
         );
         useStore.getState().setModuleMetaData(
           draftModuleMetaData.moduleName,
@@ -54,6 +55,7 @@ export const moduleMetaData = {
           draftModuleMetaData.defaultPatternLength,
           draftModuleMetaData.interpolationType,
           draftModuleMetaData.volumeMappingType,
+          draftModuleMetaData.relativePitchBend,
         );
         return true;
       },
@@ -64,6 +66,7 @@ export const moduleMetaData = {
           module.defaultPatternLength,
           module.interpolationType,
           module.volumeMapping,
+          module.relativePitchBend,
         );
         useStore.getState().setModuleMetaData(
           module.name,
@@ -71,6 +74,7 @@ export const moduleMetaData = {
           module.defaultPatternLength,
           module.interpolationType,
           module.volumeMapping,
+          module.relativePitchBend,
         );
       },
     });

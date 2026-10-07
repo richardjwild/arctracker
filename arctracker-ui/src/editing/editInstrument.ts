@@ -46,6 +46,13 @@ export function emptyInstrument(): Instrument {
   };
 }
 
+async function selectInstrument(instrumentNumber: number) {
+  const { setSelectedInstrument } = useStore.getState();
+  if (editInstrument.draftInstrumentModified())
+    await editInstrument.restoreInstrument();
+  setSelectedInstrument(instrumentNumber);
+}
+
 export const editInstrument = {
   instrumentEditing: () => {
     return useStore.getState().editorState.editMode === "instrument";
@@ -53,30 +60,30 @@ export const editInstrument = {
 
   firstInstrument: () => {
     const instruments = useStore.getState().module.instruments;
-    const { setSelectedInstrument } = useStore.getState();
-    if (instruments.length > 0) setSelectedInstrument(0);
+    if (instruments.length > 0)
+      void selectInstrument(0);
   },
 
   lastInstrument: () => {
     const instruments = useStore.getState().module.instruments;
-    const { setSelectedInstrument } = useStore.getState();
-    if (instruments.length > 0) setSelectedInstrument(instruments.length - 1);
+    if (instruments.length > 0)
+      void selectInstrument(instruments.length - 1);
   },
 
   nextInstrument: () => {
     const instruments = useStore.getState().module.instruments;
-    const { selectedInstrument, setSelectedInstrument } = useStore.getState();
+    const { selectedInstrument } = useStore.getState();
     if (
       selectedInstrument !== null &&
       selectedInstrument < instruments.length - 1
     )
-      setSelectedInstrument(selectedInstrument + 1);
+      void selectInstrument(selectedInstrument + 1);
   },
 
   previousInstrument: () => {
-    const { selectedInstrument, setSelectedInstrument } = useStore.getState();
+    const { selectedInstrument } = useStore.getState();
     if (selectedInstrument !== null && selectedInstrument > 0)
-      setSelectedInstrument(selectedInstrument - 1);
+      void selectInstrument(selectedInstrument - 1);
   },
 
   showDialog: () => {
@@ -145,6 +152,24 @@ export const editInstrument = {
       },
     };
     await editor.applyEdit(editCommand);
+  },
+
+  draftInstrumentModified: (): boolean => {
+    const selectedInstrument = useStore.getState().selectedInstrument;
+    if (selectedInstrument === null) return false;
+    const instrument =
+      useStore.getState().module.instruments[selectedInstrument];
+    const draftInstrument = useStore.getState().draftInstrument;
+    if (instrument.assigned !== draftInstrument.assigned) return true;
+    if (instrument.name !== draftInstrument.name) return true;
+    if (instrument.defaultVolume !== draftInstrument.defaultVolume) return true;
+    if (instrument.transpose !== draftInstrument.transpose) return true;
+    if (instrument.repeats !== draftInstrument.repeats) return true;
+    if (instrument.repeatStart !== draftInstrument.repeatStart) return true;
+    if (instrument.repeatEnd !== draftInstrument.repeatEnd) return true;
+    if (instrument.sample.sampleIndex !== draftInstrument.sample.sampleIndex) return true;
+    if (instrument.sample.baseNote !== draftInstrument.sample.baseNote) return true;
+    return instrument.sample.fineTuning !== draftInstrument.sample.fineTuning;
   },
 
   restoreInstrument: async () => {
@@ -222,6 +247,6 @@ export const editInstrument = {
   },
 
   closeDialog: () => {
-    editor.setEditMode("none");
+    editor.restorePreviousEditMode();
   },
 };
