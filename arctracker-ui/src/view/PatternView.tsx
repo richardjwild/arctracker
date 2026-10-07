@@ -15,6 +15,11 @@ import { commands } from "../control/commands.ts";
 import { patternLayout } from "../rendering/patternLayout.ts";
 import { patternEvents } from "../editing/patternEvents.ts";
 
+type PanDrag = {
+  track: number;
+  pointerId: number;
+};
+
 const wheelScrollThreshold = 40;
 
 function cssProperty(name: string): string {
@@ -67,6 +72,7 @@ export default function PatternView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const wheelDeltaRef = useRef(0);
+  const panDragTrack = useRef<PanDrag | null>(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const { patternNo, patternLength } = useSequencePosition();
 
@@ -242,12 +248,22 @@ export default function PatternView() {
       patternLength,
     );
     if (clickedPosition && clickedPosition.objectType === "trackFooter") {
+      panDragTrack.current = {
+        track: clickedPosition.track,
+        pointerId: event.pointerId,
+      };
       event.currentTarget.setPointerCapture(event.pointerId);
     }
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    console.log(event.movementX);
+    if (event.pointerId !== panDragTrack.current?.pointerId) return;
+    console.log(`Pan track ${panDragTrack.current.track} by ${event.movementX}`);
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerId !== panDragTrack.current?.pointerId) return;
+    panDragTrack.current = null;
   };
 
   useEffect(() => {
@@ -382,6 +398,8 @@ export default function PatternView() {
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         width="1024"
         height="1024"
       />
