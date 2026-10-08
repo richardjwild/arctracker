@@ -11,6 +11,6 @@ bool is_tone_portamento(const event_t *event);
 
 uint8_t get_note_delay(const event_t *);
 
-uint8_t get_sample_slice(const event_t *);
+uint8_t get_sample_slice(const event_t *, effect_memory_t *);
 
 #endif //ARCTRACKER_EFFECTS_H

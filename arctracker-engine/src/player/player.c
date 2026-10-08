@@ -609,7 +609,7 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
             track->scheduler = (scheduled_note_t) {
                 .scheduled = true,
                 .delay = get_note_delay(event),
-                .slice = get_sample_slice(event),
+                .slice = get_sample_slice(event, &track->effect_memory),
                 .instrument = instrument,
                 .note = note,
                 .event = event,

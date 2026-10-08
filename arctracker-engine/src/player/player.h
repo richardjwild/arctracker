@@ -38,6 +38,7 @@ typedef struct {
     uint8_t vibrato_depth;
     uint8_t tremolo_speed;
     uint8_t tremolo_depth;
+    uint8_t sample_slice;
 } effect_memory_t;
 
 typedef struct {
