@@ -8,31 +8,32 @@ use crate::arctracker::{
     UiPeakLevels,
 };
 pub use crate::state::AppState;
+use crate::state::PendingOpenRequest;
 use std::sync::Arc;
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
-fn get_available_outputs(state: tauri::State<Arc<AppState>>) -> Result<Vec<AudioDeviceInfo>, String> {
+fn get_available_outputs(state: State<Arc<AppState>>) -> Result<Vec<AudioDeviceInfo>, String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_available_outputs()
 }
 
 #[tauri::command]
-fn use_output(state: tauri::State<Arc<AppState>>, device_index: i32, name: String, host_api_name: String) -> Result<(), String> {
+fn use_output(state: State<Arc<AppState>>, device_index: i32, name: String, host_api_name: String) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.use_output(device_index, &name, &host_api_name).map_err(|e| e)?;
     Ok(())
 }
 
 #[tauri::command]
-fn use_default_output(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn use_default_output(state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.use_default_output().map_err(|e| e)?;
     Ok(())
 }
 
 #[tauri::command]
-fn get_available_midi_devices(state: tauri::State<Arc<AppState>>) -> Result<Vec<MidiDeviceInfo>, String> {
+fn get_available_midi_devices(state: State<Arc<AppState>>) -> Result<Vec<MidiDeviceInfo>, String> {
     let mut midi = state.midi.lock().unwrap();
     if let Some(midi) = midi.as_mut() {
         let midi_devices = midi.get_available_midi_devices().map_err(|e| e)?;
@@ -42,7 +43,7 @@ fn get_available_midi_devices(state: tauri::State<Arc<AppState>>) -> Result<Vec<
 }
 
 #[tauri::command]
-fn use_midi_device(state: tauri::State<Arc<AppState>>, device_name: String) -> Result<(), String> {
+fn use_midi_device(state: State<Arc<AppState>>, device_name: String) -> Result<(), String> {
     let mut midi = state.midi.lock().unwrap();
     if let Some(midi) = midi.as_mut() {
         midi.use_midi_device(&device_name).map_err(|e| e)?;
@@ -51,7 +52,7 @@ fn use_midi_device(state: tauri::State<Arc<AppState>>, device_name: String) -> R
 }
 
 #[tauri::command]
-fn set_midi_playback_channel(state: tauri::State<Arc<AppState>>, channel: i32) {
+fn set_midi_playback_channel(state: State<Arc<AppState>>, channel: i32) {
     let mut midi = state.midi.lock().unwrap();
     if let Some(midi) = midi.as_mut() {
         midi.set_playback_channel(channel);
@@ -59,7 +60,7 @@ fn set_midi_playback_channel(state: tauri::State<Arc<AppState>>, channel: i32) {
 }
 
 #[tauri::command]
-fn set_midi_playback_instrument(state: tauri::State<Arc<AppState>>, instrument: u8) {
+fn set_midi_playback_instrument(state: State<Arc<AppState>>, instrument: u8) {
     let mut midi = state.midi.lock().unwrap();
     if let Some(midi) = midi.as_mut() {
         midi.set_playback_instrument(instrument);
@@ -67,13 +68,13 @@ fn set_midi_playback_instrument(state: tauri::State<Arc<AppState>>, instrument: 
 }
 
 #[tauri::command]
-fn current_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+fn current_module(state: State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.current_module()
 }
 
 #[tauri::command]
-fn load_module(path: String, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+fn load_module(path: String, state: State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
     let info = tracker.load_module_with_info(&path).map_err(|e| e)?;
     tracker.start().map_err(|e| e.message)?;
@@ -81,7 +82,7 @@ fn load_module(path: String, state: tauri::State<Arc<AppState>>) -> Result<Modul
 }
 
 #[tauri::command]
-fn create_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+fn create_module(state: State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
     let info = tracker.create_module(default_module_params()).map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
@@ -89,7 +90,7 @@ fn create_module(state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
 }
 
 #[tauri::command]
-fn create_module_using_defaults(params: NewModuleParams, state: tauri::State<Arc<AppState>>) -> Result<Module, String> {
+fn create_module_using_defaults(params: NewModuleParams, state: State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
     let info = tracker.create_module(params).map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
@@ -100,7 +101,7 @@ fn create_module_using_defaults(params: NewModuleParams, state: tauri::State<Arc
 fn save_module(
     path: String,
     format: i32,
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.save_module(&path, format)?;
@@ -108,7 +109,7 @@ fn save_module(
 }
 
 #[tauri::command]
-fn restart_player(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn restart_player(state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.shutdown().map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
@@ -116,7 +117,7 @@ fn restart_player(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn poll_playback_events(state: tauri::State<Arc<AppState>>) -> Result<Vec<PlayerEvent>, String> {
+fn poll_playback_events(state: State<Arc<AppState>>) -> Result<Vec<PlayerEvent>, String> {
     let mut tracker = state
         .tracker
         .lock()
@@ -125,7 +126,7 @@ fn poll_playback_events(state: tauri::State<Arc<AppState>>) -> Result<Vec<Player
 }
 
 #[tauri::command]
-fn poll_export_events(state: tauri::State<Arc<AppState>>) -> Result<Vec<PlayerEvent>, String> {
+fn poll_export_events(state: State<Arc<AppState>>) -> Result<Vec<PlayerEvent>, String> {
     let mut tracker = state
         .tracker
         .lock()
@@ -134,14 +135,14 @@ fn poll_export_events(state: tauri::State<Arc<AppState>>) -> Result<Vec<PlayerEv
 }
 
 #[tauri::command]
-fn toggle_play(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn toggle_play(state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.toggle_play();
     Ok(())
 }
 
 #[tauri::command]
-fn toggle_loop(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn toggle_loop(state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.toggle_loop();
     Ok(())
@@ -149,7 +150,7 @@ fn toggle_loop(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
 
 #[tauri::command]
 fn seek(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     new_sequence_pos: i32,
     new_pattern_pos: i32,
 ) -> Result<(), String> {
@@ -159,7 +160,7 @@ fn seek(
 }
 
 #[tauri::command]
-fn toggle_track_mute(state: tauri::State<Arc<AppState>>, track: i32) -> Result<(), String> {
+fn toggle_track_mute(state: State<Arc<AppState>>, track: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.toggle_track_mute(track);
     Ok(())
@@ -167,7 +168,7 @@ fn toggle_track_mute(state: tauri::State<Arc<AppState>>, track: i32) -> Result<(
 
 #[tauri::command]
 fn set_effects_displayed(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     track: i32,
     effects_displayed: i32,
 ) -> Result<(), String> {
@@ -178,7 +179,7 @@ fn set_effects_displayed(
 
 #[tauri::command]
 fn get_player_snapshot(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     displayed_pattern_no: Option<u32>,
     num_tracks: i32,
 ) -> UiPlayerSnapshot {
@@ -187,7 +188,7 @@ fn get_player_snapshot(
 }
 
 #[tauri::command]
-fn get_and_reset_peak_levels(state: tauri::State<Arc<AppState>>) -> UiPeakLevels {
+fn get_and_reset_peak_levels(state: State<Arc<AppState>>) -> UiPeakLevels {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_and_reset_peak_levels()
 }
@@ -197,7 +198,7 @@ fn get_pattern(
     pattern_no: i32,
     num_lines: i32,
     num_tracks: i32,
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
 ) -> Vec<PatternLine> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_pattern(pattern_no, num_lines, num_tracks)
@@ -220,34 +221,34 @@ fn default_export_path(module_path: String) -> String {
 }
 
 #[tauri::command]
-fn export_audio(export_path: String, state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn export_audio(export_path: String, state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.export_audio(&export_path).map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn export_sample(instrument_no: i32, export_path: String, state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn export_sample(instrument_no: i32, export_path: String, state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.export_sample(instrument_no, &export_path).map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn get_export_state(state: tauri::State<Arc<AppState>>) -> UiExportState {
+fn get_export_state(state: State<Arc<AppState>>) -> UiExportState {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.get_export_state()
 }
 
 #[tauri::command]
-fn export_cleanup(state: tauri::State<Arc<AppState>>) -> Result<(), String> {
+fn export_cleanup(state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.export_cleanup().map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(), String> {
+fn keyboard_note_on(state: State<Arc<AppState>>, note: i32) -> Result<(), String> {
     let mut midi = state.midi.lock().unwrap();
     if let Some(midi) = midi.as_mut() {
         midi.keyboard_note_on(note);
@@ -256,7 +257,7 @@ fn keyboard_note_on(state: tauri::State<Arc<AppState>>, note: i32) -> Result<(),
 }
 
 #[tauri::command]
-fn set_master_gain(state: tauri::State<Arc<AppState>>, master_gain: f32) -> Result<(), String> {
+fn set_master_gain(state: State<Arc<AppState>>, master_gain: f32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.set_master_gain(master_gain);
     Ok(())
@@ -264,7 +265,7 @@ fn set_master_gain(state: tauri::State<Arc<AppState>>, master_gain: f32) -> Resu
 
 #[tauri::command]
 fn edit_get_event(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     pattern_no: i32,
     pattern_index: i32,
     track: i32,
@@ -278,7 +279,7 @@ fn edit_get_event(
 
 #[tauri::command]
 fn edit_set_event(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     pattern_no: i32,
     pattern_index: i32,
     track: i32,
@@ -293,7 +294,7 @@ fn edit_set_event(
 
 #[tauri::command]
 fn edit_get_sequence(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     expected_sequence_len: i32,
 ) -> Result<Vec<i32>, String> {
     let mut tracker = state.tracker.lock().unwrap();
@@ -305,7 +306,7 @@ fn edit_get_sequence(
 
 #[tauri::command]
 fn edit_set_sequence(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     new_sequence: Vec<i32>,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
@@ -317,7 +318,7 @@ fn edit_set_sequence(
 
 #[tauri::command]
 fn edit_create_pattern(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     pattern_length: i32,
 ) -> Result<i32, String> {
     let mut tracker = state.tracker.lock().unwrap();
@@ -328,7 +329,7 @@ fn edit_create_pattern(
 }
 
 #[tauri::command]
-fn edit_delete_pattern(state: tauri::State<Arc<AppState>>, pattern_no: i32) -> Result<(), String> {
+fn edit_delete_pattern(state: State<Arc<AppState>>, pattern_no: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
         .edit_delete_pattern(pattern_no)
@@ -338,7 +339,7 @@ fn edit_delete_pattern(state: tauri::State<Arc<AppState>>, pattern_no: i32) -> R
 
 #[tauri::command]
 fn edit_set_pattern_length(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     pattern_no: i32,
     new_length: i32,
 ) -> Result<(), String> {
@@ -351,7 +352,7 @@ fn edit_set_pattern_length(
 
 #[tauri::command]
 fn edit_update_instrument(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     instrument_index: u8,
     instrument_update: InstrumentUpdate,
 ) -> Result<(), String> {
@@ -363,7 +364,7 @@ fn edit_update_instrument(
 }
 
 #[tauri::command]
-fn edit_load_sample(state: tauri::State<Arc<AppState>>, path: String) -> Result<Sample, String> {
+fn edit_load_sample(state: State<Arc<AppState>>, path: String) -> Result<Sample, String> {
     let mut tracker = state.tracker.lock().unwrap();
     let sample = tracker.edit_load_sample(&path).map_err(|e| e.message)?;
     Ok(sample)
@@ -371,7 +372,7 @@ fn edit_load_sample(state: tauri::State<Arc<AppState>>, path: String) -> Result<
 
 #[tauri::command]
 fn edit_set_module_meta_data(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     name: String,
     author: String,
     default_pattern_length: u16,
@@ -387,7 +388,7 @@ fn edit_set_module_meta_data(
 }
 
 #[tauri::command]
-fn edit_set_num_tracks(state: tauri::State<Arc<AppState>>, num_tracks: i32) -> Result<(), String> {
+fn edit_set_num_tracks(state: State<Arc<AppState>>, num_tracks: i32) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
         .edit_set_num_tracks(num_tracks)
@@ -397,7 +398,7 @@ fn edit_set_num_tracks(state: tauri::State<Arc<AppState>>, num_tracks: i32) -> R
 
 #[tauri::command]
 fn edit_set_tempo(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     lines_per_beat: u8,
     beats_per_minute: u8,
 ) -> Result<(), String> {
@@ -410,13 +411,20 @@ fn edit_set_tempo(
 
 #[tauri::command]
 fn edit_set_panning(
-    state: tauri::State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     track: u8,
     panning: u8,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.edit_set_panning(track, panning).map_err(|e| e.message)?;
     Ok(())
+}
+
+#[tauri::command]
+fn take_pending_open_request(
+    state: State<'_, PendingOpenRequest>,
+) -> Option<String> {
+    state.take().map(|path| path.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
@@ -435,6 +443,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .manage(app_state)
+        .manage(PendingOpenRequest::default())
         .invoke_handler(tauri::generate_handler![
             get_available_outputs,
             use_output,
@@ -480,6 +489,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_set_num_tracks,
             edit_set_tempo,
             edit_set_panning,
+            take_pending_open_request,
             exit_successfully,
             exit_unsuccessfully,
         ])

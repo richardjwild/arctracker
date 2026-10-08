@@ -379,6 +379,11 @@ export const engine = {
     });
   },
 
+  takePendingOpenRequest: async (): Promise<string | null> => {
+    return await invoke<string | null>("take_pending_open_request")
+  },
+
+
   exitSuccessfully: async () => {
     return await invoke("exit_successfully");
   },

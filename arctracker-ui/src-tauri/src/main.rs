@@ -1,9 +1,10 @@
-use arctracker_ui_lib::arctracker::{default_module_params, initialise, NewModuleParams};
+use arctracker_ui_lib::arctracker::{default_module_params, initialise};
 use arctracker_ui_lib::AppState;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{App, AppHandle, Emitter, Manager, RunEvent, Runtime, WindowEvent};
+use arctracker_ui_lib::state::PendingOpenRequest;
 
 const OPEN_SETTINGS_MENU_ID: &str = "open_settings";
 const QUIT_MENU_ID: &str = "quit-arctracker";
@@ -711,6 +712,18 @@ fn build_keyboard_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
 
 fn handle_run_event<R: Runtime>(app_handle: &AppHandle<R>, event: RunEvent) {
     match event {
+        RunEvent::Opened { urls } => {
+            if let Some(path) = urls
+                .into_iter()
+                .filter_map(|url| url.to_file_path().ok())
+                .next()
+            {
+                let pending = app_handle.state::<PendingOpenRequest>();
+                pending.set(path);
+                // Notify the frontend that a request is waiting.
+                let _ = app_handle.emit("open-requested-files", ());
+            }
+        }
         RunEvent::WindowEvent {
             event: WindowEvent::CloseRequested { api, .. },
             ..
