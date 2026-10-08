@@ -177,7 +177,7 @@ export const patternLayout = {
       horizontalScroll.firstVisibleTrack,
       horizontalScroll.trackOffset,
     );
-    let x = layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
+    let x = layout.gutterWidth + horizontalScroll.trackOffset;
     if (pointerX <= x) return null;
     let track = null;
     for (
@@ -205,12 +205,9 @@ export const patternLayout = {
       };
     }
     let patternIndex = null;
-    const playheadY =
-      layout.trackHeaderHeight +
-      gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
-    const relativeLine = Math.floor(
-      (pointerY - playheadY - layout.playheadPadding) / layout.rowHeight,
-    );
+    const playheadY = layout.trackHeaderHeight + gridViewportFit.lineOffset
+      + gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
+    const relativeLine = Math.floor((pointerY - playheadY - layout.playheadPadding) / layout.rowHeight);
     if (
       playheadIndex + relativeLine >= 0 &&
       playheadIndex + relativeLine < patternLength
