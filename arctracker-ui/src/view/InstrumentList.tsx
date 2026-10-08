@@ -40,12 +40,23 @@ export default function InstrumentList() {
   }, [instruments.length]);
 
   useEffect(() => {
-    setFirstVisiblePos(() => {
+    setFirstVisiblePos((previous) => {
       if (selectedInstrument === null) return 0;
-      if (selectedInstrument >= visibleCount)
-        return 1 + selectedInstrument - visibleCount;
-      else
-        return 0;
+      if (selectedInstrument < previous) {
+        // Selected instrument is above the viewport.
+        return selectedInstrument;
+      }
+      if (selectedInstrument >= previous + visibleCount) {
+        // Selected instrument is below the viewport.
+        return selectedInstrument - visibleCount + 1;
+      }
+      const currentlyDisplayedCount = instruments.length - previous;
+      if (visibleCount > currentlyDisplayedCount) {
+        // We can show more instruments than we currently are showing.
+        return Math.max(previous - (visibleCount - currentlyDisplayedCount), 0);
+      }
+      // Selected instrument is already visible. Don't do anything!
+      return previous;
     });
   }, [selectedInstrument, visibleCount])
 
