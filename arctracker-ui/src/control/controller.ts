@@ -46,6 +46,11 @@ async function processCommands() {
           if (success) editor.newModuleLoaded();
         });
         return; // Don't execute any more commands if we have loaded a new module.
+      case "Load specified module":
+        void module.load(command.file).then((success) => {
+          if (success) editor.newModuleLoaded();
+        });
+        return; // Don't execute any more commands if we have loaded a new module.
       case "Save module as":
         void module.saveAs();
         break;

@@ -21,6 +21,7 @@ export type Command =
   | { type: "Edit application config" }
   | { type: "Set application config"; newConfig: AppConfig } // TODO: Verify this one, it seems not to be used.
   | { type: "Load module" }
+  | { type: "Load specified module"; file: string }
   | { type: "Save module as" }
   | { type: "Save module" }
   | { type: "Export audio" }
@@ -142,6 +143,7 @@ export const commandQueue = {
 export const commands = {
   editAppConfig: () => commandQueue.push({ type: "Edit application config" }),
   loadFile: () => commandQueue.push({ type: "Load module" }),
+  loadSpecifiedFile: (file: string) => commandQueue.push({ type: "Load specified module", file }),
   saveModuleAs: () => commandQueue.push({ type: "Save module as" }),
   saveModule: () => commandQueue.push({ type: "Save module" }),
   exportAudio: () => commandQueue.push({ type: "Export audio" }),

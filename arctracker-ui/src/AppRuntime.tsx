@@ -9,6 +9,7 @@ import { useExitGuard } from "./hooks/useExitGuard.ts";
 import { useMenuActions } from "./hooks/useMenuActions.ts";
 import useAppConfig from "./hooks/useAppConfig.ts";
 import useWelcomeMessage from "./hooks/useWelcomeMessage.ts";
+import { useOpenFileListener } from "./hooks/useOpenFileListener.ts";
 
 interface AppRuntimeProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export default function AppRuntime({ children }: AppRuntimeProps) {
   useKeyboardInput();
   useAnimation();
   useAppConfig();
+  useOpenFileListener();
   useWelcomeMessage();
   return <>{children}</>;
 }

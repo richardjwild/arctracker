@@ -110,6 +110,17 @@ export const module = {
     }
   },
 
+  load: async (file: string): Promise<boolean> => {
+    if (!(await okToDiscardModule())) return false;
+    try {
+      await loadModule(file);
+      return true;
+    } catch (err) {
+      await alerting.showError(err as string);
+      return false;
+    }
+  },
+
   save: async () => {
     const module = useStore.getState().module;
     if (
