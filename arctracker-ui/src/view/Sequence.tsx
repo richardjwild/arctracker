@@ -53,9 +53,22 @@ export default function Sequence() {
   }, [digits, moduleSequence.length]);
 
   useEffect(() => {
-    setFirstVisiblePos(() => {
-      if (sequencePos >= visibleCount) return 1 + sequencePos - visibleCount;
-      else return 0;
+    setFirstVisiblePos((previous) => {
+      if (sequencePos < previous) {
+        // The current sequence position is left of the viewport.
+        return sequencePos;
+      }
+      if (sequencePos >= previous + visibleCount) {
+        // The current sequence position is right of the viewport.
+        return sequencePos - visibleCount + 1;
+      }
+      const currentlyDisplayedCount = moduleSequence.length - previous;
+      if (visibleCount > currentlyDisplayedCount) {
+        // We can show more sequence positions than we currently are showing.
+        return Math.max(previous - (visibleCount - currentlyDisplayedCount), 0);
+      }
+      // The current sequence position is already visible. Don't do anything!
+      return previous;
     });
   }, [sequencePos, visibleCount]);
 

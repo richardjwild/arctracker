@@ -16,6 +16,7 @@ typedef enum cmd_type {
     INSTRUMENT_UPDATED = 9,
     PLAYBACK_POLICY_UPDATED = 10,
     INITIAL_BPM_CHANGED = 11,
+    INITIAL_PANNING_CHANGED = 12,
 } cmd_type_t;
 
 typedef struct {
@@ -57,6 +58,10 @@ typedef struct {
     int instrument_no;
 } instrument_updated_command_t;
 
+typedef struct {
+    uint8_t track;
+} track_panning_command_t;
+
 typedef union {
     no_data_command_t no_data;
     seek_command_t seek;
@@ -66,6 +71,7 @@ typedef union {
     master_gain_command_t master_gain;
     track_mute_command_t track_mute;
     instrument_updated_command_t instrument_updated;
+    track_panning_command_t track_panning;
 } player_command_data_t;
 
 typedef struct player_command {

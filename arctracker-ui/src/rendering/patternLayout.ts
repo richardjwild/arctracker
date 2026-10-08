@@ -5,6 +5,7 @@ export type PatternLayout = {
   leftPadding: number;
   glyphWidth: number;
   rowHeight: number;
+  gutterWidth: number;
   trackHeaderHeight: number;
   trackFooterHeight: number;
   playheadPadding: number;
@@ -16,9 +17,16 @@ export type PatternLayout = {
 export type GridViewportFit = {
   playheadRowHeight: number;
   linesToShow: number;
+  lineOffset: number;
+  trackOffset: number;
   firstVisibleTrack: number;
   lastVisibleTrack: number;
   playheadLocationOnScreen: number;
+};
+
+export type HorizontalScroll = {
+  firstVisibleTrack: number;
+  trackOffset: number;
 };
 
 export type PointerClickHit =
@@ -42,6 +50,7 @@ export const patternLayout = {
       track >= 0 && track < effectsDisplayed.length
         ? effectsDisplayed[track]
         : 1;
+    const rowNumberWidth = glyphWidth * 5;
     return {
       viewportSize,
       leftPadding,
@@ -50,7 +59,8 @@ export const patternLayout = {
       trackHeaderHeight: glyphHeight + 1,
       trackFooterHeight: glyphHeight + 5,
       playheadPadding: 2,
-      rowNumberWidth: glyphWidth * 5,
+      rowNumberWidth,
+      gutterWidth: leftPadding + rowNumberWidth - glyphWidth,
       getEventWidth: (track: number) =>
         glyphWidth * 8 + getEffectsDisplayed(track) * glyphWidth * 5,
       maxLines: 1000,
@@ -61,6 +71,8 @@ export const patternLayout = {
     viewportSize: { width: number; height: number },
     layout: PatternLayout,
     numTracks: number,
+    firstVisibleTrack: number,
+    trackOffset: number,
   ): GridViewportFit => {
     //
     // Calculate lines to show (always centred on playhead).
@@ -71,42 +83,73 @@ export const patternLayout = {
       layout.trackHeaderHeight -
       layout.trackFooterHeight -
       playheadRowHeight;
-    const linesToShow = 1 + Math.floor(availableHeight / layout.rowHeight);
+    const spaceEachSide = availableHeight / 2;
+    const linesEachSide = Math.ceil(spaceEachSide / layout.rowHeight);
+    const linesToShow = 1 + linesEachSide * 2;
+    const lineOffset = (availableHeight - linesEachSide * 2 * layout.rowHeight) / 2;
     //
     // Calculate tracks to show, with the constraint that the cursor must always be visible.
     //
-    let displayedWidth =
-      layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
-    displayedWidth += layout.getEventWidth(0);
-    let firstVisibleTrack = 0;
-    let lastVisibleTrack = 0;
     const cursorTrack = useStore.getState().editorState.cursorPosition.track;
-    for (let track = 1; track < numTracks; track++) {
+    //
+    // Is the cursor off the left-hand side or not fully visible?
+    //
+    if (cursorTrack < firstVisibleTrack) {
+      firstVisibleTrack = cursorTrack;
+      trackOffset = 0;
+    } else if (cursorTrack === firstVisibleTrack && trackOffset < 0) {
+      trackOffset = 0;
+    }
+    //
+    // Calculate how many tracks may fit in the available space to the right.
+    //
+    let displayedWidth = layout.gutterWidth + layout.getEventWidth(firstVisibleTrack) + trackOffset;
+    let lastVisibleTrack = firstVisibleTrack;
+    let lastVisibleTrackPartial = false;
+    for (let track = firstVisibleTrack + 1; track < numTracks; track++) {
+      lastVisibleTrack = track;
       displayedWidth += layout.getEventWidth(track);
-      if (displayedWidth > viewportSize.width) {
-        if (cursorTrack <= lastVisibleTrack) {
-          //
-          // Cursor is visible, we have our answer now.
-          //
+      if (displayedWidth >= viewportSize.width) {
+        lastVisibleTrackPartial = (displayedWidth > viewportSize.width);
+        break;
+      }
+    }
+    //
+    // Is the cursor off the right-hand side or not fully visible?
+    //
+    if (cursorTrack > lastVisibleTrack || (cursorTrack === lastVisibleTrack && lastVisibleTrackPartial)) {
+      // Assume the cursor track is hard up against the right-hand side and work backwards.
+      lastVisibleTrack = cursorTrack;
+      displayedWidth = layout.gutterWidth;
+      for (let track = lastVisibleTrack; track >= 0; track--) {
+        firstVisibleTrack = track;
+        displayedWidth += layout.getEventWidth(track);
+        if (displayedWidth >= viewportSize.width) {
           break;
         }
-        //
-        // Cursor is not visible, so repeatedly cut the leftmost track
-        // until everything fits fully within the viewport again.
-        //
-        while (
-          displayedWidth > viewportSize.width &&
-          firstVisibleTrack <= lastVisibleTrack
-        ) {
-          displayedWidth -= layout.getEventWidth(firstVisibleTrack);
-          firstVisibleTrack++;
-        }
       }
-      lastVisibleTrack++;
+      // Set the track offset so that the cursor track is hard up against the right-hand side.
+      trackOffset = viewportSize.width - displayedWidth;
+    }
+    //
+    // Do we have empty space on the right-hand side?
+    //
+    if (viewportSize.width > displayedWidth) {
+      // Fill as much of the empty space as we can.
+      const spaceToFill = viewportSize.width - displayedWidth;
+      trackOffset += spaceToFill;
+      while (firstVisibleTrack > 0 && trackOffset > 0) {
+        firstVisibleTrack -= 1;
+        trackOffset -= layout.getEventWidth(firstVisibleTrack);
+      }
+      // If the viewport is wider than the pattern, put the empty space on the right-hand side.
+      trackOffset = Math.min(trackOffset, 0);
     }
     return {
       playheadRowHeight,
       linesToShow,
+      lineOffset,
+      trackOffset,
       firstVisibleTrack,
       lastVisibleTrack,
       playheadLocationOnScreen: Math.floor(linesToShow / 2),
@@ -117,6 +160,7 @@ export const patternLayout = {
     pointerX: number,
     pointerY: number,
     viewportSize: { width: number; height: number },
+    horizontalScroll: HorizontalScroll,
     playheadIndex: number,
     numTracks: number,
     effectsDisplayed: number[],
@@ -130,8 +174,10 @@ export const patternLayout = {
       viewportSize,
       layout,
       numTracks,
+      horizontalScroll.firstVisibleTrack,
+      horizontalScroll.trackOffset,
     );
-    let x = layout.leftPadding + layout.rowNumberWidth - layout.glyphWidth;
+    let x = layout.gutterWidth + horizontalScroll.trackOffset;
     if (pointerX <= x) return null;
     let track = null;
     for (
@@ -152,13 +198,16 @@ export const patternLayout = {
         track,
       };
     }
+    if (pointerY >= viewportSize.height - layout.trackFooterHeight) {
+      return {
+        objectType: "trackFooter",
+        track,
+      };
+    }
     let patternIndex = null;
-    const playheadY =
-      layout.trackHeaderHeight +
-      gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
-    const relativeLine = Math.floor(
-      (pointerY - playheadY - layout.playheadPadding) / layout.rowHeight,
-    );
+    const playheadY = layout.trackHeaderHeight + gridViewportFit.lineOffset
+      + gridViewportFit.playheadLocationOnScreen * layout.rowHeight;
+    const relativeLine = Math.floor((pointerY - playheadY - layout.playheadPadding) / layout.rowHeight);
     if (
       playheadIndex + relativeLine >= 0 &&
       playheadIndex + relativeLine < patternLength

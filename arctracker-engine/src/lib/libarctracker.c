@@ -768,8 +768,6 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
-        return failure(PLAYER_PLAYING);
     if (sample_info == NULL)
         return failure(BAD_BUFFER);
     int sample_index;
@@ -878,6 +876,19 @@ api_result_t arctracker_edit_set_tempo(arctracker_t *arctracker, const uint8_t l
     module_set_lines_per_beat(arctracker->module, lines_per_beat);
     module_set_initial_bpm(arctracker->module, beats_per_minute);
     player_initial_bpm_changed(arctracker->playback.player);
+    return SUCCESS;
+}
+
+api_result_t arctracker_edit_set_panning(arctracker_t *arctracker, const uint8_t track, const uint8_t panning)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (arctracker->module == NULL)
+        return failure(NO_MODULE_LOADED);
+    if (track >= arctracker->module->num_tracks)
+        return failure(INVALID_TRACK_NUMBER);
+    module_set_initial_panning(arctracker->module, track, panning);
+    player_initial_track_panning_changed(arctracker->playback.player, track);
     return SUCCESS;
 }
 

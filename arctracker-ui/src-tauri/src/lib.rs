@@ -409,6 +409,17 @@ fn edit_set_tempo(
 }
 
 #[tauri::command]
+fn edit_set_panning(
+    state: tauri::State<Arc<AppState>>,
+    track: u8,
+    panning: u8,
+) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.edit_set_panning(track, panning).map_err(|e| e.message)?;
+    Ok(())
+}
+
+#[tauri::command]
 fn exit_successfully(app: AppHandle) {
     app.exit(0);
 }
@@ -468,6 +479,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             edit_set_module_meta_data,
             edit_set_num_tracks,
             edit_set_tempo,
+            edit_set_panning,
             exit_successfully,
             exit_unsuccessfully,
         ])

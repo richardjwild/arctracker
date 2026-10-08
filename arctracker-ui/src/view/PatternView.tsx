@@ -12,10 +12,19 @@ import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
 import { patternGrid } from "../editing/patternGrid.ts";
 import useSequencePosition from "../hooks/useSequencePosition.ts";
 import { commands } from "../control/commands.ts";
-import { patternLayout } from "../rendering/patternLayout.ts";
+import { HorizontalScroll, patternLayout } from "../rendering/patternLayout.ts";
 import { patternEvents } from "../editing/patternEvents.ts";
 
+type PanDrag = {
+  track: number;
+  pointerId: number;
+  panning: number;
+};
+
 const wheelScrollThreshold = 40;
+const panDragSensitivity = 1.75;
+const panCentre = 128;
+const panDetentWidth = 10;
 
 function cssProperty(name: string): string {
   return getComputedStyle(document.documentElement)
@@ -63,11 +72,14 @@ export default function PatternView() {
   const playing = useStore((state) => state.transportState.playing);
   const effectsDisplayed = useStore((state) => state.effectsDisplayed);
   const cursorTrack = useStore((state) => state.editorState.cursorPosition.track);
+  const trackPanning = useStore((state) => state.trackPanning);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const wheelDeltaRef = useRef(0);
+  const panDragTrack = useRef<PanDrag | null>(null);
+  const horizontalScroll = useRef<HorizontalScroll>({ firstVisibleTrack: 0, trackOffset: 0 });
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const { patternNo, patternLength } = useSequencePosition();
 
   const coloursAtPlayhead = useMemo<Colours>(() => ({
@@ -159,7 +171,10 @@ export default function PatternView() {
       numTracks,
       effectsDisplayed,
       viewportSize,
+      horizontalScroll.current,
     );
+    // The horizontal scroll may have been updated by the new pattern renderer, remember it for next time.
+    horizontalScroll.current = patternRenderer.getHorizontalScroll();
     return () => {
       const { track, field } = useStore.getState().editorState.cursorPosition;
       patternRenderer.renderPattern({
@@ -189,7 +204,7 @@ export default function PatternView() {
     }
   };
 
-  const handlePointer = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     event.preventDefault();
     const container = containerRef.current;
     if (!container) return;
@@ -202,6 +217,7 @@ export default function PatternView() {
       pointerX,
       pointerY,
       { width: container.clientWidth, height: container.clientHeight },
+      horizontalScroll.current,
       playheadIndex,
       numTracks,
       effectsDisplayed,
@@ -222,6 +238,52 @@ export default function PatternView() {
         }
         break;
     }
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    const container = containerRef.current;
+    if (!container) return;
+    const boundingRect = event.currentTarget.getBoundingClientRect();
+    const pointerX = event.clientX - boundingRect.left;
+    const pointerY = event.clientY - boundingRect.top;
+    const playheadIndex = getPatternIndex();
+    const clickedPosition = patternLayout.pointerClickedOn(
+      pointerX,
+      pointerY,
+      { width: container.clientWidth, height: container.clientHeight },
+      horizontalScroll.current,
+      playheadIndex,
+      numTracks,
+      effectsDisplayed,
+      patternLength,
+    );
+    if (clickedPosition && clickedPosition.objectType === "trackFooter") {
+      panDragTrack.current = {
+        track: clickedPosition.track,
+        pointerId: event.pointerId,
+        panning: trackPanning[clickedPosition.track],
+      };
+      document.body.classList.add("sliderDragging");
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerId !== panDragTrack.current?.pointerId) return;
+    const drag = panDragTrack.current;
+    const newPanning = Math.max(1, Math.min(255, drag.panning + event.movementX * panDragSensitivity));
+    drag.panning = newPanning;
+    const panningWithDetent = newPanning >= panCentre - panDetentWidth && newPanning <= panCentre + panDetentWidth
+      ? panCentre
+      : newPanning;
+    void engine.setPanning(drag.track, Math.round(panningWithDetent));
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerId !== panDragTrack.current?.pointerId) return;
+    panDragTrack.current = null;
+    document.body.classList.remove("sliderDragging");
   };
 
   useEffect(() => {
@@ -353,7 +415,11 @@ export default function PatternView() {
         className="uiArea"
         ref={canvasRef}
         onWheel={handleWheel}
-        onClick={handlePointer}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         width="1024"
         height="1024"
       />

@@ -372,6 +372,13 @@ export const engine = {
     });
   },
 
+  setPanning: async (track: number, panning: number) => {
+    await invoke("edit_set_panning", {
+      track,
+      panning,
+    });
+  },
+
   exitSuccessfully: async () => {
     return await invoke("exit_successfully");
   },

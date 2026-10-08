@@ -82,3 +82,7 @@ input[type='radio'] {
 label {
   font-size: 16px;
 }
+
+body.sliderDragging, body.sliderDragging * {
+  cursor: none !important;
+}
