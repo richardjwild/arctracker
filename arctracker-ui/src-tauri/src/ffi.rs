@@ -93,6 +93,7 @@ pub enum PlayerCommandType {
     PlaybackPolicyUpdated = 10,
     InitialBpmChanged = 11,
     InitialPanningChanged = 12,
+    SilenceAllAudio = 13,
 }
 
 #[repr(C)]

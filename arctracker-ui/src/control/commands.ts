@@ -121,6 +121,7 @@ export type Command =
   | { type: "Set tempo" }
   | { type: "Toggle current track mute" }
   | { type: "Toggle track mute"; track: number }
+  | { type: "Silence all audio" }
   | { type: "Shift keyboard octave up" }
   | { type: "Shift keyboard octave down" }
   | { type: "Open hex calculator" }
@@ -290,6 +291,7 @@ export const commands = {
     commandQueue.push({ type: "Toggle current track mute" }),
   toggleTrackMute: (track: number) =>
     commandQueue.push({ type: "Toggle track mute", track }),
+  silenceAllAudio: () => commandQueue.push({ type: "Silence all audio" }),
   shiftKeyboardOctaveUp: () =>
     commandQueue.push({ type: "Shift keyboard octave up" }),
   shiftKeyboardOctaveDown: () =>

@@ -310,6 +310,9 @@ async function processCommands() {
       case "Toggle track mute":
         void engine.toggleTrackMute(command.track);
         break;
+      case "Silence all audio":
+        engine.silenceAllAudio();
+        break;
       case "Shift keyboard octave up":
         pianoKeys.shiftOctave(1);
         break;

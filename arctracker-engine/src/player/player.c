@@ -20,6 +20,7 @@ static const int NULL_INSTRUMENT_INDEX = NUM_INSTRUMENT_SLOTS;
 static void synchronise_instrument(player_t *, int);
 static void synchronise_playback_policy(player_t *player);
 static void synchronise_track_panning(player_t *player, uint8_t track);
+static void silence_all_audio(player_t *player);
 static void init_null_instrument(player_t *);
 static void calculate_fine_tuning(void);
 static bool player_tick(player_t *);
@@ -293,6 +294,15 @@ static void synchronise_track_panning(player_t *player, const uint8_t track)
     spatialiser->set_amount(&spatialiser->state, panning);
 }
 
+static void silence_all_audio(player_t *player)
+{
+    for (int track = 0; track < player->module->num_tracks; track++)
+    {
+        audio_channel_t *channel = player->tracks[track].audio_channel;
+        audio_channel_silence(channel);
+    }
+}
+
 static void init_null_instrument(player_t *player)
 {
     player->instruments[NULL_INSTRUMENT_INDEX] = (player_instrument_t) {0};
@@ -382,6 +392,9 @@ static void process_player_command(player_t *player, const player_command_t comm
             break;
         case INITIAL_PANNING_CHANGED:
             synchronise_track_panning(player, command.data.track_panning.track);
+            break;
+        case SILENCE_ALL_AUDIO:
+            silence_all_audio(player);
             break;
         default:
             break;
