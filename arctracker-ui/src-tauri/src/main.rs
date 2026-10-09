@@ -60,6 +60,7 @@ const DELETE_SAMPLE_MENU_ID: &str = "delete-sample";
 const EXPORT_SAMPLE_MENU_ID: &str = "export-sample";
 const OCTAVE_UP_MENU_ID: &str = "octave-up";
 const OCTAVE_DOWN_MENU_ID: &str = "octave-down";
+const SHOW_COMMAND_REFERENCE_MENU_ID: &str = "show-command-reference";
 const OPEN_SETTINGS_REQUESTED_EVENT: &str = "open-settings-requested";
 const EXIT_REQUESTED_EVENT: &str = "exit-requested";
 const NEW_MODULE_REQUESTED_EVENT: &str = "new-module-requested";
@@ -116,6 +117,7 @@ const DELETE_SAMPLE_REQUESTED_EVENT: &str = "delete-sample-requested";
 const EXPORT_SAMPLE_REQUESTED_EVENT: &str = "export-sample-requested";
 const OCTAVE_UP_REQUESTED_EVENT: &str = "octave-up-requested";
 const OCTAVE_DOWN_REQUESTED_EVENT: &str = "octave-down-requested";
+const SHOW_COMMAND_REFERENCE_EVENT: &str = "show-command-reference";
 
 fn main() {
     let app_state = create_app_state();
@@ -204,6 +206,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         EXPORT_SAMPLE_MENU_ID => request_event(app_handle, EXPORT_SAMPLE_REQUESTED_EVENT),
         OCTAVE_UP_MENU_ID => request_event(app_handle, OCTAVE_UP_REQUESTED_EVENT),
         OCTAVE_DOWN_MENU_ID => request_event(app_handle, OCTAVE_DOWN_REQUESTED_EVENT),
+        SHOW_COMMAND_REFERENCE_MENU_ID => request_event(app_handle, SHOW_COMMAND_REFERENCE_EVENT),
         _ => {},
     });
     Ok(())
@@ -247,6 +250,13 @@ fn build_app_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         None::<String>,
     )?;
+    let show_command_reference = MenuItem::with_id(
+        app,
+        SHOW_COMMAND_REFERENCE_MENU_ID,
+        "Command Reference...",
+        true,
+        Some("Shift+CmdOrCtrl+R"),
+    )?;
     let quit = MenuItem::with_id(
         app,
         QUIT_MENU_ID,
@@ -256,7 +266,7 @@ fn build_app_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
     )?;
     let about = PredefinedMenuItem::about(app, Some("About Arctracker"), None)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    Submenu::with_items(app, "Arctracker", true, &[&about, &separator, &open_settings, &separator, &quit])
+    Submenu::with_items(app, "Arctracker", true, &[&about, &separator, &open_settings, &show_command_reference, &separator, &quit])
 }
 
 fn build_file_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {

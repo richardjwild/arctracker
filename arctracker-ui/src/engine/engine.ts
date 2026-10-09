@@ -171,6 +171,10 @@ export const engine = {
     });
   },
 
+  silenceAllAudio: () => {
+    void invoke("silence_all_audio");
+  },
+
   setEffectsDisplayed: (track: number, effectsDisplayed: number) => {
     void invoke("set_effects_displayed", {
       track,

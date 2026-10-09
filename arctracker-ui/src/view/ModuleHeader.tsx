@@ -90,35 +90,37 @@ export default function ModuleHeader() {
 
   return (
     <div className="moduleHeader uiArea padded">
-      <button
-        title={message("loadModuleHintText")}
-        className="loadButton"
-        disabled={isLoadingModule}
-        onClick={() => commands.loadFile()}
-      >
-        <LoadIcon />
-      </button>
-      <button
-        title={message("saveModuleHintText")}
-        className="saveButton"
-        onClick={commands.saveModule}
-      >
-        <SaveIcon />
-      </button>
-      {/*<button title="Export module" className="exportButton">*/}
-      {/*  <ExportIcon />*/}
-      {/*</button>*/}
-      <button
-        title={message("bounceAudioHintText")}
-        className="bounceButton"
-        onClick={() => commands.exportAudio()}
-      >
-        <BounceIcon />
-      </button>
+      <div className="buttons">
+        <button
+          title={message("loadModuleHintText")}
+          className="loadButton left"
+          disabled={isLoadingModule}
+          onClick={() => commands.loadFile()}
+        >
+          <LoadIcon />
+        </button>
+        <button
+          title={message("saveModuleHintText")}
+          className="saveButton"
+          onClick={commands.saveModule}
+        >
+          <SaveIcon />
+        </button>
+        {/*<button title="Export module" className="exportButton">*/}
+        {/*  <ExportIcon />*/}
+        {/*</button>*/}
+        <button
+          title={message("bounceAudioHintText")}
+          className="bounceButton right"
+          onClick={() => commands.exportAudio()}
+        >
+          <BounceIcon />
+        </button>
+      </div>
       <div className="moduleInfo">{formatModuleInfo(module)}</div>
       <button
         title={message("editModuleDetailsHintText")}
-        className="editNameAuthorButton"
+        className="editNameAuthorButton left right"
         onClick={commands.editModuleMetaData}
       >
         <EditNameIcon />

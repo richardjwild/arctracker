@@ -17,6 +17,7 @@ import KeyboardOctave from "./view/KeyboardOctave.tsx";
 import UserMessages from "./view/UserMessages.tsx";
 import HexCalculator from "./view/HexCalculator.tsx";
 import SetMultipleEffects from "./view/SetMultipleEffects.tsx";
+import CommandReference from "./view/CommandReference.tsx";
 
 export default function AppLayout() {
   return (
@@ -38,6 +39,7 @@ export default function AppLayout() {
       <EditTempo />
       <EditAppConfig />
       <SetMultipleEffects />
+      <CommandReference />
     </main>
   );
 }

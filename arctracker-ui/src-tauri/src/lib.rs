@@ -167,6 +167,13 @@ fn toggle_track_mute(state: State<Arc<AppState>>, track: i32) -> Result<(), Stri
 }
 
 #[tauri::command]
+fn silence_all_audio(state: State<Arc<AppState>>) -> Result<(), String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.silence_all_audio();
+    Ok(())
+}
+
+#[tauri::command]
 fn set_effects_displayed(
     state: State<Arc<AppState>>,
     track: i32,
@@ -464,6 +471,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             toggle_loop,
             seek,
             toggle_track_mute,
+            silence_all_audio,
             set_effects_displayed,
             get_player_snapshot,
             get_and_reset_peak_levels,

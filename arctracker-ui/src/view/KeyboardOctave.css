@@ -10,7 +10,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
     padding-left: 10px;
     height: 100%;
     width: 290px;
@@ -18,7 +18,7 @@
 
 .keyboardOctave .control button {
     height: 30px;
-    width: 30px;
+    width: 15px;
     background: transparent;
     color: var(--colour-keyboard-octave-button-fg);
     border-radius: 5px;
@@ -33,11 +33,31 @@
 }
 
 .keyboardOctave .control button svg {
-    transform: translateX(0px) translateY(1px);
+    transform: translateX(-5px) translateY(1px) scale(50%);
 }
 
 .keyboardGraphic {
     background: var(--colour-panel-bg);
     width: 210px;
     height: 50px;
+}
+
+.keyboardOctave .control button.killAllAudio {
+    height: 30px;
+    width: 60px;
+    background-color: var(--colour-silence-all-audio-button-bg);
+    color: black;
+    border-radius: 5px;
+    border: solid 1px var(--colour-silence-all-audio-button-bg);
+    padding: 0;
+}
+
+.keyboardOctave .control button.killAllAudio:hover {
+    background-color: black;
+    color: var(--colour-silence-all-audio-button-bg);
+    border: solid 1px var(--colour-silence-all-audio-button-bg);
+}
+
+.keyboardOctave .control button.killAllAudio svg {
+    transform: translateX(0px) translateY(1px) scale(100%);
 }

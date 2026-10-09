@@ -17,6 +17,7 @@ typedef enum cmd_type {
     PLAYBACK_POLICY_UPDATED = 10,
     INITIAL_BPM_CHANGED = 11,
     INITIAL_PANNING_CHANGED = 12,
+    SILENCE_ALL_AUDIO = 13,
 } cmd_type_t;
 
 typedef struct {

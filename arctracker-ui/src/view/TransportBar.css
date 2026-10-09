@@ -7,15 +7,14 @@
 .transportBar .buttons {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 0;
 }
 
 .transportBar button {
     height: 30px;
-    width: 30px;
+    width: 45px;
     background: var(--colour-transport-button-bg);
     color: var(--colour-button-fg);
-    border-radius: 5px;
     border: solid 1px var(--colour-button-fg);
     padding: 0;
 }
@@ -47,9 +46,9 @@
 }
 
 .transportBar button.tempo {
-    width: 110px;
-    color: var(--colour-transport-button-tempo-fg);
-    background: var(--colour-transport-button-tempo-bg);
+    width: 120px;
+    color: var(--colour-button-fg);
+    background: var(--colour-transport-button-tempo-fg);
     border: none;
     padding: 5px;
     height: 30px;
@@ -59,13 +58,8 @@
     vertical-align: middle;
 }
 
-.transportBar button.tempo-enabled {
-    color: var(--colour-transport-button-tempo-bg);
-    background: var(--colour-transport-button-tempo-fg);
-}
-
-.transportBar button.tempo-enabled:hover {
+.transportBar button:hover {
     color: var(--colour-transport-button-tempo-fg);
-    background: var(--colour-transport-button-tempo-bg);
+    background: var(--colour-button-fg);
     border: solid 1px var(--colour-transport-button-tempo-fg);
 }

@@ -1,0 +1,40 @@
+.commandReference {
+    width: 570px;
+    height: 515px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.commandReference h1 {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: var(--colour-sample-edit-input-text);
+    font-size: 20px;
+    margin: 0;
+}
+
+.commandList {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    color: var(--colour-text);
+}
+
+.commandListColumn {
+    font-family: sans-serif;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.commandListColumn p {
+    margin: 0;
+}
+
+.commandListColumn span.command {
+    font-family: Spline, monospace;
+    font-weight: bold;
+    margin-right: 0.5em;
+}

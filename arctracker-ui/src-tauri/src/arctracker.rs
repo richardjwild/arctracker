@@ -859,6 +859,20 @@ impl Arctracker {
         }
     }
 
+    pub fn silence_all_audio(&mut self) {
+        let command = ffi::PlayerCommand {
+            cmd_type: ffi::PlayerCommandType::SilenceAllAudio,
+            data: ffi::PlayerCommandData {
+                no_data_command: ffi::NoDataCommand {
+                    unused: 0,
+                },
+            }
+        };
+        unsafe {
+            ffi::arctracker_player_cmd(self.handle, &command);
+        }
+    }
+
     pub fn set_effects_displayed(&mut self, track: i32, effects_displayed: i32) {
         unsafe {
             ffi::arctracker_set_effects_displayed(self.handle, track, effects_displayed);

@@ -141,7 +141,13 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "Backspace",
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
   ],
-  ["Space", [{ modifiers: "none", execute: commands.togglePlay }]],
+  [
+    "Space",
+    [
+      { modifiers: "none", execute: commands.togglePlay },
+      { modifiers: "secondary", execute: commands.silenceAllAudio },
+    ]
+  ],
   ["KeyB", [{ modifiers: "primary", execute: commands.exportAudio }]],
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
   ["KeyE", [{ modifiers: "primary", execute: commands.openSetMultipleEffects }]],
@@ -159,7 +165,13 @@ const keyBindings = new Map<string, KeyBinding[]>([
     ]
   ],
   ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
-  ["KeyR", [{ modifiers: "primary", execute: commands.toggleLoop }]],
+  [
+    "KeyR",
+    [
+      { modifiers: "primary", execute: commands.toggleLoop },
+      { modifiers: "primary+secondary", execute: commands.showCommandReference },
+    ]
+  ],
   [
     "KeyS",
     [

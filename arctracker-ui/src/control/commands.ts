@@ -121,12 +121,15 @@ export type Command =
   | { type: "Set tempo" }
   | { type: "Toggle current track mute" }
   | { type: "Toggle track mute"; track: number }
+  | { type: "Silence all audio" }
   | { type: "Shift keyboard octave up" }
   | { type: "Shift keyboard octave down" }
   | { type: "Open hex calculator" }
   | { type: "Close hex calculator" }
   | { type: "Open set multiple effects" }
-  | { type: "Set multiple effects"; effectLane: number; effect: Effect; noteOnsOnly: boolean };
+  | { type: "Set multiple effects"; effectLane: number; effect: Effect; noteOnsOnly: boolean }
+  | { type: "Show command reference" }
+  | { type: "Hide command reference" };
 
 const queue: Command[] = [];
 
@@ -290,6 +293,7 @@ export const commands = {
     commandQueue.push({ type: "Toggle current track mute" }),
   toggleTrackMute: (track: number) =>
     commandQueue.push({ type: "Toggle track mute", track }),
+  silenceAllAudio: () => commandQueue.push({ type: "Silence all audio" }),
   shiftKeyboardOctaveUp: () =>
     commandQueue.push({ type: "Shift keyboard octave up" }),
   shiftKeyboardOctaveDown: () =>
@@ -300,4 +304,6 @@ export const commands = {
     commandQueue.push({ type: "Open set multiple effects" }),
   setMultipleEffects: (effectLane: number, effect: Effect, noteOnsOnly: boolean) =>
     commandQueue.push({ type: "Set multiple effects", effectLane, effect, noteOnsOnly }),
+  showCommandReference: () => commandQueue.push({ type: "Show command reference" }),
+  hideCommandReference: () => commandQueue.push({ type: "Hide command reference" }),
 };

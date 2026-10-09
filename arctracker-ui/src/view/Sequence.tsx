@@ -228,7 +228,7 @@ export default function Sequence() {
             type="button"
             title={message("insertSequencePositionBeforeCurrentHintText")}
             disabled={playing}
-            className={playing ? "disabled" : "enabled"}
+            className={`left ${playing ? "disabled" : "enabled"}`}
             onClick={(event) =>
               commands.insertSequencePositionBefore(event.shiftKey)
             }
@@ -250,7 +250,7 @@ export default function Sequence() {
             type="button"
             title={message("deleteSequencePositionHintText")}
             disabled={playing}
-            className={playing ? "disabled" : "enabled"}
+            className={`right ${playing ? "disabled" : "enabled"}`}
             onClick={commands.deleteSequencePosition}
           >
             <DeleteIcon />

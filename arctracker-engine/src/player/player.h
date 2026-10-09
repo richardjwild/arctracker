@@ -74,7 +74,6 @@ typedef struct {
     int instrument_no;
     int current_note;
     scheduled_note_t scheduler;
-    effect_memory_t effect_memory;
     track_command_state_t command_state;
     sampler_state_t sampler_state[2];
     panner_state_t panner;
