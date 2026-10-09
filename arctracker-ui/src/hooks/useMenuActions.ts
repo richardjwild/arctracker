@@ -90,6 +90,7 @@ const menuActions: MenuAction[] = [
   { eventId: "export-sample-requested", action: commands.exportSample },
   { eventId: "octave-up-requested", action: commands.shiftKeyboardOctaveUp },
   { eventId: "octave-down-requested", action: commands.shiftKeyboardOctaveDown },
+  { eventId: "show-command-reference", action: commands.showCommandReference },
 ];
 
 export function useMenuActions() {

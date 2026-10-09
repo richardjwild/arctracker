@@ -20,6 +20,7 @@ export const editorKeyHandlers: {
   handleAppConfigInput: KeyHandler,
   handleHexCalculatorInput: KeyHandler,
   handleSetMultipleEffectsInput: KeyHandler,
+  handleCommandReferenceInput: KeyHandler,
 } = {
   handleSampleFieldInput: (e) => {
     if (!patternEvents.editing()) return false;
@@ -130,5 +131,15 @@ export const editorKeyHandlers: {
       return true;
     }
     return false;
-  }
+  },
+
+  handleCommandReferenceInput: (e) => {
+    if (!useStore.getState().commandReferenceVisible)
+      return false;
+    if (e.code === 'Escape') {
+      commands.hideCommandReference();
+      return true;
+    }
+    return false;
+  },
 };

@@ -36,6 +36,7 @@ interface AppStore {
   isLoadingModule: boolean;
   userMessages: UserMessage[];
   hexCalculatorActive: boolean;
+  commandReferenceVisible: boolean;
   replaceModule: (module: Module) => void;
   setMasterGain: (gain: number) => void;
   setModuleFilename: (fileName: string) => void;
@@ -73,6 +74,7 @@ interface AppStore {
   setLoadingModule: (loading: boolean) => void;
   logMessage: (message: UserMessage) => void;
   setHexCalculatorActive: (active: boolean) => void;
+  setCommandReferenceVisible: (visible: boolean) => void;
 }
 
 const initialModule: Module = {
@@ -189,6 +191,7 @@ export const useStore = create<AppStore>((set) => ({
   isLoadingModule: false,
   userMessages: [],
   hexCalculatorActive: false,
+  commandReferenceVisible: false,
 
   replaceModule: (result) => {
     console.log("volume mapping", result.volumeMapping);
@@ -418,5 +421,10 @@ export const useStore = create<AppStore>((set) => ({
   setHexCalculatorActive: (hexCalculatorActive: boolean) =>
     set({
       hexCalculatorActive,
+    }),
+
+  setCommandReferenceVisible: (visible: boolean) =>
+    set({
+      commandReferenceVisible: visible,
     }),
 }));

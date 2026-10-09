@@ -331,6 +331,12 @@ async function processCommands() {
       case "Set multiple effects":
         void patternEvents.setMultipleEffects(command.effectLane, command.effect, command.noteOnsOnly);
         break;
+      case "Show command reference":
+        useStore.getState().setCommandReferenceVisible(true);
+        break;
+      case "Hide command reference":
+        useStore.getState().setCommandReferenceVisible(false);
+        break;
     }
   }
 }
