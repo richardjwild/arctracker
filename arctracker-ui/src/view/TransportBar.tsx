@@ -120,7 +120,7 @@ export default function TransportBar() {
           title={message("togglePlayHintText")}
           onClick={commands.togglePlay}
           aria-label="Play/Pause"
-          className="playPause"
+          className="playPause left"
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
@@ -144,7 +144,7 @@ export default function TransportBar() {
           title={message("seekSequenceBackwardsHintText")}
           onClick={commands.sequenceSeekBackwards}
           aria-label="Rewind"
-          className="rewind"
+          className="rewind right"
         >
           <RewindIcon />
         </button>
@@ -154,7 +154,7 @@ export default function TransportBar() {
       </div>
       <button
         title={message("editTempoHintText")}
-        className={`tempo ${playing ? "" : "tempo-enabled"}`}
+        className="tempo left right"
         onClick={commands.editTempo}
       >
         {beatsPerMinute === 0 ? message("setTempoButtonLabel") : `${beatsPerMinute}bpm`}

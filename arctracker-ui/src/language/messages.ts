@@ -134,6 +134,7 @@ const messages = {
     commandEC: "Silence sample after delay",
     commandED: "Delay note-on",
     commandEE: "Delay next pattern line",
+    panic: "PANIC! Kill all audio"
   },
 } as const;
 

@@ -10,8 +10,8 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 5px;
-    padding-left: 5px;
+    gap: 10px;
+    padding-left: 10px;
     height: 100%;
     width: 290px;
 }
@@ -44,7 +44,7 @@
 
 .keyboardOctave .control button.killAllAudio {
     height: 30px;
-    width: 30px;
+    width: 60px;
     background-color: var(--colour-silence-all-audio-button-bg);
     color: black;
     border-radius: 5px;

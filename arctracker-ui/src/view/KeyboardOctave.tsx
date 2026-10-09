@@ -21,49 +21,24 @@ const BlackKeyWidth = 4;
 const BlackKeyHeight = 20;
 const OctaveWidth = WhiteKeySpacing * 7;
 
+const SilenceAudioIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    height="24px"
+    viewBox="0 -960 960 960"
+    width="24px"
+    fill="currentColor"
+  >
+    <path d="m616-320-56-56 104-104-104-104 56-56 104 104 104-104 56 56-104 104 104 104-56 56-104-104-104 104Zm-496-40v-240h160l200-200v640L280-360H120Zm280-246-86 86H200v80h114l86 86v-252ZM300-480Z" />
+  </svg>
+);
+
 export default function KeyboardOctave() {
-  const ArrowLeftIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill="currentColor"
-    >
-      <path d="M400-240 160-480l240-240 56 58-142 142h486v80H314l142 142-56 58Z" />
-    </svg>
-  );
-
-  const ArrowRightIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill="currentColor"
-    >
-      <path d="m560-240-56-58 142-142H160v-80h486L504-662l56-58 240 240-240 240Z" />
-    </svg>
-  );
-
-  const SilenceAudioIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill="currentColor"
-    >
-      <path d="m616-320-56-56 104-104-104-104 56-56 104 104 104-104 56 56-104 104 104 104-56 56-104-104-104 104Zm-496-40v-240h160l200-200v640L280-360H120Zm280-246-86 86H200v80h114l86 86v-252ZM300-480Z" />
-    </svg>
-  );
-
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pianoKeyboardTranspose = useStore(
     (state) => state.pianoKeyboardTranspose,
   );
   const currentOctave = pianoKeyboardTranspose / 12;
-  console.log('pianoKeyboardTranspose', pianoKeyboardTranspose, 'currentOctave', currentOctave);
   const whiteKeySelectedColor = cssProperty(
     "--colour-piano-key-white-selected",
   );
@@ -111,13 +86,6 @@ export default function KeyboardOctave() {
   return (
     <div className="keyboardOctave">
       <div className="control">
-        <button
-          type="button"
-          title={message("shiftKeyboardOctaveDown")}
-          onClick={commands.shiftKeyboardOctaveDown}
-        >
-          <ArrowLeftIcon />
-        </button>
         <canvas
           className="keyboardGraphic"
           ref={canvasRef}
@@ -125,15 +93,8 @@ export default function KeyboardOctave() {
           height={CanvasHeight}
         ></canvas>
         <button
-          type="button"
-          title={message("shiftKeyboardOctaveUp")}
-          onClick={commands.shiftKeyboardOctaveUp}
-        >
-          <ArrowRightIcon />
-        </button>
-        <button
           className="killAllAudio"
-          title="Silence all audio"
+          title={message("panic")}
           onClick={commands.silenceAllAudio}
         >
           <SilenceAudioIcon />

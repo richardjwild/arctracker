@@ -57,6 +57,16 @@
   border-radius: 10px;
 }
 
+button.left {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+button.right {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
 .visually-hidden {
   clip: rect(0 0 0 0);
   clip-path: inset(50%);

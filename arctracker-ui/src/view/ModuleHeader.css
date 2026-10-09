@@ -19,15 +19,24 @@
     width: 100%;
 }
 
+.moduleHeader .buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+}
+
 .moduleHeader button {
     height: 30px;
     width: 30px;
     min-width: 30px;
     min-height: 30px;
     color: var(--colour-button-fg);
-    border-radius: 5px;
     border: solid 1px var(--colour-button-fg);
     padding: 0;
+}
+
+.moduleHeader button svg {
+    transform: translateX(0px) translateY(1px);
 }
 
 .moduleHeader button.loadButton {
