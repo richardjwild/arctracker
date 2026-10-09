@@ -6,10 +6,10 @@ static bool is_pitch_slide_cmd(command_t);
 static bool is_volume_slide_cmd(command_t);
 static const effect_t *get_priority_cmd(const event_t *, bool (*is_of_group)(command_t));
 static const effect_t *get_track_effect(const event_t *, command_t);
-static void process_pitch_slide_cmd(const effect_t *, audio_generator_t *, track_command_state_t *);
+static void process_pitch_slide_cmd(const effect_t *, audio_generator_t *, const track_command_state_t *);
 static void process_volume_slide_cmd(const effect_t *, audio_generator_t *);
-static void process_vibrato_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
-static void process_tremolo_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
+static void process_vibrato_cmd(const event_t *, audio_generator_t *, const track_command_state_t *);
+static void process_tremolo_cmd(const event_t *, audio_generator_t *, const track_command_state_t *);
 static void process_set_volume_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
 static void process_set_glissando_cmd(const event_t *, audio_generator_t *);
 static void process_set_vibrato_waveform_cmd(const event_t *, track_command_state_t *);
@@ -117,7 +117,7 @@ static const effect_t *get_track_effect(const event_t *event, const command_t co
     return NULL;
 }
 
-static void process_pitch_slide_cmd(const effect_t *effect, audio_generator_t *generator, track_command_state_t *command_state)
+static void process_pitch_slide_cmd(const effect_t *effect, audio_generator_t *generator, const track_command_state_t *command_state)
 {
     if (effect == NULL)
     {
@@ -143,7 +143,6 @@ static void process_pitch_slide_cmd(const effect_t *effect, audio_generator_t *g
     {
         int slide_rate = effect->data;
         if (slide_rate == 0) slide_rate = command_state->effect_memory.tone_portamento_speed;
-        else command_state->effect_memory.tone_portamento_speed = slide_rate;
         generator->tone_portamento_on(&generator->state, slide_rate);
     }
     else
@@ -180,7 +179,7 @@ static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *
     }
 }
 
-static void process_vibrato_cmd(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
+static void process_vibrato_cmd(const event_t *event, audio_generator_t *generator, const track_command_state_t *command_state)
 {
     const effect_t *effect = get_track_effect(event, VIBRATO);
     if (effect == NULL)
@@ -193,25 +192,17 @@ static void process_vibrato_cmd(const event_t *event, audio_generator_t *generat
     {
         rate = command_state->effect_memory.vibrato_speed;
     }
-    else
-    {
-        command_state->effect_memory.vibrato_speed = rate;
-    }
     int depth = effect->data & 0xf;
     if (depth == 0)
     {
         depth = command_state->effect_memory.vibrato_depth;
-    }
-    else
-    {
-        command_state->effect_memory.vibrato_depth = depth;
     }
     const bool retrigger = command_state->vibrato_retrigger;
     const pt_waveform_t waveform = command_state->vibrato_waveform;
     generator->vibrato_on(&generator->state, rate, depth, waveform, retrigger);
 }
 
-static void process_tremolo_cmd(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
+static void process_tremolo_cmd(const event_t *event, audio_generator_t *generator, const track_command_state_t *command_state)
 {
     const effect_t *effect = get_track_effect(event, TREMOLO);
     if (effect == NULL)
@@ -224,18 +215,10 @@ static void process_tremolo_cmd(const event_t *event, audio_generator_t *generat
     {
         rate = command_state->effect_memory.tremolo_speed;
     }
-    else
-    {
-        command_state->effect_memory.tremolo_speed = rate;
-    }
     int depth = effect->data & 0xf;
     if (depth == 0)
     {
         depth = command_state->effect_memory.tremolo_depth;
-    }
-    else
-    {
-        command_state->effect_memory.tremolo_depth = depth;
     }
     const bool retrigger = command_state->tremolo_retrigger;
     const pt_waveform_t waveform = command_state->tremolo_waveform;
@@ -479,7 +462,7 @@ uint8_t get_note_delay(const event_t *event)
     return effect != NULL ? effect->data : 0;
 }
 
-uint8_t get_sample_slice(const event_t *event, effect_memory_t *effect_memory)
+uint8_t get_sample_slice(const event_t *event, const effect_memory_t *effect_memory)
 {
     const effect_t *effect = get_track_effect(event, USE_SAMPLE_SLICE);
     if (effect == NULL) {
@@ -488,6 +471,40 @@ uint8_t get_sample_slice(const event_t *event, effect_memory_t *effect_memory)
     if (effect->data == 0) {
         return effect_memory->sample_slice;
     }
-    effect_memory->sample_slice = effect->data;
     return effect->data;
+}
+
+/******************************************************************************************
+ * Certain ProTracker effects have memories, wherein the command data is remembered when  *
+ * it is non-zero, and if the command data is zero then the previously remembered value   *
+ * is used. This relieves the user from having to enter the same data in multiple events. *
+ * The effect memories are per track. The effects with memory are:                        *
+ *                                                                                        *
+ *   0x03 Tone portamento                                                                 *
+ *   0x04 Vibrato (speed and depth remembered separately)                                 *
+ *   0x07 Tremolo (speed and depth remembered separately)                                 *
+ *   0x09 Use sample slice                                                                *
+ ******************************************************************************************/
+
+void update_effect_memories(const event_t *event, effect_memory_t *memory)
+{
+    const effect_t *effect = NULL;
+    if ((effect = get_track_effect(event, TONE_PORTAMENTO)) != NULL)
+        if (effect->data) memory->tone_portamento_speed = effect->data;
+    if ((effect = get_track_effect(event, USE_SAMPLE_SLICE)) != NULL)
+        if (effect->data) memory->sample_slice = effect->data;
+    if ((effect = get_track_effect(event, VIBRATO)) != NULL)
+    {
+        const uint8_t speed = effect->data >> 4;
+        const uint8_t depth = effect->data & 0xf;
+        if (speed) memory->vibrato_speed = speed;
+        if (depth) memory->vibrato_depth = depth;
+    }
+    if ((effect = get_track_effect(event, TREMOLO)) != NULL)
+    {
+        const uint8_t speed = effect->data >> 4;
+        const uint8_t depth = effect->data & 0xf;
+        if (speed) memory->tremolo_speed = speed;
+        if (depth) memory->tremolo_depth = depth;
+    }
 }

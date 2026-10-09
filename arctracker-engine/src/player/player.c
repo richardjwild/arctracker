@@ -609,7 +609,7 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
             track->scheduler = (scheduled_note_t) {
                 .scheduled = true,
                 .delay = get_note_delay(event),
-                .slice = get_sample_slice(event, &track->effect_memory),
+                .slice = get_sample_slice(event, &track->command_state.effect_memory),
                 .instrument = instrument,
                 .note = note,
                 .event = event,
@@ -625,6 +625,7 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
         // If a note has been scheduled then the track commands will be applied when the note-on happens.
         process_track_event_commands(event, instrument, track);
     }
+    update_effect_memories(event, &track->command_state.effect_memory);
 }
 
 static void tick_audio_dsps(const player_t *player, const event_scheduler_t *event_scheduler)
