@@ -81,29 +81,39 @@ export default function InstrumentList() {
     <div className="sampleList uiArea" ref={containerRef}>
       {visibleInstruments
         .map((instrument: Instrument, index: number) => ({ instrument, index }))
-        .map(({ instrument, index }: { instrument: Instrument, index: number}) => (
-          <button
-            key={index}
-            type="button"
-            className={
-              selectedInstrument === index + firstVisiblePos ? "selected" : ""
-            }
-            ref={cellRef}
-            onClick={(e) => {
-              e.preventDefault();
-              if (selectedInstrument === index + firstVisiblePos)
-                commands.openInstrumentEditor();
-              else {
-                setSelectedInstrument(index + firstVisiblePos);
-                if (e.shiftKey) commands.openInstrumentEditor();
+        .map(
+          ({
+            instrument,
+            index,
+          }: {
+            instrument: Instrument;
+            index: number;
+          }) => (
+            <button
+              key={index}
+              type="button"
+              className={
+                selectedInstrument === index + firstVisiblePos ? "selected" : ""
               }
-            }}
-          >
-            {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
-            {": "}
-            {instrument.assigned ? instrument.name : message("unassignedInstrumentName")}
-          </button>
-        ))}
+              ref={cellRef}
+              onClick={(e) => {
+                e.preventDefault();
+                if (selectedInstrument === index + firstVisiblePos)
+                  commands.openInstrumentEditor();
+                else {
+                  setSelectedInstrument(index + firstVisiblePos);
+                  if (e.shiftKey) commands.openInstrumentEditor();
+                }
+              }}
+            >
+              {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
+              {" "}
+              {instrument.assigned
+                ? `♫ ${instrument.name}`
+                : ""}
+            </button>
+          ),
+        )}
       <button
         type="button"
         className="addInstrument"

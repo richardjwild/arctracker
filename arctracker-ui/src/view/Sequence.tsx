@@ -89,8 +89,8 @@ export default function Sequence() {
         stroke="currentColor"
         strokeWidth="2"
       >
-        <path d="M4 9v6M1 12h6" />
-        <rect x="9" y="6" width="12" height="12" rx="1" />
+        <path d="M6 8v-2h12v12h-12v-2" />
+        <path d="M6 9v6M3 12h6" />
       </svg>
       <span className="visually-hidden">Insert before</span>
     </>
@@ -106,8 +106,8 @@ export default function Sequence() {
         stroke="currentColor"
         strokeWidth="2"
       >
-        <rect x="3" y="6" width="12" height="12" rx="1" />
-        <path d="M20 9v6M17 12h6" />
+        <path d="M18 8v-2h-12v12h12v-2" />
+        <path d="M18 9v6M15 12h6" />
       </svg>
       <span className="visually-hidden">Insert after</span>
     </>
@@ -123,7 +123,7 @@ export default function Sequence() {
         stroke="currentColor"
         strokeWidth="2"
       >
-        <rect x="6" y="6" width="12" height="12" rx="1" />
+        <path d="M18 12v-6h-12v12h12v-6" />
         <path d="M9 9 L15 15 M15 9 L9 15" />
       </svg>
       <span className="visually-hidden">Delete</span>

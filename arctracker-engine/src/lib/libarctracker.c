@@ -722,28 +722,29 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         return failure(BAD_ARCTRACKER_HANDLE);
     if (arctracker->module == NULL)
         return failure(NO_MODULE_LOADED);
+    sample_t sample = {0};
     if (instrument_update.assigned)
     {
         if (instrument_update.sample_index >= arctracker->module->sample_slots)
             return failure(INVALID_SAMPLE_INDEX);
-        const sample_t sample = arctracker->module->samples[instrument_update.sample_index];
+        sample = arctracker->module->samples[instrument_update.sample_index];
         if (sample.sample_length == 0)
             return failure(INVALID_SAMPLE_INDEX);
     }
-    const sample_t sample = arctracker->module->samples[instrument_update.sample_index];
-    if (instrument_update.repeat_start < 0 || instrument_update.repeat_start >= sample.sample_length - 1)
-        return failure(INVALID_REPEAT_START);
-    if (instrument_update.repeats)
+    int repeat_length = 0;
+    if (instrument_update.assigned && instrument_update.repeats)
     {
+        if (instrument_update.repeat_start < 0 || instrument_update.repeat_start >= sample.sample_length - 1)
+            return failure(INVALID_REPEAT_START);
         if (instrument_update.repeat_end <= instrument_update.repeat_start || instrument_update.repeat_end >= sample.sample_length)
             return failure(INVALID_REPEAT_END);
+        // Plus one because the sample at repeat_end is included in the loop:
+        repeat_length = 1 + instrument_update.repeat_end - instrument_update.repeat_start;
     }
     if (instrument_update.base_note < LOWEST_NOTE || instrument_update.base_note > HIGHEST_NOTE)
         return failure(INVALID_BASE_NOTE);
     if (instrument_update.fine_tuning < -128 || instrument_update.fine_tuning > 127)
         return failure(INVALID_FINE_TUNING);
-    // Plus one because the sample at repeat_end is included in the loop:
-    const int repeat_length = 1 + instrument_update.repeat_end - instrument_update.repeat_start;
     const edit_result_t result = editor_update_instrument(
         arctracker->module,
         slot,

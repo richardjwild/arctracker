@@ -41,7 +41,7 @@ const messages = {
     audioFileFilterDescription: "Audio Samples",
     exportingAudioMessage: "Exporting audio...",
     unassignedInstrumentName: "(empty)",
-    addInstrumentHintText: "Add instrument",
+    addInstrumentHintText: "Create new instrument slot",
     loadModuleHintText: "Load module from file",
     saveModuleHintText: "Save module to file",
     bounceAudioHintText: "Export module audio to file",
