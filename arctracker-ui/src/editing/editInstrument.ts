@@ -160,6 +160,7 @@ export const editInstrument = {
     const instrument =
       useStore.getState().module.instruments[selectedInstrument];
     const draftInstrument = useStore.getState().draftInstrument;
+    if (instrument === undefined) return false;
     if (instrument.assigned !== draftInstrument.assigned) return true;
     if (instrument.name !== draftInstrument.name) return true;
     if (instrument.defaultVolume !== draftInstrument.defaultVolume) return true;

@@ -13,7 +13,7 @@
     gap: 10px;
     padding-left: 10px;
     height: 100%;
-    width: 290px;
+    width: 270px;
 }
 
 .keyboardOctave .control button {
@@ -44,7 +44,7 @@
 
 .keyboardOctave .control button.killAllAudio {
     height: 30px;
-    width: 60px;
+    width: 30px;
     background: var(--colour-button-bg);
     color: var(--colour-silence-all-audio-button-fg);
     border-radius: 5px;

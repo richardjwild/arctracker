@@ -10,7 +10,7 @@
 
 .masterGain input[type='range'] {
     accent-color: var(--colour-slider);
-    width: 115px;
+    width: 85px;
 }
 
 .masterGain .gainValue {

@@ -6,6 +6,18 @@ import {useEffect, useRef, useState} from "react";
 import { Instrument } from "../editing/editInstrument.ts";
 import { message } from "../language/messages.ts";
 
+const AddInstrumentIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    height="19px"
+    viewBox="0 -960 960 960"
+    width="19px"
+    fill="currentColor"
+  >
+    <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+  </svg>
+);
+
 export default function InstrumentList() {
   const instruments = useStore((state) => state.module.instruments);
   const { selectedInstrument, setSelectedInstrument } = useStore(
@@ -94,13 +106,15 @@ export default function InstrumentList() {
         ))}
       <button
         type="button"
+        className="addInstrument"
+        title={message("addInstrumentHintText")}
         ref={cellRef}
         onClick={(e) => {
           e.preventDefault();
           commands.addInstrument();
         }}
       >
-        {message("addInstrumentButtonLabel")}
+        <AddInstrumentIcon />
       </button>
     </div>
   );

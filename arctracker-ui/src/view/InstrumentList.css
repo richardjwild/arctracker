@@ -14,7 +14,7 @@
     font-family: SplineSansMono, monospace;
     font-size: 12px;
     width: 100%;
-    height: 25px;
+    height: 21px;
     border: solid 1px var(--colour-samplelist-button-bg);
     text-align: left;
     padding-left: 10px;
@@ -34,4 +34,17 @@
 
 .sampleList button.selected:hover {
     background-color: var(--colour-radio-button-selected-hover);
+}
+
+.sampleList button.addInstrument {
+    color: var(--colour-samplelist-button-selected-bg);
+    background-color: var(--colour-panel-bg);
+    border: none;
+    text-align: center;
+    padding: 0;
+}
+
+.sampleList button.addInstrument:hover {
+    color: var(--colour-panel-bg);
+    background-color: var(--colour-samplelist-button-selected-bg);
 }

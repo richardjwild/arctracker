@@ -36,7 +36,7 @@
   height: calc(100vh - 25px); /* because margin: 10px */
   display: grid;
   gap: 1px;
-  grid-template-columns: 50px 1fr 300px;
+  grid-template-columns: 50px 1fr 270px;
   grid-template-rows: 50px 50px minmax(0, 1fr) 50px;
   grid-template-areas:
     "moduleHeader moduleHeader masterGain"
