@@ -19,26 +19,46 @@
     text-align: left;
     padding-left: 10px;
     border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.sampleList button:hover {
+    background-color: var(--colour-samplelist-button-hover-bg);
+}
+
+.sampleList button.selected {
+    background-color: var(--colour-samplelist-button-selected-bg);
+}
+
+.sampleList button.selected:hover {
+    background-color: var(--colour-radio-button-selected-hover);
+}
+
+.sampleList button span.instrumentIndex {
+    display: block;
+    width: 14px;
+}
+
+.sampleList button span.instrumentName {
+    display: block;
+    width: 200px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.sampleList button:hover {
-    background-color: var(--colour-button-fg);
-    color: var(--colour-samplelist-button-bg);
-    border: solid 1px var(--colour-samplelist-button-bg);
-}
-
-.sampleList button.selected {
-    background-color: var(--colour-samplelist-button-selected-bg);
-    color: var(--colour-button-fg);
-    border: solid 1px var(--colour-samplelist-button-selected-bg);
-    border-radius: 5px;
-}
-
-.sampleList button.selected:hover {
-    background-color: var(--colour-button-fg);
+.sampleList button.addInstrument {
     color: var(--colour-samplelist-button-selected-bg);
-    border: solid 1px var(--colour-samplelist-button-selected-bg);
+    background-color: var(--colour-panel-bg);
+    border: none;
+    text-align: center;
+    padding: 0;
+    display: block;
+}
+
+.sampleList button.addInstrument:hover {
+    color: var(--colour-panel-bg);
+    background-color: var(--colour-samplelist-button-selected-bg);
 }

@@ -21,7 +21,7 @@
     grid-area: instrumentEditTitle;
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-title-text);
     font-size: 20px;
     margin: 0;
 }
@@ -109,7 +109,7 @@
 .sampleEditLabel {
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-label);
+    color: var(--colour-title-text);
     padding-top: 13px;
 }
 
@@ -127,10 +127,14 @@
     border-radius: 0;
     border: none;
     background-color: transparent;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     caret-shape: block;
-    caret-color: var(--colour-sample-edit-input-text);
-    accent-color: var(--colour-sample-edit-input-text);
+    caret-color: var(--colour-input-text);
+    accent-color: var(--colour-slider);
+}
+
+.sampleEditField input[type='text'].readonly {
+    color: var(--colour-input-text);
 }
 
 .sampleEditField select {
@@ -142,8 +146,8 @@
     font-family: SplineSansMono, monospace;
     font-size: 16px;
     font-weight: bold;
-    color: var(--colour-sample-edit-input-text);
-    accent-color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
+    accent-color: var(--colour-input-text);
 }
 
 .defaultVolumeValue {
@@ -151,7 +155,7 @@
     font-family: SplineSansMono, monospace;
     font-size: 12px;
     text-align: center;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-title-text);
 }
 
 .sampleEditField input:focus {
@@ -166,7 +170,7 @@
     margin: 0;
     width: 20px;
     height: 13px;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
 }
 
 .transposeEdit .spinnerButtons button.increment svg, .fineTuneEdit .spinnerButtons button.increment svg {
@@ -191,7 +195,7 @@
     font-family: sans-serif;
     font-weight: bold;
     font-size: 16px;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     margin-right: 10px;
 }
 
@@ -209,13 +213,11 @@
     width: 90px;
     border-radius: 5px;
     padding: 0;
-    background: var(--colour-button-save-sample-bg);
+    background: var(--colour-button-bg);
     color: var(--colour-button-fg);
-    border: solid 1px var(--colour-button-fg);
+    border: solid 1px var(--colour-button-border);
 }
 
 .saveCloseButtons button:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-save-sample-bg);
-    border: solid 1px var(--colour-button-save-sample-bg);
+    background: var(--colour-button-bg-hover);
 }

@@ -453,7 +453,11 @@ extern "C" {
         lines_per_beat: u8,
         beats_per_minute: u8,
     ) -> ApiResult;
-    pub fn arctracker_edit_set_panning(handle: *mut ArctrackerHandle, track: u8, panning: u8) -> ApiResult;
+    pub fn arctracker_edit_set_panning(
+        handle: *mut ArctrackerHandle,
+        track: u8,
+        panning: u8,
+    ) -> ApiResult;
     pub fn arctracker_player_shutdown(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_destroy(handle: *mut ArctrackerHandle) -> ApiResult;
     pub fn arctracker_midi_destroy(handle: *mut MidiHandle);

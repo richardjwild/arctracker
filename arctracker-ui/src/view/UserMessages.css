@@ -23,7 +23,7 @@
 .userMessages .messages .message {
     font-family: sans-serif;
     font-size: 12px;
-    color: var(--colour-user-message);
+    color: var(--colour-text);
     height: 20px;
     width: 100%;
     white-space: nowrap;

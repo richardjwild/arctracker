@@ -2,7 +2,10 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use crate::arctracker::{default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams, UiPlayerSnapshot, VolumeMappingType};
+use crate::arctracker::{
+    default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams,
+    UiPlayerSnapshot, VolumeMappingType,
+};
 use crate::arctracker::{
     InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
     UiPeakLevels,
@@ -19,9 +22,16 @@ fn get_available_outputs(state: State<Arc<AppState>>) -> Result<Vec<AudioDeviceI
 }
 
 #[tauri::command]
-fn use_output(state: State<Arc<AppState>>, device_index: i32, name: String, host_api_name: String) -> Result<(), String> {
+fn use_output(
+    state: State<Arc<AppState>>,
+    device_index: i32,
+    name: String,
+    host_api_name: String,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.use_output(device_index, &name, &host_api_name).map_err(|e| e)?;
+    tracker
+        .use_output(device_index, &name, &host_api_name)
+        .map_err(|e| e)?;
     Ok(())
 }
 
@@ -84,13 +94,18 @@ fn load_module(path: String, state: State<Arc<AppState>>) -> Result<Module, Stri
 #[tauri::command]
 fn create_module(state: State<Arc<AppState>>) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
-    let info = tracker.create_module(default_module_params()).map_err(|e| e.message)?;
+    let info = tracker
+        .create_module(default_module_params())
+        .map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
     Ok(info)
 }
 
 #[tauri::command]
-fn create_module_using_defaults(params: NewModuleParams, state: State<Arc<AppState>>) -> Result<Module, String> {
+fn create_module_using_defaults(
+    params: NewModuleParams,
+    state: State<Arc<AppState>>,
+) -> Result<Module, String> {
     let mut tracker = state.tracker.lock().unwrap();
     let info = tracker.create_module(params).map_err(|e| e.message)?;
     tracker.start().map_err(|e| e.message)?;
@@ -98,11 +113,7 @@ fn create_module_using_defaults(params: NewModuleParams, state: State<Arc<AppSta
 }
 
 #[tauri::command]
-fn save_module(
-    path: String,
-    format: i32,
-    state: State<Arc<AppState>>,
-) -> Result<(), String> {
+fn save_module(path: String, format: i32, state: State<Arc<AppState>>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker.save_module(&path, format)?;
     Ok(())
@@ -235,9 +246,15 @@ fn export_audio(export_path: String, state: State<Arc<AppState>>) -> Result<(), 
 }
 
 #[tauri::command]
-fn export_sample(instrument_no: i32, export_path: String, state: State<Arc<AppState>>) -> Result<(), String> {
+fn export_sample(
+    instrument_no: i32,
+    export_path: String,
+    state: State<Arc<AppState>>,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.export_sample(instrument_no, &export_path).map_err(|e| e.message)?;
+    tracker
+        .export_sample(instrument_no, &export_path)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
@@ -312,10 +329,7 @@ fn edit_get_sequence(
 }
 
 #[tauri::command]
-fn edit_set_sequence(
-    state: State<Arc<AppState>>,
-    new_sequence: Vec<i32>,
-) -> Result<(), String> {
+fn edit_set_sequence(state: State<Arc<AppState>>, new_sequence: Vec<i32>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
         .edit_set_sequence(&new_sequence)
@@ -324,10 +338,7 @@ fn edit_set_sequence(
 }
 
 #[tauri::command]
-fn edit_create_pattern(
-    state: State<Arc<AppState>>,
-    pattern_length: i32,
-) -> Result<i32, String> {
+fn edit_create_pattern(state: State<Arc<AppState>>, pattern_length: i32) -> Result<i32, String> {
     let mut tracker = state.tracker.lock().unwrap();
     let pattern_no = tracker
         .edit_create_pattern(pattern_length)
@@ -389,7 +400,14 @@ fn edit_set_module_meta_data(
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .edit_set_module_meta_data(name, author, default_pattern_length, interpolation_type, volume_mapping_type, relative_pitch_bend)
+        .edit_set_module_meta_data(
+            name,
+            author,
+            default_pattern_length,
+            interpolation_type,
+            volume_mapping_type,
+            relative_pitch_bend,
+        )
         .map_err(|e| e.message)?;
     Ok(())
 }
@@ -417,20 +435,16 @@ fn edit_set_tempo(
 }
 
 #[tauri::command]
-fn edit_set_panning(
-    state: State<Arc<AppState>>,
-    track: u8,
-    panning: u8,
-) -> Result<(), String> {
+fn edit_set_panning(state: State<Arc<AppState>>, track: u8, panning: u8) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.edit_set_panning(track, panning).map_err(|e| e.message)?;
+    tracker
+        .edit_set_panning(track, panning)
+        .map_err(|e| e.message)?;
     Ok(())
 }
 
 #[tauri::command]
-fn take_pending_open_request(
-    state: State<'_, PendingOpenRequest>,
-) -> Option<String> {
+fn take_pending_open_request(state: State<'_, PendingOpenRequest>) -> Option<String> {
     state.take().map(|path| path.to_string_lossy().into_owned())
 }
 
@@ -446,6 +460,12 @@ fn exit_unsuccessfully(app: AppHandle) {
 
 pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(tauri_plugin_log::log::LevelFilter::Debug)
+                .max_file_size(50_000 /* bytes */)
+                .build(),
+        )
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())

@@ -14,7 +14,7 @@
     text-overflow: ellipsis;
     margin-left: 10px;
     background-color: transparent;
-    color: var(--colour-text);
+    color: var(--colour-title-text);
     font-size: 16px;
     width: 100%;
 }
@@ -31,60 +31,15 @@
     min-width: 30px;
     min-height: 30px;
     color: var(--colour-button-fg);
+    background: var(--colour-button-bg);
     border: solid 1px var(--colour-button-fg);
     padding: 0;
 }
 
+.moduleHeader button:hover {
+    background: var(--colour-button-bg-hover)
+}
+
 .moduleHeader button svg {
     transform: translateX(0px) translateY(1px);
-}
-
-.moduleHeader button.loadButton {
-    background: var(--colour-button-load-module-bg);
-}
-
-.moduleHeader button.loadButton:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-load-module-bg);
-    border: solid 1px var(--colour-button-load-module-bg);
-}
-
-.moduleHeader button.saveButton {
-    background: var(--colour-button-save-module-bg);
-}
-
-.moduleHeader button.saveButton:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-save-module-bg);
-    border: solid 1px var(--colour-button-save-module-bg);
-}
-
-.moduleHeader button.exportButton {
-    background: var(--colour-button-export-module-bg);
-}
-
-.moduleHeader button.exportButton:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-export-module-bg);
-    border: solid 1px var(--colour-button-export-module-bg);
-}
-
-.moduleHeader button.bounceButton {
-    background: var(--colour-button-bounce-module-bg);
-}
-
-.moduleHeader button.bounceButton:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-bounce-module-bg);
-    border: solid 1px var(--colour-button-bounce-module-bg);
-}
-
-.moduleHeader button.editNameAuthorButton {
-    background: var(--colour-button-edit-name-author-bg);
-}
-
-.moduleHeader button.editNameAuthorButton:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-edit-name-author-bg);
-    border: solid 1px var(--colour-button-edit-name-author-bg);
 }

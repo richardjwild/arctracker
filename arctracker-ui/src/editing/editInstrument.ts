@@ -142,6 +142,7 @@ export const editInstrument = {
     };
     const editCommand: EditCommand = {
       apply: async () => {
+        console.log('update instrument', after);
         await engine.updateInstrument(selectedInstrument, after);
         useStore.getState().setInstrument(selectedInstrument, draftInstrument);
         return true;
@@ -160,6 +161,7 @@ export const editInstrument = {
     const instrument =
       useStore.getState().module.instruments[selectedInstrument];
     const draftInstrument = useStore.getState().draftInstrument;
+    if (instrument === undefined) return false;
     if (instrument.assigned !== draftInstrument.assigned) return true;
     if (instrument.name !== draftInstrument.name) return true;
     if (instrument.defaultVolume !== draftInstrument.defaultVolume) return true;

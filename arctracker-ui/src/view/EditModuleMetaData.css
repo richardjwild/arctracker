@@ -63,7 +63,7 @@
     display: block;
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-label);
+    color: var(--colour-title-text);
     padding-top: 13px;
 }
 
@@ -73,10 +73,10 @@
     border-radius: 0;
     border: none;
     background-color: transparent;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     caret-shape: block;
-    caret-color: var(--colour-sample-edit-input-text);
-    accent-color: var(--colour-sample-edit-input-text);
+    caret-color: var(--colour-input-text);
+    accent-color: var(--colour-input-text);
 }
 
 .interpolationTypeEdit, .volumeMappingEdit, .pitchBendTypeEdit {
@@ -90,7 +90,7 @@
     display: inline;
     font-family: sans-serif;
     font-size: 16px;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     margin-bottom: 11px;
     margin-right: 10px;
 }

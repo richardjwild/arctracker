@@ -93,7 +93,7 @@ export default function ModuleHeader() {
       <div className="buttons">
         <button
           title={message("loadModuleHintText")}
-          className="loadButton left"
+          className="left"
           disabled={isLoadingModule}
           onClick={() => commands.loadFile()}
         >
@@ -101,7 +101,6 @@ export default function ModuleHeader() {
         </button>
         <button
           title={message("saveModuleHintText")}
-          className="saveButton"
           onClick={commands.saveModule}
         >
           <SaveIcon />
@@ -111,7 +110,7 @@ export default function ModuleHeader() {
         {/*</button>*/}
         <button
           title={message("bounceAudioHintText")}
-          className="bounceButton right"
+          className="right"
           onClick={() => commands.exportAudio()}
         >
           <BounceIcon />
@@ -120,7 +119,7 @@ export default function ModuleHeader() {
       <div className="moduleInfo">{formatModuleInfo(module)}</div>
       <button
         title={message("editModuleDetailsHintText")}
-        className="editNameAuthorButton left right"
+        className="left right"
         onClick={commands.editModuleMetaData}
       >
         <EditNameIcon />

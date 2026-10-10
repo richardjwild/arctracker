@@ -15,7 +15,9 @@ where
         command.env("MACOSX_DEPLOYMENT_TARGET", "11.0");
     }
     eprintln!("Running: {command:?}");
-    let status = command.status().unwrap_or_else(|e| panic!("Failed to execute {program:?}: {e}"));
+    let status = command
+        .status()
+        .unwrap_or_else(|e| panic!("Failed to execute {program:?}: {e}"));
     if !status.success() {
         panic!("Failed to run command: {program:?}");
     }
@@ -25,25 +27,31 @@ where
 fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: &str) {
     let core_data = build_directory.join("meson-private/coredata.dat");
     if core_data.exists() {
-        run("meson", [
-            "setup".as_ref(),
-            "--reconfigure".as_ref(),
-            build_directory.as_os_str(),
-            source_directory.as_os_str(),
-            format!("-Dbuildtype={build_type}").as_ref(),
-            "-Ddefault_library=static".as_ref(),
-            "-Dasan=false".as_ref(),
-            "-Db_sanitize=none".as_ref(),
-        ]);
+        run(
+            "meson",
+            [
+                "setup".as_ref(),
+                "--reconfigure".as_ref(),
+                build_directory.as_os_str(),
+                source_directory.as_os_str(),
+                format!("-Dbuildtype={build_type}").as_ref(),
+                "-Ddefault_library=static".as_ref(),
+                "-Dasan=false".as_ref(),
+                "-Db_sanitize=none".as_ref(),
+            ],
+        );
     } else {
-        run("meson", [
-            "setup".as_ref(),
-            build_directory.as_os_str(),
-            source_directory.as_os_str(),
-            format!("-Dbuildtype={build_type}").as_ref(),
-            "-Ddefault_library=static".as_ref(),
-            "-Dasan=false".as_ref(),
-        ]);
+        run(
+            "meson",
+            [
+                "setup".as_ref(),
+                build_directory.as_os_str(),
+                source_directory.as_os_str(),
+                format!("-Dbuildtype={build_type}").as_ref(),
+                "-Ddefault_library=static".as_ref(),
+                "-Dasan=false".as_ref(),
+            ],
+        );
     }
 }
 
@@ -58,18 +66,37 @@ fn main() {
         "release" => "release",
         _ => "debug",
     };
-    configure_meson(&engine_source_directory, &engine_build_directory, meson_build_type);
-    run("meson", [
-        "compile".as_ref(),
-        "-C".as_ref(),
-        engine_build_directory.as_os_str(),
-    ]);
-    println!("cargo:rustc-link-search=native={}", engine_build_directory.display());
+    configure_meson(
+        &engine_source_directory,
+        &engine_build_directory,
+        meson_build_type,
+    );
+    run(
+        "meson",
+        [
+            "compile".as_ref(),
+            "-C".as_ref(),
+            engine_build_directory.as_os_str(),
+        ],
+    );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        engine_build_directory.display()
+    );
     let portaudio_library_directory = engine_build_directory.join("subprojects/portaudio-19.7.0");
     let rtmidi_library_directory = engine_build_directory.join("subprojects/rtmidi-6.0.0");
-    println!("cargo:rustc-link-search=native={}", engine_build_directory.display());
-    println!("cargo:rustc-link-search=native={}", portaudio_library_directory.display());
-    println!("cargo:rustc-link-search=native={}", rtmidi_library_directory.display());
+    println!(
+        "cargo:rustc-link-search=native={}",
+        engine_build_directory.display()
+    );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        portaudio_library_directory.display()
+    );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        rtmidi_library_directory.display()
+    );
     println!("cargo:rustc-link-lib=static=arctracker");
     println!("cargo:rustc-link-lib=static=portaudio_static");
     println!("cargo:rustc-link-lib=static=rtmidi");
@@ -87,7 +114,16 @@ fn main() {
         println!("cargo:rustc-link-lib=c++");
     }
     println!("cargo:rustc-link-lib=static=arctracker");
-    println!("cargo:rerun-if-changed={}", engine_source_directory.join("meson.build").display());
-    println!("cargo:rerun-if-changed={}", engine_source_directory.join("src").display());
-    println!("cargo:rerun-if-changed={}", engine_source_directory.join("include").display());
+    println!(
+        "cargo:rerun-if-changed={}",
+        engine_source_directory.join("meson.build").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        engine_source_directory.join("src").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        engine_source_directory.join("include").display()
+    );
 }

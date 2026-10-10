@@ -75,7 +75,7 @@ export default function HexCalculator() {
       <div className="hexCalculatorArea">
         <button
           type="button"
-          className="hexCalculatorButton"
+          className="left right"
           title={message("hexCalculatorButtonTooltip")}
           onClick={commands.openHexCalculator}
         >

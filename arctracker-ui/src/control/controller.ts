@@ -1,3 +1,4 @@
+import { debug } from '@tauri-apps/plugin-log';
 import { commandQueue } from "./commands.ts";
 import { transport } from "../transport/transport.ts";
 import { module } from "../module/module.ts";
@@ -22,7 +23,7 @@ import { pianoKeys } from "../keyboard/pianoKeys.ts";
 async function processCommands() {
   const commands = commandQueue.consume();
   for (const command of commands) {
-    console.log("command", JSON.stringify(command)); // TODO: Add an event log for this.
+    void debug(JSON.stringify(command));
     switch (command.type) {
       case "Edit application config":
         if (transport.playing()) transport.togglePlay();

@@ -57,7 +57,10 @@ export default function SampleEditDialog() {
       instrumentIndex === null || instrumentIndex >= instruments.length
         ? emptyInstrument()
         : instruments[instrumentIndex];
-    setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
+    if (instrument.assigned)
+      setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
+    else
+      setDraftInstrument(emptyInstrument());
   }, [instruments, instrumentIndex, instrumentEditing]);
 
   const updateDraftInstrument = (updatedDraftInstrument: Instrument) => {
@@ -292,6 +295,7 @@ export default function SampleEditDialog() {
       <div className="sampleLengthEdit padded sampleEditField">
         <input
           type="text"
+          className="readonly"
           readOnly
           value={draftInstrument.sample.sampleLength}
         />
@@ -302,8 +306,9 @@ export default function SampleEditDialog() {
       <div className="sampleRateEdit padded sampleEditField">
         <input
           type="text"
+          className="readonly"
           readOnly
-          value={`${draftInstrument.sample.sampleRate}Hz`}
+          value={draftInstrument.sample.sampleRate == 0 ? "" : `${draftInstrument.sample.sampleRate}Hz`}
         />
       </div>
       <div className="baseNoteLabel padded sampleEditLabel">

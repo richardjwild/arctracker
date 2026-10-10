@@ -1,6 +1,6 @@
 import "./KeyboardOctave.css";
 import { message } from "../language/messages.ts";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useStore } from "../store/useStore.ts";
 import { commands } from "../control/commands.ts";
 
@@ -83,6 +83,14 @@ export default function KeyboardOctave() {
     for (let octave = 0; octave < 5; octave++) renderOctave(ctx, octave);
   }, [currentOctave]);
 
+  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    const boundingRect = event.currentTarget.getBoundingClientRect();
+    const pointerX = event.clientX - boundingRect.left;
+    if (pointerX < currentOctave * OctaveWidth) commands.shiftKeyboardOctaveDown();
+    if (pointerX > (currentOctave + 2) * OctaveWidth) commands.shiftKeyboardOctaveUp();
+  };
+
   return (
     <div className="keyboardOctave">
       <div className="control">
@@ -91,6 +99,7 @@ export default function KeyboardOctave() {
           ref={canvasRef}
           width={CanvasWidth}
           height={CanvasHeight}
+          onClick={handleClick}
         ></canvas>
         <button
           className="killAllAudio"

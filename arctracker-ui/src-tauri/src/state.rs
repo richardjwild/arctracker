@@ -19,4 +19,3 @@ impl PendingOpenRequest {
         self.0.lock().unwrap().take()
     }
 }
-

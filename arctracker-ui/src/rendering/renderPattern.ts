@@ -66,6 +66,7 @@ export type Colours = {
 };
 
 const FULL_CIRCLE = 2 * Math.PI;
+const FADE_HEIGHT = 10;
 const DASH = "–";
 
 export type RenderPatternView = {
@@ -91,6 +92,8 @@ export class PatternRenderer {
   private readonly viewportSize: ViewportSize;
   private readonly layout: PatternLayout;
   private readonly gridViewportFit: GridViewportFit;
+  private readonly topFade: CanvasGradient;
+  private readonly bottomFade: CanvasGradient;
 
   public constructor(
     ctx: CanvasRenderingContext2D,
@@ -120,6 +123,22 @@ export class PatternRenderer {
       horizontalScroll.trackOffset,
     );
     this.ctx.textBaseline = "hanging";
+    this.topFade = this.createTopFade();
+    this.bottomFade = this.createBottomFade();
+  }
+
+  private createTopFade(): CanvasGradient {
+    let fade = this.ctx.createLinearGradient(0, this.layout.trackHeaderHeight + FADE_HEIGHT, 0, this.layout.trackHeaderHeight);
+    fade.addColorStop(0, `${this.colours().background}00`);
+    fade.addColorStop(1, this.colours().background);
+    return fade;
+  }
+
+  private createBottomFade(): CanvasGradient {
+    let fade = this.ctx.createLinearGradient(0, this.layout.viewportSize.height - this.layout.trackFooterHeight - FADE_HEIGHT, 0, this.layout.viewportSize.height - this.layout.trackFooterHeight);
+    fade.addColorStop(1, this.colours().background);
+    fade.addColorStop(0, `${this.colours().background}00`);
+    return fade;
   }
 
   public renderPattern(view: RenderPatternView) {
@@ -133,6 +152,7 @@ export class PatternRenderer {
       this.renderPatternLines(view);
       this.renderTrackHeaders(view);
       this.renderTrackFooters(view);
+      this.renderFades();
       this.renderRowNumberLane();
     } catch (err) {
       this.renderError(err);
@@ -183,7 +203,7 @@ export class PatternRenderer {
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackHeader(x, track, view.trackMuteState[track]);
     }
-    this.withFillStyle(this.colours().trackHeaderNotMutedBg)
+    this.withFillStyle(this.colours().background)
       .fillRect(0, 0, this.layout.gutterWidth, this.layout.trackHeaderHeight);
   }
 
@@ -193,7 +213,7 @@ export class PatternRenderer {
     for (let track = 0; track <= this.numTracks; track++) {
       x += this.renderTrackFooter(view, x, track, view.trackMuteState[track]);
     }
-    this.withFillStyle(this.colours().trackFooterNotMutedBg)
+    this.withFillStyle(this.colours().background)
       .fillRect(0, this.layout.viewportSize.height - this.layout.trackFooterHeight, this.layout.gutterWidth, this.layout.trackFooterHeight);
   }
 
@@ -306,8 +326,8 @@ export class PatternRenderer {
     this.withStrokeStyle(this.colours().trackLaneSeparator)
       .withLineWidth(1)
       .strokePath([
-        { x: trackX + trackWidth, y: 0 },
-        { x: trackX + trackWidth, y: this.viewportSize.height },
+        { x: trackX + trackWidth, y: this.layout.trackHeaderHeight },
+        { x: trackX + trackWidth, y: this.viewportSize.height - this.layout.trackFooterHeight },
       ]);
     return trackWidth;
   }
@@ -530,6 +550,13 @@ export class PatternRenderer {
     return this.layout.glyphWidth;
   }
 
+  private renderFades() {
+    this.withFillGradient(this.topFade)
+      .fillRect(0, this.layout.trackHeaderHeight, this.layout.viewportSize.width, 10);
+    this.withFillGradient(this.bottomFade)
+      .fillRect(0, this.layout.viewportSize.height - this.layout.trackFooterHeight - 10, this.layout.viewportSize.width, 10);
+  }
+
   private colours(atPlayhead: boolean = false): Colours {
     return atPlayhead ? this.coloursAtPlayhead : this.coloursOffPlayhead;
   }
@@ -541,6 +568,11 @@ export class PatternRenderer {
 
   private withFillStyle(fillStyle: string): PatternRenderer {
     this.ctx.fillStyle = fillStyle;
+    return this;
+  }
+
+  private withFillGradient(gradient: CanvasGradient): PatternRenderer {
+    this.ctx.fillStyle = gradient;
     return this;
   }
 

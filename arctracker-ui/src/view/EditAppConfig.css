@@ -78,7 +78,7 @@
     display: block;
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-label);
+    color: var(--colour-title-text);
     padding-top: 13px;
 }
 
@@ -91,8 +91,8 @@
     font-family: SplineSansMono, monospace;
     font-size: 16px;
     font-weight: bold;
-    color: var(--colour-sample-edit-input-text);
-    accent-color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
+    accent-color: var(--colour-input-text);
 }
 
 .editAppConfig select:focus {
@@ -107,7 +107,7 @@
     font-family: SplineSansMono, monospace;
     font-size: 16px;
     font-weight: bold;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
 }
 
 .editAppConfig input[type='text']:focus {
