@@ -109,7 +109,7 @@
 .sampleEditLabel {
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-label);
+    color: var(--colour-title-text);
     padding-top: 13px;
 }
 
@@ -130,11 +130,11 @@
     color: var(--colour-input-text);
     caret-shape: block;
     caret-color: var(--colour-input-text);
-    accent-color: var(--colour-input-text);
+    accent-color: var(--colour-slider);
 }
 
 .sampleEditField input[type='text'].readonly {
-    color: var(--colour-information-text);
+    color: var(--colour-input-text);
 }
 
 .sampleEditField select {
@@ -155,7 +155,7 @@
     font-family: SplineSansMono, monospace;
     font-size: 12px;
     text-align: center;
-    color: var(--colour-text);
+    color: var(--colour-title-text);
 }
 
 .sampleEditField input:focus {
@@ -195,7 +195,7 @@
     font-family: sans-serif;
     font-weight: bold;
     font-size: 16px;
-    color: var(--colour-text);
+    color: var(--colour-input-text);
     margin-right: 10px;
 }
 

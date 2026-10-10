@@ -9,7 +9,7 @@
 }
 
 .masterGain input[type='range'] {
-    accent-color: var(--colour-selected);
+    accent-color: var(--colour-slider);
     width: 115px;
 }
 
