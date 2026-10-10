@@ -111,26 +111,24 @@
 .sequenceEditButtons button {
     height: 30px;
     width: 30px;
-    border: solid 1px var(--colour-button-fg);
+    border: solid 1px var(--colour-button-border);
     padding: 0;
-}
-
-.sequenceEditButtons button svg {
-    transform: translateY(1px);
-}
-
-.sequenceEditButtons button.disabled {
-    background-color: var(--colour-sequence-edit-button-bg);
-    border: solid 1px var(--colour-panel-bg);
 }
 
 .sequenceEditButtons button.enabled {
     color: var(--colour-button-fg);
-    background-color: var(--colour-sequence-edit-button-enabled-bg);
+    background: var(--colour-button-bg);
+}
+
+.sequenceEditButtons button.disabled {
+    color: var(--colour-button-fg-disabled);
+    background: var(--colour-button-bg-disabled);
 }
 
 .sequenceEditButtons button.enabled:hover {
-    background-color: var(--colour-button-fg);
-    color: var(--colour-sequence-edit-button-enabled-bg);
-    border: solid 1px var(--colour-sequence-edit-button-enabled-bg);
+    background: var(--colour-button-bg-hover);
+}
+
+.sequenceEditButtons button svg {
+    transform: translateY(1px);
 }

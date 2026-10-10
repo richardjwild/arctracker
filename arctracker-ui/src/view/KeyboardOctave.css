@@ -45,17 +45,15 @@
 .keyboardOctave .control button.killAllAudio {
     height: 30px;
     width: 60px;
-    background-color: var(--colour-silence-all-audio-button-bg);
-    color: black;
+    background: var(--colour-button-bg);
+    color: var(--colour-silence-all-audio-button-fg);
     border-radius: 5px;
-    border: solid 1px var(--colour-silence-all-audio-button-bg);
+    border: solid 1px var(--colour-button-border);
     padding: 0;
 }
 
 .keyboardOctave .control button.killAllAudio:hover {
-    background-color: black;
-    color: var(--colour-silence-all-audio-button-bg);
-    border: solid 1px var(--colour-silence-all-audio-button-bg);
+    background: var(--colour-button-bg-hover);
 }
 
 .keyboardOctave .control button.killAllAudio svg {

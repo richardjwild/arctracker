@@ -5,6 +5,7 @@
 }
 
 .transportBar .buttons {
+    width: 100%;
     display: flex;
     align-items: center;
     gap: 0;
@@ -13,16 +14,22 @@
 .transportBar button {
     height: 30px;
     width: 45px;
-    background: var(--colour-transport-button-bg);
+    background: var(--colour-button-bg);
     color: var(--colour-button-fg);
-    border: solid 1px var(--colour-button-fg);
+    border: solid 1px var(--colour-button-border);
     padding: 0;
 }
 
 .transportBar button:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-transport-button-bg);
-    border: solid 1px var(--colour-transport-button-bg);
+    background: var(--colour-button-bg-hover);
+}
+
+.transportBar button.tempo {
+    width: 120px;
+    font-family: SplineSansMono, monospace;
+    font-size: 12px;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .transportBar button.playPause svg {
@@ -39,27 +46,4 @@
 
 .transportBar button.rewind svg {
     transform: translateX(-1px) translateY(1px);
-}
-
-.transportBar .buttons {
-    width: 100%;
-}
-
-.transportBar button.tempo {
-    width: 120px;
-    color: var(--colour-button-fg);
-    background: var(--colour-transport-button-tempo-fg);
-    border: none;
-    padding: 5px;
-    height: 30px;
-    font-family: SplineSansMono, monospace;
-    font-size: 12px;
-    text-align: center;
-    vertical-align: middle;
-}
-
-.transportBar button:hover {
-    color: var(--colour-transport-button-tempo-fg);
-    background: var(--colour-button-fg);
-    border: solid 1px var(--colour-transport-button-tempo-fg);
 }

@@ -209,13 +209,11 @@
     width: 90px;
     border-radius: 5px;
     padding: 0;
-    background: var(--colour-button-save-sample-bg);
+    background: var(--colour-button-bg);
     color: var(--colour-button-fg);
-    border: solid 1px var(--colour-button-fg);
+    border: solid 1px var(--colour-button-border);
 }
 
 .saveCloseButtons button:hover {
-    background: var(--colour-button-fg);
-    color: var(--colour-button-save-sample-bg);
-    border: solid 1px var(--colour-button-save-sample-bg);
+    background: var(--colour-button-bg-hover);
 }

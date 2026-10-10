@@ -12,8 +12,8 @@
     border-radius: 7px;
     font-family: sans-serif;
     font-size: 12px;
-    border: solid 1px var(--colour-panel-bg);
-    background-color: var(--colour-hex-calculator-button);
+    border: solid 1px var(--colour-button-border);
+    background: var(--colour-button-bg);
     color: var(--colour-button-fg);
     padding: 0;
     margin-top: 10px;
@@ -21,9 +21,7 @@
 }
 
 .hexCalculatorArea button:hover {
-    background-color: var(--colour-button-fg);
-    color: var(--colour-hex-calculator-button);
-    border: solid 1px var(--colour-hex-calculator-button);
+    background: var(--colour-button-bg-hover);
 }
 
 .ellipsis {
