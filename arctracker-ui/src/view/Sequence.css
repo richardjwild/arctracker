@@ -63,9 +63,7 @@
 }
 
 .sequence .sequencePos:hover {
-    color: var(--colour-sequence-position-bg);
-    background-color: var(--colour-sequence-position-fg);
-    border: solid 1px var(--colour-sequence-position-bg);
+    background-color: var(--colour-sequence-position-bg-hover);
 }
 
 .sequence .sequencePos.current {

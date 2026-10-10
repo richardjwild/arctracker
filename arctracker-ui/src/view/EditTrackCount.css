@@ -11,7 +11,7 @@
     display: block;
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-label);
+    color: var(--colour-title-text);
 }
 
 .editTrackCount input[type='text'] {
@@ -20,10 +20,10 @@
     border-radius: 0;
     border: none;
     background-color: transparent;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     caret-shape: block;
-    caret-color: var(--colour-sample-edit-input-text);
-    accent-color: var(--colour-sample-edit-input-text);
+    caret-color: var(--colour-input-text);
+    accent-color: var(--colour-input-text);
 }
 
 .editTrackCount input:focus {

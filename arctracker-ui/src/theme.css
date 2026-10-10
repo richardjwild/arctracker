@@ -40,10 +40,13 @@
     --colour-button-save-sample-bg: #00d000;
     --colour-button-save-module-bg: green;
     --colour-radio-button-selected: #ff7733;
+    --colour-radio-button-selected-hover: #ff9a62;
     --colour-samplelist-button-bg: #642f15;
+    --colour-samplelist-button-hover-bg: #a44e23;
     --colour-samplelist-button-selected-bg: #ff7733;
     --colour-sequence-position-fg: black;
     --colour-sequence-position-bg: #642f15;
+    --colour-sequence-position-bg-hover: #a44e23;
     --colour-sequence-position-current-bg: #ff7733;
     --colour-sequence-change-pattern: #642f15;
     --colour-sequence-change-pattern-enabled: #ff7733;

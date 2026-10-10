@@ -44,7 +44,7 @@
     display: block;
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-label);
+    color: var(--colour-title-text);
     padding-top: 13px;
 }
 
@@ -57,10 +57,10 @@
     font-family: SplineSansMono, monospace;
     font-size: 16px;
     font-weight: bold;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     caret-shape: block;
-    caret-color: var(--colour-sample-edit-input-text);
-    accent-color: var(--colour-sample-edit-input-text);
+    caret-color: var(--colour-input-text);
+    accent-color: var(--colour-input-text);
 }
 
 .setMultipleEffects input[type='text']:focus, .setMultipleEffects input[type='number']:focus {
@@ -79,7 +79,7 @@
     font-family: sans-serif;
     font-weight: bold;
     font-size: 16px;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-input-text);
     margin-left: 5px;
     margin-right: 10px;
 }

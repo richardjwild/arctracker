@@ -25,20 +25,13 @@
 }
 
 .sampleList button:hover {
-    background-color: var(--colour-button-fg);
-    color: var(--colour-samplelist-button-bg);
-    border: solid 1px var(--colour-samplelist-button-bg);
+    background-color: var(--colour-samplelist-button-hover-bg);
 }
 
 .sampleList button.selected {
     background-color: var(--colour-samplelist-button-selected-bg);
-    color: var(--colour-button-fg);
-    border: solid 1px var(--colour-samplelist-button-selected-bg);
-    border-radius: 5px;
 }
 
 .sampleList button.selected:hover {
-    background-color: var(--colour-button-fg);
-    color: var(--colour-samplelist-button-selected-bg);
-    border: solid 1px var(--colour-samplelist-button-selected-bg);
+    background-color: var(--colour-radio-button-selected-hover);
 }
