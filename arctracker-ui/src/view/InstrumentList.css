@@ -19,9 +19,9 @@
     text-align: left;
     padding-left: 10px;
     border-radius: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
 }
 
 .sampleList button:hover {
@@ -36,12 +36,26 @@
     background-color: var(--colour-radio-button-selected-hover);
 }
 
+.sampleList button span.instrumentIndex {
+    display: block;
+    width: 14px;
+}
+
+.sampleList button span.instrumentName {
+    display: block;
+    width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .sampleList button.addInstrument {
     color: var(--colour-samplelist-button-selected-bg);
     background-color: var(--colour-panel-bg);
     border: none;
     text-align: center;
     padding: 0;
+    display: block;
 }
 
 .sampleList button.addInstrument:hover {

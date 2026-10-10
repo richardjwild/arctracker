@@ -6,6 +6,18 @@ import {useEffect, useRef, useState} from "react";
 import { Instrument } from "../editing/editInstrument.ts";
 import { message } from "../language/messages.ts";
 
+const InstrumentAssignedIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    height="16px"
+    viewBox="0 -960 960 960"
+    width="16px"
+    fill="currentColor"
+  >
+    <path d="M127-167q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T320-418v-342l480-80v480q0 66-47 113t-113 47q-66 0-113-47t-47-113q0-66 47-113t113-47q23 0 42.5 5.5T720-498v-165l-320 63v320q0 66-47 113t-113 47q-66 0-113-47Z" />
+  </svg>
+);
+
 const AddInstrumentIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -106,11 +118,13 @@ export default function InstrumentList() {
                 }
               }}
             >
-              {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
-              {" "}
-              {instrument.assigned
-                ? `♫ ${instrument.name}`
-                : ""}
+              <span className="instrumentIndex">{hexadecimal.toHex(index + firstVisiblePos + 1, 2)}</span>
+              {instrument.assigned && (
+                <>
+                  <InstrumentAssignedIcon />
+                  <span className="instrumentName">{instrument.name}</span>
+                </>
+              )}
             </button>
           ),
         )}
