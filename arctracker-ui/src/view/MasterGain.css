@@ -9,12 +9,12 @@
 }
 
 .masterGain input[type='range'] {
-    accent-color: var(--colour-master-gain-accent);
+    accent-color: var(--colour-selected);
     width: 115px;
 }
 
 .masterGain .gainValue {
-    color: var(--colour-master-gain-value);
+    color: var(--colour-title-text);
     padding-right: 5px;
     width: 29px;
     text-align: center;

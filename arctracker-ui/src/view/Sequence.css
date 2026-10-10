@@ -6,6 +6,7 @@
     align-items: flex-start;
     gap: 0;
     border-right: solid 1px var(--colour-ui-bg);
+    color: var(--colour-title-text);
 }
 
 .currentPosition .position {

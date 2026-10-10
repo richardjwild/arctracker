@@ -292,6 +292,7 @@ export default function SampleEditDialog() {
       <div className="sampleLengthEdit padded sampleEditField">
         <input
           type="text"
+          className="readonly"
           readOnly
           value={draftInstrument.sample.sampleLength}
         />
@@ -302,6 +303,7 @@ export default function SampleEditDialog() {
       <div className="sampleRateEdit padded sampleEditField">
         <input
           type="text"
+          className="readonly"
           readOnly
           value={`${draftInstrument.sample.sampleRate}Hz`}
         />
