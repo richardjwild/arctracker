@@ -1,7 +1,10 @@
 use crate::ffi;
+use crate::ffi::{
+    UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN,
+    MIDI_DEVICE_NAME_LEN,
+};
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
-use crate::ffi::{UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
 
 pub struct Arctracker {
     handle: *mut ffi::ArctrackerHandle,
@@ -84,31 +87,21 @@ impl From<ffi::PlayerEventType> for PlayerEventType {
 #[derive(Serialize)]
 #[serde(tag = "eventType", content = "data")]
 pub enum PlayerEvent {
-    PlayerError {
-        error_message: String,
-    },
-    UserMidiNoteOn {
-        midi_note: i32,
-    },
+    PlayerError { error_message: String },
+    UserMidiNoteOn { midi_note: i32 },
 }
 
 impl From<ffi::PlayerEvent> for PlayerEvent {
     fn from(event: ffi::PlayerEvent) -> Self {
         unsafe {
             match event.event_type {
-                ffi::PlayerEventType::PlayerError => {
-                    Self::PlayerError {
-                        error_message: c_string_to_rust(
-                            &event.data.player_error.error_message,
-                        ),
-                    }
-                }
+                ffi::PlayerEventType::PlayerError => Self::PlayerError {
+                    error_message: c_string_to_rust(&event.data.player_error.error_message),
+                },
 
-                ffi::PlayerEventType::UserMidiNoteOn => {
-                    Self::UserMidiNoteOn {
-                        midi_note: event.data.midi_note.midi_note,
-                    }
-                }
+                ffi::PlayerEventType::UserMidiNoteOn => Self::UserMidiNoteOn {
+                    midi_note: event.data.midi_note.midi_note,
+                },
             }
         }
     }
@@ -377,9 +370,7 @@ pub fn initialise() -> Result<ArctrackerInit, ArctrackerError> {
 }
 
 impl Arctracker {
-    pub fn from_handle(
-        handle: *mut ffi::ArctrackerHandle,
-    ) -> Self {
+    pub fn from_handle(handle: *mut ffi::ArctrackerHandle) -> Self {
         Self { handle }
     }
 
@@ -395,24 +386,33 @@ impl Arctracker {
         };
         let mut devices = vec![empty_device; output_count as usize];
         let result = unsafe {
-            ffi::arctracker_get_available_outputs(
-                self.handle,
-                devices.as_mut_ptr(),
-                output_count,
-            )
+            ffi::arctracker_get_available_outputs(self.handle, devices.as_mut_ptr(), output_count)
         };
         if !result.success {
-            return Err(c_string_to_rust(&result.error_message))
+            return Err(c_string_to_rust(&result.error_message));
         }
         Ok(devices.into_iter().map(AudioDeviceInfo::from).collect())
     }
 
-    pub fn use_output(&mut self, device_index: i32, name: &str, host_api_name: &str) -> Result<(), String> {
+    pub fn use_output(
+        &mut self,
+        device_index: i32,
+        name: &str,
+        host_api_name: &str,
+    ) -> Result<(), String> {
         let c_name = CString::new(name).map_err(|_| "Invalid device name".to_string())?;
-        let c_host_api_name = CString::new(host_api_name).map_err(|_| "Invalid device name".to_string())?;
-        let result = unsafe { ffi::arctracker_use_output(self.handle, device_index, c_name.as_ptr(), c_host_api_name.as_ptr()) };
+        let c_host_api_name =
+            CString::new(host_api_name).map_err(|_| "Invalid device name".to_string())?;
+        let result = unsafe {
+            ffi::arctracker_use_output(
+                self.handle,
+                device_index,
+                c_name.as_ptr(),
+                c_host_api_name.as_ptr(),
+            )
+        };
         if !result.success {
-            return Err(c_string_to_rust(&result.error_message))
+            return Err(c_string_to_rust(&result.error_message));
         }
         Ok(())
     }
@@ -420,7 +420,7 @@ impl Arctracker {
     pub fn use_default_output(&mut self) -> Result<(), String> {
         let result = unsafe { ffi::arctracker_use_default_output(self.handle) };
         if !result.success {
-            return Err(c_string_to_rust(&result.error_message))
+            return Err(c_string_to_rust(&result.error_message));
         }
         Ok(())
     }
@@ -610,9 +610,8 @@ impl Arctracker {
             beats_per_minute: params.beats_per_minute,
             author: author.as_ptr(),
         };
-        let result = unsafe {
-            ffi::arctracker_module_create(self.handle, params, module_info.as_mut_ptr())
-        };
+        let result =
+            unsafe { ffi::arctracker_module_create(self.handle, params, module_info.as_mut_ptr()) };
         if !result.success {
             return Err(ArctrackerError {
                 message: c_string_to_rust(&result.error_message),
@@ -791,10 +790,8 @@ impl Arctracker {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::TogglePlay,
             data: ffi::PlayerCommandData {
-                no_data_command: ffi::NoDataCommand {
-                    unused: 0,
-                },
-            }
+                no_data_command: ffi::NoDataCommand { unused: 0 },
+            },
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -805,10 +802,8 @@ impl Arctracker {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::ToggleLoop,
             data: ffi::PlayerCommandData {
-                no_data_command: ffi::NoDataCommand {
-                    unused: 0,
-                },
-            }
+                no_data_command: ffi::NoDataCommand { unused: 0 },
+            },
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -834,10 +829,8 @@ impl Arctracker {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::SetMasterGain,
             data: ffi::PlayerCommandData {
-                master_gain: ffi::MasterGainCommand {
-                    master_gain,
-                }
-            }
+                master_gain: ffi::MasterGainCommand { master_gain },
+            },
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -848,9 +841,7 @@ impl Arctracker {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::TrackMuteStateChanged,
             data: ffi::PlayerCommandData {
-                track_mute: ffi::TrackMuteCommand {
-                    track,
-                }
+                track_mute: ffi::TrackMuteCommand { track },
             },
         };
         unsafe {
@@ -863,10 +854,8 @@ impl Arctracker {
         let command = ffi::PlayerCommand {
             cmd_type: ffi::PlayerCommandType::SilenceAllAudio,
             data: ffi::PlayerCommandData {
-                no_data_command: ffi::NoDataCommand {
-                    unused: 0,
-                },
-            }
+                no_data_command: ffi::NoDataCommand { unused: 0 },
+            },
         };
         unsafe {
             ffi::arctracker_player_cmd(self.handle, &command);
@@ -890,10 +879,12 @@ impl Arctracker {
             })
         }
     }
-    
+
     pub fn export_sample(&mut self, instrument_no: i32, path: &str) -> Result<(), ArctrackerError> {
         let c_filename = CString::new(path).unwrap();
-        let result = unsafe { ffi::arctracker_export_sample(self.handle, instrument_no, c_filename.as_ptr()) };
+        let result = unsafe {
+            ffi::arctracker_export_sample(self.handle, instrument_no, c_filename.as_ptr())
+        };
         if result.success {
             Ok(())
         } else {
@@ -1177,14 +1168,8 @@ impl Arctracker {
         }
     }
 
-    pub fn edit_set_panning(
-        &mut self,
-        track: u8,
-        panning: u8,
-    ) -> Result<(), ArctrackerError> {
-        let result = unsafe {
-            ffi::arctracker_edit_set_panning(self.handle, track, panning)
-        };
+    pub fn edit_set_panning(&mut self, track: u8, panning: u8) -> Result<(), ArctrackerError> {
+        let result = unsafe { ffi::arctracker_edit_set_panning(self.handle, track, panning) };
         if result.success {
             Ok(())
         } else {
@@ -1234,21 +1219,24 @@ impl ArctrackerMidi {
         };
         let mut devices = vec![empty_device; device_count as usize];
         let result = unsafe {
-            ffi::arctracker_get_available_midi_devices(self.handle, devices.as_mut_ptr(), device_count)
+            ffi::arctracker_get_available_midi_devices(
+                self.handle,
+                devices.as_mut_ptr(),
+                device_count,
+            )
         };
         if !result.success {
-            return Err(c_string_to_rust(&result.error_message))
+            return Err(c_string_to_rust(&result.error_message));
         }
         Ok(devices.into_iter().map(MidiDeviceInfo::from).collect())
     }
 
     pub fn use_midi_device(&mut self, name: &str) -> Result<(), String> {
         let c_device_name = CString::new(name).map_err(|_| "Invalid device name")?;
-        let result = unsafe {
-            ffi::arctracker_use_midi_device(self.handle, c_device_name.as_ptr())
-        };
+        let result =
+            unsafe { ffi::arctracker_use_midi_device(self.handle, c_device_name.as_ptr()) };
         if !result.success {
-            return Err(c_string_to_rust(&result.error_message))
+            return Err(c_string_to_rust(&result.error_message));
         }
         Ok(())
     }

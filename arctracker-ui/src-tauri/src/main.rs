@@ -1,10 +1,10 @@
 use arctracker_ui_lib::arctracker::{default_module_params, initialise};
+use arctracker_ui_lib::state::PendingOpenRequest;
 use arctracker_ui_lib::AppState;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{App, AppHandle, Emitter, Manager, RunEvent, Runtime, WindowEvent};
-use arctracker_ui_lib::state::PendingOpenRequest;
 
 const OPEN_SETTINGS_MENU_ID: &str = "open_settings";
 const QUIT_MENU_ID: &str = "quit-arctracker";
@@ -145,7 +145,9 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         OPEN_SETTINGS_MENU_ID => request_event(app_handle, OPEN_SETTINGS_REQUESTED_EVENT),
         QUIT_MENU_ID => request_event(app_handle, EXIT_REQUESTED_EVENT),
         NEW_MODULE_MENU_ID => request_event(app_handle, NEW_MODULE_REQUESTED_EVENT),
-        NEW_MODULE_USING_DEFAULTS_MENU_ID => request_event(app_handle, NEW_MODULE_USING_DEFAULTS_REQUESTED_EVENT),
+        NEW_MODULE_USING_DEFAULTS_MENU_ID => {
+            request_event(app_handle, NEW_MODULE_USING_DEFAULTS_REQUESTED_EVENT)
+        }
         OPEN_MODULE_MENU_ID => request_event(app_handle, OPEN_MODULE_REQUESTED_EVENT),
         SAVE_MODULE_MENU_ID => request_event(app_handle, SAVE_MODULE_REQUESTED_EVENT),
         SAVE_MODULE_AS_MENU_ID => request_event(app_handle, SAVE_MODULE_AS_REQUESTED_EVENT),
@@ -160,8 +162,12 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         SEEK_TO_START_MENU_ID => request_event(app_handle, SEEK_TO_START_REQUESTED_EVENT),
         SEEK_TO_END_MENU_ID => request_event(app_handle, SEEK_TO_END_REQUESTED_EVENT),
         TOGGLE_MUTE_MENU_ID => request_event(app_handle, TOGGLE_MUTE_REQUESTED_EVENT),
-        INCREASE_EFFECTS_DISPLAYED_MENU_ID => request_event(app_handle, INCREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT),
-        DECREASE_EFFECTS_DISPLAYED_MENU_ID => request_event(app_handle, DECREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT),
+        INCREASE_EFFECTS_DISPLAYED_MENU_ID => {
+            request_event(app_handle, INCREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT)
+        }
+        DECREASE_EFFECTS_DISPLAYED_MENU_ID => {
+            request_event(app_handle, DECREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT)
+        }
         UNDO_MENU_ID => request_event(app_handle, UNDO_REQUESTED_EVENT),
         REDO_MENU_ID => request_event(app_handle, REDO_REQUESTED_EVENT),
         TOGGLE_EDIT_MENU_ID => request_event(app_handle, TOGGLE_EDIT_REQUESTED_EVENT),
@@ -176,27 +182,31 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         CUT_PATTERN_MENU_ID => request_event(app_handle, CUT_PATTERN_REQUESTED_EVENT),
         COPY_PATTERN_MENU_ID => request_event(app_handle, COPY_PATTERN_REQUESTED_EVENT),
         PASTE_PATTERN_MENU_ID => request_event(app_handle, PASTE_PATTERN_REQUESTED_EVENT),
-        SET_MULTIPLE_EFFECTS_MENU_ID => request_event(app_handle, SET_MULTIPLE_EFFECTS_REQUESTED_EVENT),
+        SET_MULTIPLE_EFFECTS_MENU_ID => {
+            request_event(app_handle, SET_MULTIPLE_EFFECTS_REQUESTED_EVENT)
+        }
         INCREMENT_PATTERN_MENU_ID => request_event(app_handle, INCREMENT_PATTERN_REQUESTED_EVENT),
         DECREMENT_PATTERN_MENU_ID => request_event(app_handle, DECREMENT_PATTERN_REQUESTED_EVENT),
         INSERT_SEQUENCE_BEFORE_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_BEFORE_REQUESTED_EVENT)
-        },
+        }
         INSERT_SEQUENCE_AFTER_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_AFTER_REQUESTED_EVENT)
-        },
+        }
         INSERT_SEQUENCE_BEFORE_WITH_NEW_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_BEFORE_WITH_NEW_REQUESTED_EVENT)
-        },
+        }
         INSERT_SEQUENCE_AFTER_WITH_NEW_MENU_ID => {
             request_event(app_handle, INSERT_SEQUENCE_AFTER_WITH_NEW_REQUESTED_EVENT)
-        },
+        }
         DELETE_SEQUENCE_POSITION_MENU_ID => {
             request_event(app_handle, DELETE_SEQUENCE_POSITION_REQUESTED_EVENT)
-        },
+        }
         SET_PATTERN_LENGTH_MENU_ID => request_event(app_handle, SET_PATTERN_LENGTH_REQUESTED_EVENT),
         NEXT_INSTRUMENT_MENU_ID => request_event(app_handle, NEXT_INSTRUMENT_REQUESTED_EVENT),
-        PREVIOUS_INSTRUMENT_MENU_ID => request_event(app_handle, PREVIOUS_INSTRUMENT_REQUESTED_EVENT),
+        PREVIOUS_INSTRUMENT_MENU_ID => {
+            request_event(app_handle, PREVIOUS_INSTRUMENT_REQUESTED_EVENT)
+        }
         FIRST_INSTRUMENT_MENU_ID => request_event(app_handle, FIRST_INSTRUMENT_REQUESTED_EVENT),
         LAST_INSTRUMENT_MENU_ID => request_event(app_handle, LAST_INSTRUMENT_REQUESTED_EVENT),
         ADD_INSTRUMENT_MENU_ID => request_event(app_handle, ADD_INSTRUMENT_REQUESTED_EVENT),
@@ -207,7 +217,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         OCTAVE_UP_MENU_ID => request_event(app_handle, OCTAVE_UP_REQUESTED_EVENT),
         OCTAVE_DOWN_MENU_ID => request_event(app_handle, OCTAVE_DOWN_REQUESTED_EVENT),
         SHOW_COMMAND_REFERENCE_MENU_ID => request_event(app_handle, SHOW_COMMAND_REFERENCE_EVENT),
-        _ => {},
+        _ => {}
     });
     Ok(())
 }
@@ -266,7 +276,19 @@ fn build_app_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
     )?;
     let about = PredefinedMenuItem::about(app, Some("About Arctracker"), None)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    Submenu::with_items(app, "Arctracker", true, &[&about, &separator, &open_settings, &show_command_reference, &separator, &quit])
+    Submenu::with_items(
+        app,
+        "Arctracker",
+        true,
+        &[
+            &about,
+            &separator,
+            &open_settings,
+            &show_command_reference,
+            &separator,
+            &quit,
+        ],
+    )
 }
 
 fn build_file_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
@@ -333,20 +355,26 @@ fn build_file_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
 fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
     let undo = MenuItem::with_id(app, UNDO_MENU_ID, "Undo", true, Some("CmdOrCtrl+Z"))?;
     let redo = MenuItem::with_id(app, REDO_MENU_ID, "Redo", true, Some("Shift+CmdOrCtrl+Z"))?;
-    let toggle_edit = MenuItem::with_id(app, TOGGLE_EDIT_MENU_ID, "Toggle Edit Mode", true, Some("Esc"))?;
+    let toggle_edit = MenuItem::with_id(
+        app,
+        TOGGLE_EDIT_MENU_ID,
+        "Toggle Edit Mode",
+        true,
+        Some("Esc"),
+    )?;
     let clear_event = MenuItem::with_id(
         app,
         CLEAR_EVENT_MENU_ID,
         "Clear Current Event",
         true,
-        Some("Delete")
+        Some("Delete"),
     )?;
     let clear_field = MenuItem::with_id(
         app,
         CLEAR_FIELD_MENU_ID,
         "Clear Current Field",
         true,
-        Some("Backspace")
+        Some("Backspace"),
     )?;
     let cut_events = MenuItem::with_id(
         app,
@@ -444,54 +472,56 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
 }
 
 fn build_transport_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
-    let play_pause = MenuItem::with_id(
-        app,
-        PLAY_PAUSE_MENU_ID,
-        "Play/Pause",
-        true,
-        Some("Space")
-    )?;
+    let play_pause = MenuItem::with_id(app, PLAY_PAUSE_MENU_ID, "Play/Pause", true, Some("Space"))?;
     let toggle_loop = MenuItem::with_id(
         app,
         TOGGLE_LOOP_MENU_ID,
         "Toggle Pattern Loop",
         true,
-        Some("CmdOrCtrl+R")
+        Some("CmdOrCtrl+R"),
     )?;
     let seek_forwards = MenuItem::with_id(
         app,
         SEEK_FORWARDS_MENU_ID,
         "Seek Forwards",
         true,
-        Some("Alt+Right")
+        Some("Alt+Right"),
     )?;
     let seek_backwards = MenuItem::with_id(
         app,
         SEEK_BACKWARDS_MENU_ID,
         "Seek Backwards",
         true,
-        Some("Alt+Left")
+        Some("Alt+Left"),
     )?;
     let seek_to_start = MenuItem::with_id(
         app,
         SEEK_TO_START_MENU_ID,
         "Seek To Start",
         true,
-        Some("Alt+CmdOrCtrl+Left")
+        Some("Alt+CmdOrCtrl+Left"),
     )?;
     let seek_to_end = MenuItem::with_id(
         app,
         SEEK_TO_END_MENU_ID,
         "Seek To End",
         true,
-        Some("Alt+CmdOrCtrl+Right")
+        Some("Alt+CmdOrCtrl+Right"),
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(
         app,
         "Transport",
         true,
-        &[&play_pause, &toggle_loop, &separator, &seek_forwards, &seek_backwards, &seek_to_start, &seek_to_end],
+        &[
+            &play_pause,
+            &toggle_loop,
+            &separator,
+            &seek_forwards,
+            &seek_backwards,
+            &seek_to_start,
+            &seek_to_end,
+        ],
     )
 }
 
@@ -501,28 +531,33 @@ fn build_track_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         TOGGLE_MUTE_MENU_ID,
         "Toggle Mute State",
         true,
-        Some("CmdOrCtrl+M")
+        Some("CmdOrCtrl+M"),
     )?;
     let increase_effects_displayed = MenuItem::with_id(
         app,
         INCREASE_EFFECTS_DISPLAYED_MENU_ID,
         "Increase Effects Displayed",
         true,
-        Some("Shift+]")
+        Some("Shift+]"),
     )?;
     let decrease_effects_displayed = MenuItem::with_id(
         app,
         DECREASE_EFFECTS_DISPLAYED_MENU_ID,
         "Decrease Effects Displayed",
         true,
-        Some("Shift+[")
+        Some("Shift+["),
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(
         app,
         "Track",
         true,
-        &[&toggle_mute, &separator, &increase_effects_displayed, &decrease_effects_displayed],
+        &[
+            &toggle_mute,
+            &separator,
+            &increase_effects_displayed,
+            &decrease_effects_displayed,
+        ],
     )
 }
 
@@ -541,12 +576,8 @@ fn build_module_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("CmdOrCtrl+T"),
     )?;
-    let set_tempo = MenuItem::with_id(
-        app,
-        SET_TEMPO_MENU_ID,
-        "Set Tempo...",
-        true,
-        None::<String>)?;
+    let set_tempo =
+        MenuItem::with_id(app, SET_TEMPO_MENU_ID, "Set Tempo...", true, None::<String>)?;
     Submenu::with_items(
         app,
         "Module",
@@ -561,14 +592,14 @@ fn build_sequence_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         INCREMENT_PATTERN_MENU_ID,
         "Increment Pattern",
         true,
-        Some("Shift+=")
+        Some("Shift+="),
     )?;
     let decrement_pattern = MenuItem::with_id(
         app,
         DECREMENT_PATTERN_MENU_ID,
         "Decrement Pattern",
         true,
-        Some("Shift+-")
+        Some("Shift+-"),
     )?;
     let insert_before = MenuItem::with_id(
         app,
@@ -635,33 +666,28 @@ fn build_pattern_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
 }
 
 fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
-    let next_instrument = MenuItem::with_id(
-        app,
-        NEXT_INSTRUMENT_MENU_ID,
-        "Next",
-        true,
-        Some("Alt+Down")
-    )?;
+    let next_instrument =
+        MenuItem::with_id(app, NEXT_INSTRUMENT_MENU_ID, "Next", true, Some("Alt+Down"))?;
     let previous_instrument = MenuItem::with_id(
         app,
         PREVIOUS_INSTRUMENT_MENU_ID,
         "Previous",
         true,
-        Some("Alt+Up")
+        Some("Alt+Up"),
     )?;
     let first_instrument = MenuItem::with_id(
         app,
         FIRST_INSTRUMENT_MENU_ID,
         "First",
         true,
-        Some("Alt+CmdOrCtrl+Up")
+        Some("Alt+CmdOrCtrl+Up"),
     )?;
     let last_instrument = MenuItem::with_id(
         app,
         LAST_INSTRUMENT_MENU_ID,
         "Last",
         true,
-        Some("Alt+CmdOrCtrl+Down")
+        Some("Alt+CmdOrCtrl+Down"),
     )?;
     let add_instrument = MenuItem::with_id(
         app,
@@ -699,23 +725,34 @@ fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> 
         None::<String>,
     )?;
     let separator = PredefinedMenuItem::separator(app)?;
-    Submenu::with_items(app, "Instrument", true, &[&next_instrument, &previous_instrument, &first_instrument, &last_instrument, &separator, &add_instrument, &edit_instrument, &separator, &load_sample, &delete_sample, &export_sample])
+    Submenu::with_items(
+        app,
+        "Instrument",
+        true,
+        &[
+            &next_instrument,
+            &previous_instrument,
+            &first_instrument,
+            &last_instrument,
+            &separator,
+            &add_instrument,
+            &edit_instrument,
+            &separator,
+            &load_sample,
+            &delete_sample,
+            &export_sample,
+        ],
+    )
 }
 
 fn build_keyboard_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
-    let octave_up = MenuItem::with_id(
-        app,
-        OCTAVE_UP_MENU_ID,
-        "Octave Up",
-        true,
-        Some("Shift+.")
-    )?;
+    let octave_up = MenuItem::with_id(app, OCTAVE_UP_MENU_ID, "Octave Up", true, Some("Shift+."))?;
     let octave_down = MenuItem::with_id(
         app,
         OCTAVE_DOWN_MENU_ID,
         "Octave Down",
         true,
-        Some("Shift+,")
+        Some("Shift+,"),
     )?;
     Submenu::with_items(app, "Keyboard", true, &[&octave_up, &octave_down])
 }
