@@ -9,7 +9,7 @@
 .commandReference h1 {
     font-family: sans-serif;
     font-weight: bold;
-    color: var(--colour-sample-edit-input-text);
+    color: var(--colour-title-text);
     font-size: 20px;
     margin: 0;
 }
@@ -37,4 +37,9 @@
     font-family: Spline, monospace;
     font-weight: bold;
     margin-right: 0.5em;
+    color: var(--colour-command);
+}
+
+.commandListColumn span pre {
+    display: inline;
 }
