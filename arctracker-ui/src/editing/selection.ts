@@ -49,4 +49,23 @@ export const selection = {
   clearPatternSelection: () => {
     useStore.getState().setPatternSelection(null);
   },
+
+  movePatternSelection: (rows: number) => {
+    const selection = useStore.getState().patternSelection;
+    if (!selection) return null;
+    const currentPattern = useStore.getState().currentPattern;
+    const bottomRow = currentPattern.lines.length - 1;
+    const newAnchor: PatternGridPosition = {
+      track: selection.anchor.track,
+      patternIndex: Math.max(Math.min(selection.anchor.patternIndex + rows, bottomRow), 0),
+    };
+    const newFocus: PatternGridPosition = {
+      track: selection.focus.track,
+      patternIndex: Math.max(Math.min(selection.focus.patternIndex + rows, bottomRow), 0),
+    }
+    useStore.getState().setPatternSelection({
+      anchor: newAnchor,
+      focus: newFocus
+    });
+  },
 };

@@ -379,4 +379,68 @@ export const patternEvents = {
     }
     void patternEvents.setEvents(updatedEvents);
   },
+
+  duplicatePatternEvents: async () => {
+    const moduleSequence = useStore.getState().sequence;
+    const cursorPosition = cursor.currentPosition();
+    const selectionBounds = selection.patternSelectionBounds() || {
+      top: cursorPosition.patternIndex,
+      bottom: cursorPosition.patternIndex,
+      left: cursorPosition.track,
+      right: cursorPosition.track,
+    };
+    const patternNo = moduleSequence[sequence.currentPosition()];
+    const currentPattern = useStore.getState().currentPattern;
+    const numTracks = useStore.getState().module.numTracks;
+    const blockHeight = Math.min(
+      selectionBounds.bottom - selectionBounds.top + 1,
+      currentPattern.lines.length - selectionBounds.top,
+    );
+    const blockWidth = Math.min(
+      selectionBounds.right - selectionBounds.left + 1,
+      numTracks - selectionBounds.left,
+    );
+    if (blockHeight === 0 || blockWidth === 0) {
+      // This shouldn't really happen, but if it does, quitting now is the correct thing to do.
+      return;
+    }
+    //
+    // Duplicate the selected events.
+    //
+    let duplicatedEvents: { location: EventLocation; event: PatternEvent }[] = [];
+    for (
+      let patternIndex = selectionBounds.top;
+      patternIndex <= selectionBounds.bottom &&
+      patternIndex < currentPattern.lines.length;
+      patternIndex++
+    ) {
+      for (
+        let track = selectionBounds.left;
+        track <= selectionBounds.right && track < numTracks;
+        track++
+      ) {
+        const event = await patternEvents.getEvent(patternNo, patternIndex, track);
+        if (patternIndex + blockHeight < currentPattern.lines.length) {
+          const location: EventLocation = {
+            patternNo,
+            patternIndex: patternIndex + blockHeight,
+            track,
+          };
+          duplicatedEvents.push({ location, event });
+        }
+      }
+    }
+    if (duplicatedEvents.length == 0) {
+      return;
+    }
+    await patternEvents.setEvents(duplicatedEvents);
+    //
+    // Now move the selection and cursor down by an amount equal to the selection block height.
+    //
+    selection.movePatternSelection(blockHeight);
+    patternGrid.moveTo({
+      track: cursorPosition.track,
+      patternIndex: Math.min(cursorPosition.patternIndex + blockHeight, currentPattern.lines.length - 1),
+    });
+  },
 };

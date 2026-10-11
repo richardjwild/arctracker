@@ -37,6 +37,7 @@ const menuActions: MenuAction[] = [
   { eventId: "cut-events-requested", action: commands.cutPatternEvents },
   { eventId: "copy-events-requested", action: commands.copyPatternEvents },
   { eventId: "paste-events-requested", action: commands.pastePatternEvents },
+  { eventId: "duplicate-events-requested", action: commands.duplicatePatternEvents },
   { eventId: "cut-track-requested", action: commands.cutTrack },
   { eventId: "copy-track-requested", action: commands.copyTrack },
   { eventId: "paste-track-requested", action: commands.pasteTrack },

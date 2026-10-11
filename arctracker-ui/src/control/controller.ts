@@ -23,7 +23,7 @@ import { pianoKeys } from "../keyboard/pianoKeys.ts";
 async function processCommands() {
   const commands = commandQueue.consume();
   for (const command of commands) {
-    void debug(JSON.stringify(command));
+    void debug(`Command: ${JSON.stringify(command)}`);
     switch (command.type) {
       case "Edit application config":
         if (transport.playing()) transport.togglePlay();
@@ -209,6 +209,9 @@ async function processCommands() {
         break;
       case "Paste pattern events":
         void copyPaste.pastePatternEvents(null);
+        break;
+      case "Duplicate pattern events":
+        void patternEvents.duplicatePatternEvents();
         break;
       case "Copy track":
         void copyPaste.copyTrack();

@@ -82,6 +82,7 @@ export type Command =
   | { type: "Copy pattern events" }
   | { type: "Cut pattern events" }
   | { type: "Paste pattern events" }
+  | { type: "Duplicate pattern events" }
   | { type: "Copy track" }
   | { type: "Cut track" }
   | { type: "Paste track" }
@@ -235,6 +236,7 @@ export const commands = {
   copyPatternEvents: () => commandQueue.push({ type: "Copy pattern events" }),
   cutPatternEvents: () => commandQueue.push({ type: "Cut pattern events" }),
   pastePatternEvents: () => commandQueue.push({ type: "Paste pattern events" }),
+  duplicatePatternEvents: () => commandQueue.push({ type: "Duplicate pattern events" }),
   copyTrack: () => commandQueue.push({ type: "Copy track" }),
   cutTrack: () => commandQueue.push({ type: "Cut track" }),
   pasteTrack: () => commandQueue.push({ type: "Paste track" }),

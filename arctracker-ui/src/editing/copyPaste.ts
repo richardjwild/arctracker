@@ -139,12 +139,6 @@ export const copyPaste = {
       }
     }
     await patternEvents.setEvents(pastedEvents);
-    if (!providedLocation) {
-      patternGrid.moveTo({
-        track: cursorPosition.track,
-        patternIndex: cursorPosition.patternIndex + blockHeight - 1,
-      });
-    }
   },
 
   copyTrack: async (): Promise<EventLocation[]> => {

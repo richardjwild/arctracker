@@ -150,6 +150,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
   ],
   ["KeyB", [{ modifiers: "primary", execute: commands.exportAudio }]],
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
+  ["KeyD", [{ modifiers: "primary", execute: commands.duplicatePatternEvents }]],
   ["KeyE", [{ modifiers: "primary", execute: commands.openSetMultipleEffects }]],
   ["KeyH", [{ modifiers: "primary", execute: commands.openHexCalculator }]],
   ["KeyI", [{ modifiers: "primary", execute: commands.openInstrumentEditor }]],

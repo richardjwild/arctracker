@@ -41,6 +41,7 @@ const CUT_PATTERN_MENU_ID: &str = "cut-pattern";
 const COPY_PATTERN_MENU_ID: &str = "copy-pattern";
 const PASTE_PATTERN_MENU_ID: &str = "paste-pattern";
 const SET_MULTIPLE_EFFECTS_MENU_ID: &str = "set-multiple-effects";
+const DUPLICATE_EVENTS_MENU_ID: &str = "duplicate-events";
 const INCREMENT_PATTERN_MENU_ID: &str = "increment-pattern";
 const DECREMENT_PATTERN_MENU_ID: &str = "decrement-pattern";
 const INSERT_SEQUENCE_BEFORE_MENU_ID: &str = "insert-sequence-before";
@@ -96,6 +97,7 @@ const CUT_PATTERN_REQUESTED_EVENT: &str = "cut-pattern-requested";
 const COPY_PATTERN_REQUESTED_EVENT: &str = "copy-pattern-requested";
 const PASTE_PATTERN_REQUESTED_EVENT: &str = "paste-pattern-requested";
 const SET_MULTIPLE_EFFECTS_REQUESTED_EVENT: &str = "set-multiple-effects-requested";
+const DUPLICATE_EVENTS_REQUESTED_EVENT: &str = "duplicate-events-requested";
 const INCREMENT_PATTERN_REQUESTED_EVENT: &str = "increment-pattern-requested";
 const DECREMENT_PATTERN_REQUESTED_EVENT: &str = "decrement-pattern-requested";
 const INSERT_SEQUENCE_BEFORE_REQUESTED_EVENT: &str = "insert-sequence-before-requested";
@@ -185,6 +187,9 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         SET_MULTIPLE_EFFECTS_MENU_ID => {
             request_event(app_handle, SET_MULTIPLE_EFFECTS_REQUESTED_EVENT)
         }
+        DUPLICATE_EVENTS_MENU_ID => {
+            request_event(app_handle, DUPLICATE_EVENTS_REQUESTED_EVENT)
+        }
         INCREMENT_PATTERN_MENU_ID => request_event(app_handle, INCREMENT_PATTERN_REQUESTED_EVENT),
         DECREMENT_PATTERN_MENU_ID => request_event(app_handle, DECREMENT_PATTERN_REQUESTED_EVENT),
         INSERT_SEQUENCE_BEFORE_MENU_ID => {
@@ -232,7 +237,6 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
     let sequence_menu = build_sequence_menu(app)?;
     let pattern_menu = build_pattern_menu(app)?;
     let instrument_menu = build_instrument_menu(app)?;
-    let keyboard_menu = build_keyboard_menu(app)?;
     let menu = Menu::with_items(
         app,
         &[
@@ -245,7 +249,6 @@ fn install_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
             &sequence_menu,
             &pattern_menu,
             &instrument_menu,
-            &keyboard_menu,
         ],
     )?;
     app.set_menu(menu)?;
@@ -397,6 +400,13 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("CmdOrCtrl+V"),
     )?;
+    let duplicate_events = MenuItem::with_id(
+        app,
+        DUPLICATE_EVENTS_MENU_ID,
+        "Duplicate Events",
+        true,
+        Some("CmdOrCtrl+D"),
+    )?;
     let cut_track = MenuItem::with_id(app, CUT_TRACK_MENU_ID, "Cut Track", true, Some("Shift+F3"))?;
     let copy_track = MenuItem::with_id(
         app,
@@ -440,6 +450,14 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("CmdOrCtrl+E"),
     )?;
+    let octave_up = MenuItem::with_id(app, OCTAVE_UP_MENU_ID, "Keyboard Octave Up", true, Some("Shift+."))?;
+    let octave_down = MenuItem::with_id(
+        app,
+        OCTAVE_DOWN_MENU_ID,
+        "Keyboard Octave Down",
+        true,
+        Some("Shift+,"),
+    )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(
         app,
@@ -457,6 +475,7 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
             &cut_events,
             &copy_events,
             &paste_events,
+            &duplicate_events,
             &separator,
             &cut_track,
             &copy_track,
@@ -467,6 +486,9 @@ fn build_edit_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
             &paste_pattern,
             &separator,
             &set_multiple_effects,
+            &separator,
+            &octave_up,
+            &octave_down,
         ],
     )
 }
@@ -743,18 +765,6 @@ fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> 
             &export_sample,
         ],
     )
-}
-
-fn build_keyboard_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
-    let octave_up = MenuItem::with_id(app, OCTAVE_UP_MENU_ID, "Octave Up", true, Some("Shift+."))?;
-    let octave_down = MenuItem::with_id(
-        app,
-        OCTAVE_DOWN_MENU_ID,
-        "Octave Down",
-        true,
-        Some("Shift+,"),
-    )?;
-    Submenu::with_items(app, "Keyboard", true, &[&octave_up, &octave_down])
 }
 
 fn handle_run_event<R: Runtime>(app_handle: &AppHandle<R>, event: RunEvent) {
