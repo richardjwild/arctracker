@@ -413,10 +413,10 @@ fn edit_set_module_meta_data(
 }
 
 #[tauri::command]
-fn edit_set_num_tracks(state: State<Arc<AppState>>, num_tracks: i32) -> Result<(), String> {
+fn edit_set_num_tracks(state: State<Arc<AppState>>, num_tracks: i32, init_new_tracks: bool) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .edit_set_num_tracks(num_tracks)
+        .edit_set_num_tracks(num_tracks, init_new_tracks)
         .map_err(|e| e.message)?;
     Ok(())
 }

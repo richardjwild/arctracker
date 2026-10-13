@@ -1,6 +1,7 @@
 import { editor } from "./editor.ts";
 import { engine } from "../engine/engine.ts";
 import { useStore } from "../store/useStore.ts";
+import { message } from "../language/messages.ts";
 
 export type InterpolationType = "ARCTRACKER" | "ARCHIMEDES";
 
@@ -77,6 +78,7 @@ export const moduleMetaData = {
           module.relativePitchBend,
         );
       },
+      undoMessage: message("updateModuleMetadata"),
     });
   },
 };

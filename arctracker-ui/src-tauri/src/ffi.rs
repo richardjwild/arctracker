@@ -447,6 +447,7 @@ extern "C" {
     pub fn arctracker_edit_set_num_tracks(
         handle: *mut ArctrackerHandle,
         num_tracks: c_int,
+        init_new_tracks: bool,
     ) -> ApiResult;
     pub fn arctracker_edit_set_tempo(
         handle: *mut ArctrackerHandle,

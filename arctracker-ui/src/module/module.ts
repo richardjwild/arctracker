@@ -185,15 +185,16 @@ export const module = {
     if (currentTracks !== trackCount) {
       void editor.applyEdit({
         apply: async () => {
-          await engine.setNumTracks(trackCount);
+          await engine.setNumTracks(trackCount, true);
           useStore.getState().updateTracks(trackCount);
           return true;
         },
         undo: async () => {
-          // TODO: Don't clear the new tracks if the undo operation increases the track count.
-          await engine.setNumTracks(currentTracks);
+          const trackCountWasIncreased: boolean = currentTracks < trackCount;
+          await engine.setNumTracks(currentTracks, trackCountWasIncreased);
           useStore.getState().updateTracks(currentTracks);
         },
+        undoMessage: messageFn("setTrackCount")(trackCount.toString()),
       });
     }
     editor.restorePreviousEditMode();

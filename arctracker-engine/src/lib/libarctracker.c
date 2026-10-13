@@ -843,7 +843,7 @@ api_result_t arctracker_edit_set_module_meta_data(
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int num_tracks)
+api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int num_tracks, const bool init_new_tracks)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
@@ -856,7 +856,7 @@ api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int 
     const player_restore_state_t player_state = player_get_restore_state(arctracker->playback.player);
     if (arctracker->playback.thread_active)
         arctracker_player_shutdown(arctracker);
-    const edit_result_t edit_result = editor_set_num_tracks(arctracker->module, num_tracks);
+    const edit_result_t edit_result = editor_set_num_tracks(arctracker->module, num_tracks, init_new_tracks);
     if (!edit_result.success)
         return failure(edit_result.error_message);
     api_result_t restart_result = arctracker_player_start(arctracker);

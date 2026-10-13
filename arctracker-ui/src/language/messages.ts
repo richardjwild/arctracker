@@ -134,7 +134,8 @@ const messages = {
     commandEC: "Silence sample after delay",
     commandED: "Delay note-on",
     commandEE: "Delay next pattern line",
-    panic: "PANIC! Kill all audio"
+    panic: "Silence all audio generators",
+    updateModuleMetadata: "update module metadata",
   },
 } as const;
 
@@ -151,6 +152,14 @@ const messageFns = {
     menuListenersFailed: (p: string) => `Failed to install menu listeners. Error details: ${p}`,
     copiedEvents: (p: string) => p === "1" ? "Copied 1 event to clipboard." : `Copied ${p} events to clipboard.`,
     copiedPattern: (p: string) => `Copied pattern ${p} to clipboard.`,
+    undid: (p: string) => `Undone: ${p}.`,
+    redid: (p: string) => `Redone: ${p}.`,
+    setTrackCount: (p: string) => `set track count to ${p}`,
+    insertSequenceBefore: (p: string) => `insert sequence position before ${p}`,
+    insertSequenceAfter: (p: string) => `insert sequence position after ${p}`,
+    deleteSequencePosition: (p: string) => `delete sequence position ${p}`,
+    updatePatternEvents: (p: string) => `update ${p} pattern events`,
+    updateInstrument: (p: string) => `update instrument ${p}`,
   },
 } as const;
 
@@ -158,6 +167,10 @@ const messageFns2 = {
   en: {
     menuActionFailed: (eventId: string, errorMessage: string) => `Menu action failed: ${eventId}. Error details: ${errorMessage}`,
     copiedTrack: (trackIndex: string, patternNo: string) => `Copied pattern ${patternNo} track ${trackIndex} to clipboard.`,
+    setTempo: (lpb: string, bpm: string) => `set tempo (LPB=${lpb}, BPM=${bpm})`,
+    setPatternAtPosition: (pos: string, pat: string) => `set pattern at position ${pos} to ${pat}`,
+    setEvent: (track: string, row: string) => `set event (track=${track}, row=${row}`,
+    setPatternLength: (pat: string, length: string) => `set pattern ${pat} length to ${length}`,
   },
 } as const;
 

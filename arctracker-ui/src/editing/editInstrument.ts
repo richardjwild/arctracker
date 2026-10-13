@@ -3,7 +3,7 @@ import { engine, InstrumentUpdate } from "../engine/engine.ts";
 import { EditCommand, editor } from "./editor.ts";
 import { AUDIO_EXPORT_EXTENSION, filePicker } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
-import { message } from "../language/messages.ts";
+import { message, messageFn } from "../language/messages.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
 export type Instrument = {
@@ -151,6 +151,7 @@ export const editInstrument = {
         await engine.updateInstrument(selectedInstrument, before);
         useStore.getState().setInstrument(selectedInstrument, instrument);
       },
+      undoMessage: messageFn("updateInstrument")(selectedInstrument.toString()),
     };
     await editor.applyEdit(editCommand);
   },

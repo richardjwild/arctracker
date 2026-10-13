@@ -4,6 +4,7 @@ import { transport } from "../transport/transport.ts";
 import { cursor } from "./cursor.ts";
 import { pattern } from "./pattern.ts";
 import { engine } from "../engine/engine.ts";
+import { messageFn, messageFn2 } from "../language/messages.ts";
 
 function ensureSequencePosition() {
   const moduleSequence = useStore.getState().sequence;
@@ -24,6 +25,7 @@ function basicEditCommand(before: number[], after: number[]): EditCommand {
       useStore.getState().setSequence(before);
       ensureSequencePosition();
     },
+    undoMessage: "", // This will be overridden.
   };
 }
 
@@ -35,7 +37,10 @@ async function setPattern(sequenceIndex: number, patternNo: number) {
   if (patternNo < 0 || patternNo >= numPatterns) return;
   const updatedSequence = [...sequence];
   updatedSequence[sequenceIndex] = patternNo;
-  const command = basicEditCommand(sequence, updatedSequence);
+  const command = {
+    ...basicEditCommand(sequence, updatedSequence),
+    undoMessage: messageFn2("setPatternAtPosition")(sequenceIndex.toString(), patternNo.toString()),
+  };
   await editor.applyEdit(command);
 }
 
@@ -123,6 +128,7 @@ export const sequence = {
         }
         ensureSequencePosition();
       },
+      undoMessage: messageFn("insertSequenceBefore")(sequencePosition.toString())
     }
     await editor.applyEdit(command);
   },
@@ -155,6 +161,7 @@ export const sequence = {
         }
         ensureSequencePosition();
       },
+      undoMessage: messageFn("insertSequenceAfter")(sequencePosition.toString()),
     }
     await editor.applyEdit(command);
   },
@@ -166,7 +173,10 @@ export const sequence = {
     const sequencePosition = sequence.currentPosition();
     const updatedSequence = [...moduleSequence];
     updatedSequence.splice(sequencePosition, 1);
-    const command = basicEditCommand(moduleSequence, updatedSequence);
+    const command = {
+      ...basicEditCommand(moduleSequence, updatedSequence),
+      undoMessage: messageFn("deleteSequencePosition")(sequencePosition.toString()),
+    };
     await editor.applyEdit(command);
   },
 };

@@ -137,7 +137,7 @@ edit_result_t editor_set_module_title(module_t *module, const char *name, const 
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_set_num_tracks(module_t *module, const uint32_t num_tracks)
+edit_result_t editor_set_num_tracks(module_t *module, const uint32_t num_tracks, const bool init_new_tracks)
 {
     if (num_tracks > module->track_capacity)
     {
@@ -145,7 +145,7 @@ edit_result_t editor_set_num_tracks(module_t *module, const uint32_t num_tracks)
         if (!module_adjust_track_capacity(module, new_track_capacity))
             return failure(ADJUST_TRACK_COUNT_FAILED);
     }
-    module_set_num_tracks(module, num_tracks);
+    module_set_num_tracks(module, num_tracks, init_new_tracks);
     return EDIT_SUCCESS;
 }
 

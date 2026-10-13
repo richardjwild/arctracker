@@ -1,6 +1,7 @@
 import { editor } from "./editor.ts";
 import { useStore } from "../store/useStore.ts";
 import { engine } from "../engine/engine.ts";
+import { messageFn2 } from "../language/messages.ts";
 
 export type ModuleTempo = { linesPerBeat: number; beatsPerMinute: number };
 
@@ -31,6 +32,7 @@ export const tempo = {
         await engine.setTempo(oldLinesPerBeat, oldBeatsPerMinute);
         useStore.getState().updateTempo(oldLinesPerBeat, oldBeatsPerMinute);
       },
+      undoMessage: messageFn2("setTempo")(newLinesPerBeat.toString(), newBeatsPerMinute.toString())
     });
     tempo.hideDialog();
   },

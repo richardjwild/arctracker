@@ -363,9 +363,10 @@ export const engine = {
     });
   },
 
-  setNumTracks: async (numTracks: number) => {
+  setNumTracks: async (numTracks: number, initNewTracks: boolean) => {
     return await invoke("edit_set_num_tracks", {
       numTracks,
+      initNewTracks,
     });
   },
 

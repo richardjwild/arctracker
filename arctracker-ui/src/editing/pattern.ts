@@ -3,6 +3,7 @@ import { useStore } from "../store/useStore.ts";
 import { editor } from "./editor.ts";
 import { sequence } from "./sequence.ts";
 import { cursor } from "./cursor.ts";
+import { messageFn2 } from "../language/messages.ts";
 
 function ensurePatternIndex() {
   const patternNo = useStore.getState().sequence[sequence.currentPosition()];
@@ -56,6 +57,7 @@ export const pattern = {
           useStore.getState().updatePatterns(module.numPatterns, patternLengths);
           ensurePatternIndex();
         },
+        undoMessage: messageFn2("setPatternLength")(patternNo.toString(), newLength.toString()),
       });
     }
     editor.restorePreviousEditMode();

@@ -168,7 +168,7 @@ void module_set_default_pattern_length(module_t *module, uint16_t default_patter
 
 bool module_adjust_track_capacity(module_t *module, uint32_t new_track_capacity);
 
-void module_set_num_tracks(module_t *module, uint32_t num_tracks);
+void module_set_num_tracks(module_t *module, uint32_t num_tracks, bool init_new_tracks);
 
 void module_toggle_mute_state(const module_t *module, int track);
 

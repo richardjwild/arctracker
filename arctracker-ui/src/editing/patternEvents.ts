@@ -6,6 +6,7 @@ import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { patternGrid } from "./patternGrid.ts";
 import { selection } from "./selection.ts";
 import { sequence } from "./sequence.ts";
+import { messageFn, messageFn2 } from "../language/messages.ts";
 
 export type Effect = {
   effectCode: number[];
@@ -82,6 +83,7 @@ async function buildEventEditCommand({
         );
         useStore.getState().patternRevised();
       },
+      undoMessage: messageFn2("setEvent")(location.track.toString(), location.patternIndex.toString()),
     };
   } catch (err) {
     throw err;
@@ -117,6 +119,7 @@ function buildMultipleEventEditCommand(eventEdits: EventEdit[]): EditCommand {
       }
       useStore.getState().patternRevised();
     },
+    undoMessage: messageFn("updatePatternEvents")(eventEdits.length.toString()),
   };
 }
 

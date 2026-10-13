@@ -43,6 +43,6 @@ edit_result_t editor_load_sample(module_t *module, const char *filename, int *sa
 
 edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author, uint16_t default_pattern_length);
 
-edit_result_t editor_set_num_tracks(module_t *module, uint32_t num_tracks);
+edit_result_t editor_set_num_tracks(module_t *module, uint32_t num_tracks, bool init_new_tracks);
 
 #endif //ARCTRACKER_ENGINE_EDITOR_H

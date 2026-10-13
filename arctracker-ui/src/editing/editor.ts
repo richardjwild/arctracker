@@ -3,6 +3,8 @@ import { Cursor, CursorPosition } from "./cursor.ts";
 import { alerting } from "../alerting/alert.ts";
 import { transport } from "../transport/transport.ts";
 import { engine } from "../engine/engine.ts";
+import { userMessages } from "../messages/userMessages.ts";
+import { messageFn } from "../language/messages.ts";
 
 export type EditMode =
   | "none"
@@ -25,6 +27,7 @@ export type EditorState = {
 export type EditCommand = {
   apply: (redoing: boolean) => Promise<boolean>;
   undo: () => Promise<void>;
+  undoMessage: string;
 };
 
 type HistoryEntry = {
@@ -155,8 +158,10 @@ export const editor = {
     if (!entry) return;
     try {
       await entry.command.undo();
+      const message = entry.command.undoMessage;
       currentRevisionId = entry.beforeRevision;
       redoStack.push(entry);
+      userMessages.logMessage({ type: "info", message: messageFn("undid")(message) })
     } catch (err) {
       undoStack.push(entry);
       void alerting.showError(err as string);
@@ -169,8 +174,10 @@ export const editor = {
     if (!entry) return;
     try {
       await entry.command.apply(true);
+      const message = entry.command.undoMessage;
       currentRevisionId = entry.afterRevision;
       undoStack.push(entry);
+      userMessages.logMessage({ type: "info", message: messageFn("redid")(message) })
     } catch (err) {
       redoStack.push(entry);
       void alerting.showError(err as string);

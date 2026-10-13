@@ -477,11 +477,11 @@ static track_t *resize_tracks(const track_t *tracks, const uint32_t old_track_ca
     return resized_tracks;
 }
 
-void module_set_num_tracks(module_t *module, const uint32_t num_tracks)
+void module_set_num_tracks(module_t *module, const uint32_t num_tracks, const bool init_new_tracks)
 {
     const uint32_t old_num_tracks = module->num_tracks;
     module->num_tracks = (int) num_tracks;
-    if (num_tracks <= old_num_tracks)
+    if (num_tracks <= old_num_tracks || !init_new_tracks)
     {
         return;
     }
