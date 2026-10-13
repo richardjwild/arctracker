@@ -1144,9 +1144,7 @@ static bool load_samples(
             22
         );
 
-        instrument->assigned =
-            sample_length > 0 ||
-            instrument->name[0] != '\0';
+        instrument->assigned = sample_length > 0;
 
         instrument->default_volume =
             scale_mod_volume(mod_volume);
