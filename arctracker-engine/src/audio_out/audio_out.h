@@ -4,19 +4,18 @@
 #include <stdatomic.h>
 #include "audio_channel.h"
 #include "audio_api/audio_api.h"
-#include "audio_out/volume_mapping_type.h"
+
+#define SAMPLE_RATE 44100
+#define AUDIO_BUFFER_SIZE_FRAMES 512
 
 typedef struct {
     int num_channels;
     float master_gain;
     float *mono_channel_buffer;
     stereo_frame_t *stereo_channel_buffer;
-    stereo_frame_t *output_buffer;
-    int frames_filled;
-    interpolation_type_t interpolation_type;
     atomic_uint peak_l;
     atomic_uint peak_r;
-    audio_api_t api;
+    unsigned int frames_until_next_tick;
 } audio_out_t;
 
 typedef struct {
@@ -24,11 +23,9 @@ typedef struct {
     const char *error_message;
 } audio_out_result_t;
 
-bool initialise_audio(audio_out_t *audio_out, audio_api_t audio_api, int num_channels, float master_gain);
+bool initialise_audio(audio_out_t *audio_out, int num_channels, float master_gain);
 
-bool write_audio_data(audio_out_t *, audio_channel_t *, int);
-
-void send_remaining_audio(audio_out_t *);
+void write_audio_data(audio_out_t *, audio_channel_t *, unsigned int, float *);
 
 void destroy_audio_resources(const audio_out_t *);
 

@@ -1,8 +1,8 @@
 import { useStore } from "../store/useStore.ts";
 import "./InstrumentList.css";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
-import {commands} from "../control/commands.ts";
-import {useEffect, useRef, useState} from "react";
+import { commands } from "../control/commands.ts";
+import { useEffect, useRef, useState } from "react";
 import { Instrument } from "../editing/editInstrument.ts";
 import { message } from "../language/messages.ts";
 
@@ -43,9 +43,9 @@ export default function InstrumentList() {
 
   const gap = 5;
   const visibleCount =
-      cellHeight > 0
-          ? Math.max(1, Math.floor((viewportHeight) / (cellHeight + gap)) - 1)
-          : 1;
+    cellHeight > 0
+      ? Math.max(1, Math.floor(viewportHeight / (cellHeight + gap)) - 1)
+      : 1;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -82,11 +82,11 @@ export default function InstrumentList() {
       // Selected instrument is already visible. Don't do anything!
       return previous;
     });
-  }, [selectedInstrument, visibleCount])
+  }, [selectedInstrument, visibleCount]);
 
   const visibleInstruments = instruments.slice(
-      firstVisiblePos,
-      firstVisiblePos + visibleCount,
+    firstVisiblePos,
+    firstVisiblePos + visibleCount,
   );
 
   return (
@@ -118,7 +118,9 @@ export default function InstrumentList() {
                 }
               }}
             >
-              <span className="instrumentIndex">{hexadecimal.toHex(index + firstVisiblePos + 1, 2)}</span>
+              <span className="instrumentIndex">
+                {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
+              </span>
               {instrument.assigned && (
                 <>
                   <InstrumentAssignedIcon />
@@ -128,18 +130,20 @@ export default function InstrumentList() {
             </button>
           ),
         )}
-      <button
-        type="button"
-        className="addInstrument"
-        title={message("addInstrumentHintText")}
-        ref={cellRef}
-        onClick={(e) => {
-          e.preventDefault();
-          commands.addInstrument();
-        }}
-      >
-        <AddInstrumentIcon />
-      </button>
+      {instruments.length < 256 && (
+        <button
+          type="button"
+          className="addInstrument"
+          title={message("addInstrumentHintText")}
+          ref={cellRef}
+          onClick={(e) => {
+            e.preventDefault();
+            commands.addInstrument();
+          }}
+        >
+          <AddInstrumentIcon />
+        </button>
+      )}
     </div>
   );
 }

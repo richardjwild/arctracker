@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "player.h"
+
+#include <assert.h>
 #include <math.h>
 #include "sequencer.h"
 #include "commands.h"
@@ -23,7 +25,7 @@ static void synchronise_track_panning(player_t *player, uint8_t track);
 static void silence_all_audio(player_t *player);
 static void init_null_instrument(player_t *);
 static void calculate_fine_tuning(void);
-static bool player_tick(player_t *);
+static void player_update_instruments(player_t *);
 static void process_player_commands(player_t *player);
 static void process_player_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
@@ -42,13 +44,12 @@ static audio_channel_t *initialise_audio_channels(const module_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
 static void initialise_spatialisers(const player_t *player);
 static event_t *get_events(const player_t *);
-static void play_scheduled_notes(const player_t *);
+static void action_scheduled_note_ons(const player_t *);
 static void note_on(int, const player_instrument_t *, uint8_t, player_track_t *, const event_t *, const playback_policy_t *);
 static audio_generator_t init_audio_generator(int, player_track_t *track, const player_instrument_t *, uint8_t, uint8_t, const playback_policy_t *);
 static sampler_state_t *get_available_sample_player(player_track_t *);
 static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
-static bool audio_consume(player_t *);
 static void on_new_pattern_line(player_t *);
 static void on_new_event(const player_t *, event_t *, player_track_t *);
 static void tick_audio_dsps(const player_t *, const event_scheduler_t *);
@@ -57,9 +58,10 @@ static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
 static void clear_loop_state(player_t *);
 static player_event_t create_user_midi_event(int note);
-static player_event_t create_error_event(const char *);
 
-player_t *player_create(module_t *module, const audio_api_t audio_api, player_event_queue_t *player_event_queue)
+static void player_tick(player_t *player);
+
+player_t *player_create(module_t *module, player_event_queue_t *player_event_queue)
 {
     player_t *player = allocate_array(PLAYER, 1, sizeof(player_t));
     if (player == NULL)
@@ -72,9 +74,8 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
     player->master_gain = module->master_gain;
     player->current_bpm = module->initial_bpm;
     const tempo_t initial_tempo = module_get_initial_tempo(module);
-    player->tick_scheduler = tick_scheduler_create(initial_tempo, audio_api.info.sample_rate);
-    player->sequence = sequencer_initialise(module, audio_api.info.bouncing);
-    player->bouncing = audio_api.info.bouncing;
+    player->tick_scheduler = tick_scheduler_create(initial_tempo, SAMPLE_RATE);
+    player->sequence = sequencer_initialise(module);
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
     {
@@ -91,7 +92,7 @@ player_t *player_create(module_t *module, const audio_api_t audio_api, player_ev
         goto init_failed;
     }
     initialise_spatialisers(player);
-    const bool audio_init_result = initialise_audio(&player->audio_out, audio_api, module->num_tracks, player->master_gain);
+    const bool audio_init_result = initialise_audio(&player->audio_out, module->num_tracks, player->master_gain);
     if (!audio_init_result)
     {
         error_with_detail(AUDIO_INIT_FAILED, get_error_message());
@@ -112,40 +113,50 @@ init_failed:
     return NULL;
 }
 
-void player_update_instruments(player_t *player)
+player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, const unsigned long frames_requested, const bool halt_at_sequence_end)
 {
-    for (int instrument_index = 0; instrument_index < NUM_INSTRUMENT_SLOTS; instrument_index++)
+    unsigned long frames_unwritten = frames_requested;
+    audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
+    unsigned long frames_until_next_tick = player->audio_out.frames_until_next_tick;
+    unsigned long buffer_offset = 0;
+    while (!(halt_at_sequence_end && player->sequence.jumped_back) && frames_unwritten > 0)
     {
-        synchronise_instrument(player, instrument_index);
+        const unsigned long frames_to_write = frames_unwritten > frames_until_next_tick ? frames_until_next_tick : frames_unwritten;
+        if (frames_to_write > 0)
+        {
+            assert(buffer_offset + frames_to_write * 2 <= frames_requested * 2);
+            write_audio_data(&player->audio_out, player->audio_channels, frames_to_write, output_buffer + buffer_offset);
+            frames_until_next_tick -= frames_to_write;
+            frames_unwritten -= frames_to_write;
+            buffer_offset += frames_to_write * 2;
+        }
+        if (frames_until_next_tick == 0)
+        {
+            player_tick(player);
+            frames_until_next_tick = tick_scheduler_samples_next_tick(audio_accumulator);
+        }
     }
+    player->audio_out.frames_until_next_tick = frames_until_next_tick;
+    return (player_render_audio_result_t) {
+        .song_ended = player->sequence.jumped_back,
+        .frames_unfilled = frames_unwritten,
+    };
 }
 
-bool player_run(player_t *player)
+static void player_tick(player_t *player)
 {
-    player->running = true;
-    if (player->bouncing)
+    process_player_commands(player);
+    if (player->playing)
     {
-        // Normally the player waits to be started by the user, but when bouncing audio it must start immediately.
-        player_start(player);
+        if (player_step(player))
+        {
+            on_new_pattern_line(player);
+        }
+        action_scheduled_note_ons(player);
+        event_scheduler_t *event_scheduler = &player->tick_scheduler.event_scheduler;
+        tick_audio_dsps(player, event_scheduler);
+        tick_scheduler_advance_tick(event_scheduler);
     }
-    bool healthy = true;
-    while (healthy && player->running)
-    {
-        // This is the player main loop.
-        healthy = player_tick(player);
-    }
-    if (healthy)
-    {
-        send_remaining_audio(&player->audio_out);
-    }
-    else
-    {
-        event_queue_add(player->player_event_queue, create_error_event(player->error_message));
-    }
-    player->running = false;
-    player->playing = false;
-    destroy_audio_resources(&player->audio_out);
-    return healthy;
 }
 
 bool player_queue_command(const player_t *player, const player_command_t command)
@@ -153,14 +164,9 @@ bool player_queue_command(const player_t *player, const player_command_t command
     return command_queue_add(player->command_queue, command);
 }
 
-void player_shutdown(player_t *player)
-{
-    player->running = false;
-}
-
 void player_sequence_changed(player_t *player, const module_t *module)
 {
-    player->sequence = sequencer_reinitialise(module, &player->sequence, false);
+    player->sequence = sequencer_reinitialise(module, &player->sequence);
 }
 
 void player_instrument_changed(player_t *player, const int instrument_no)
@@ -198,6 +204,7 @@ void player_restore_state(player_t *player, const player_restore_state_t state)
 void player_destroy(player_t *player)
 {
     command_queue_destroy(player->command_queue);
+    destroy_audio_resources(&player->audio_out);
     deallocate(PLAYER, player->audio_channels);
     deallocate(PLAYER, player->tracks);
     deallocate(PLAYER, player);
@@ -251,7 +258,7 @@ static void synchronise_instrument(player_t *player, const int instrument_index)
         return;
     }
     const float base_period = period_for_note(sample.base_note, 1.0f);
-    const float output_rate = (float) player->audio_out.api.info.sample_rate;
+    const float output_rate = SAMPLE_RATE;
     const float phase_increment_per_period = base_period * sample.sample_rate / output_rate;
     player->instruments[instrument_index] = (player_instrument_t) {
         .assigned = true,
@@ -316,30 +323,12 @@ static void calculate_fine_tuning(void)
     }
 }
 
-static bool player_tick(player_t *player)
+static void player_update_instruments(player_t *player)
 {
-    process_player_commands(player);
-    if (player->bouncing && player->sequence.song_ended)
+    for (int instrument_index = 0; instrument_index < NUM_INSTRUMENT_SLOTS; instrument_index++)
     {
-        player_shutdown(player);
-        return true;
+        synchronise_instrument(player, instrument_index);
     }
-    if (!audio_consume(player))
-    {
-        return false;
-    }
-    event_scheduler_t *event_scheduler = &player->tick_scheduler.event_scheduler;
-    if (player->playing)
-    {
-        if (player_step(player))
-        {
-            on_new_pattern_line(player);
-        }
-        play_scheduled_notes(player);
-        tick_audio_dsps(player, event_scheduler);
-        tick_scheduler_advance_tick(event_scheduler);
-    }
-    return true;
 }
 
 static void process_player_commands(player_t *player)
@@ -410,12 +399,6 @@ static void process_toggle_play_command(player_t *player)
 static void process_seek_command(player_t *player, const seek_command_t data)
 {
     player_seek(player, data.new_sequence_pos, data.new_pattern_pos);
-}
-
-static void set_volume(const player_track_t *track, const uint8_t volume)
-{
-    audio_generator_t *generator = &track->audio_channel->audio_generator;
-    generator->set_volume(&generator->state, volume);
 }
 
 static void process_midi_note_on_command(const player_t *player, const midi_note_on_command_t data)
@@ -574,18 +557,6 @@ static event_t *get_events(const player_t *player)
     return pattern.events + sequence->pattern_index * track_capacity;
 }
 
-static bool audio_consume(player_t *player)
-{
-    audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
-    const int samples_to_write = tick_scheduler_samples_next_tick(audio_accumulator);
-    const bool success = write_audio_data(&player->audio_out, player->audio_channels, samples_to_write);
-    if (!success)
-    {
-        player->error_message = get_error_message();
-    }
-    return success;
-}
-
 static void on_new_pattern_line(player_t *player)
 {
     clear_scheduled_notes(player);
@@ -631,7 +602,8 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
     }
     else if (event->instrument_no && instrument->assigned)
     {
-        set_volume(track, instrument->default_volume);
+        audio_generator_t *generator = &track->audio_channel->audio_generator;
+        generator->set_volume(&generator->state, instrument->default_volume);
     }
     if (!track->scheduler.scheduled)
     {
@@ -653,7 +625,7 @@ static void tick_audio_dsps(const player_t *player, const event_scheduler_t *eve
     }
 }
 
-static void play_scheduled_notes(const player_t *player)
+static void action_scheduled_note_ons(const player_t *player)
 {
     for (int track = 0; track < player->module->num_tracks; track++)
     {
@@ -736,7 +708,7 @@ static void player_stop(player_t *player)
 static void player_start(player_t *player)
 {
     player->playing = true;
-    player->sequence.song_ended = false;
+    player->sequence.jumped_back = false;
     tick_scheduler_restart(&player->tick_scheduler);
     clear_loop_state(player);
     if (player->sequence.looping_state.looping && !player->sequence.looping_state.commanded_by_ui)
@@ -767,13 +739,4 @@ static player_event_t create_user_midi_event(const int note)
             }
         }
     };
-}
-
-static player_event_t create_error_event(const char *error_message)
-{
-    player_event_t event = {
-        .type = PLAYER_ERROR,
-    };
-    snprintf(event.data.player_error.error_message, ERROR_MESSAGE_MAX_LENGTH, "%s", error_message);
-    return event;
 }

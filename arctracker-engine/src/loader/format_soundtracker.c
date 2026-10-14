@@ -496,6 +496,14 @@ static int decimal_digit(uint8_t c)
 
 static int tracks_from_signature(const uint8_t *signature)
 {
+    //
+    // Historical note: Many people incorrectly assumed that the M.K. string referred to Mahoney & Kaktus, the authors
+    // of Noisetracker, but in fact M.K. are the initials of Michael Kleps (née Hartmann), also known as Unknown of the
+    // demoscene group D.O.C. (Doctor Mabuse Orgasm Crackings). He was responsible for many of the early innovations and
+    // proliferations of the Soundtracker clones. Among other things, his Soundtracker clones increased the number of
+    // sample slots from 15 to 31. (MOD files with 15 samples are not currently supported by Arctracker, because Amiga
+    // history is not its purpose — other projects do that far better. I am focussed more on the Archimedes scene).
+    //
     if (memcmp(signature, "M.K.", 4) == 0 ||
         memcmp(signature, "M!K!", 4) == 0)
         return 4;
@@ -796,6 +804,7 @@ static void decode_effect(
         case 0x6:
             effects[0].command = VIBRATO;
             effects[0].data = 0;
+            effects[1].command = VOLUME_SLIDE;
             if ((mod_data & 0xf0) != 0) {
                 effects[1].data = 0x80 | 4 * (mod_data >> 4);
             }
@@ -843,7 +852,11 @@ static void decode_effect(
             break;
 
         case 0xD:
-            // ProTracker Dxx represents the target pattern line as decimal, not hex.
+            // ProTracker Dxy represents the entry pattern line xy as decimal-like, although, weirdly, it does not
+            // constrain the bottom nybble to the decimal digits 0-9. A-F are also accepted and they have the same
+            // values as in a hexadecimal number. Therefore 2A is treated as (2 x 10 + 10) = 30; 3B is treated as
+            // (3 x 10 + 11) = 41 etc. Thus the naive implementation below is actually correct. Arctracker treats its
+            // 0Dxy command data as hexadecimal, mostly because Arctracker's patterns may be longer than 64 lines.
             effects[0].command = BREAK_TO_NEXT_PATTERN;
             effects[0].data = 10 * (mod_data >> 4) + (mod_data & 0xf);
             break;

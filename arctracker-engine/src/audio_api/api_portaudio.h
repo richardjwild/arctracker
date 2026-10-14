@@ -2,6 +2,9 @@
 #define ARCTRACKER_PORTAUDIO_H
 
 #include "audio_api.h"
+#include "portaudio.h"
+
+#define DEFAULT_PORTAUDIO_DEVICE_INDEX -1
 
 typedef struct {
     int device_index;
@@ -9,16 +12,18 @@ typedef struct {
     char host_api_name[HOST_API_NAME_SIZE];
 } audio_device_info_t;
 
-audio_api_t get_output(int device_index, const char *name, const char *host_api_name, interpolation_type_t interpolation_type);
+bool open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data);
 
-audio_api_t get_default_output(interpolation_type_t interpolation_type);
+bool start_portaudio_stream(PaStream *pa_stream);
+
+void close_portaudio_stream(PaStream *pa_stream);
 
 bool start_portaudio(void);
+
+bool stop_portaudio(void);
 
 int get_available_output_count(void);
 
 bool get_available_outputs(audio_device_info_t *available_outputs, int requested_outputs);
-
-bool stop_portaudio(void);
 
 #endif //ARCTRACKER_PORTAUDIO_H

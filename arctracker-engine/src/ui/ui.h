@@ -91,8 +91,10 @@ typedef struct ui_transport_state {
 } ui_transport_state_t;
 
 typedef struct ui_export_state {
-    bool completed;
+    bool running;
     int percent_complete;
+    bool failed;
+    char error_message[256];
 } ui_export_state_t;
 
 typedef struct ui_peak_level {

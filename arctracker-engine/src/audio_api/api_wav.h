@@ -3,6 +3,19 @@
 
 #include "audio_api.h"
 
-audio_api_t initialise_wav(const char *output_filename, interpolation_type_t interpolation_type);
+typedef struct {
+    char output_filename[MAX_FILE_PATH_LENGTH];
+    unsigned long frames_written;
+    unsigned long data_capacity;
+    float *audio_buffer;
+    unsigned long audio_buffer_size;
+    int16_t *audio_data;
+} wav_export_t;
+
+bool export_init(const char *output_filename, wav_export_t *wav_export);
+
+bool export_collect_audio(wav_export_t *wav_export, unsigned long frames_in_buffer);
+
+bool export_finish(wav_export_t *wav_export);
 
 #endif //ARCTRACKER_API_WAV_H

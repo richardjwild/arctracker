@@ -68,9 +68,14 @@ bool monitor_export(arctracker_t *arctracker_handle)
 {
     ui_export_state_t export_state;
     arctracker_get_export_state(arctracker_handle, &export_state);
+    printf("initial export state: running=%s, failed=%s, pct complete=%d error=%s",
+        export_state.running ? "yes" : "no",
+        export_state.failed ? "yes" : "no",
+        export_state.percent_complete,
+        export_state.error_message);
     bool player_healthy = true;
     int pct_complete = 0;
-    while (player_healthy && !export_state.completed)
+    while (player_healthy && export_state.running)
     {
         if (export_state.percent_complete > pct_complete)
         {
@@ -81,8 +86,14 @@ bool monitor_export(arctracker_t *arctracker_handle)
         usleep(16000);
         if (player_healthy)
             arctracker_get_export_state(arctracker_handle, &export_state);
+        else
+            printf("player is not healthy\n");
     }
-    return player_healthy;
+    if (export_state.failed)
+    {
+        fprintf(stderr, "Export failed: %s\n", export_state.error_message);
+    }
+    return player_healthy && !export_state.failed;
 }
 
 static bool state_changed(const ui_transport_state_t new_state)

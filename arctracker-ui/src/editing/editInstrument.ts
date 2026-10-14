@@ -53,6 +53,16 @@ async function selectInstrument(instrumentNumber: number) {
   setSelectedInstrument(instrumentNumber);
 }
 
+function ensureSelectedInstrumentValid() {
+  let selectedInstrument = useStore.getState().selectedInstrument;
+  if (selectedInstrument === null) return;
+  const { module, setSelectedInstrument } = useStore.getState();
+  while (selectedInstrument >= 0 && !module.instruments[selectedInstrument]?.assigned) {
+    selectedInstrument -= 1;
+  }
+  setSelectedInstrument(Math.max(selectedInstrument, 0));
+}
+
 export const editInstrument = {
   instrumentEditing: () => {
     return useStore.getState().editorState.editMode === "instrument";
@@ -251,5 +261,6 @@ export const editInstrument = {
 
   closeDialog: () => {
     editor.restorePreviousEditMode();
+    ensureSelectedInstrumentValid();
   },
 };
