@@ -3,7 +3,7 @@
 
 #include <stdatomic.h>
 #include "audio_channel.h"
-#include "audio_api/audio_api.h"
+#include "audio_out/stereo_frame.h"
 
 #define SAMPLE_RATE 44100
 #define AUDIO_BUFFER_SIZE_FRAMES 512

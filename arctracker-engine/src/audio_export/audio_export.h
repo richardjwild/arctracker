@@ -1,7 +1,9 @@
 #ifndef ARCTRACKER_API_WAV_H
 #define ARCTRACKER_API_WAV_H
 
-#include "audio_api.h"
+#include <stdbool.h>
+
+#define MAX_FILE_PATH_LENGTH 4096
 
 typedef struct {
     char output_filename[MAX_FILE_PATH_LENGTH];

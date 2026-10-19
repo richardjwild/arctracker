@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "api_wav.h"
+#include "audio_export.h"
 #include "audio_file/wav.h"
 #include "audio_out/audio_out.h"
 #include "io/error.h"

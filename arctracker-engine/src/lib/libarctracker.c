@@ -4,13 +4,10 @@
 #include <string.h>
 #include "libarctracker.h"
 
-#include <math.h>
-
 #include "arctracker.h"
 #include "messages.h"
 #include "player/player.h"
-#include "audio_api/audio_api.h"
-#include "audio_api/api_portaudio.h"
+#include "portaudio/portaudio_api.h"
 #include "io/error.h"
 #include "loader/loader.h"
 #include "memory/heap.h"
@@ -609,25 +606,17 @@ static void *run_export(void *arg)
         if (frames_filled > 0)
         {
             if (!export_collect_audio(&wav_export, frames_filled))
+            {
                 arctracker->export_state = FAILED;
+                return NULL;
+            }
         }
         if (result.song_ended)
         {
             arctracker->export_state = WRITING;
         }
     }
-    if (arctracker->export_state == FAILED)
-    {
-        return NULL;
-    }
-    if (export_finish(&wav_export))
-    {
-        arctracker->export_state = COMPLETE;
-    }
-    else
-    {
-        arctracker->export_state = FAILED;
-    }
+    arctracker->export_state = export_finish(&wav_export) ? COMPLETE : FAILED;
     return NULL;
 }
 

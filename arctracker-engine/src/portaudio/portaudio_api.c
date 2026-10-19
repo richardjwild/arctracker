@@ -1,4 +1,5 @@
-#include "api_portaudio.h"
+#include "portaudio_api.h"
+#include "portaudio.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>

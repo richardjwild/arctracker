@@ -1,10 +1,18 @@
 #ifndef ARCTRACKER_PORTAUDIO_H
 #define ARCTRACKER_PORTAUDIO_H
 
-#include "audio_api.h"
 #include "portaudio.h"
+#include <stdbool.h>
 
+#define AUDIO_DEVICE_NAME_SIZE 256
+#define HOST_API_NAME_SIZE 256
 #define DEFAULT_PORTAUDIO_DEVICE_INDEX -1
+
+typedef struct {
+    int device_index;
+    char name[AUDIO_DEVICE_NAME_SIZE];
+    char host_api_name[HOST_API_NAME_SIZE];
+} portaudio_config_t;
 
 typedef struct {
     int device_index;

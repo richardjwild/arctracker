@@ -3,8 +3,9 @@
 
 #include <pthread.h>
 #include "portaudio.h"
-#include "audio_api/api_wav.h"
+#include "audio_export/audio_export.h"
 #include "player/player.h"
+#include "portaudio/portaudio_api.h"
 #include "ui/player_event_queue.h"
 
 typedef enum {
