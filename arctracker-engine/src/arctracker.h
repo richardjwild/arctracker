@@ -2,26 +2,37 @@
 #define ARCTRACKER_ARCTRACKER_H
 
 #include <pthread.h>
+#include "portaudio.h"
+#include "audio_export/audio_export.h"
 #include "player/player.h"
+#include "portaudio/portaudio_api.h"
 #include "ui/player_event_queue.h"
 
+typedef enum {
+    IDLE, RENDERING, WRITING, COMPLETE, FAILED
+} export_state_t;
+
 typedef struct {
-    bool initialised;
+    player_t *player;
+    player_event_queue_t *event_queue;
+    bool stream_started;
+    PaStream *pa_stream;
+} playback_audio_subsystem_t;
+
+typedef struct {
     player_t *player;
     player_event_queue_t *event_queue;
     bool thread_active;
     pthread_t audio_thread;
-} audio_subsystem_t;
-
-typedef enum {
-    IDLE, RUNNING, COMPLETE
-} export_state_t;
+    wav_export_t wav_export;
+} export_audio_subsystem_t;
 
 typedef struct arctracker_handle {
+    bool portaudio_initialised;
+    portaudio_config_t audio_config;
     module_t *module;
-    audio_api_t playback_audio_api;
-    audio_subsystem_t playback;
-    audio_subsystem_t export;
+    playback_audio_subsystem_t playback;
+    export_audio_subsystem_t export;
     export_state_t export_state;
 } arctracker_t;
 

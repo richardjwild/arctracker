@@ -160,6 +160,7 @@ const messageFns = {
     deleteSequencePosition: (p: string) => `delete sequence position ${p}`,
     updatePatternEvents: (p: string) => `update ${p} pattern events`,
     updateInstrument: (p: string) => `update instrument ${p}`,
+    audioExportFailed: (p: string) => `Audio export failed: ${p}`,
   },
 } as const;
 

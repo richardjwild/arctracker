@@ -320,8 +320,10 @@ pub struct UiPeakLevels {
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UiExportState {
-    pub completed: bool,
+    pub running: bool,
     pub percent_complete: i32,
+    pub failed: bool,
+    pub error_message: String,
 }
 
 #[derive(Debug)]
@@ -899,8 +901,10 @@ impl Arctracker {
         unsafe { ffi::arctracker_get_export_state(self.handle, export_state.as_mut_ptr()) };
         let export_state = unsafe { export_state.assume_init() };
         UiExportState {
-            completed: export_state.completed,
+            running: export_state.running,
             percent_complete: export_state.percent_complete,
+            failed: export_state.failed,
+            error_message: c_string_to_rust(&export_state.error_message),
         }
     }
 

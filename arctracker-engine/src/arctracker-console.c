@@ -153,7 +153,7 @@ static void start_export(arctracker_t *arctracker_handle, char *filename)
     const api_result_t result = arctracker_export_audio(arctracker_handle, filename);
     if (!result.success)
     {
-        fprintf(stderr, "Export failed: %s\n", result.error_message);
+        fprintf(stderr, "Export failed to start: %s\n", result.error_message);
         exit(EXIT_FAILURE);
     }
 }

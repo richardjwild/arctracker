@@ -385,8 +385,10 @@ export const useStore = create<AppStore>((set) => ({
     set((state) => {
       const current = state.exportState;
       if (
-        current?.completed === next?.completed &&
-        current?.percentComplete === next?.percentComplete
+        current?.running === next?.running &&
+        current?.failed === next?.failed &&
+        current?.percentComplete === next?.percentComplete &&
+        current?.errorMessage === next?.errorMessage
       ) {
         return state;
       }

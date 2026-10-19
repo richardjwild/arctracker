@@ -32,13 +32,12 @@ typedef struct {
     sequence_jump_t sequence_jump;
     pattern_break_t pattern_break;
     int restart_position;
-    bool song_ended;
-    bool continuous_play;
+    bool jumped_back;
 } sequence_t;
 
-sequence_t sequencer_initialise(const module_t *, bool bouncing);
+sequence_t sequencer_initialise(const module_t *);
 
-sequence_t sequencer_reinitialise(const module_t *, const sequence_t *old_sequence, bool bouncing);
+sequence_t sequencer_reinitialise(const module_t *, const sequence_t *old_sequence);
 
 void sequencer_advance(sequence_t *, bool *pattern_entered);
 

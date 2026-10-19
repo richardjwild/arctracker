@@ -80,15 +80,15 @@ bool wav_write_pcm16(const char *filename, const wav_pcm16_t *wav)
 {
     const size_t data_size = wav->frames * wav->channels * (BITS_PER_SAMPLE_PCM16 / 8);
     FILE *fp = fopen(filename, WRITEONLY_BINARY);
-    bool ok = write_riff_chunk_descriptor(fp, data_size)
+    if (fp == NULL)
+    {
+        system_error(errno);
+        return false;
+    }
+    const bool ok = write_riff_chunk_descriptor(fp, data_size)
         && write_format_subchunk(fp, wav->channels, BITS_PER_SAMPLE_PCM16, wav->sample_rate)
         && write_data_subchunk(fp, data_size)
         && write_audio_data(fp, wav->pcm16, wav->frames, wav->channels);
-    if (ferror(fp))
-    {
-        ok = false;
-        system_error(errno);
-    }
     fclose(fp);
     return ok;
 }

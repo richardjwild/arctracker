@@ -5,12 +5,14 @@ import {
   AUDIO_EXPORT_EXTENSION,
 } from "../filesystem/filePicker.ts";
 import { alerting } from "../alerting/alert.ts";
-import { message } from "../language/messages.ts";
+import { message, messageFn } from "../language/messages.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
 export type ExportState = {
-  completed: boolean;
+  running: boolean;
   percentComplete: number;
+  failed: boolean;
+  errorMessage: string;
 }
 
 const { setExportState, setExportMonitoring } = useStore.getState();
@@ -34,10 +36,6 @@ export const audioExport = {
     setExportMonitoring(true);
     try {
       await engine.exportAudio(filePath);
-      userMessages.logMessage({
-        type: "info",
-        message: message("audioExportComplete"),
-      });
     } catch (err) {
       setExportMonitoring(false);
       await alerting.showError(err as string);
@@ -45,9 +43,17 @@ export const audioExport = {
   },
 
   handleStateChange: (exportState: ExportState) => {
-    if (exportState.completed) {
+    if (!exportState.running) {
       setExportMonitoring(false);
       void engine.exportCleanup();
+      if (exportState.failed) {
+        void alerting.showError(messageFn("audioExportFailed")(exportState.errorMessage));
+      } else {
+        userMessages.logMessage({
+          type: "info",
+          message: message("audioExportComplete"),
+        });
+      }
     }
   },
 

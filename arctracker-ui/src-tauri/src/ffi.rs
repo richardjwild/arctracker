@@ -268,8 +268,10 @@ pub struct UiPeakLevels {
 
 #[repr(C)]
 pub struct UiExportState {
-    pub completed: bool,
+    pub running: bool,
     pub percent_complete: c_int,
+    pub failed: bool,
+    pub error_message: [c_char; 256],
 }
 
 #[repr(C)]

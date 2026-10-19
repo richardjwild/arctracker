@@ -2,7 +2,8 @@
 #define ARCTRACKER_ENGINE_AUDIO_SPATIALISER_H
 
 #include <stdint.h>
-#include "audio_api/audio_api.h"
+#include <stdbool.h>
+#include "audio_out/stereo_frame.h"
 
 typedef struct panner_state panner_state_t;
 

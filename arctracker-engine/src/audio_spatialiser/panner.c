@@ -1,4 +1,5 @@
 #include "panner.h"
+#include <stdbool.h>
 
 static const float PAN_HARD_LEFT = 1.0f;
 static const float PAN_HARD_RIGHT = 255.0f;

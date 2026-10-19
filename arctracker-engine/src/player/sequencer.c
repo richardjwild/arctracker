@@ -20,7 +20,7 @@ static void advance_pattern_event(sequence_t *, bool *);
 static void execute_commanded_pattern_entry(sequence_t *);
 static bool jump_permitted(int, const sequence_t *);
 
-sequence_t sequencer_initialise(const module_t *module, const bool bouncing)
+sequence_t sequencer_initialise(const module_t *module)
 {
     return (sequence_t) {
         .sequence = module->sequence,
@@ -31,12 +31,12 @@ sequence_t sequencer_initialise(const module_t *module, const bool bouncing)
         .looping_state = NOT_LOOPING,
         .sequence_jump = NO_SEQUENCE_JUMP,
         .pattern_break = NO_PATTERN_BREAK,
+        .jumped_back = false,
         .restart_position = module->restart_position,
-        .continuous_play = !bouncing,
     };
 }
 
-sequence_t sequencer_reinitialise(const module_t *module, const sequence_t *old_sequence, const bool bouncing)
+sequence_t sequencer_reinitialise(const module_t *module, const sequence_t *old_sequence)
 {
     sequence_t sequence = (sequence_t) {
         .sequence = module->sequence,
@@ -47,7 +47,7 @@ sequence_t sequencer_reinitialise(const module_t *module, const sequence_t *old_
         .looping_state = old_sequence->looping_state,
         .sequence_jump = NO_SEQUENCE_JUMP,
         .pattern_break = NO_PATTERN_BREAK,
-        .continuous_play = !bouncing,
+        .jumped_back = false,
     };
     if (sequence.sequence_index >= sequence.tune_length)
         sequence.sequence_index = sequence.tune_length - 1;
@@ -120,10 +120,8 @@ static void advance_sequence_index(sequence_t *sequence)
     sequence->sequence_index += 1;
     if (end_of_sequence(sequence))
     {
-        if (sequence->continuous_play)
-            sequence->sequence_index = sequence->restart_position;
-        else
-            sequence->song_ended = true;
+        sequence->sequence_index = sequence->restart_position;
+        sequence->jumped_back = true;
     }
     sequence->pattern_index = 0;
 }
@@ -162,22 +160,26 @@ static bool end_of_loop(const sequence_t *sequence)
 
 static void execute_commanded_pattern_entry(sequence_t *sequence)
 {
-    if (sequence->sequence_jump.commanded)
+    const int old_sequence_index = sequence->sequence_index;
+    if (sequence->sequence_jump.commanded && jump_permitted(sequence->sequence_jump.sequence_index, sequence))
     {
         sequence->sequence_index = sequence->sequence_jump.sequence_index;
     }
     else
     {
         sequence->sequence_index += 1;
-        if (end_of_sequence(sequence)) sequence->sequence_index = 0;
+        if (end_of_sequence(sequence)) sequence->sequence_index = sequence->restart_position;
     }
     sequence->pattern_index = sequence->pattern_break.pattern_index;
     sequence->sequence_jump.commanded = false;
     sequence->pattern_break.commanded = false;
+    if (sequence->sequence_index <= old_sequence_index)
+    {
+        sequence->jumped_back = true;
+    }
 }
 
 static bool jump_permitted(const int sequence_index, const sequence_t *sequence)
 {
-    return sequence_index < sequence->tune_length
-           && (sequence->continuous_play || sequence_index > sequence->sequence_index);
+    return sequence_index < sequence->tune_length;
 }
