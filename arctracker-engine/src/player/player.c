@@ -739,9 +739,12 @@ static void player_start(player_t *player)
 static void player_seek(player_t *player, const int new_sequence_pos, const int new_pattern_pos)
 {
     const bool pattern_entered = new_sequence_pos != player->current_frame.sequence_pos;
-    sequencer_clear_loop(&player->sequence);
     sequencer_seek(&player->sequence, new_sequence_pos, new_pattern_pos);
     set_current_frame(player, true, pattern_entered);
+    if (pattern_entered)
+    {
+        sequencer_clear_loop(&player->sequence);
+    }
 }
 
 static void clear_loop_state(player_t *player)
