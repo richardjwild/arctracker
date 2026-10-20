@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "player.h"
-
 #include <assert.h>
 #include <math.h>
 #include "sequencer.h"
@@ -14,9 +13,6 @@
 #include "audio_spatialiser/panner.h"
 #include "io/error.h"
 
-#define DEFAULT_TICKS_PER_SECOND 50
-
-static double fine_tuning[256] = {0};
 static const int NULL_INSTRUMENT_INDEX = NUM_INSTRUMENT_SLOTS;
 
 static void synchronise_instrument(player_t *, int);
@@ -24,21 +20,24 @@ static void synchronise_playback_policy(player_t *player);
 static void synchronise_track_panning(player_t *player, uint8_t track);
 static void silence_all_audio(player_t *player);
 static void init_null_instrument(player_t *);
-static void calculate_fine_tuning(void);
+static void calculate_fine_tuning(player_t *);
 static void player_update_instruments(player_t *);
+static void process_midi_commands(player_t *player);
+static void process_midi_command(player_t *player, midi_command_t command);
 static void process_player_commands(player_t *player);
 static void process_player_command(player_t *player, player_command_t command);
 static void process_toggle_play_command(player_t *player);
 static void process_seek_command(player_t *player, seek_command_t data);
 static void process_midi_note_on_command(const player_t *player, midi_note_on_command_t data);
-static void process_keyboard_note_on_command(const player_t *player, keyboard_note_on_command_t data);
-static void process_note_off_command(const player_t *player, note_off_command_t data);
+static void process_keyboard_note_on_command(const player_t *player, midi_note_on_command_t data);
+static void process_note_off_command(const player_t *player, midi_note_off_command_t data);
 static const player_instrument_t *get_player_instrument(const player_t *, int);
 static void process_toggle_loop_command(player_t *player);
 static void process_set_master_gain_command(player_t *player, master_gain_command_t data);
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool, bool);
 static void define_implicit_loop_start(player_t *);
+static void player_tick(player_t *player);
 static bool player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
@@ -59,9 +58,7 @@ static void player_seek(player_t *, int, int);
 static void clear_loop_state(player_t *);
 static player_event_t create_user_midi_event(int note);
 
-static void player_tick(player_t *player);
-
-player_t *player_create(module_t *module, player_event_queue_t *player_event_queue)
+player_t *player_create(module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue)
 {
     player_t *player = allocate_array(PLAYER, 1, sizeof(player_t));
     if (player == NULL)
@@ -81,6 +78,7 @@ player_t *player_create(module_t *module, player_event_queue_t *player_event_que
     {
         goto init_failed;
     }
+    player->midi_queue = midi_queue;
     player->audio_channels = initialise_audio_channels(player->module);
     if (player->audio_channels == NULL)
     {
@@ -102,7 +100,7 @@ player_t *player_create(module_t *module, player_event_queue_t *player_event_que
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true, true);
     init_null_instrument(player);
-    calculate_fine_tuning();
+    calculate_fine_tuning(player);
     player_update_instruments(player);
     define_implicit_loop_start(player);
     lfo_init_waveforms();
@@ -119,6 +117,10 @@ player_render_audio_result_t player_render_audio(player_t *player, float *output
     audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
     unsigned long frames_until_next_tick = player->audio_out.frames_until_next_tick;
     unsigned long buffer_offset = 0;
+    //
+    // MIDI commands are processed here because we want to service them as quickly as is feasible.
+    //
+    process_midi_commands(player);
     while (!(halt_at_sequence_end && player->sequence.jumped_back) && frames_unwritten > 0)
     {
         const unsigned long frames_to_write = frames_unwritten > frames_until_next_tick ? frames_until_next_tick : frames_unwritten;
@@ -141,22 +143,6 @@ player_render_audio_result_t player_render_audio(player_t *player, float *output
         .song_ended = player->sequence.jumped_back,
         .frames_unfilled = frames_unwritten,
     };
-}
-
-static void player_tick(player_t *player)
-{
-    process_player_commands(player);
-    if (player->playing)
-    {
-        if (player_step(player))
-        {
-            on_new_pattern_line(player);
-        }
-        action_scheduled_note_ons(player);
-        event_scheduler_t *event_scheduler = &player->tick_scheduler.event_scheduler;
-        tick_audio_dsps(player, event_scheduler);
-        tick_scheduler_advance_tick(event_scheduler);
-    }
 }
 
 bool player_queue_command(const player_t *player, const player_command_t command)
@@ -266,7 +252,7 @@ static void synchronise_instrument(player_t *player, const int instrument_index)
         .default_volume = instrument.default_volume,
         .sample = (player_sample_t) {
             .phase_increment_per_period = phase_increment_per_period,
-            .fine_tuning = fine_tuning[128 + sample.finetune],
+            .fine_tuning = player->fine_tuning[128 + sample.finetune],
             .sample_end = sample.sample_length - 1,
             .sample_repeats = instrument.repeats,
             .repeat_end = instrument.repeat_offset + instrument.repeat_length - 1,
@@ -315,11 +301,11 @@ static void init_null_instrument(player_t *player)
     player->instruments[NULL_INSTRUMENT_INDEX] = (player_instrument_t) {0};
 }
 
-static void calculate_fine_tuning(void)
+static void calculate_fine_tuning(player_t *player)
 {
     for (int finetune = -128; finetune <= 127; finetune++)
     {
-        fine_tuning[finetune + 128] = pow(2.0, -(double) finetune / (16.0 * 96.0));
+        player->fine_tuning[finetune + 128] = pow(2.0, -(double) finetune / (16.0 * 96.0));
     }
 }
 
@@ -328,6 +314,34 @@ static void player_update_instruments(player_t *player)
     for (int instrument_index = 0; instrument_index < NUM_INSTRUMENT_SLOTS; instrument_index++)
     {
         synchronise_instrument(player, instrument_index);
+    }
+}
+
+static void process_midi_command(player_t *player, const midi_command_t command)
+{
+    switch (command.cmd_type)
+    {
+        case NOTE_ON:
+            if (command.data.note_on.is_keyboard) process_keyboard_note_on_command(player, command.data.note_on);
+            else process_midi_note_on_command(player, command.data.note_on);
+            break;
+        case NOTE_OFF:
+            process_note_off_command(player, command.data.note_off);
+            break;
+    }
+}
+
+static void process_midi_commands(player_t *player)
+{
+    if (player->midi_queue == NULL)
+    {
+        // If the MIDI subsystem failed to initialise, don't make the player unusable.
+        return;
+    }
+    midi_command_t command;
+    while (midi_queue_read(player->midi_queue, &command))
+    {
+        process_midi_command(player, command);
     }
 }
 
@@ -349,17 +363,6 @@ static void process_player_command(player_t *player, const player_command_t comm
             break;
         case SEEK:
             process_seek_command(player, command.data.seek);
-            break;
-        case MIDI_NOTE_ON:
-            process_midi_note_on_command(player, command.data.midi_note_on);
-            break;
-        case KEYBOARD_NOTE_ON:
-            process_keyboard_note_on_command(player, command.data.keyboard_note_on);
-            break;
-        case MIDI_NOTE_OFF:
-            /* fall through */
-        case KEYBOARD_NOTE_OFF:
-            process_note_off_command(player, command.data.note_off);
             break;
         case TOGGLE_LOOP:
             process_toggle_loop_command(player);
@@ -415,7 +418,7 @@ static void process_midi_note_on_command(const player_t *player, const midi_note
     note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL, &player->playback_policy);
 }
 
-static void process_keyboard_note_on_command(const player_t *player, const keyboard_note_on_command_t data)
+static void process_keyboard_note_on_command(const player_t *player, const midi_note_on_command_t data)
 {
     player_track_t *track = &player->tracks[data.track];
     audio_channel_t *channel = track->audio_channel;
@@ -428,7 +431,7 @@ static void process_keyboard_note_on_command(const player_t *player, const keybo
     note_on(data.note, get_player_instrument(player, data.instrument_no), 0, track, NULL, &player->playback_policy);
 }
 
-static void process_note_off_command(const player_t *player, const note_off_command_t data)
+static void process_note_off_command(const player_t *player, const midi_note_off_command_t data)
 {
     audio_channel_t *channel = player->tracks[data.track].audio_channel;
     const instrument_t instrument = player->module->instruments[data.instrument_no];
@@ -529,6 +532,22 @@ static void define_implicit_loop_start(player_t *player)
     player->loop_state.defined = true;
     player->loop_state.counter = 0;
     player->loop_state.looping = false;
+}
+
+static void player_tick(player_t *player)
+{
+    process_player_commands(player);
+    if (player->playing)
+    {
+        if (player_step(player))
+        {
+            on_new_pattern_line(player);
+        }
+        action_scheduled_note_ons(player);
+        event_scheduler_t *event_scheduler = &player->tick_scheduler.event_scheduler;
+        tick_audio_dsps(player, event_scheduler);
+        tick_scheduler_advance_tick(event_scheduler);
+    }
 }
 
 static bool player_step(player_t *player)

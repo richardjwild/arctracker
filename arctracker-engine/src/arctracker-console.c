@@ -14,6 +14,7 @@ static void disable_raw_mode(void);
 static void print_output_devices(arctracker_t *arctracker_handle);
 static void print_midi_input_devices(midi_subsystem_t *midi_handle);
 static ui_module_info_t load_module(arctracker_t *arctracker_handle, char *filename);
+static void print_instrument_slots(arctracker_t *arctracker_handle);
 static void start_player(arctracker_t *arctracker_handle);
 static void start_export(arctracker_t *arctracker_handle, char *filename);
 static void shutdown_player(arctracker_t *arctracker_handle);
@@ -32,17 +33,10 @@ int main(const int argc, char *argv[])
     midi_subsystem_t *midi_handle = init_result.midi_handle;
     print_output_devices(arctracker_handle);
     print_midi_input_devices(midi_handle);
-    ui_module_info_t module_info = load_module(arctracker_handle, config.mod_filename);
-    printf("Module name: %s\n", module_info.name);
-    for (int slot = 0; slot < 256; slot++)
-    {
-        ui_instrument_info_t instrument_info;
-        arctracker_get_instrument_info(arctracker_handle, slot, &instrument_info);
-        if (instrument_info.assigned)
-            printf("Slot %d -> Sample %d -> %s\n", slot, instrument_info.sample_info.sample_index, instrument_info.name);
-    }
     if (config.bounce)
     {
+        ui_module_info_t module_info = load_module(arctracker_handle, config.mod_filename[0]);
+        printf("Module name: %s\n", module_info.name);
         start_export(arctracker_handle, config.output_filename);
         if (monitor_export(arctracker_handle))
             printf("Export complete\n");
@@ -50,11 +44,18 @@ int main(const int argc, char *argv[])
     }
     else
     {
-        start_player(arctracker_handle);
-        enable_raw_mode();
-        ui_loop(arctracker_handle, module_info);
-        disable_raw_mode();
-        shutdown_player(arctracker_handle);
+        for (int mod = 0; mod < config.mod_count; mod++)
+        {
+            printf("Loading file: %s\n", config.mod_filename[mod]);
+            ui_module_info_t module_info = load_module(arctracker_handle, config.mod_filename[mod]);
+            printf("Module name: %s\n", module_info.name);
+            print_instrument_slots(arctracker_handle);
+            start_player(arctracker_handle);
+            enable_raw_mode();
+            ui_loop(arctracker_handle, module_info);
+            disable_raw_mode();
+            shutdown_player(arctracker_handle);
+        }
     }
     destroy(arctracker_handle, midi_handle);
     exit(EXIT_SUCCESS);
@@ -136,6 +137,17 @@ static ui_module_info_t load_module(arctracker_t *arctracker_handle, char *filen
         exit(EXIT_FAILURE);
     }
     return module_info;
+}
+
+static void print_instrument_slots(arctracker_t *arctracker_handle)
+{
+    for (int slot = 0; slot < 256; slot++)
+    {
+        ui_instrument_info_t instrument_info;
+        arctracker_get_instrument_info(arctracker_handle, slot, &instrument_info);
+        if (instrument_info.assigned)
+            printf("Slot %d -> Sample %d -> %s\n", slot, instrument_info.sample_info.sample_index, instrument_info.name);
+    }
 }
 
 static void start_player(arctracker_t *arctracker_handle)

@@ -26,24 +26,23 @@ bool handle_argument(args_t *, const char *);
 args_t read_configuration(int p_argc, char *p_argv[])
 {
     args_t config = {
-        .mod_filename=NULL,
-        .bounce=false,
-        .output_filename=NULL,
+        .mod_filename = {NULL, NULL, NULL},
+        .mod_count = 0,
+        .bounce = false,
+        .output_filename = NULL,
     };
     if (p_argc > 1)
     {
-        for (int i = 1; i < p_argc; i++)
+        for (int i = 1; i < p_argc && config.mod_count < 3; i++)
         {
             if (!handle_argument(&config, p_argv[i]))
             {
-                if (i == (p_argc - 1))
-                    config.mod_filename = p_argv[i];
-                else
-                    error_with_detail("Unknown argument", p_argv[i]);
+                config.mod_filename[config.mod_count] = p_argv[i];
+                config.mod_count ++;
             }
         }
     }
-    if (config.mod_filename == NULL)
+    if (config.mod_count == 0)
     {
         error(USAGE_MESSAGE);
     }

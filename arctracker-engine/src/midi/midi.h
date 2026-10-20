@@ -12,13 +12,13 @@ typedef struct {
     char name[MAX_MIDI_DEVICE_NAME_LEN];
 } midi_device_info_t;
 
-midi_subsystem_t *midi_initialise(arctracker_t *arctracker);
+midi_subsystem_t *midi_initialise(midi_command_queue_t *midi_queue);
 
 bool midi_get_device_count(const midi_subsystem_t *midi, unsigned int *count);
 
 bool midi_get_devices(const midi_subsystem_t *midi, midi_device_info_t *device_info, unsigned int requested_count);
 
-bool midi_use_device(const midi_subsystem_t *midi, const char *requested_name);
+bool midi_use_device(midi_subsystem_t *midi, const char *requested_name);
 
 void midi_set_playback_channel(midi_subsystem_t *midi, int channel);
 

@@ -34,6 +34,7 @@ typedef struct arctracker_handle {
     playback_audio_subsystem_t playback;
     export_audio_subsystem_t export;
     export_state_t export_state;
+    midi_command_queue_t *midi_queue;
 } arctracker_t;
 
 #endif //ARCTRACKER_ARCTRACKER_H

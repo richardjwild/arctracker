@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 
-typedef struct
-{
-    char *mod_filename;
+typedef struct {
+    char *mod_filename[3];
+    int mod_count;
     bool bounce;
     char *output_filename;
 } args_t;
