@@ -19,6 +19,7 @@ type InputState = {
   fineTuning: string;
   repeatStart: string;
   repeatEnd: string;
+  baseNote: string;
 };
 
 type SpinnerButtonProps = {
@@ -30,6 +31,7 @@ const emptyInputState: InputState = {
   fineTuning: "0",
   repeatStart: "0",
   repeatEnd: "0",
+  baseNote: "C0",
 };
 
 export default function SampleEditDialog() {
@@ -48,6 +50,7 @@ export default function SampleEditDialog() {
       fineTuning: (draftInstrument.sample.fineTuning).toString(),
       repeatStart: draftInstrument.repeatStart.toString(),
       repeatEnd: draftInstrument.repeatEnd.toString(),
+      baseNote: notes.toString(draftInstrument.sample.baseNote + 1),
     });
   };
 
@@ -83,6 +86,30 @@ export default function SampleEditDialog() {
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(message("invalidTranspose"));
+    }
+    loseFocus();
+  };
+
+  const validateBaseNote = () => {
+    const baseNote = inputState.baseNote;
+    const regex = /[ABCDEFG][#♯]?[0-4]/g;
+    if (baseNote === "") {
+      syncInputStateWithDraft();
+      void alerting.showInfo(message("baseNoteNotSet"));
+    } if (!baseNote.match(regex)) {
+      syncInputStateWithDraft();
+      void alerting.showInfo(message("invalidBaseNote"));
+    } else {
+      const note = (baseNote.length === 3 ? baseNote.substring(0, 2) : baseNote.substring(0, 1)).replace("♯", "#");
+      const relativeNoteIndex = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].indexOf(note);
+      const octave = Number(baseNote.length === 3 ? baseNote.substring(2) : baseNote.substring(1));
+      setDraftInstrument({
+        ...draftInstrument,
+        sample: {
+          ...draftInstrument.sample,
+          baseNote: relativeNoteIndex + octave * 12,
+        },
+      })
     }
     loseFocus();
   };
@@ -317,25 +344,49 @@ export default function SampleEditDialog() {
         </label>
       </div>
       <div className="baseNoteEdit uiArea padded rounded sampleEditField">
-        <select
+        <input
+          type="text"
           id="baseNoteInput"
-          value={draftInstrument.sample.baseNote}
+          value={inputState.baseNote}
+          onFocus={editor.startTextInput}
           onChange={(e) =>
-            updateDraftInstrument({
-              ...draftInstrument,
-              sample: {
-                ...draftInstrument.sample,
-                baseNote: Number(e.target.value),
-              },
+            setInputState({
+              ...inputState,
+              baseNote: e.target.value,
             })
           }
-        >
-          {notes.allNotes().map((note, index) => (
-            <option key={index} value={index}>
-              {note}
-            </option>
-          ))}
-        </select>
+          onBlur={(e) => {
+            e.preventDefault();
+            editor.stopTextInput();
+            validateBaseNote();
+          }}
+        />
+        <div className="spinnerButtons">
+          <IncrementButton
+            onClick={() => {
+              if (draftInstrument.sample.baseNote == notes.allNotes().length - 1) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                sample: {
+                  ...draftInstrument.sample,
+                  baseNote: draftInstrument.sample.baseNote + 1,
+                }
+              });
+            }}
+          />
+          <DecrementButton
+            onClick={() => {
+              if (draftInstrument.sample.baseNote == 0) return;
+              updateDraftInstrument({
+                ...draftInstrument,
+                sample: {
+                  ...draftInstrument.sample,
+                  baseNote: draftInstrument.sample.baseNote - 1,
+                }
+              });
+            }}
+          />
+        </div>
       </div>
 
       <div className="fineTuneLabel padded sampleEditLabel">

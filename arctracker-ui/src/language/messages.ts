@@ -10,6 +10,9 @@ const messages = {
     invalidDefaultPatternLength:
       "Default pattern length must be a number between 1 and 1000.",
     invalidTranspose: "Transpose must be between -12 and 12.",
+    baseNoteNotSet: "Base note must be set.",
+    invalidBaseNote: "Base note must be in the form C2, D#3, etc.",
+    invalidBaseNoteOctave: "Base note octave must be between 0 and 4.",
     invalidFineTune: "Fine tuning must be between -128 and 127.",
     invalidRepeatStart:
       "Repeat start must be between 0 and repeat end.",

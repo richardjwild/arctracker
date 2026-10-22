@@ -162,7 +162,7 @@
     outline: none;
 }
 
-.transposeEdit .spinnerButtons button, .fineTuneEdit .spinnerButtons button {
+.transposeEdit .spinnerButtons button, .baseNoteEdit .spinnerButtons button, .fineTuneEdit .spinnerButtons button {
     display: block;
     background-color: transparent;
     border: none;
@@ -173,12 +173,12 @@
     color: var(--colour-input-text);
 }
 
-.transposeEdit .spinnerButtons button.increment svg, .fineTuneEdit .spinnerButtons button.increment svg {
+.transposeEdit .spinnerButtons button.increment svg, .baseNoteEdit .spinnerButtons button.increment svg, .fineTuneEdit .spinnerButtons button.increment svg {
     transform: translateY(-4.5px);
     pointer-events: none;
 }
 
-.transposeEdit .spinnerButtons button.decrement svg, .fineTuneEdit .spinnerButtons button.decrement svg {
+.transposeEdit .spinnerButtons button.decrement svg, .baseNoteEdit .spinnerButtons button.decrement svg, .fineTuneEdit .spinnerButtons button.decrement svg {
     transform: translateY(-6.5px);
     pointer-events: none;
 }
