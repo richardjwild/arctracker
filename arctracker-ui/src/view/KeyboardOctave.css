@@ -16,26 +16,6 @@
     width: 270px;
 }
 
-.keyboardOctave .control button {
-    height: 30px;
-    width: 15px;
-    background: transparent;
-    color: var(--colour-keyboard-octave-button-fg);
-    border-radius: 5px;
-    border: solid 1px transparent;
-    padding: 0;
-}
-
-.keyboardOctave .control button:hover {
-    background: var(--colour-keyboard-octave-button-fg);
-    color: var(--colour-panel-bg);
-    border: solid 1px var(--colour-keyboard-octave-button-fg);
-}
-
-.keyboardOctave .control button svg {
-    transform: translateX(-5px) translateY(1px) scale(50%);
-}
-
 .keyboardGraphic {
     background: var(--colour-panel-bg);
     width: 210px;
