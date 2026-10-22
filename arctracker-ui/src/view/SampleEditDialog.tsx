@@ -72,7 +72,7 @@ export default function SampleEditDialog() {
 
   useEffect(() => {
     syncInputStateWithDraft();
-    if (editInstrument.draftInstrumentModified()) {
+    if (instrumentEditing) {
       void editInstrument.auditionInstrument();
     }
   }, [draftInstrument]);
