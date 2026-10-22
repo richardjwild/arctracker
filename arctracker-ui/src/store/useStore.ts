@@ -101,8 +101,6 @@ const initialTransportState: TransportState = {
   looping: false,
   sequencePos: 0,
   patternIndex: 0,
-  // patternNo: 0,
-  // patternLength: 0,
 };
 
 const initialPattern: CurrentPattern = {
