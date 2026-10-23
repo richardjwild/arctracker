@@ -166,7 +166,7 @@ export default function SampleEditDialog() {
       ...draftInstrument,
       repeats: true,
       repeatStart: 0,
-      repeatEnd: draftInstrument.sample.sampleLength - 1,
+      repeatEnd: Math.max(draftInstrument.sample.sampleLength - 1, 0),
     });
   };
 
