@@ -90,28 +90,59 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
+  const getOctave = (baseNote: string): number | null => {
+    const octave = Number(baseNote.length === 3 ? baseNote.substring(2) : baseNote.substring(1));
+    return octave >= 0 && octave <= 4 ? octave : null;
+  }
+
   const validateBaseNote = () => {
     const baseNote = inputState.baseNote;
-    const regex = /[ABCDEFG][#♯]?[0-4]/g;
     if (baseNote === "") {
       syncInputStateWithDraft();
       void alerting.showInfo(message("baseNoteNotSet"));
-    } if (!baseNote.match(regex)) {
+      return;
+    }
+    if (!baseNote.match(/[a-gA-G][#♯]?[0-9]/g)) {
       syncInputStateWithDraft();
       void alerting.showInfo(message("invalidBaseNote"));
-    } else {
-      const note = (baseNote.length === 3 ? baseNote.substring(0, 2) : baseNote.substring(0, 1)).replace("♯", "#");
-      const relativeNoteIndex = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].indexOf(note);
-      const octave = Number(baseNote.length === 3 ? baseNote.substring(2) : baseNote.substring(1));
-      setDraftInstrument({
-        ...draftInstrument,
-        sample: {
-          ...draftInstrument.sample,
-          baseNote: relativeNoteIndex + octave * 12,
-        },
-      })
+      return;
     }
-    loseFocus();
+    let octave = getOctave(baseNote);
+    if (octave === null) {
+      syncInputStateWithDraft();
+      void alerting.showInfo(message("invalidBaseNoteOctave"));
+      return;
+    }
+    const note = (baseNote.length === 3 ? baseNote.substring(0, 2) : baseNote.substring(0, 1)).replace("♯", "#").toUpperCase();
+    const recognisedNotes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    let relativeNoteIndex = recognisedNotes.indexOf(note);
+    if (relativeNoteIndex === -1) {
+      if (note === "E#") {
+        // E# is enharmonic with F.
+        relativeNoteIndex = recognisedNotes.indexOf("F");
+      } else if (note === "B#") {
+        if (octave === 4) {
+          syncInputStateWithDraft();
+          void alerting.showInfo(message("invalidBaseNoteOctave"));
+          return;
+        }
+        // B# is enharmonic with C.
+        relativeNoteIndex = recognisedNotes.indexOf("C");
+        octave += 1;
+      } else {
+        // This should not happen, but if it does, I would very much like to see what it is.
+        syncInputStateWithDraft();
+        void alerting.showInfo(messageFn("unrecognisedNote")(note));
+        return;
+      }
+    }
+    setDraftInstrument({
+      ...draftInstrument,
+      sample: {
+        ...draftInstrument.sample,
+        baseNote: relativeNoteIndex + octave * 12,
+      },
+    });
   };
 
   const validateFineTune = () => {
@@ -348,6 +379,7 @@ export default function SampleEditDialog() {
           type="text"
           id="baseNoteInput"
           value={inputState.baseNote}
+          maxLength={3}
           onFocus={editor.startTextInput}
           onChange={(e) =>
             setInputState({
@@ -359,6 +391,7 @@ export default function SampleEditDialog() {
             e.preventDefault();
             editor.stopTextInput();
             validateBaseNote();
+            loseFocus();
           }}
         />
         <div className="spinnerButtons">
@@ -400,6 +433,7 @@ export default function SampleEditDialog() {
           id="fineTuneInput"
           value={inputState.fineTuning}
           onFocus={editor.startTextInput}
+          maxLength={3}
           onChange={(e) =>
             setInputState({
               ...inputState,

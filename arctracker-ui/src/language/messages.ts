@@ -164,6 +164,7 @@ const messageFns = {
     updatePatternEvents: (p: string) => `update ${p} pattern events`,
     updateInstrument: (p: string) => `update instrument ${p}`,
     audioExportFailed: (p: string) => `Audio export failed: ${p}`,
+    unrecognisedNote: (p: string) => `Unrecognised note: ${p}`,
   },
 } as const;
 
