@@ -45,6 +45,12 @@ export default function SampleEditDialog() {
   const { draftInstrument, setDraftInstrument } = useStore((state) => state);
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
+  const sampleNameRef = useRef<HTMLInputElement>(null);
+  const transposeInputRef = useRef<HTMLInputElement>(null);
+  const baseNoteInputRef = useRef<HTMLInputElement>(null);
+  const fineTuneInputRef = useRef<HTMLInputElement>(null);
+  const repeatStartInputRef = useRef<HTMLInputElement>(null);
+  const repeatEndInputRef = useRef<HTMLInputElement>(null);
   const loseFocus = () => modalRef.current?.focus();
 
   const syncInputStateWithDraft = () => {
@@ -69,6 +75,24 @@ export default function SampleEditDialog() {
       return true;
     } else if (e.code === 'KeyS' && primaryModifier(e)) {
       void commands.saveAndCloseInstrumentEditor();
+      return true;
+    } else if (e.code === 'Digit1' && primaryModifier(e)) {
+      sampleNameRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit2' && primaryModifier(e)) {
+      transposeInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit3' && primaryModifier(e)) {
+      baseNoteInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit4' && primaryModifier(e)) {
+      fineTuneInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit5' && primaryModifier(e)) {
+      repeatStartInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit6' && primaryModifier(e)) {
+      repeatEndInputRef.current?.focus();
       return true;
     }
     return false;
@@ -306,6 +330,7 @@ export default function SampleEditDialog() {
           onChange={(e) => {
             updateDraftInstrument({ ...draftInstrument, name: e.target.value });
           }}
+          ref={sampleNameRef}
         />
       </div>
       <div className="defaultVolumeLabel padded sampleEditLabel">
@@ -353,6 +378,7 @@ export default function SampleEditDialog() {
             editor.stopTextInput();
             validateTranspose();
           }}
+          ref={transposeInputRef}
         />
         <div className="spinnerButtons">
           <IncrementButton
@@ -421,6 +447,7 @@ export default function SampleEditDialog() {
             validateBaseNote();
             loseFocus();
           }}
+          ref={baseNoteInputRef}
         />
         <div className="spinnerButtons">
           <IncrementButton
@@ -473,6 +500,7 @@ export default function SampleEditDialog() {
             editor.stopTextInput();
             validateFineTune();
           }}
+          ref={fineTuneInputRef}
         />
         <div className="spinnerButtons">
           <IncrementButton
@@ -547,6 +575,7 @@ export default function SampleEditDialog() {
                 editor.stopTextInput();
                 updateRepeatStart();
               }}
+              ref={repeatStartInputRef}
             />
           </div>
           <div className="repeatEndLabel padded sampleEditLabel">
@@ -571,6 +600,7 @@ export default function SampleEditDialog() {
                 editor.stopTextInput();
                 updateRepeatEnd();
               }}
+              ref={repeatEndInputRef}
             />
           </div>
         </>
