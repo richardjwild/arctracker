@@ -121,10 +121,7 @@ export default function SampleEditDialog() {
       instrumentIndex === null || instrumentIndex >= instruments.length
         ? emptyInstrument()
         : instruments[instrumentIndex];
-    if (instrument.assigned)
-      setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
-    else
-      setDraftInstrument(emptyInstrument());
+    setDraftInstrument({ ...instrument, sample: { ...instrument.sample } });
   }, [instruments, instrumentIndex, instrumentEditing]);
 
   const updateDraftInstrument = (updatedDraftInstrument: Instrument) => {

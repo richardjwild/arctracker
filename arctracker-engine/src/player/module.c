@@ -265,13 +265,13 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
 void module_get_instrument_info(const module_t *module, const int instrument_index, ui_instrument_info_t *instrument_info)
 {
     instrument_t instrument = module->instruments[instrument_index];
+    snprintf(instrument_info->name, sizeof instrument_info->name, "%s", instrument.name);
+    instrument_info->default_volume = instrument.default_volume;
+    instrument_info->transpose = instrument.transpose;
     instrument_info->assigned = instrument.assigned;
     if (instrument.assigned)
     {
         const sample_t sample = module->samples[instrument.sample_index];
-        snprintf(instrument_info->name, sizeof instrument_info->name, "%s", instrument.name);
-        instrument_info->default_volume = instrument.default_volume;
-        instrument_info->transpose = instrument.transpose;
         instrument_info->sample_info.sample_index = instrument.sample_index;
         instrument_info->sample_info.sample_length = sample.sample_length;
         instrument_info->sample_info.sample_rate = sample.sample_rate;
@@ -284,9 +284,6 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
     }
     else
     {
-        instrument_info->name[0] = '\0';
-        instrument_info->default_volume = 255;
-        instrument_info->transpose = 0;
         instrument_info->sample_info.sample_index = 0;
         instrument_info->sample_info.sample_length = 0;
         instrument_info->sample_info.sample_rate = 0;

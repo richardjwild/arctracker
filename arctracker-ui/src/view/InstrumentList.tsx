@@ -121,12 +121,8 @@ export default function InstrumentList() {
               <span className="instrumentIndex">
                 {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
               </span>
-              {instrument.assigned && (
-                <>
-                  <InstrumentAssignedIcon />
-                  <span className="instrumentName">{instrument.name}</span>
-                </>
-              )}
+              {instrument.assigned && <InstrumentAssignedIcon />}
+              <span className="instrumentName">{instrument.name}</span>
             </button>
           ),
         )}
