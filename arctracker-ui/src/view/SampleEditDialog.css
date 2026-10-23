@@ -162,6 +162,14 @@
     outline: none;
 }
 
+.sampleEditField input[type='range']:focus {
+    accent-color: var(--colour-slider-focus);
+}
+
+.sampleEditField input[type="radio"]:focus + label {
+    text-decoration: underline;
+}
+
 .transposeEdit .spinnerButtons button, .baseNoteEdit .spinnerButtons button, .fineTuneEdit .spinnerButtons button {
     display: block;
     background-color: transparent;

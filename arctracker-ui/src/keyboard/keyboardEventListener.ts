@@ -25,8 +25,15 @@ export const registerKeyHandler = (handler: KeyHandler) => {
 }
 
 export const keyboardEventListener = (e: KeyboardEvent) => {
+  if (e.target instanceof HTMLInputElement && (e.target.type === 'range' || e.target.type === 'radio')) {
+    if (e.code === "Enter" || e.code === "Escape") {
+      e.preventDefault();
+      e.target.blur();
+    }
+    return;
+  }
   if (editor.inputtingText()) {
-    if (e.code === "Enter") {
+    if (e.code === "Enter" || e.code === "Escape") {
       e.preventDefault();
       (document.activeElement as HTMLElement)?.blur();
     }

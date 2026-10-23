@@ -46,9 +46,11 @@ export default function SampleEditDialog() {
   const [inputState, setInputState] = useState(emptyInputState);
   const modalRef = useRef<HTMLDivElement>(null);
   const sampleNameRef = useRef<HTMLInputElement>(null);
+  const defaultVolumeInputRef = useRef<HTMLInputElement>(null);
   const transposeInputRef = useRef<HTMLInputElement>(null);
   const baseNoteInputRef = useRef<HTMLInputElement>(null);
   const fineTuneInputRef = useRef<HTMLInputElement>(null);
+  const sampleRepeatsInputRef = useRef<HTMLInputElement>(null);
   const repeatStartInputRef = useRef<HTMLInputElement>(null);
   const repeatEndInputRef = useRef<HTMLInputElement>(null);
   const loseFocus = () => modalRef.current?.focus();
@@ -80,18 +82,24 @@ export default function SampleEditDialog() {
       sampleNameRef.current?.focus();
       return true;
     } else if (e.code === 'Digit2' && primaryModifier(e)) {
-      transposeInputRef.current?.focus();
+      defaultVolumeInputRef.current?.focus();
       return true;
     } else if (e.code === 'Digit3' && primaryModifier(e)) {
-      baseNoteInputRef.current?.focus();
+      transposeInputRef.current?.focus();
       return true;
     } else if (e.code === 'Digit4' && primaryModifier(e)) {
-      fineTuneInputRef.current?.focus();
+      baseNoteInputRef.current?.focus();
       return true;
     } else if (e.code === 'Digit5' && primaryModifier(e)) {
-      repeatStartInputRef.current?.focus();
+      fineTuneInputRef.current?.focus();
       return true;
     } else if (e.code === 'Digit6' && primaryModifier(e)) {
+      sampleRepeatsInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit7' && primaryModifier(e)) {
+      repeatStartInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit8' && primaryModifier(e)) {
       repeatEndInputRef.current?.focus();
       return true;
     }
@@ -351,6 +359,7 @@ export default function SampleEditDialog() {
               defaultVolume: e.target.valueAsNumber,
             });
           }}
+          ref={defaultVolumeInputRef}
         />
         <span className="defaultVolumeValue">
           {Math.round((100 * draftInstrument.defaultVolume) / 255) + "%"}
@@ -420,137 +429,145 @@ export default function SampleEditDialog() {
           type="text"
           className="readonly"
           readOnly
-          value={draftInstrument.sample.sampleRate == 0 ? "" : `${draftInstrument.sample.sampleRate}Hz`}
+          value={draftInstrument.sample.sampleRate === 0 ? "" : `${draftInstrument.sample.sampleRate}Hz`}
         />
       </div>
-      <div className="baseNoteLabel padded sampleEditLabel">
-        <label htmlFor="baseNoteInput">
-          {message("instrumentBaseNoteLabel")}
-        </label>
-      </div>
-      <div className="baseNoteEdit uiArea padded rounded sampleEditField">
-        <input
-          type="text"
-          id="baseNoteInput"
-          value={inputState.baseNote}
-          maxLength={3}
-          onFocus={editor.startTextInput}
-          onChange={(e) =>
-            setInputState({
-              ...inputState,
-              baseNote: e.target.value,
-            })
-          }
-          onBlur={(e) => {
-            e.preventDefault();
-            editor.stopTextInput();
-            validateBaseNote();
-            loseFocus();
-          }}
-          ref={baseNoteInputRef}
-        />
-        <div className="spinnerButtons">
-          <IncrementButton
-            onClick={() => {
-              if (draftInstrument.sample.baseNote == notes.allNotes().length - 1) return;
-              updateDraftInstrument({
-                ...draftInstrument,
-                sample: {
-                  ...draftInstrument.sample,
-                  baseNote: draftInstrument.sample.baseNote + 1,
-                }
-              });
-            }}
-          />
-          <DecrementButton
-            onClick={() => {
-              if (draftInstrument.sample.baseNote == 0) return;
-              updateDraftInstrument({
-                ...draftInstrument,
-                sample: {
-                  ...draftInstrument.sample,
-                  baseNote: draftInstrument.sample.baseNote - 1,
-                }
-              });
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="fineTuneLabel padded sampleEditLabel">
-        <label htmlFor="fineTuneInput">
-          {message("instrumentFineTuneLabel")}
-        </label>
-      </div>
-      <div className="fineTuneEdit uiArea padded rounded sampleEditField">
-        <input
-          type="text"
-          id="fineTuneInput"
-          value={inputState.fineTuning}
-          onFocus={editor.startTextInput}
-          maxLength={3}
-          onChange={(e) =>
-            setInputState({
-              ...inputState,
-              fineTuning: e.target.value,
-            })
-          }
-          onBlur={(e) => {
-            e.preventDefault();
-            editor.stopTextInput();
-            validateFineTune();
-          }}
-          ref={fineTuneInputRef}
-        />
-        <div className="spinnerButtons">
-          <IncrementButton
-            onClick={() => {
-              if (draftInstrument.sample.fineTuning == 127) return;
-              updateDraftInstrument({
-                ...draftInstrument,
-                sample: {
-                  ...draftInstrument.sample,
-                  fineTuning: draftInstrument.sample.fineTuning + 1,
-                }
-              });
-            }}
-          />
-          <DecrementButton
-            onClick={() => {
-              if (draftInstrument.sample.fineTuning == -128) return;
-              updateDraftInstrument({
-                ...draftInstrument,
-                sample: {
-                  ...draftInstrument.sample,
-                  fineTuning: draftInstrument.sample.fineTuning - 1,
-                }
-              });
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="sampleRepeatsLabel padded sampleEditLabel">
-        <label>{message("instrumentSampleLoopsLabel")}</label>
-      </div>
-      <div className="sampleRepeatsEdit padded sampleEditField">
-        <input
-          type="radio"
-          id="sampleRepeatsYes"
-          name="sampleRepeats"
-          checked={draftInstrument.repeats}
-          onChange={setSampleRepeats}
-        />
-        <label htmlFor="sampleRepeatsYes">{message("yes")}</label>
-        <input
-          type="radio"
-          id="sampleRepeatsNo"
-          name="sampleRepeats"
-          checked={!draftInstrument.repeats}
-          onChange={setSampleNoRepeat}
-        />
-        <label htmlFor="sampleRepeatsNo">{message("no")}</label>
-      </div>
+      {draftInstrument.sample.sampleLength > 0 && (
+        <>
+          <div className="baseNoteLabel padded sampleEditLabel">
+            <label htmlFor="baseNoteInput">
+              {message("instrumentBaseNoteLabel")}
+            </label>
+          </div>
+          <div className="baseNoteEdit uiArea padded rounded sampleEditField">
+            <input
+              type="text"
+              id="baseNoteInput"
+              value={inputState.baseNote}
+              maxLength={3}
+              onFocus={editor.startTextInput}
+              onChange={(e) =>
+                setInputState({
+                  ...inputState,
+                  baseNote: e.target.value,
+                })
+              }
+              onBlur={(e) => {
+                e.preventDefault();
+                editor.stopTextInput();
+                validateBaseNote();
+                loseFocus();
+              }}
+              ref={baseNoteInputRef}
+            />
+            <div className="spinnerButtons">
+              <IncrementButton
+                onClick={() => {
+                  if (
+                    draftInstrument.sample.baseNote ==
+                    notes.allNotes().length - 1
+                  )
+                    return;
+                  updateDraftInstrument({
+                    ...draftInstrument,
+                    sample: {
+                      ...draftInstrument.sample,
+                      baseNote: draftInstrument.sample.baseNote + 1,
+                    },
+                  });
+                }}
+              />
+              <DecrementButton
+                onClick={() => {
+                  if (draftInstrument.sample.baseNote == 0) return;
+                  updateDraftInstrument({
+                    ...draftInstrument,
+                    sample: {
+                      ...draftInstrument.sample,
+                      baseNote: draftInstrument.sample.baseNote - 1,
+                    },
+                  });
+                }}
+              />
+            </div>
+          </div>
+          <div className="fineTuneLabel padded sampleEditLabel">
+            <label htmlFor="fineTuneInput">
+              {message("instrumentFineTuneLabel")}
+            </label>
+          </div>
+          <div className="fineTuneEdit uiArea padded rounded sampleEditField">
+            <input
+              type="text"
+              id="fineTuneInput"
+              value={inputState.fineTuning}
+              onFocus={editor.startTextInput}
+              maxLength={3}
+              onChange={(e) =>
+                setInputState({
+                  ...inputState,
+                  fineTuning: e.target.value,
+                })
+              }
+              onBlur={(e) => {
+                e.preventDefault();
+                editor.stopTextInput();
+                validateFineTune();
+              }}
+              ref={fineTuneInputRef}
+            />
+            <div className="spinnerButtons">
+              <IncrementButton
+                onClick={() => {
+                  if (draftInstrument.sample.fineTuning == 127) return;
+                  updateDraftInstrument({
+                    ...draftInstrument,
+                    sample: {
+                      ...draftInstrument.sample,
+                      fineTuning: draftInstrument.sample.fineTuning + 1,
+                    },
+                  });
+                }}
+              />
+              <DecrementButton
+                onClick={() => {
+                  if (draftInstrument.sample.fineTuning == -128) return;
+                  updateDraftInstrument({
+                    ...draftInstrument,
+                    sample: {
+                      ...draftInstrument.sample,
+                      fineTuning: draftInstrument.sample.fineTuning - 1,
+                    },
+                  });
+                }}
+              />
+            </div>
+          </div>
+          <div className="sampleRepeatsLabel padded sampleEditLabel">
+            <label>{message("instrumentSampleLoopsLabel")}</label>
+          </div>
+          <div className="sampleRepeatsEdit padded sampleEditField">
+            <input
+              type="radio"
+              id="sampleRepeatsYes"
+              name="sampleRepeats"
+              checked={draftInstrument.repeats}
+              onChange={setSampleRepeats}
+              ref={draftInstrument.repeats ? sampleRepeatsInputRef : null}
+            />
+            <label htmlFor="sampleRepeatsYes">{message("yes")}</label>
+            <input
+              type="radio"
+              id="sampleRepeatsNo"
+              name="sampleRepeats"
+              checked={!draftInstrument.repeats}
+              onChange={setSampleNoRepeat}
+              ref={draftInstrument.repeats ? null : sampleRepeatsInputRef}
+            />
+            <label htmlFor="sampleRepeatsNo">{message("no")}</label>
+          </div>
+        </>
+      )}
       {draftInstrument.repeats && (
         <>
           <div className="repeatStartLabel padded sampleEditLabel">
