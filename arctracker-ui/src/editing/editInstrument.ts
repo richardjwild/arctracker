@@ -190,6 +190,7 @@ export const editInstrument = {
     if (selectedInstrument === null) return;
     const instrument =
       useStore.getState().module.instruments[selectedInstrument];
+    if (!instrument) return;
     const update: InstrumentUpdate = {
       assigned: instrument.assigned,
       name: instrument.name,

@@ -5,7 +5,6 @@ import { keyBinding } from "./keyBinding.ts";
 import { editor } from "../editing/editor.ts";
 
 const handlers: KeyHandler[] = [
-  editorKeyHandlers.handleInstrumentEditorInput,
   editorKeyHandlers.handleModuleTitleInput,
   pianoKeyHandler.handleRealtimePianoInput,
   editorKeyHandlers.handleSampleFieldInput,
@@ -18,6 +17,13 @@ const handlers: KeyHandler[] = [
   keyBinding.handleKey,
 ];
 
+const registeredHandlers = new Set<KeyHandler>();
+
+export const registerKeyHandler = (handler: KeyHandler) => {
+  registeredHandlers.add(handler);
+  return () => registeredHandlers.delete(handler);
+}
+
 export const keyboardEventListener = (e: KeyboardEvent) => {
   if (editor.inputtingText()) {
     if (e.code === "Enter") {
@@ -25,6 +31,12 @@ export const keyboardEventListener = (e: KeyboardEvent) => {
       (document.activeElement as HTMLElement)?.blur();
     }
     return;
+  }
+  for (const registeredHandler of registeredHandlers) {
+    if (registeredHandler(e)) {
+      e.preventDefault();
+      return;
+    }
   }
   for (const handler of handlers) {
     if (handler(e)) {

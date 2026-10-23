@@ -2,7 +2,6 @@ import { Cursor } from "./cursor.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { commands } from "../control/commands.ts";
 import { KeyHandler } from "../keyboard/keyHandler.ts";
-import { editInstrument } from "./editInstrument.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { patternEvents } from "./patternEvents.ts";
 import { moduleMetaData } from "./moduleMetaData.ts";
@@ -14,7 +13,6 @@ import { editor } from "./editor.ts";
 export const editorKeyHandlers: {
   handleSampleFieldInput: KeyHandler,
   handleEffectFieldInput: KeyHandler,
-  handleInstrumentEditorInput: KeyHandler,
   handleModuleTitleInput: KeyHandler,
   handleTempoInput: KeyHandler,
   handleAppConfigInput: KeyHandler,
@@ -50,25 +48,6 @@ export const editorKeyHandlers: {
       const numberValue = hexadecimal.fromHexDigit(e.key);
       if (numberValue === null) return false;
       commands.editEffectData(cursorField, e.key);
-      return true;
-    }
-    return false;
-  },
-
-  handleInstrumentEditorInput: (e) => {
-    if (!editInstrument.instrumentEditing())
-      return false;
-    if (e.code === 'Escape') {
-      void commands.restoreAndCloseInstrumentEditor();
-      return true;
-    } else if (e.code === 'KeyL' && primaryModifier(e)) {
-      void commands.loadSample();
-      return true;
-    } else if (e.code === 'KeyD' && primaryModifier(e)) {
-      void commands.deleteSample();
-      return true;
-    } else if (e.code === 'KeyS' && primaryModifier(e)) {
-      void commands.saveAndCloseInstrumentEditor();
       return true;
     }
     return false;

@@ -13,6 +13,9 @@ import {
 } from "../editing/editInstrument.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { notes } from "../rendering/notes.ts";
+import { primaryModifier } from "../keyboard/keyBinding.ts";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import { registerKeyHandler } from "../keyboard/keyboardEventListener.ts";
 
 type InputState = {
   transpose: string;
@@ -53,6 +56,31 @@ export default function SampleEditDialog() {
       baseNote: notes.toString(draftInstrument.sample.baseNote + 1),
     });
   };
+
+  const handleInstrumentEditorInput: KeyHandler = (e) => {
+    if (e.code === 'Escape') {
+      void commands.restoreAndCloseInstrumentEditor();
+      return true;
+    } else if (e.code === 'KeyL' && primaryModifier(e)) {
+      void commands.loadSample();
+      return true;
+    } else if (e.code === 'KeyD' && primaryModifier(e)) {
+      void commands.deleteSample();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      void commands.saveAndCloseInstrumentEditor();
+      return true;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (!instrumentEditing) return;
+    const unregisterKeyHandler = registerKeyHandler(handleInstrumentEditorInput);
+    return () => {
+      unregisterKeyHandler();
+    }
+  }, [instrumentEditing])
 
   useEffect(() => {
     if (!instrumentEditing) return;
