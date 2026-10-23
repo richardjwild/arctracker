@@ -1,8 +1,8 @@
 .sampleEdit {
-    width: 600px;
+    width: 630px;
     height: 525px;
     display: grid;
-    grid-template-columns: 145px 1fr 145px 1fr;
+    grid-template-columns: 160px 1fr 160px 1fr;
     grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 50px;
     gap: 10px;
     grid-template-areas:
@@ -104,6 +104,25 @@
 
 .repeatEndEdit {
     grid-area: repeatEndEdit;
+}
+
+.fieldLabel {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.fieldLabel .hotKey {
+    background-color: var(--colour-hotKey-hint);
+    color: var(--colour-panel-bg);
+    display: block;
+    margin-top: 5px;
+    width: 13px;
+    height: 13px;
+    line-height: 13px;
+    border-radius: 2px;
+    text-align: center;
+    font-size: 10px;
 }
 
 .sampleEditLabel {

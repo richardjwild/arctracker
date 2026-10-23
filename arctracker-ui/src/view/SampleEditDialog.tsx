@@ -315,6 +315,23 @@ export default function SampleEditDialog() {
     );
   };
 
+  const FieldLabel = ({
+    text,
+    className,
+    associatedField,
+    hotkey,
+  }: {
+    text: string;
+    className: string;
+    associatedField?: string;
+    hotkey: number;
+  }) => (
+    <div className={`${className} padded sampleEditLabel fieldLabel`}>
+      <div className="hotKey">{hotkey}</div>
+      <label htmlFor={associatedField}>{text}</label>
+    </div>
+  );
+
   return (
     <Modal ref={modalRef} className="sampleEdit">
       <h1 className="instrumentEditTitle padded">
@@ -322,11 +339,12 @@ export default function SampleEditDialog() {
           hexadecimal.toHex(instrumentIndex + 1, 2),
         )}
       </h1>
-      <div className="sampleNameLabel padded sampleEditLabel">
-        <label htmlFor="sampleNameInput">
-          {message("instrumentNameLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        text={message("instrumentNameLabel")}
+        className="sampleNameLabel"
+        associatedField="sampleNameInput"
+        hotkey={1}
+      />
       <div className="sampleNameEdit uiArea padded rounded sampleEditField">
         <input
           type="text"
@@ -341,11 +359,12 @@ export default function SampleEditDialog() {
           ref={sampleNameRef}
         />
       </div>
-      <div className="defaultVolumeLabel padded sampleEditLabel">
-        <label htmlFor="defaultVolumeInput">
-          {message("instrumentDefaultVolumeLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        text={message("instrumentDefaultVolumeLabel")}
+        className="defaultVolumeLabel"
+        associatedField="defaultVolumeInput"
+        hotkey={2}
+      />
       <div className="defaultVolumeEdit uiArea padded rounded sampleEditField">
         <input
           type="range"
@@ -365,11 +384,12 @@ export default function SampleEditDialog() {
           {Math.round((100 * draftInstrument.defaultVolume) / 255) + "%"}
         </span>
       </div>
-      <div className="transposeLabel padded sampleEditLabel">
-        <label htmlFor="transposeInput">
-          {message("instrumentTransposeLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        text={message("instrumentTransposeLabel")}
+        className="transposeLabel"
+        associatedField="transposeInput"
+        hotkey={3}
+      />
       <div className="transposeEdit uiArea padded rounded sampleEditField">
         <input
           type="text"
@@ -429,16 +449,21 @@ export default function SampleEditDialog() {
           type="text"
           className="readonly"
           readOnly
-          value={draftInstrument.sample.sampleRate === 0 ? "" : `${draftInstrument.sample.sampleRate}Hz`}
+          value={
+            draftInstrument.sample.sampleRate === 0
+              ? ""
+              : `${draftInstrument.sample.sampleRate}Hz`
+          }
         />
       </div>
       {draftInstrument.sample.sampleLength > 0 && (
         <>
-          <div className="baseNoteLabel padded sampleEditLabel">
-            <label htmlFor="baseNoteInput">
-              {message("instrumentBaseNoteLabel")}
-            </label>
-          </div>
+          <FieldLabel
+            text={message("instrumentBaseNoteLabel")}
+            className="baseNoteLabel"
+            associatedField="baseNoteInput"
+            hotkey={4}
+          />
           <div className="baseNoteEdit uiArea padded rounded sampleEditField">
             <input
               type="text"
@@ -491,11 +516,12 @@ export default function SampleEditDialog() {
               />
             </div>
           </div>
-          <div className="fineTuneLabel padded sampleEditLabel">
-            <label htmlFor="fineTuneInput">
-              {message("instrumentFineTuneLabel")}
-            </label>
-          </div>
+          <FieldLabel
+            text={message("instrumentFineTuneLabel")}
+            className="fineTuneLabel"
+            associatedField="fineTuneInput"
+            hotkey={5}
+          />
           <div className="fineTuneEdit uiArea padded rounded sampleEditField">
             <input
               type="text"
@@ -543,9 +569,12 @@ export default function SampleEditDialog() {
               />
             </div>
           </div>
-          <div className="sampleRepeatsLabel padded sampleEditLabel">
-            <label>{message("instrumentSampleLoopsLabel")}</label>
-          </div>
+          <FieldLabel
+            text={message("instrumentSampleLoopsLabel")}
+            className="sampleRepeatsLabel"
+            associatedField={draftInstrument.repeats ? "sampleRepeatsYes" : "sampleRepeatsNo"}
+            hotkey={6}
+          />
           <div className="sampleRepeatsEdit padded sampleEditField">
             <input
               type="radio"
@@ -570,11 +599,12 @@ export default function SampleEditDialog() {
       )}
       {draftInstrument.repeats && (
         <>
-          <div className="repeatStartLabel padded sampleEditLabel">
-            <label htmlFor="repeatStartInput">
-              {message("instrumentLoopStartLabel")}
-            </label>
-          </div>
+          <FieldLabel
+            text={message("instrumentLoopStartLabel")}
+            className="repeatStartLabel"
+            associatedField="repeatStartInput"
+            hotkey={7}
+          />
           <div className="repeatStartEdit uiArea padded rounded sampleEditField">
             <input
               type="text"
@@ -595,11 +625,12 @@ export default function SampleEditDialog() {
               ref={repeatStartInputRef}
             />
           </div>
-          <div className="repeatEndLabel padded sampleEditLabel">
-            <label htmlFor="repeatEndInput">
-              {message("instrumentLoopEndLabel")}
-            </label>
-          </div>
+          <FieldLabel
+            text={message("instrumentLoopEndLabel")}
+            className="repeatEndLabel"
+            associatedField="repeatEndInput"
+            hotkey={8}
+          />
           <div className="repeatEndEdit uiArea padded rounded sampleEditField">
             <input
               type="text"
