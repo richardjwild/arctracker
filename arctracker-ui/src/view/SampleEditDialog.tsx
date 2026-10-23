@@ -411,34 +411,34 @@ export default function SampleEditDialog() {
           />
         </div>
       </div>
-      <div className="sampleLengthLabel padded sampleEditLabel">
-        <label>{message("instrumentSampleLengthLabel")}</label>
-      </div>
-      <div className="sampleLengthEdit padded sampleEditField">
-        <input
-          type="text"
-          className="readonly"
-          readOnly
-          value={draftInstrument.sample.sampleLength}
-        />
-      </div>
-      <div className="sampleRateLabel padded sampleEditLabel">
-        <label>{message("sampleRateLabel")}</label>
-      </div>
-      <div className="sampleRateEdit padded sampleEditField">
-        <input
-          type="text"
-          className="readonly"
-          readOnly
-          value={
-            draftInstrument.sample.sampleRate === 0
-              ? ""
-              : `${draftInstrument.sample.sampleRate}Hz`
-          }
-        />
-      </div>
       {draftInstrument.sample.sampleLength > 0 && (
         <>
+          <div className="sampleLengthLabel padded sampleEditLabel">
+            <label>{message("instrumentSampleLengthLabel")}</label>
+          </div>
+          <div className="sampleLengthEdit padded sampleEditField">
+            <input
+              type="text"
+              className="readonly"
+              readOnly
+              value={draftInstrument.sample.sampleLength}
+            />
+          </div>
+          <div className="sampleRateLabel padded sampleEditLabel">
+            <label>{message("sampleRateLabel")}</label>
+          </div>
+          <div className="sampleRateEdit padded sampleEditField">
+            <input
+              type="text"
+              className="readonly"
+              readOnly
+              value={
+                draftInstrument.sample.sampleRate === 0
+                  ? ""
+                  : `${draftInstrument.sample.sampleRate}Hz`
+              }
+            />
+          </div>
           <FieldLabel
             text={message("instrumentBaseNoteLabel")}
             className="baseNoteLabel"
