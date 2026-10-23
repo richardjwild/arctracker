@@ -106,25 +106,6 @@
     grid-area: repeatEndEdit;
 }
 
-.fieldLabel {
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-}
-
-.fieldLabel .hotKey {
-    background-color: var(--colour-hotKey-hint);
-    color: var(--colour-panel-bg);
-    display: block;
-    margin-top: 5px;
-    width: 13px;
-    height: 13px;
-    line-height: 13px;
-    border-radius: 2px;
-    text-align: center;
-    font-size: 10px;
-}
-
 .sampleEditLabel {
     font-family: sans-serif;
     font-weight: bold;

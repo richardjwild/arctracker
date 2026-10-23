@@ -16,6 +16,7 @@ import { notes } from "../rendering/notes.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { KeyHandler } from "../keyboard/keyHandler.ts";
 import { registerKeyHandler } from "../keyboard/keyboardEventListener.ts";
+import FieldLabel from "./components/FieldLabel.tsx";
 
 type InputState = {
   transpose: string;
@@ -314,23 +315,6 @@ export default function SampleEditDialog() {
       </button>
     );
   };
-
-  const FieldLabel = ({
-    text,
-    className,
-    associatedField,
-    hotkey,
-  }: {
-    text: string;
-    className: string;
-    associatedField?: string;
-    hotkey: number;
-  }) => (
-    <div className={`${className} padded sampleEditLabel fieldLabel`}>
-      <div className="hotKey">{hotkey}</div>
-      <label htmlFor={associatedField}>{text}</label>
-    </div>
-  );
 
   return (
     <Modal ref={modalRef} className="sampleEdit">
