@@ -14,8 +14,9 @@ typedef struct {
 
 typedef struct midi_handle {
     RtMidiInPtr midi_in;
-    arctracker_t *arctracker;
+    midi_command_queue_t *midi_queue;
     note_input_state_t note_input;
+    bool callback_set;
 } midi_subsystem_t;
 
 const int PORT_NOT_FOUND = -1;
@@ -24,7 +25,7 @@ const unsigned char MIDI_CHAN_1_NOTE_OFF = 0x80;
 
 static void handle_message(double, const unsigned char *, size_t, void *);
 
-midi_subsystem_t *midi_initialise(arctracker_t *arctracker)
+midi_subsystem_t *midi_initialise(midi_command_queue_t *midi_queue)
 {
     midi_subsystem_t *midi = allocate_array(MAIN, sizeof(midi_subsystem_t), 1);
     if (midi == NULL)
@@ -48,7 +49,8 @@ midi_subsystem_t *midi_initialise(arctracker_t *arctracker)
         }
     }
     midi->midi_in = midi_in;
-    midi->arctracker = arctracker;
+    midi->midi_queue = midi_queue;
+    midi->callback_set = false;
     return midi;
 }
 
@@ -91,7 +93,7 @@ bool midi_get_devices(const midi_subsystem_t *midi, midi_device_info_t *device_i
     return true;
 }
 
-bool midi_use_device(const midi_subsystem_t *midi, const char *requested_name)
+bool midi_use_device(midi_subsystem_t *midi, const char *requested_name)
 {
     if (midi->midi_in == NULL) return true;
     const unsigned int device_count = rtmidi_get_port_count(midi->midi_in);
@@ -125,12 +127,14 @@ bool midi_use_device(const midi_subsystem_t *midi, const char *requested_name)
     // Now we know the requested port is available. Cancel any existing callbacks.
     //
     rtmidi_in_cancel_callback(midi->midi_in);
+    midi->callback_set = false;
     rtmidi_close_port(midi->midi_in);
     //
     // Configure a new callback.
     //
     rtmidi_open_port(midi->midi_in, requested_port, "Arctracker Main Input");
     rtmidi_in_set_callback(midi->midi_in, handle_message, (void *) midi);
+    midi->callback_set = true;
     return true;
 }
 
@@ -144,30 +148,31 @@ static void handle_message(const double timestamp, const unsigned char *message,
     const unsigned char velocity = message[2];
     if (status == MIDI_CHAN_1_NOTE_ON && velocity > 0)
     {
-        player_command_t command = (player_command_t) {
-            .cmd_type = MIDI_NOTE_ON,
-            .data = (player_command_data_t) {
-                .midi_note_on = (midi_note_on_command_t) {
+        const midi_command_t command = (midi_command_t) {
+            .cmd_type = NOTE_ON,
+            .data = (midi_command_data_t) {
+                .note_on = (midi_note_on_command_t) {
                     .track = atomic_load(&midi->note_input.selected_channel),
                     .instrument_no = atomic_load(&midi->note_input.selected_instrument),
                     .note = note - 48,
                     .velocity = velocity,
+                    .is_keyboard = false,
                 }
             }
         };
-        arctracker_player_cmd(midi->arctracker, &command);
+        midi_queue_add(midi->midi_queue, command);
     }
     else if (status == MIDI_CHAN_1_NOTE_OFF || (status == MIDI_CHAN_1_NOTE_ON && velocity == 0))
     {
-        player_command_t command = (player_command_t) {
-            .cmd_type = MIDI_NOTE_OFF,
-            .data = (player_command_data_t) {
-                .note_off = (note_off_command_t) {
+        const midi_command_t command = (midi_command_t) {
+            .cmd_type = NOTE_OFF,
+            .data = (midi_command_data_t) {
+                .note_off = (midi_note_off_command_t) {
                     .track = atomic_load(&midi->note_input.selected_channel),
                 }
             }
         };
-        arctracker_player_cmd(midi->arctracker, &command);
+        midi_queue_add(midi->midi_queue, command);
     }
 }
 
@@ -183,17 +188,18 @@ void midi_set_playback_instrument(midi_subsystem_t *midi, const uint8_t instrume
 
 void keyboard_note_on(const midi_subsystem_t *midi, const int note)
 {
-    player_command_t command = (player_command_t){
-        .cmd_type = KEYBOARD_NOTE_ON,
-        .data = (player_command_data_t){
-            .keyboard_note_on = (keyboard_note_on_command_t){
+    const midi_command_t command = (midi_command_t) {
+        .cmd_type = NOTE_ON,
+        .data = (midi_command_data_t) {
+            .note_on = (midi_note_on_command_t) {
                 .track = atomic_load(&midi->note_input.selected_channel),
                 .instrument_no = atomic_load(&midi->note_input.selected_instrument),
                 .note = note,
+                .is_keyboard = true,
             }
         }
     };
-    arctracker_player_cmd(midi->arctracker, &command);
+    midi_queue_add(midi->midi_queue, command);
 }
 
 void midi_destroy(midi_subsystem_t *midi)
@@ -201,7 +207,7 @@ void midi_destroy(midi_subsystem_t *midi)
     if (midi == NULL) return;
     if (midi->midi_in)
     {
-        rtmidi_in_cancel_callback(midi->midi_in);
+        if (midi->callback_set) rtmidi_in_cancel_callback(midi->midi_in);
         rtmidi_close_port(midi->midi_in);
         rtmidi_in_free(midi->midi_in);
     }

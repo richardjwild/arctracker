@@ -14,43 +14,34 @@
 
 #define MAX_FILE_PATH_LENGTH 4096
 #define NUM_FORMATS 4
-#define FAILED_TO_READ_MODULE_FILE (load_module_result_t) {\
-    .file_read = false,\
-    .recognised_format = false,\
-    .module_loaded = false,\
-    .module = NULL\
-}
-#define UNRECOGNISED_MODULE_FORMAT (load_module_result_t) {\
-    .file_read = true,\
-    .recognised_format = false,\
-    .module_loaded = false,\
-    .module = NULL\
-}
-#define FAILED_TO_LOAD_MODULE (load_module_result_t) {\
-    .file_read = true,\
-    .recognised_format = true,\
-    .module_loaded = false,\
-    .module = NULL\
-}
-#define SUCCESSFULLY_LOADED_MODULE(module_p) (load_module_result_t) {\
-    .file_read = true,\
-    .recognised_format = true,\
-    .module_loaded = true,\
-    .module = module_p\
-}
-#define FAILED_TO_READ_SAMPLE_FILE (load_sample_result_t) {\
-    .file_read = false,\
-    .file_valid = false,\
-    .sample_length = 0,\
-    .sample_data = NULL,\
-}
-#define SUCCESSFULLY_LOADED_SAMPLE(length, rate, data) (load_sample_result_t) {\
-    .file_read = true,\
-    .file_valid = true,\
-    .sample_length = length,\
-    .sample_rate = rate,\
-    .sample_data = data,\
-}
+
+static const load_module_result_t FAILED_TO_READ_MODULE_FILE = {
+    .file_read = false,
+    .recognised_format = false,
+    .module_loaded = false,
+    .module = NULL,
+};
+
+static const load_module_result_t UNRECOGNISED_MODULE_FORMAT = {
+    .file_read = true,
+    .recognised_format = false,
+    .module_loaded = false,
+    .module = NULL,
+};
+
+static const load_module_result_t FAILED_TO_LOAD_MODULE = {
+    .file_read = true,
+    .recognised_format = true,
+    .module_loaded = false,
+    .module = NULL,
+};
+
+static const load_sample_result_t FAILED_TO_READ_SAMPLE_FILE = {
+    .file_read = false,
+    .file_valid = false,
+    .sample_length = 0,
+    .sample_data = NULL,
+};
 
 static const char *READONLY = "r";
 static const char *WRITE_BINARY = "wb";
@@ -60,6 +51,8 @@ static mapped_file_t load_file(FILE *);
 static size_t file_size(int);
 static format_t *known_formats(void);
 static int16_t clamp_to_pcm16(float sample);
+static load_module_result_t successfully_loaded_module(module_t *);
+static load_sample_result_t successfully_loaded_sample(int length, float rate, float *data);
 
 load_module_result_t load_module(const char *filename)
 {
@@ -82,7 +75,7 @@ load_module_result_t load_module(const char *filename)
             module_t *module = format.read_module(file);
             munmap(file.addr, file.size);
             if (module == NULL) return FAILED_TO_LOAD_MODULE;
-            return SUCCESSFULLY_LOADED_MODULE(module);
+            return successfully_loaded_module(module);
         }
     }
     munmap(file.addr, file.size);
@@ -140,7 +133,7 @@ load_sample_result_t load_sample(const char *filename)
     {
         return FAILED_TO_READ_SAMPLE_FILE;
     }
-    return SUCCESSFULLY_LOADED_SAMPLE(audio_data.frames, (float) audio_data.sample_rate, audio_data.audio_data);
+    return successfully_loaded_sample(audio_data.frames, (float) audio_data.sample_rate, audio_data.audio_data);
 }
 
 bool export_sample(const module_t *module, const int instrument_index, const char *filename)
@@ -229,3 +222,23 @@ static int16_t clamp_to_pcm16(const float sample)
     return (int16_t)(sample * INT16_MAX);
 }
 
+static load_module_result_t successfully_loaded_module(module_t *module)
+{
+    return (load_module_result_t) {
+        .file_read = true,
+        .recognised_format = true,
+        .module_loaded = true,
+        .module = module,
+    };
+}
+
+static load_sample_result_t successfully_loaded_sample(const int length, const float rate, float *data)
+{
+    return (load_sample_result_t) {
+        .file_read = true,
+        .file_valid = true,
+        .sample_length = length,
+        .sample_rate = rate,
+        .sample_data = data,
+    };
+}

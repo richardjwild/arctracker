@@ -36,7 +36,7 @@ static void count_resources(resource_group_t, char *);
 arctracker_init_result_t arctracker_init(void)
 {
     arctracker_t *arctracker = arctracker_create();
-    midi_subsystem_t *midi = midi_initialise(arctracker);
+    midi_subsystem_t *midi = midi_initialise(arctracker->midi_queue);
     periods_init(PERIOD_MAX);
     return (arctracker_init_result_t) {
         .arctracker_handle = arctracker,
@@ -57,7 +57,8 @@ arctracker_t *arctracker_create(void)
     arctracker->export_state = IDLE,
     arctracker->playback.event_queue = event_queue_init();
     arctracker->export.event_queue = event_queue_init();
-    if (arctracker->playback.event_queue == NULL || arctracker->export.event_queue == NULL)
+    arctracker->midi_queue = midi_queue_init();
+    if (arctracker->playback.event_queue == NULL || arctracker->export.event_queue == NULL || arctracker->midi_queue == NULL)
     {
         arctracker_destroy(arctracker);
         return NULL;
@@ -318,9 +319,11 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     {
         return failure(AUDIO_INIT_FAILED);
     }
-    arctracker->playback.player = player_create(arctracker->module, arctracker->playback.event_queue);
+    arctracker->playback.player = player_create(arctracker->module, arctracker->playback.event_queue, arctracker->midi_queue);
     if (arctracker->playback.player == NULL)
+    {
         return failure(PLAYER_INIT_FAILED);
+    }
     if (!open_portaudio_stream(&arctracker->audio_config, &arctracker->playback.pa_stream, portaudio_callback, arctracker->playback.player))
     {
         player_destroy(arctracker->playback.player);
@@ -575,7 +578,7 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
         return failure(PLAYER_ALREADY_RUNNING);
     if (!export_init(output_filename, &arctracker->export.wav_export))
         return failure(EXPORT_INIT_FAILED);
-    arctracker->export.player = player_create(arctracker->module, arctracker->export.event_queue);
+    arctracker->export.player = player_create(arctracker->module, arctracker->export.event_queue, arctracker->midi_queue);
     if (arctracker->export.player == NULL)
         return failure(EXPORT_INIT_FAILED);
     pthread_t export_thread;
@@ -977,6 +980,7 @@ api_result_t arctracker_destroy(arctracker_t *arctracker)
         remove_module(arctracker);
     event_queue_destroy(arctracker->playback.event_queue);
     event_queue_destroy(arctracker->export.event_queue);
+    midi_queue_destroy(arctracker->midi_queue);
     if (arctracker->portaudio_initialised && !stop_portaudio())
     {
         // PortAudio returned an error code when terminating, but the utility of that is only

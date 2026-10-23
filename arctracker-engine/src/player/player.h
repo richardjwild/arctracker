@@ -10,6 +10,7 @@
 #include "audio_spatialiser/panner.h"
 #include "ui/player_event_queue.h"
 #include "audio_generator/playback_policy.h"
+#include "midi/midi_cmd_queue.h"
 
 typedef struct {
     event_t *events;
@@ -97,15 +98,17 @@ typedef struct player {
     sequence_t sequence;
     pt_loop_state_t loop_state;
     player_instrument_t instruments[NUM_INSTRUMENT_SLOTS + 1];
+    double fine_tuning[256];
     tick_scheduler_t tick_scheduler;
     audio_out_t audio_out;
     frame_t current_frame;
     player_command_queue_t *command_queue;
+    midi_command_queue_t *midi_queue;
     player_event_queue_t *player_event_queue;
     const char *error_message;
 } player_t;
 
-player_t *player_create(module_t *module, player_event_queue_t *player_event_queue);
+player_t *player_create(module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue);
 
 player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, unsigned long frames_requested, bool halt_at_sequence_end);
 

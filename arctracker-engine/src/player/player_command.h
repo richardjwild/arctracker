@@ -6,10 +6,10 @@
 typedef enum cmd_type {
     TOGGLE_PLAY = 0,
     SEEK = 1,
-    MIDI_NOTE_ON = 2,
-    MIDI_NOTE_OFF = 3, // Reserved for future use.
-    KEYBOARD_NOTE_ON = 4,
-    KEYBOARD_NOTE_OFF = 5, // Reserved for future use.
+    MIDI_NOTE_ON = 2, // Unused now.
+    MIDI_NOTE_OFF = 3, // Unused now.
+    KEYBOARD_NOTE_ON = 4, // Unused now.
+    KEYBOARD_NOTE_OFF = 5, // Unused now.
     TOGGLE_LOOP = 6,
     SET_MASTER_GAIN = 7,
     TRACK_MUTE_STATE_CHANGED = 8,
@@ -30,24 +30,6 @@ typedef struct {
 } seek_command_t;
 
 typedef struct {
-    int track;
-    uint8_t instrument_no;
-    int note;
-    uint8_t velocity;
-} midi_note_on_command_t;
-
-typedef struct {
-    int track;
-    uint8_t instrument_no;
-    int note;
-} keyboard_note_on_command_t;
-
-typedef struct {
-    int track;
-    uint8_t instrument_no;
-} note_off_command_t;
-
-typedef struct {
     float master_gain;
 } master_gain_command_t;
 
@@ -66,9 +48,6 @@ typedef struct {
 typedef union {
     no_data_command_t no_data;
     seek_command_t seek;
-    midi_note_on_command_t midi_note_on;
-    keyboard_note_on_command_t keyboard_note_on;
-    note_off_command_t note_off;
     master_gain_command_t master_gain;
     track_mute_command_t track_mute;
     instrument_updated_command_t instrument_updated;

@@ -4,8 +4,9 @@
     --colour-beat-line: #252525;
     --colour-track-lane-separator: #333333;
     --colour-text: #dddddd;
-    --colour-title-text: #aaaa55;
-    --colour-input-text: #aa7700;
+    --colour-title-text: #aa7700;
+    --colour-hotKey-hint: #553b00;
+    --colour-input-text: #aaaa55;
     --colour-pattern-text-muted: #444444;
     --colour-pattern-text-channel-muted: #333333;
     --colour-pattern-text-bright: #ffffff;
@@ -45,6 +46,7 @@
     --colour-button-fg-disabled: #777777;
     --colour-button-border: #1c1c1c;
     --colour-slider: #eeee33;
+    --colour-slider-focus: #ff7733;
     --colour-silence-all-audio-button-fg: #cc1111;
     --colour-radio-button-selected: #ff7733;
     --colour-radio-button-selected-hover: #ff9a62;
@@ -63,7 +65,6 @@
     --colour-vu-meter-bottom: rgb(0, 255, 0);
     --colour-vu-meter-middle: rgb(255, 255, 0);
     --colour-vu-meter-top: rgb(255, 0, 0);
-    --colour-keyboard-octave-button-fg: #cccc22;
     --colour-piano-key-white-not-selected: #888888;
     --colour-piano-key-white-selected: #cccccc;
     --colour-piano-key-black: #111111;
