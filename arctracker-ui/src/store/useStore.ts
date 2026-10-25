@@ -70,7 +70,7 @@ interface AppStore {
   setExportMonitoring: (monitoring: boolean) => void;
   setExportState: (state: ExportState) => void;
   setCurrentPattern: (currentPattern: CurrentPattern) => void;
-  setSelectedInstrument: (instrument: number) => void;
+  setSelectedInstrument: (instrument: number | null) => void;
   setLoadingModule: (loading: boolean) => void;
   logMessage: (message: UserMessage) => void;
   setHexCalculatorActive: (active: boolean) => void;

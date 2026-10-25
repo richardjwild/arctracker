@@ -57,10 +57,10 @@ function ensureSelectedInstrumentValid() {
   let selectedInstrument = useStore.getState().selectedInstrument;
   if (selectedInstrument === null) return;
   const { module, setSelectedInstrument } = useStore.getState();
-  while (selectedInstrument >= 0 && !module.instruments[selectedInstrument]?.assigned) {
-    selectedInstrument -= 1;
-  }
-  setSelectedInstrument(Math.max(selectedInstrument, 0));
+  if (module.instruments.length === 0)
+    setSelectedInstrument(null);
+  if (selectedInstrument >= module.instruments.length)
+    setSelectedInstrument(module.instruments.length - 1);
 }
 
 export const editInstrument = {

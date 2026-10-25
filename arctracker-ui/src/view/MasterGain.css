@@ -14,7 +14,7 @@
 }
 
 .masterGain .gainValue {
-    color: var(--colour-title-text);
+    color: var(--colour-input-text);
     padding-right: 5px;
     width: 29px;
     text-align: center;

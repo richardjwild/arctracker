@@ -5,6 +5,7 @@ import { commands } from "../control/commands.ts";
 import { KeyHandler } from "./keyHandler.ts";
 import { patternEvents } from "../editing/patternEvents.ts";
 import { notes } from "../rendering/notes.ts";
+import { editor } from "../editing/editor.ts";
 
 const pianoLayout = [
   "KeyZ",
@@ -44,16 +45,16 @@ function noteFromKeyboard(e: KeyboardEvent): number | null {
 export const pianoKeyHandler: { handleRealtimePianoInput: KeyHandler } = {
   handleRealtimePianoInput: (e) => {
     const cursorField = new Cursor().currentField();
-    if (!patternEvents.editing() || cursorField.field === "note") {
-      const pianoKey = noteFromKeyboard(e);
-      if (pianoKey !== null) {
-        console.log('pianoKey', pianoKey);
-        engine.noteOn(pianoKey);
-        commands.editNoteField(pianoKey);
-        return true;
-      }
+    if (editor.inputtingText() || (patternEvents.editing() && cursorField.field !== "note")) {
+      return false;
     }
-    return false;
+    const pianoKey = noteFromKeyboard(e);
+    if (pianoKey === null) {
+      return false;
+    }
+    engine.noteOn(pianoKey);
+    commands.editNoteField(pianoKey);
+    return true;
   },
 }
 

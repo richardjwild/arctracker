@@ -6,7 +6,6 @@ import { editor } from "../editing/editor.ts";
 
 const handlers: KeyHandler[] = [
   editorKeyHandlers.handleModuleTitleInput,
-  pianoKeyHandler.handleRealtimePianoInput,
   editorKeyHandlers.handleSampleFieldInput,
   editorKeyHandlers.handleEffectFieldInput,
   editorKeyHandlers.handleTempoInput,
@@ -25,7 +24,11 @@ export const registerKeyHandler = (handler: KeyHandler) => {
 }
 
 export const keyboardEventListener = (e: KeyboardEvent) => {
-  if (e.target instanceof HTMLInputElement && (e.target.type === 'range' || e.target.type === 'radio')) {
+  if (pianoKeyHandler.handleRealtimePianoInput(e)) {
+    e.preventDefault();
+    return;
+  }
+  if (e.target instanceof HTMLInputElement && (e.target.type === "range" || e.target.type === "radio")) {
     if (e.code === "Enter" || e.code === "Escape") {
       e.preventDefault();
       e.target.blur();

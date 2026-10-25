@@ -220,11 +220,14 @@ export default function SampleEditDialog() {
   }
 
   const setSampleRepeats = () => {
+    const repeatEnd =
+      draftInstrument.repeatEnd <= 0
+        ? draftInstrument.sample.sampleLength - 1
+        : draftInstrument.repeatEnd;
     updateDraftInstrument({
       ...draftInstrument,
       repeats: true,
-      repeatStart: 0,
-      repeatEnd: Math.max(draftInstrument.sample.sampleLength - 1, 0),
+      repeatEnd,
     });
   };
 
@@ -232,8 +235,6 @@ export default function SampleEditDialog() {
     updateDraftInstrument({
       ...draftInstrument,
       repeats: false,
-      repeatStart: 0,
-      repeatEnd: 0,
     });
   };
 
