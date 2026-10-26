@@ -2,6 +2,9 @@ import { message } from "../language/messages";
 import "./CommandReference.css";
 import Modal from "./Modal";
 import { useStore } from "../store/useStore.ts";
+import { commands } from "../control/commands.ts";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 const commandsColumn1 = [
   [" 1", message("command01")],
@@ -41,7 +44,17 @@ const commandsColumn2 = [
 ];
 
 export default function CommandReference() {
+  const keyHandler: KeyHandler = (e) => {
+    if (e.code === 'Escape') {
+      commands.hideCommandReference();
+      return true;
+    }
+    return false;
+  };
+
   const visible = useStore((state) => state.commandReferenceVisible);
+  useKeyboardHandler(keyHandler, visible);
+
   if (!visible) return null;
   return (
     <Modal className="commandReference">

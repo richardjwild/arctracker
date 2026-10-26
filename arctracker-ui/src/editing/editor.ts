@@ -19,7 +19,6 @@ export type EditMode =
 
 export type EditorState = {
   editMode: EditMode;
-  inputtingText: boolean;
   cursorPosition: CursorPosition;
   sequencePosition: number;
 };
@@ -68,26 +67,6 @@ export const editor = {
 
   allChangesSaved: () => {
     savedRevisionId = currentRevisionId;
-  },
-
-  inputtingText: () => {
-    return useStore.getState().editorState.inputtingText;
-  },
-
-  startTextInput: () => {
-    const { editorState, setEditorState } = useStore.getState();
-    setEditorState({
-      ...editorState,
-      inputtingText: true,
-    });
-  },
-
-  stopTextInput: () => {
-    const { editorState, setEditorState } = useStore.getState();
-    setEditorState({
-      ...editorState,
-      inputtingText: false,
-    });
   },
 
   togglePatternEdit: () => {

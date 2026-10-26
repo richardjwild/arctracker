@@ -2,7 +2,6 @@ import Modal from "./Modal.tsx";
 import "./SampleEditDialog.css";
 import { useStore } from "../store/useStore.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
-import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import React, { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
@@ -15,8 +14,8 @@ import { message, messageFn } from "../language/messages.ts";
 import { notes } from "../rendering/notes.ts";
 import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { KeyHandler } from "../keyboard/keyHandler.ts";
-import { registerKeyHandler } from "../keyboard/keyboardEventListener.ts";
 import FieldLabel from "./components/FieldLabel.tsx";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 type InputState = {
   transpose: string;
@@ -107,13 +106,7 @@ export default function SampleEditDialog() {
     return false;
   };
 
-  useEffect(() => {
-    if (!instrumentEditing) return;
-    const unregisterKeyHandler = registerKeyHandler(handleInstrumentEditorInput);
-    return () => {
-      unregisterKeyHandler();
-    }
-  }, [instrumentEditing])
+  useKeyboardHandler(handleInstrumentEditorInput, instrumentEditing);
 
   useEffect(() => {
     if (!instrumentEditing) return;
@@ -333,8 +326,6 @@ export default function SampleEditDialog() {
           id="sampleNameInput"
           maxLength={SampleNameMaxLength}
           value={draftInstrument.name}
-          onFocus={editor.startTextInput}
-          onBlur={editor.stopTextInput}
           onChange={(e) => {
             updateDraftInstrument({ ...draftInstrument, name: e.target.value });
           }}
@@ -377,7 +368,6 @@ export default function SampleEditDialog() {
           type="text"
           id="transposeInput"
           value={inputState.transpose}
-          onFocus={editor.startTextInput}
           onChange={(e) =>
             setInputState({
               ...inputState,
@@ -386,7 +376,6 @@ export default function SampleEditDialog() {
           }
           onBlur={(e) => {
             e.preventDefault();
-            editor.stopTextInput();
             validateTranspose();
           }}
           ref={transposeInputRef}
@@ -452,7 +441,6 @@ export default function SampleEditDialog() {
               id="baseNoteInput"
               value={inputState.baseNote}
               maxLength={3}
-              onFocus={editor.startTextInput}
               onChange={(e) =>
                 setInputState({
                   ...inputState,
@@ -461,7 +449,6 @@ export default function SampleEditDialog() {
               }
               onBlur={(e) => {
                 e.preventDefault();
-                editor.stopTextInput();
                 validateBaseNote();
                 loseFocus();
               }}
@@ -509,7 +496,6 @@ export default function SampleEditDialog() {
               type="text"
               id="fineTuneInput"
               value={inputState.fineTuning}
-              onFocus={editor.startTextInput}
               maxLength={3}
               onChange={(e) =>
                 setInputState({
@@ -519,7 +505,6 @@ export default function SampleEditDialog() {
               }
               onBlur={(e) => {
                 e.preventDefault();
-                editor.stopTextInput();
                 validateFineTune();
               }}
               ref={fineTuneInputRef}
@@ -592,7 +577,6 @@ export default function SampleEditDialog() {
               type="text"
               id="repeatStartInput"
               value={inputState.repeatStart}
-              onFocus={editor.startTextInput}
               onChange={(e) =>
                 setInputState({
                   ...inputState,
@@ -601,7 +585,6 @@ export default function SampleEditDialog() {
               }
               onBlur={(e) => {
                 e.preventDefault();
-                editor.stopTextInput();
                 updateRepeatStart();
               }}
               ref={repeatStartInputRef}
@@ -618,7 +601,6 @@ export default function SampleEditDialog() {
               type="text"
               id="repeatEndInput"
               value={inputState.repeatEnd}
-              onFocus={editor.startTextInput}
               onChange={(e) =>
                 setInputState({
                   ...inputState,
@@ -627,7 +609,6 @@ export default function SampleEditDialog() {
               }
               onBlur={(e) => {
                 e.preventDefault();
-                editor.stopTextInput();
                 updateRepeatEnd();
               }}
               ref={repeatEndInputRef}

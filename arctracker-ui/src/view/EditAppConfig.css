@@ -1,9 +1,9 @@
 .editAppConfig {
     width: 835px;
-    height: 345px;
+    height: 330px;
     display: grid;
-    grid-template-columns: 180px 0.5fr 180px 0.5fr;
-    grid-template-rows: 50px 50px 50px 50px 50px 50px;
+    grid-template-columns: 215px 0.5fr 215px 0.5fr;
+    grid-template-rows: 50px 50px 50px 50px 50px 40px;
     gap: 10px;
     grid-template-areas:
         "outputDeviceLabel outputDeviceEdit outputDeviceEdit outputDeviceEdit"
@@ -72,46 +72,6 @@
 
 .defaultBeatsPerMinuteEdit {
     grid-area: defaultBeatsPerMinuteEdit;
-}
-
-.editAppConfig label {
-    display: block;
-    font-family: sans-serif;
-    font-weight: bold;
-    color: var(--colour-title-text);
-    padding-top: 13px;
-}
-
-.editAppConfig select {
-    box-sizing: content-box;
-    width: 100%;
-    height: 28px;
-    background-color: transparent;
-    border: none;
-    font-family: SplineSansMono, monospace;
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--colour-input-text);
-    accent-color: var(--colour-input-text);
-}
-
-.editAppConfig select:focus {
-    outline: none;
-}
-
-.editAppConfig input[type='text'] {
-    width: 100%;
-    height: 28px;
-    background-color: transparent;
-    border: none;
-    font-family: SplineSansMono, monospace;
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--colour-input-text);
-}
-
-.editAppConfig input[type='text']:focus {
-    outline: none;
 }
 
 .defaultPatternLengthEdit {

@@ -261,7 +261,7 @@ fn build_app_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         OPEN_SETTINGS_MENU_ID,
         "Settings...",
         true,
-        None::<String>,
+        Some("CmdOrCtrl+P"),
     )?;
     let show_command_reference = MenuItem::with_id(
         app,
@@ -589,7 +589,7 @@ fn build_module_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         EDIT_DETAILS_MENU_ID,
         "Edit Module Details...",
         true,
-        None::<String>,
+        Some("CmdOrCtrl+M"),
     )?;
     let set_track_count = MenuItem::with_id(
         app,
@@ -599,7 +599,7 @@ fn build_module_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         Some("CmdOrCtrl+T"),
     )?;
     let set_tempo =
-        MenuItem::with_id(app, SET_TEMPO_MENU_ID, "Set Tempo...", true, None::<String>)?;
+        MenuItem::with_id(app, SET_TEMPO_MENU_ID, "Set Tempo...", true, Some("Shift+T"))?;
     Submenu::with_items(
         app,
         "Module",

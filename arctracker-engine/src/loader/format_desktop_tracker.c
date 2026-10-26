@@ -202,15 +202,16 @@ static bool decode_dtt_patterns(const uint8_t *base_address, const uint32_t *pat
                 }
                 int highest_effect_used = 0;
                 //
-                // We don't check effect lane 0 because our policy is to display at least one lane.
+                // Set effects_displayed on the track so that all the effect lanes that are used are visible. We don't
+                // check effect lane 0 because our policy is to display at least one lane.
                 //
                 for (int effect_lane = 1; effect_lane <= 3; effect_lane++)
                 {
-                    if (event->effects[effect_lane].command != 0)
+                    if (event->effects[effect_lane].command != NO_EFFECT)
                         highest_effect_used = effect_lane;
                 }
-                if (highest_effect_used > module->tracks[track].effects_displayed)
-                    module->tracks[track].effects_displayed = highest_effect_used;
+                if (highest_effect_used >= module->tracks[track].effects_displayed)
+                    module->tracks[track].effects_displayed = highest_effect_used + 1;
             }
         }
     }

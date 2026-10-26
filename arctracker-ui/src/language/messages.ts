@@ -103,6 +103,7 @@ const messages = {
     effectLaneLabel: "Effect Lane:",
     effectValueLabel: "Effect Value:",
     onlyNoteOnsLabel: "Note-ons Only:",
+    invalidEffectLane: "Effect lane must be a number 1-4",
     invalidEffectValue: "Effect value must use only numbers 0-9 and letters A-F.",
     commandReferenceTitle: "Command Reference",
     command00: "No effect",

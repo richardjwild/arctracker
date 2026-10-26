@@ -29,38 +29,15 @@
 }
 
 .hexCalculator {
-    width: 135px;
+    width: 175px;
     height: 105px;
     display: grid;
-    grid-template-columns: 70px 1fr;
+    grid-template-columns: 105px 1fr;
     grid-template-rows: 50px 50px;
     gap: 10px;
     grid-template-areas:
         "decimalValueLabel decimalValueEdit"
         "hexValueLabel hexValueEdit"
-}
-
-.hexCalculator label {
-    display: block;
-    font-family: sans-serif;
-    font-weight: bold;
-    color: var(--colour-title-text);
-    padding-top: 13px;
-}
-
-.hexCalculator input[type='text'] {
-    height: 28px;
-    border-radius: 0;
-    border: none;
-    background-color: transparent;
-    color: var(--colour-input-text);
-    caret-shape: block;
-    caret-color: var(--colour-input-text);
-    accent-color: var(--colour-input-text);
-}
-
-.hexCalculator input:focus {
-    outline: none;
 }
 
 .hexCalculator .decimalValueEdit, .hexCalculator .hexValueEdit {

@@ -163,6 +163,7 @@ export const editInstrument = {
       undoMessage: messageFn("updateInstrument")(selectedInstrument.toString()),
     };
     await editor.applyEdit(editCommand);
+    ensureSelectedInstrumentValid();
   },
 
   draftInstrumentModified: (): boolean => {
@@ -203,6 +204,7 @@ export const editInstrument = {
       fineTuning: instrument.sample.fineTuning,
     };
     await engine.updateInstrument(selectedInstrument, update);
+    ensureSelectedInstrumentValid();
   },
 
   loadSample: async () => {
@@ -261,6 +263,5 @@ export const editInstrument = {
 
   closeDialog: () => {
     editor.restorePreviousEditMode();
-    ensureSelectedInstrumentValid();
   },
 };

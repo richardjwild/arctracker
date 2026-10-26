@@ -1,5 +1,4 @@
 import Modal from "./Modal.tsx";
-import { editor } from "../editing/editor.ts";
 import { commands } from "../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
@@ -42,13 +41,11 @@ export default function EditTrackCount() {
           ref={trackCountInputRef}
           maxLength={4}
           value={inputTrackCount}
-          onFocus={editor.startTextInput}
           onBlur={(e) => {
             e.preventDefault();
             const trackCount = validateTrackCount();
             if (trackCount) {
               commands.setTrackCount(trackCount);
-              editor.stopTextInput();
             } else {
               trackCountInputRef.current?.focus();
             }

@@ -145,7 +145,6 @@ const initialInstrument: Instrument = {
 function initialEditorState(): EditorState {
   return {
     editMode: "none",
-    inputtingText: false,
     cursorPosition: {
       track: 0,
       field: 0,

@@ -158,7 +158,13 @@ const keyBindings = new Map<string, KeyBinding[]>([
     "KeyL",
     [{ modifiers: "primary", execute: commands.editCurrentPatternLength }],
   ],
-  ["KeyM", [{ modifiers: "primary", execute: commands.toggleCurrentTrackMute }]],
+  [
+    "KeyM",
+    [
+      { modifiers: "primary", execute: commands.editModuleMetaData },
+      { modifiers: "secondary", execute: commands.toggleCurrentTrackMute },
+    ]
+  ],
   ["KeyN",
     [
       { modifiers: "primary", execute: () => commands.createModule() },
@@ -166,6 +172,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
     ]
   ],
   ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
+  ["KeyP", [{ modifiers: "primary", execute: commands.editAppConfig }]],
   [
     "KeyR",
     [
@@ -180,7 +187,13 @@ const keyBindings = new Map<string, KeyBinding[]>([
       { modifiers: "primary+secondary", execute: commands.saveModuleAs },
     ],
   ],
-  ["KeyT", [{ modifiers: "primary", execute: commands.editTrackCount }]],
+  [
+    "KeyT",
+    [
+      { modifiers: "primary", execute: commands.editTrackCount },
+      { modifiers: "secondary", execute: commands.editTempo },
+    ]
+  ],
   ["KeyV", [{ modifiers: "primary", execute: commands.pastePatternEvents }]],
   ["KeyX", [{ modifiers: "primary", execute: commands.cutPatternEvents }]],
   [

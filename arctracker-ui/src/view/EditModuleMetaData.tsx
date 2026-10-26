@@ -1,8 +1,7 @@
 import { useStore } from "../store/useStore.ts";
 import "./EditModuleMetaData.css";
 import Modal from "./Modal.tsx";
-import { editor } from "../editing/editor.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   InterpolationType,
   ModuleMetaData,
@@ -12,6 +11,10 @@ import {
 import { commands } from "../control/commands.ts";
 import { alerting } from "../alerting/alert.ts";
 import { message } from "../language/messages.ts";
+import { primaryModifier } from "../keyboard/keyBinding.ts";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import FieldLabel from "./components/FieldLabel.tsx";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 const ModuleNameMaxLength = 65;
 const AuthorMaxLength = 65;
@@ -33,6 +36,43 @@ export default function EditModuleMetaData() {
   const setDraftModuleMetaData = useStore((state) => state.setDraftModuleMetaData);
   const [defaultPatternLengthInput, setDefaultPatternLengthInput] =
     useState("");
+  const moduleNameInputRef = useRef<HTMLInputElement>(null);
+  const authorInputRef = useRef<HTMLInputElement>(null);
+  const defaultPatternLengthInputRef = useRef<HTMLInputElement>(null);
+  const interpolationTypeInputRef = useRef<HTMLInputElement>(null);
+  const volumeMappingInputRef = useRef<HTMLInputElement>(null);
+  const pitchBendInputRef = useRef<HTMLInputElement>(null);
+
+  const handleKeys: KeyHandler = (e) => {
+    if (e.code === 'Escape') {
+      moduleMetaData.hideDialog();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      commands.setModuleMetaData();
+      return true;
+    } else if (e.code === 'Digit1' && primaryModifier(e)) {
+      moduleNameInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit2' && primaryModifier(e)) {
+      authorInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit3' && primaryModifier(e)) {
+      defaultPatternLengthInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit4' && primaryModifier(e)) {
+      interpolationTypeInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit5' && primaryModifier(e)) {
+      volumeMappingInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit6' && primaryModifier(e)) {
+      pitchBendInputRef.current?.focus();
+      return true;
+    }
+    return false;
+  };
+
+  useKeyboardHandler(handleKeys, editing);
 
   useEffect(() => {
     if (!editing) return;
@@ -110,39 +150,44 @@ export default function EditModuleMetaData() {
 
   return (
     <Modal className="editModuleTitle">
-      <div className="moduleNameLabel">
-        <label htmlFor="moduleNameInput">{message("moduleNameLabel")}</label>
-      </div>
+      <FieldLabel
+        className="moduleNameLabel"
+        text={message("moduleNameLabel")}
+        associatedField="moduleNameInput"
+        hotkey={1}
+      />
       <div className="moduleNameEdit uiArea padded rounded">
         <input
           type="text"
           id="moduleNameInput"
           maxLength={ModuleNameMaxLength}
           value={draftModuleMetaData?.moduleName}
-          onFocus={editor.startTextInput}
-          onBlur={editor.stopTextInput}
           onChange={(e) => updateDraftModuleName(e.target.value)}
+          ref={moduleNameInputRef}
         />
       </div>
-      <div className="authorLabel">
-        <label htmlFor="authorInput">{message("authorNameLabel")}</label>
-      </div>
+      <FieldLabel
+        className="authorLabel"
+        text={message("authorNameLabel")}
+        associatedField="moduleNameInput"
+        hotkey={2}
+      />
       <div className="authorEdit uiArea padded rounded">
         <input
           type="text"
           id="authorInput"
           maxLength={AuthorMaxLength}
           value={draftModuleMetaData?.author}
-          onFocus={editor.startTextInput}
-          onBlur={editor.stopTextInput}
           onChange={(e) => updateDraftAuthor(e.target.value)}
+          ref={authorInputRef}
         />
       </div>
-      <div className="defaultPatternLengthLabel">
-        <label htmlFor="defaultPatternLengthInput">
-          {message("defaultPatternLengthLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="defaultPatternLengthLabel"
+        text={message("defaultPatternLengthLabel")}
+        associatedField="defaultPatternLengthInput"
+        hotkey={3}
+      />
       <div className="defaultPatternLengthEdit">
         <div className="uiArea padded rounded">
           <input
@@ -150,21 +195,19 @@ export default function EditModuleMetaData() {
             id="defaultPatternLengthInput"
             maxLength={DefaultPatternLengthMaxLength}
             value={defaultPatternLengthInput}
-            onFocus={editor.startTextInput}
-            onBlur={() => {
-              validateDefaultPatternLength();
-              editor.stopTextInput();
-            }}
+            onBlur={validateDefaultPatternLength}
             onChange={(e) => setDefaultPatternLengthInput(e.target.value)}
+            ref={defaultPatternLengthInputRef}
           />
         </div>
       </div>
-      <div className="interpolationTypeLabel">
-        <label htmlFor="interpolationTypeInput">
-          {message("interpolationTypeLabel")}
-        </label>
-      </div>
-      <div className="interpolationTypeEdit">
+      <FieldLabel
+        className="interpolationTypeLabel"
+        text={message("interpolationTypeLabel")}
+        associatedField="interpolationTypeInput"
+        hotkey={4}
+      />
+      <div className="interpolationTypeEdit radio">
         <input
           type="radio"
           name="interpolationTypeInput"
@@ -172,6 +215,7 @@ export default function EditModuleMetaData() {
           value="arctracker"
           checked={draftModuleMetaData?.interpolationType === "ARCTRACKER"}
           onClick={() => setInterpolationType("ARCTRACKER")}
+          ref={draftModuleMetaData?.interpolationType === "ARCTRACKER" ? interpolationTypeInputRef : null}
           />
         <label htmlFor="interpolationTypeInputArctracker">
           {message("arctrackerInterpolationType")}
@@ -183,17 +227,19 @@ export default function EditModuleMetaData() {
           value="archimedes"
           checked={draftModuleMetaData?.interpolationType === "ARCHIMEDES"}
           onClick={() => setInterpolationType("ARCHIMEDES")}
+          ref={draftModuleMetaData?.interpolationType === "ARCHIMEDES" ? interpolationTypeInputRef : null}
           />
         <label htmlFor="interpolationTypeInputArchimedes">
           {message("archimedesInterpolationType")}
         </label>
       </div>
-      <div className="volumeMappingLabel">
-        <label htmlFor="volumeMappingInput">
-          {message("volumeMappingLabel")}
-        </label>
-      </div>
-      <div className="volumeMappingEdit">
+      <FieldLabel
+        className="volumeMappingLabel"
+        text={message("volumeMappingLabel")}
+        associatedField="volumeMappingInputArctracker"
+        hotkey={5}
+      />
+      <div className="volumeMappingEdit radio">
         <input
           type="radio"
           name="volumeMappingInput"
@@ -201,6 +247,7 @@ export default function EditModuleMetaData() {
           value="archimedes"
           checked={draftModuleMetaData?.volumeMappingType === "ARCHIMEDES"}
           onClick={() => setVolumeMappingType("ARCHIMEDES")}
+          ref={draftModuleMetaData?.volumeMappingType === "ARCHIMEDES" ? volumeMappingInputRef : null}
           />
         <label htmlFor="volumeMappingInputArctracker">
           {message("arctrackerVolumeMapping")}
@@ -212,17 +259,19 @@ export default function EditModuleMetaData() {
           value="amiga"
           checked={draftModuleMetaData?.volumeMappingType === "AMIGA"}
           onClick={() => setVolumeMappingType("AMIGA")}
+          ref={draftModuleMetaData?.volumeMappingType === "AMIGA" ? volumeMappingInputRef : null}
           />
         <label htmlFor="volumeMappingInputAmiga">
           {message("amigaVolumeMapping")}
         </label>
       </div>
-      <div className="pitchBendTypeLabel">
-        <label htmlFor="pitchBendInput">
-          {message("pitchBendTypeLabel")}
-        </label>
-      </div>
-      <div className="pitchBendTypeEdit">
+      <FieldLabel
+        className="pitchBendTypeLabel"
+        text={message("pitchBendTypeLabel")}
+        associatedField="pitchBendInputRelative"
+        hotkey={6}
+      />
+      <div className="pitchBendTypeEdit radio">
         <input
           type="radio"
           name="pitchBendInput"
@@ -230,6 +279,7 @@ export default function EditModuleMetaData() {
           value="relative"
           checked={draftModuleMetaData?.relativePitchBend}
           onClick={() => setRelativePitchBend(true)}
+          ref={draftModuleMetaData?.relativePitchBend ? pitchBendInputRef : null}
           />
         <label htmlFor="pitchBendInputRelative">
           {message("relativePitchBend")}
@@ -241,12 +291,13 @@ export default function EditModuleMetaData() {
           value="fixed"
           checked={!draftModuleMetaData?.relativePitchBend}
           onClick={() => setRelativePitchBend(false)}
+          ref={draftModuleMetaData?.relativePitchBend ? null : pitchBendInputRef}
           />
         <label htmlFor="pitchBendInputFixed">
           {message("fixedPitchBend")}
         </label>
       </div>
-      <div className="saveCloseButtons uiArea padded rounded">
+      <div className="saveCloseButtons">
         <button type="button" onClick={commands.setModuleMetaData}>
           {message("saveButtonLabel")}
         </button>

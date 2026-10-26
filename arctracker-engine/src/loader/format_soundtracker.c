@@ -757,7 +757,8 @@ static uint8_t scale_mod_volume(uint8_t volume)
 static void decode_effect(
     uint8_t mod_effect,
     uint8_t mod_data,
-    effect_t *effects)
+    effect_t *effects,
+    int *effects_displayed)
 {
     effects[0].command = NO_EFFECT;
     effects[0].data = 0;
@@ -799,6 +800,7 @@ static void decode_effect(
             else if ((mod_data & 0x0f) != 0) {
                 effects[1].data = 4 * (mod_data & 0xf);
             }
+            *effects_displayed = 2;
             break;
 
         case 0x6:
@@ -811,6 +813,7 @@ static void decode_effect(
             else if ((mod_data & 0x0f) != 0) {
                 effects[1].data = 4 * (mod_data & 0xf);
             }
+            *effects_displayed = 2;
             break;
 
         case 0x7:
@@ -1083,7 +1086,8 @@ static bool load_patterns(
                 decode_effect(
                     mod_effect,
                     byte3,
-                    event->effects
+                    event->effects,
+                    &module->tracks[track].effects_displayed
                 );
             }
         }

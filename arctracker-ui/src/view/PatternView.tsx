@@ -14,6 +14,10 @@ import useSequencePosition from "../hooks/useSequencePosition.ts";
 import { commands } from "../control/commands.ts";
 import { HorizontalScroll, patternLayout } from "../rendering/patternLayout.ts";
 import { patternEvents } from "../editing/patternEvents.ts";
+import { Cursor } from "../editing/cursor.ts";
+import { hexadecimal } from "../rendering/hexadecimal.ts";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 type PanDrag = {
   track: number;
@@ -73,6 +77,7 @@ export default function PatternView() {
   const effectsDisplayed = useStore((state) => state.effectsDisplayed);
   const cursorTrack = useStore((state) => state.editorState.cursorPosition.track);
   const trackPanning = useStore((state) => state.trackPanning);
+  const editing = useStore((state) => state.editorState.editMode) === "patternEvents";
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSizeRef = useRef({ width: 0, height: 0 });
@@ -191,6 +196,27 @@ export default function PatternView() {
     };
   };
 
+  const handleKeys: KeyHandler = (e) => {
+    if (!patternEvents.editing()) return false;
+    const cursorField = new Cursor().currentField();
+    if (cursorField.field === "sampleHigh" || cursorField.field === "sampleLow") {
+      const numberValue = hexadecimal.fromHexDigit(e.key);
+      if (numberValue === null) return false;
+      commands.editSampleField(cursorField, e.key);
+      return true;
+    } else if (cursorField.field === "effectCode1" || cursorField.field === "effectCode2") {
+      if (e.metaKey || e.ctrlKey || !/^[0-9A-Za-z]$/i.test(e.key)) return false;
+      commands.editEffectCode(cursorField, e.key);
+      return true;
+    } else if (cursorField.field === "effectData1" || cursorField.field === "effectData2") {
+      const numberValue = hexadecimal.fromHexDigit(e.key);
+      if (numberValue === null) return false;
+      commands.editEffectData(cursorField, e.key);
+      return true;
+    }
+    return false;
+  };
+
   const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
     event.preventDefault();
     wheelDeltaRef.current += normalisedWheelDelta(event);
@@ -285,6 +311,8 @@ export default function PatternView() {
     panDragTrack.current = null;
     document.body.classList.remove("sliderDragging");
   };
+
+  useKeyboardHandler(handleKeys, editing);
 
   useEffect(() => {
     // Register the pattern renderer.

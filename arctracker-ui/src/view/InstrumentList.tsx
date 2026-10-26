@@ -89,43 +89,40 @@ export default function InstrumentList() {
     firstVisiblePos + visibleCount,
   );
 
+  const InstrumentSlot = ({ instrument, index }: { instrument: Instrument, index: number }) => {
+    return (
+      <button
+        key={index}
+        type="button"
+        className={
+          selectedInstrument === index + firstVisiblePos ? "selected" : ""
+        }
+        ref={cellRef}
+        onClick={(e) => {
+          e.preventDefault();
+          if (selectedInstrument === index + firstVisiblePos)
+            commands.openInstrumentEditor();
+          else {
+            setSelectedInstrument(index + firstVisiblePos);
+            if (e.shiftKey) commands.openInstrumentEditor();
+          }
+        }}
+      >
+        <span className="instrumentIndex">
+          {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
+        </span>
+        {instrument.assigned && <InstrumentAssignedIcon />}
+        <span className="instrumentName">{instrument.name}</span>
+      </button>
+    );
+  }
+
   return (
     <div className="sampleList uiArea" ref={containerRef}>
       {visibleInstruments
         .map((instrument: Instrument, index: number) => ({ instrument, index }))
-        .map(
-          ({
-            instrument,
-            index,
-          }: {
-            instrument: Instrument;
-            index: number;
-          }) => (
-            <button
-              key={index}
-              type="button"
-              className={
-                selectedInstrument === index + firstVisiblePos ? "selected" : ""
-              }
-              ref={cellRef}
-              onClick={(e) => {
-                e.preventDefault();
-                if (selectedInstrument === index + firstVisiblePos)
-                  commands.openInstrumentEditor();
-                else {
-                  setSelectedInstrument(index + firstVisiblePos);
-                  if (e.shiftKey) commands.openInstrumentEditor();
-                }
-              }}
-            >
-              <span className="instrumentIndex">
-                {hexadecimal.toHex(index + firstVisiblePos + 1, 2)}
-              </span>
-              {instrument.assigned && <InstrumentAssignedIcon />}
-              <span className="instrumentName">{instrument.name}</span>
-            </button>
-          ),
-        )}
+        .map(({ instrument, index, }: { instrument: Instrument; index: number; }) =>
+          <InstrumentSlot instrument={instrument} index={index} />)}
       {instruments.length < 256 && (
         <button
           type="button"

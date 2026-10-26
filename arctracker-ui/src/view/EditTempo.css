@@ -1,9 +1,9 @@
 .editTempo {
-    width: 230px;
-    height: 165px;
+    width: 220px;
+    height: 150px;
     display: grid;
-    grid-template-columns: 120px 1fr;
-    grid-template-rows: 50px 50px 50px;
+    grid-template-columns: 155px 1fr;
+    grid-template-rows: 50px 50px 40px;
     gap: 10px;
     grid-template-areas:
         "linesPerBeatLabel linesPerBeatEdit"
@@ -11,31 +11,12 @@
         "saveCloseButtons saveCloseButtons"
 }
 
-.editTempo label {
-    display: block;
-    font-family: sans-serif;
-    font-weight: bold;
-    color: var(--colour-title-text);
-    padding-top: 13px;
-}
-
-.editTempo input[type='text'] {
-    height: 28px;
-    border-radius: 0;
-    border: none;
-    background-color: transparent;
-    color: var(--colour-input-text);
-    caret-shape: block;
-    caret-color: var(--colour-input-text);
-    accent-color: var(--colour-input-text);
-}
-
 .editTempo input:focus {
     outline: none;
 }
 
 .editTempo .linesPerBeatEdit {
-    width: 23px;
+    width: 32px;
 }
 
 .editTempo .beatsPerMinuteEdit {

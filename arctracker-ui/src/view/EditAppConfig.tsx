@@ -3,7 +3,7 @@ import { message } from "../language/messages.ts";
 import "./EditAppConfig.css";
 import { useStore } from "../store/useStore.ts";
 import { audioDevice, AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AppConfig,
   appConfig, DraftAppConfig,
@@ -11,7 +11,10 @@ import {
 } from "../config/appConfig.ts";
 import { alerting } from "../alerting/alert.ts";
 import { midi, MidiDeviceInfo } from "../midi/midi.ts";
-import { editor } from "../editing/editor.ts";
+import FieldLabel from "./components/FieldLabel.tsx";
+import { primaryModifier } from "../keyboard/keyBinding.ts";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
@@ -57,6 +60,47 @@ export default function EditAppConfig() {
   const [availableMidiInputs, setAvailableMidiInputs] = useState<
     MidiDeviceInfo[]
   >([]);
+  const outputDeviceSelectRef = useRef<HTMLSelectElement>(null);
+  const midiInputDeviceSelectRef = useRef<HTMLSelectElement>(null);
+  const defaultAuthorNameInputRef = useRef<HTMLInputElement>(null);
+  const defaultPatternLengthInputRef = useRef<HTMLInputElement>(null);
+  const defaultTrackCountInputRef = useRef<HTMLInputElement>(null);
+  const defaultLinesPerBeatInputRef = useRef<HTMLInputElement>(null);
+  const defaultBeatsPerMinuteInputRef = useRef<HTMLInputElement>(null);
+
+  const keyHandler: KeyHandler = (e) => {
+    if (e.code === "Escape") {
+      appConfig.hideDialog();
+      return true;
+    } else if (e.code === "KeyS" && primaryModifier(e)) {
+      void appConfig.update();
+      return true;
+    } else if (e.code === "Digit1" && primaryModifier(e)) {
+      outputDeviceSelectRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit2" && primaryModifier(e)) {
+      midiInputDeviceSelectRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit3" && primaryModifier(e)) {
+      defaultAuthorNameInputRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit4" && primaryModifier(e)) {
+      defaultPatternLengthInputRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit5" && primaryModifier(e)) {
+      defaultTrackCountInputRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit6" && primaryModifier(e)) {
+      defaultLinesPerBeatInputRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit7" && primaryModifier(e)) {
+      defaultBeatsPerMinuteInputRef.current?.focus();
+      return true;
+    }
+    return false;
+  };
+
+  useKeyboardHandler(keyHandler, editing);
 
   const syncDraftConfigWithCurrent = async (currentConfig: AppConfig) => {
     const audioOutputs = await audioDevice.getAvailableOutputs();
@@ -208,17 +252,19 @@ export default function EditAppConfig() {
 
   return (
     <Modal className="editAppConfig">
-      <div className="outputDeviceLabel">
-        <label htmlFor="outputDeviceSelect">
-          {message("outputDeviceLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="outputDeviceLabel"
+        associatedField="outputDeviceSelect"
+        hotkey={1}
+        text={message("outputDeviceLabel")}
+      />
       <div className="outputDeviceEdit uiArea padded rounded">
         <select
           id="outputDeviceSelect"
           name="outputDevice"
           onChange={(e) => setSelectedAudioDevice(Number(e.target.value))}
           value={getDeviceIndex(draftAppConfig.selectedAudioDevice)}
+          ref={outputDeviceSelectRef}
         >
           <option value={defaultOutputDeviceIndex}>
             {message("defaultOutputDevice")}
@@ -230,17 +276,19 @@ export default function EditAppConfig() {
           ))}
         </select>
       </div>
-      <div className="midiInputDeviceLabel">
-        <label htmlFor="midiInputDeviceSelect">
-          {message("midiInputDeviceLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="midiInputDeviceLabel"
+        associatedField="midiInputDeviceSelect"
+        hotkey={2}
+        text={message("midiInputDeviceLabel")}
+        />
       <div className="midiInputDeviceEdit uiArea padded rounded">
         <select
           id="midiInputDeviceSelect"
           name="midiInputDevice"
           onChange={(e) => setSelectedMidiDevice(e.target.value)}
           value={draftAppConfig.selectedMidiDevice?.name || ""}
+          ref={midiInputDeviceSelectRef}
         >
           <option value={""}>{message("noMidiInputDevice")}</option>
           {availableMidiInputs.map((input, i) => (
@@ -250,32 +298,33 @@ export default function EditAppConfig() {
           ))}
         </select>
       </div>
-      <div className="defaultAuthorNameLabel">
-        <label htmlFor="defaultAuthorNameInput">
-          {message("defaultAuthorNameLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="defaultAuthorNameLabel"
+        associatedField="defaultAuthorNameInput"
+        hotkey={3}
+        text={message("defaultAuthorNameLabel")}
+      />
       <div className="defaultAuthorNameEdit uiArea padded rounded">
         <input
           type="text"
           id="defaultAuthorNameInput"
           maxLength={65}
           value={draftAppConfig.defaultAuthorName || ""}
-          onFocus={editor.startTextInput}
-          onBlur={editor.stopTextInput}
           onChange={(e) =>
             setDraftAppConfig({
               ...draftAppConfig,
               defaultAuthorName: e.target.value,
             })
           }
+          ref={defaultAuthorNameInputRef}
         />
       </div>
-      <div className="defaultPatternLengthLabel">
-        <label htmlFor="defaultPatternLengthInput">
-          {message("defaultPatternLengthLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="defaultPatternLengthLabel"
+        associatedField="defaultPatternLengthInput"
+        hotkey={4}
+        text={message("defaultPatternLengthLabel")}
+      />
       <div className="defaultPatternLengthEdit uiArea padded rounded">
         <input
           type="text"
@@ -283,18 +332,16 @@ export default function EditAppConfig() {
           maxLength={4}
           value={inputPatternLength}
           onChange={(e) => setInputPatternLength(e.target.value)}
-          onFocus={editor.startTextInput}
-          onBlur={() => {
-            validateDefaultPatternLength();
-            editor.stopTextInput();
-          }}
+          onBlur={validateDefaultPatternLength}
+          ref={defaultPatternLengthInputRef}
         />
       </div>
-      <div className="defaultTrackCountLabel">
-        <label htmlFor="defaultTrackCountInput">
-          {message("defaultTrackCountLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="defaultTrackCountLabel"
+        associatedField="defaultTrackCountInput"
+        hotkey={5}
+        text={message("defaultTrackCountLabel")}
+      />
       <div className="defaultTrackCountEdit uiArea padded rounded">
         <input
           type="text"
@@ -302,18 +349,16 @@ export default function EditAppConfig() {
           maxLength={3}
           value={inputTrackCount}
           onChange={(e) => setInputTrackCount(e.target.value)}
-          onFocus={editor.startTextInput}
-          onBlur={() => {
-            validateDefaultTrackCount();
-            editor.stopTextInput();
-          }}
+          onBlur={validateDefaultTrackCount}
+          ref={defaultTrackCountInputRef}
         />
       </div>
-      <div className="defaultLinesPerBeatLabel">
-        <label htmlFor="defaultLinesPerBeatInput">
-          {message("defaultLinesPerBeatLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="defaultLinesPerBeatLabel"
+        associatedField="defaultLinesPerBeatInput"
+        hotkey={6}
+        text={message("defaultLinesPerBeatLabel")}
+      />
       <div className="defaultLinesPerBeatEdit uiArea padded rounded">
         <input
           type="text"
@@ -321,18 +366,16 @@ export default function EditAppConfig() {
           maxLength={3}
           value={inputLinesPerBeat}
           onChange={(e) => setInputLinesPerBeat(e.target.value)}
-          onFocus={editor.startTextInput}
-          onBlur={() => {
-            validateDefaultLinesPerBeat();
-            editor.stopTextInput();
-          }}
+          onBlur={validateDefaultLinesPerBeat}
+          ref={defaultLinesPerBeatInputRef}
         />
       </div>
-      <div className="defaultBeatsPerMinuteLabel">
-        <label htmlFor="defaultBeatsPerMinuteInput">
-          {message("defaultBeatsPerMinuteLabel")}
-        </label>
-      </div>
+      <FieldLabel
+        className="defaultBeatsPerMinuteLabel"
+        associatedField="defaultBeatsPerMinuteInput"
+        hotkey={7}
+        text={message("defaultBeatsPerMinuteLabel")}
+      />
       <div className="defaultBeatsPerMinuteEdit uiArea padded rounded">
         <input
           type="text"
@@ -340,14 +383,11 @@ export default function EditAppConfig() {
           maxLength={3}
           value={inputBeatsPerMinute}
           onChange={(e) => setInputBeatsPerMinute(e.target.value)}
-          onFocus={editor.startTextInput}
-          onBlur={() => {
-            validateDefaultBeatsPerMinute();
-            editor.stopTextInput();
-          }}
+          onBlur={validateDefaultBeatsPerMinute}
+          ref={defaultBeatsPerMinuteInputRef}
         />
       </div>
-      <div className="saveCloseButtons uiArea padded rounded">
+      <div className="saveCloseButtons">
         <button type="button" onClick={appConfig.update}>
           {message("saveButtonLabel")}
         </button>

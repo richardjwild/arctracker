@@ -1,12 +1,15 @@
 import { useStore } from "../store/useStore.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal.tsx";
-import { editor } from "../editing/editor.ts";
 import { tempo } from "../editing/tempo.ts";
 import { alerting } from "../alerting/alert.ts";
 import "./EditTempo.css";
 import { commands } from "../control/commands.ts";
 import { message } from "../language/messages.ts";
+import { primaryModifier } from "../keyboard/keyBinding.ts";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import FieldLabel from "./components/FieldLabel.tsx";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 const LinesPerBeatMaxLength = 2;
 const TempoMaxLength = 3;
@@ -18,6 +21,27 @@ export default function EditTempo() {
   const module = useStore((state) => state.module);
   const draftTempo = useStore((state) => state.draftTempo);
   const setDraftTempo = useStore((state) => state.setDraftTempo);
+  const linesPerBeatInputRef = useRef<HTMLInputElement>(null);
+  const beatsPerMinuteInputRef = useRef<HTMLInputElement>(null);
+
+  const handleKeys: KeyHandler = (e) => {
+    if (e.code === 'Escape') {
+      tempo.hideDialog();
+      return true;
+    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+      commands.setTempo();
+      return true;
+    } else if (e.code === 'Digit1' && primaryModifier(e)) {
+      linesPerBeatInputRef.current?.focus();
+      return true;
+    } else if (e.code === 'Digit2' && primaryModifier(e)) {
+      beatsPerMinuteInputRef.current?.focus();
+      return true;
+    }
+    return false;
+  };
+
+  useKeyboardHandler(handleKeys, editing);
 
   useEffect(() => {
     if (!editing) return;
@@ -92,51 +116,51 @@ export default function EditTempo() {
 
   return (
     <Modal className="editTempo">
-      <div className="linesPerBeatLabel">
-        <label htmlFor="linesPerBeatInput">{message("linesPerBeatLabel")}</label>
-      </div>
+      <FieldLabel
+        className="linesPerBeatLabel"
+        associatedField="linesPerBeatInput"
+        text={message("linesPerBeatLabel")}
+        hotkey={1}
+      />
       <div className="linesPerBeatEdit uiArea padded rounded">
         <input
           type="text"
           id="linesPerBeatInput"
           maxLength={LinesPerBeatMaxLength}
           value={inputState.linesPerBeat}
-          onFocus={editor.startTextInput}
-          onBlur={() => {
-            validateLinesPerBeat();
-            editor.stopTextInput();
-          }}
+          onBlur={validateLinesPerBeat}
           onChange={(e) =>
             setInputState({
               linesPerBeat: e.target.value,
               beatsPerMinute: inputState.beatsPerMinute,
             })
           }
+          ref={linesPerBeatInputRef}
         />
       </div>
-      <div className="beatsPerMinuteLabel">
-        <label htmlFor="beatsPerMinuteInput">{message("beatsPerMinuteLabel")}</label>
-      </div>
+      <FieldLabel
+        className="beatsPerMinuteLabel"
+        associatedField="beatsPerMinuteInput"
+        text={message("beatsPerMinuteLabel")}
+        hotkey={2}
+      />
       <div className="beatsPerMinuteEdit uiArea padded rounded">
         <input
           type="text"
           id="beatsPerMinuteInput"
           maxLength={TempoMaxLength}
           value={inputState.beatsPerMinute}
-          onFocus={editor.startTextInput}
-          onBlur={() => {
-            validateBeatsPerMinute();
-            editor.stopTextInput();
-          }}
+          onBlur={validateBeatsPerMinute}
           onChange={(e) =>
             setInputState({
               linesPerBeat: inputState.linesPerBeat,
               beatsPerMinute: e.target.value,
             })
           }
+          ref={beatsPerMinuteInputRef}
         />
       </div>
-      <div className="saveCloseButtons uiArea padded rounded">
+      <div className="saveCloseButtons">
         <button type="button" onClick={commands.setTempo}>
           {message("saveButtonLabel")}
         </button>

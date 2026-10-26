@@ -330,7 +330,7 @@ async function processCommands() {
         useStore.getState().setHexCalculatorActive(false);
         break;
       case "Open set multiple effects":
-        editor.setEditMode("setMultipleEffects");
+        if (patternEvents.editing()) editor.setEditMode("setMultipleEffects");
         break;
       case "Set multiple effects":
         void patternEvents.setMultipleEffects(command.effectLane, command.effect, command.noteOnsOnly);

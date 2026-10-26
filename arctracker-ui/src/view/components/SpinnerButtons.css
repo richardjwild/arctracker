@@ -1,0 +1,26 @@
+.spinner {
+    display: flex;
+    flex-direction: row;
+}
+
+.spinnerButtons button {
+    display: block;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 20px;
+    height: 13px;
+    color: var(--colour-input-text);
+    transform: translateY(2px);
+}
+
+.spinnerButtons button.increment svg {
+    transform: translateY(-4.5px);
+    pointer-events: none;
+}
+
+.spinnerButtons button.decrement svg {
+    transform: translateY(-6.5px);
+    pointer-events: none;
+}

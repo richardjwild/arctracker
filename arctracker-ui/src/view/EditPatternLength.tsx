@@ -2,7 +2,6 @@ import { useStore } from "../store/useStore.ts";
 import "./EditPatternLength.css";
 import Modal from "./Modal.tsx";
 import { useEffect, useRef, useState } from "react";
-import { editor } from "../editing/editor.ts";
 import { alerting } from "../alerting/alert.ts";
 import { commands } from "../control/commands.ts";
 import { message } from "../language/messages.ts";
@@ -46,13 +45,11 @@ export default function EditPatternLength() {
           ref={patternLengthInputRef}
           maxLength={4}
           value={inputPatternLength}
-          onFocus={editor.startTextInput}
           onBlur={(e) => {
             e.preventDefault();
             const patternLength = validatePatternLength();
             if (patternLength) {
               commands.setCurrentPatternLength(patternLength);
-              editor.stopTextInput();
             } else {
               patternLengthInputRef.current?.focus();
             }
