@@ -716,7 +716,7 @@ fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> 
         ADD_INSTRUMENT_MENU_ID,
         "Add Instrument...",
         true,
-        None::<String>,
+        Some("Shift+CmdOrCtrl+I"),
     )?;
     let edit_instrument = MenuItem::with_id(
         app,
