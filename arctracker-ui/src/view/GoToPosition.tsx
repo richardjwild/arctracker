@@ -7,11 +7,24 @@ import { message } from "../language/messages.ts";
 import Modal from "./Modal.tsx";
 import { editor } from "../editing/editor.ts";
 import FieldLabel from "./components/FieldLabel.tsx";
+import { KeyHandler } from "../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 
 export default function GoToPosition() {
   const dialogVisible = useStore((state) => state.editorState.editMode) === "goToPosition";
-  const [inputNewPosition, setInputNewPosition] = useState("");
   const sequenceLength = useStore((state) => state.sequence.length);
+  const currentPosition = useStore((state) => state.editorState.sequencePosition) + 1;
+  const [inputNewPosition, setInputNewPosition] = useState("");
+
+  const handleKeys: KeyHandler = (e) => {
+    if (e.code === 'Escape') {
+      editor.restorePreviousEditMode();
+      return true;
+    }
+    return false;
+  }
+
+  useKeyboardHandler(handleKeys, dialogVisible);
 
   const newPositionInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -21,6 +34,10 @@ export default function GoToPosition() {
   }, [dialogVisible]);
 
   const validateNewPosition = (): number | null => {
+    if (inputNewPosition === "") {
+      setInputNewPosition(currentPosition.toString());
+      return currentPosition;
+    }
     const newPosition = Number(inputNewPosition);
     if (Number.isInteger(newPosition) && newPosition >= 1 && newPosition <= sequenceLength) {
       return newPosition;
