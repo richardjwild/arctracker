@@ -7,7 +7,7 @@ export default function FieldLabel({
   hotkey,
 }: {
   text: string;
-  className: string;
+  className?: string;
   associatedField?: string;
   hotkey?: number;
 }) {

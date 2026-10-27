@@ -1,0 +1,13 @@
+.goToPosition {
+    width: 210px;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+}
+
+.newPositionLabel {
+    display: block;
+    min-width: 105px;
+}

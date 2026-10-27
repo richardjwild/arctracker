@@ -51,6 +51,7 @@ const menuActions: MenuAction[] = [
   { eventId: "seek-backwards-requested", action: commands.sequenceSeekBackwards },
   { eventId: "seek-to-start-requested", action: commands.sequenceSeekToStart },
   { eventId: "seek-to-end-requested", action: commands.sequenceSeekToEnd },
+  { eventId: "open-seek-dialog-requested", action: commands.openSequenceSeekDialog },
   { eventId: "increment-pattern-requested", action: commands.incrementPatternAtCurrentPosition },
   { eventId: "decrement-pattern-requested", action: commands.decrementPatternAtCurrentPosition },
   {

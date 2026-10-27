@@ -36,6 +36,7 @@ export default function EditTrackCount() {
       <label htmlFor="trackCount">{message("trackCountLabel")}</label>
       <div className="uiArea padded rounded">
         <input
+          className="noFocusStyle"
           type="text"
           id="patternLength"
           ref={trackCountInputRef}

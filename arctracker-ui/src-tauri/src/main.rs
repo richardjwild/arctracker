@@ -20,6 +20,7 @@ const SEEK_FORWARDS_MENU_ID: &str = "seek-forward";
 const SEEK_BACKWARDS_MENU_ID: &str = "seek-backward";
 const SEEK_TO_START_MENU_ID: &str = "seek-to-start";
 const SEEK_TO_END_MENU_ID: &str = "seek-to-end";
+const OPEN_SEEK_DIALOG: &str = "open-seek-dialog";
 const TOGGLE_MUTE_MENU_ID: &str = "toggle-mute";
 const INCREASE_EFFECTS_DISPLAYED_MENU_ID: &str = "increase-effects-displayed";
 const DECREASE_EFFECTS_DISPLAYED_MENU_ID: &str = "decrease-effects-displayed";
@@ -79,6 +80,7 @@ const SEEK_FORWARDS_REQUESTED_EVENT: &str = "seek-forwards-requested";
 const SEEK_BACKWARDS_REQUESTED_EVENT: &str = "seek-backwards-requested";
 const SEEK_TO_START_REQUESTED_EVENT: &str = "seek-to-start-requested";
 const SEEK_TO_END_REQUESTED_EVENT: &str = "seek-to-end-requested";
+const OPEN_SEEK_DIALOG_REQUESTED_EVENT: &str = "open-seek-dialog-requested";
 const TOGGLE_MUTE_REQUESTED_EVENT: &str = "toggle-mute-requested";
 const INCREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT: &str = "increase-effects-displayed-requested";
 const DECREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT: &str = "decrease-effects-displayed-requested";
@@ -163,6 +165,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         SEEK_BACKWARDS_MENU_ID => request_event(app_handle, SEEK_BACKWARDS_REQUESTED_EVENT),
         SEEK_TO_START_MENU_ID => request_event(app_handle, SEEK_TO_START_REQUESTED_EVENT),
         SEEK_TO_END_MENU_ID => request_event(app_handle, SEEK_TO_END_REQUESTED_EVENT),
+        OPEN_SEEK_DIALOG => request_event(app_handle, OPEN_SEEK_DIALOG_REQUESTED_EVENT),
         TOGGLE_MUTE_MENU_ID => request_event(app_handle, TOGGLE_MUTE_REQUESTED_EVENT),
         INCREASE_EFFECTS_DISPLAYED_MENU_ID => {
             request_event(app_handle, INCREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT)
@@ -530,6 +533,13 @@ fn build_transport_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("Alt+CmdOrCtrl+Right"),
     )?;
+    let open_seek_dialog = MenuItem::with_id(
+        app,
+        OPEN_SEEK_DIALOG,
+        "Seek to position...",
+        true,
+        Some("CmdOrCtrl+G"),
+    )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(
         app,
@@ -543,6 +553,7 @@ fn build_transport_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
             &seek_backwards,
             &seek_to_start,
             &seek_to_end,
+            &open_seek_dialog,
         ],
     )
 }

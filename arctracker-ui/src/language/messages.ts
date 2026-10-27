@@ -9,6 +9,7 @@ const messages = {
     invalidPatternLength: "Pattern length must be a number between 1 and 1000.",
     invalidDefaultPatternLength:
       "Default pattern length must be a number between 1 and 1000.",
+    invalidSequencePosition: "Sequence position must be a number between 1 and the current song length",
     invalidTranspose: "Transpose must be between -12 and 12.",
     baseNoteNotSet: "Base note must be set.",
     invalidBaseNote: "Base note must be in the form C2, D#3, etc.",
@@ -27,6 +28,7 @@ const messages = {
     exportSampleTitle: "Export sample",
     authorNameLabel: "Author:",
     patternLengthLabel: "Pattern Length:",
+    newPositionLabel: "New position:",
     linesPerBeatLabel: "Lines per Beat:",
     beatsPerMinuteLabel: "Tempo (bpm):",
     defaultPatternLengthLabel: "Default Pattern Length:",

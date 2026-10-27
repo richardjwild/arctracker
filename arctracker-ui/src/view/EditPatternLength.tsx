@@ -40,6 +40,7 @@ export default function EditPatternLength() {
       <label htmlFor="patternLength">{message("patternLengthLabel")}</label>
       <div className="uiArea padded rounded">
         <input
+          className="noFocusStyle"
           type="text"
           id="patternLength"
           ref={patternLengthInputRef}

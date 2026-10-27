@@ -152,6 +152,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
   ["KeyC", [{ modifiers: "primary", execute: commands.copyPatternEvents }]],
   ["KeyD", [{ modifiers: "primary", execute: commands.duplicatePatternEvents }]],
   ["KeyE", [{ modifiers: "primary", execute: commands.openSetMultipleEffects }]],
+  ["KeyG", [{ modifiers: "primary", execute: commands.openSequenceSeekDialog }]],
   ["KeyH", [{ modifiers: "primary", execute: commands.openHexCalculator }]],
   [
     "KeyI",

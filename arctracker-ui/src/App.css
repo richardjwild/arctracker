@@ -92,12 +92,18 @@ input[type='text'] {
   background-color: transparent;
   color: var(--colour-input-text);
   caret-shape: block;
-  caret-color: var(--colour-panel-bg);
-  accent-color: var(--colour-input-text);
 }
 
 input[type='text']:focus {
   outline: none;
+}
+
+input[type='text'].noFocusStyle:focus {
+  caret-color: var(--colour-input-text);
+  accent-color: var(--colour-panel-bg);
+}
+
+input[type='text']:focus:not(.noFocusStyle) {
   background-color: var(--colour-input-text);
   color: var(--colour-panel-bg);
 }

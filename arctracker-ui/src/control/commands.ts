@@ -35,6 +35,7 @@ export type Command =
   | { type: "Sequence seek backwards" }
   | { type: "Sequence seek to start" }
   | { type: "Sequence seek to end" }
+  | { type: "Open sequence seek dialog" }
   | { type: "Next instrument" }
   | { type: "Previous instrument" }
   | { type: "First instrument" }
@@ -166,6 +167,7 @@ export const commands = {
   sequenceSeekToStart: () =>
     commandQueue.push({ type: "Sequence seek to start" }),
   sequenceSeekToEnd: () => commandQueue.push({ type: "Sequence seek to end" }),
+  openSequenceSeekDialog: () => commandQueue.push({ type: "Open sequence seek dialog" }),
   nextInstrument: () => commandQueue.push({ type: "Next instrument" }),
   previousInstrument: () => commandQueue.push({ type: "Previous instrument" }),
   firstInstrument: () => commandQueue.push({ type: "First instrument" }),

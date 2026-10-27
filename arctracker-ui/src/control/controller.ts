@@ -101,6 +101,9 @@ async function processCommands() {
         transport.sequenceSeekToEnd();
         sequence.goToEnd();
         break;
+      case "Open sequence seek dialog":
+        editor.setEditMode("goToPosition");
+        break;
       case "Next instrument":
         editInstrument.nextInstrument();
         break;
