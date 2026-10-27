@@ -9,15 +9,7 @@
 }
 
 .masterGain input[type='range'] {
-    accent-color: var(--colour-slider);
     width: 85px;
-}
-
-.masterGain .gainValue {
-    color: var(--colour-input-text);
-    padding-right: 5px;
-    width: 29px;
-    text-align: center;
 }
 
 .masterGain canvas.vuMeter {

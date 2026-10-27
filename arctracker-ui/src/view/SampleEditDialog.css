@@ -1,9 +1,9 @@
 .sampleEdit {
     width: 630px;
-    height: 525px;
+    height: 510px;
     display: grid;
     grid-template-columns: 160px 1fr 160px 1fr;
-    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 50px;
+    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 40px;
     gap: 10px;
     grid-template-areas:
         "instrumentEditTitle instrumentEditTitle instrumentEditTitle instrumentEditTitle"
@@ -106,11 +106,8 @@
     grid-area: repeatEndEdit;
 }
 
-.sampleEditLabel {
-    font-family: sans-serif;
-    font-weight: bold;
-    color: var(--colour-title-text);
-    padding-top: 13px;
+.saveCloseButtons {
+    grid-area: saveCloseButtons;
 }
 
 .sampleEditField {
@@ -119,113 +116,4 @@
     align-items: center;
     gap: 5px;
     overflow: hidden;
-}
-
-.sampleEditField input[type='text'], .sampleEditField input[type='range'] {
-    width: 100%;
-    height: 28px;
-    border-radius: 0;
-    border: none;
-    background-color: transparent;
-    color: var(--colour-input-text);
-    caret-shape: block;
-    caret-color: var(--colour-input-text);
-    accent-color: var(--colour-slider);
-}
-
-.sampleEditField input[type='text'].readonly {
-    color: var(--colour-input-text);
-}
-
-.sampleEditField select {
-    box-sizing: content-box;
-    width: 100%;
-    height: 28px;
-    background-color: transparent;
-    border: none;
-    font-family: SplineSansMono, monospace;
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--colour-input-text);
-    accent-color: var(--colour-input-text);
-}
-
-.defaultVolumeValue {
-    width: 35px;
-    font-family: SplineSansMono, monospace;
-    font-size: 12px;
-    text-align: center;
-    color: var(--colour-title-text);
-}
-
-.sampleEditField input:focus {
-    outline: none;
-}
-
-.sampleEditField input[type='range']:focus {
-    accent-color: var(--colour-slider-focus);
-}
-
-.sampleEditField input[type="radio"]:focus + label {
-    text-decoration: underline;
-}
-
-.transposeEdit .spinnerButtons button, .baseNoteEdit .spinnerButtons button, .fineTuneEdit .spinnerButtons button {
-    display: block;
-    background-color: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-    width: 20px;
-    height: 13px;
-    color: var(--colour-input-text);
-}
-
-.transposeEdit .spinnerButtons button.increment svg, .baseNoteEdit .spinnerButtons button.increment svg, .fineTuneEdit .spinnerButtons button.increment svg {
-    transform: translateY(-4.5px);
-    pointer-events: none;
-}
-
-.transposeEdit .spinnerButtons button.decrement svg, .baseNoteEdit .spinnerButtons button.decrement svg, .fineTuneEdit .spinnerButtons button.decrement svg {
-    transform: translateY(-6.5px);
-    pointer-events: none;
-}
-
-.sampleRepeatsEdit {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-}
-
-.sampleRepeatsEdit label {
-    display: inline;
-    font-family: sans-serif;
-    font-weight: bold;
-    font-size: 16px;
-    color: var(--colour-input-text);
-    margin-right: 10px;
-}
-
-.saveCloseButtons {
-    grid-area: saveCloseButtons;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 5px;
-    overflow: hidden;
-}
-
-.saveCloseButtons button {
-    height: 30px;
-    width: 90px;
-    border-radius: 5px;
-    padding: 0;
-    background: var(--colour-button-bg);
-    color: var(--colour-button-fg);
-    border: solid 1px var(--colour-button-border);
-}
-
-.saveCloseButtons button:hover {
-    background: var(--colour-button-bg-hover);
 }

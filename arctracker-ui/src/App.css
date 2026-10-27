@@ -156,6 +156,53 @@ select:focus {
   color: var(--colour-panel-bg);
 }
 
+input[type='range'] {
+  width: 100%;
+  height: 28px;
+  border-radius: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--colour-input-text);
+  caret-shape: block;
+  caret-color: var(--colour-input-text);
+  accent-color: var(--colour-slider);
+}
+
+input[type='range']:focus {
+  accent-color: var(--colour-slider-focus);
+}
+
+.rangeValue {
+  width: 35px;
+  font-family: SplineSansMono, monospace;
+  font-size: 12px;
+  text-align: center;
+  color: var(--colour-input-text);
+}
+
 body.sliderDragging, body.sliderDragging * {
   cursor: none !important;
+}
+
+.saveCloseButtons {
+  grid-area: saveCloseButtons;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.saveCloseButtons button {
+  height: 30px;
+  width: 90px;
+  border-radius: 5px;
+  padding: 0;
+  background: var(--colour-button-bg);
+  color: var(--colour-button-fg);
+  border: solid 1px var(--colour-button-border);
+}
+
+.saveCloseButtons button:hover {
+  background: var(--colour-button-bg-hover);
 }
