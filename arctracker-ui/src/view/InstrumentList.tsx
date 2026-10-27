@@ -32,9 +32,8 @@ const AddInstrumentIcon = () => (
 
 export default function InstrumentList() {
   const instruments = useStore((state) => state.module.instruments);
-  const { selectedInstrument, setSelectedInstrument } = useStore(
-    (state) => state,
-  );
+  const selectedInstrument = useStore((state) => state.selectedInstrument);
+  const setSelectedInstrument = useStore((state) => state.setSelectedInstrument);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cellRef = useRef<HTMLButtonElement | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
@@ -122,7 +121,7 @@ export default function InstrumentList() {
       {visibleInstruments
         .map((instrument: Instrument, index: number) => ({ instrument, index }))
         .map(({ instrument, index, }: { instrument: Instrument; index: number; }) =>
-          <InstrumentSlot instrument={instrument} index={index} />)}
+          <InstrumentSlot key={index} instrument={instrument} index={index} />)}
       {instruments.length < 256 && (
         <button
           type="button"
