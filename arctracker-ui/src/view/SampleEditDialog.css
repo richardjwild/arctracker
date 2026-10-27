@@ -1,9 +1,9 @@
 .sampleEdit {
     width: 630px;
-    height: 510px;
+    height: 520px;
     display: grid;
     grid-template-columns: 160px 1fr 160px 1fr;
-    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 40px;
+    grid-template-rows: 50px 50px 50px 50px 50px 50px 50px 50px 50px;
     gap: 10px;
     grid-template-areas:
         "instrumentEditTitle instrumentEditTitle instrumentEditTitle instrumentEditTitle"
@@ -108,6 +108,7 @@
 
 .saveCloseButtons {
     grid-area: saveCloseButtons;
+    padding-top: 10px;
 }
 
 .sampleEditField {
