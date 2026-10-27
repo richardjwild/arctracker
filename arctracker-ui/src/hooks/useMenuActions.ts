@@ -70,6 +70,7 @@ const menuActions: MenuAction[] = [
     eventId: "insert-sequence-after-with-new-requested",
     action: () => commands.insertSequencePositionAfter(true),
   },
+  { eventId: "create-pattern-requested", action: commands.createPatternAtCurrentPosition },
   {
     eventId: "delete-sequence-position-requested",
     action: commands.deleteSequencePosition,

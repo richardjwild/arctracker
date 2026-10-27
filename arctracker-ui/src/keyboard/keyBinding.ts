@@ -142,6 +142,10 @@ const keyBindings = new Map<string, KeyBinding[]>([
     [{ modifiers: "none", execute: commands.clearPatternEventField }],
   ],
   [
+    "Enter",
+    [{ modifiers: "primary", execute: commands.createPatternAtCurrentPosition }],
+  ],
+  [
     "Space",
     [
       { modifiers: "none", execute: commands.togglePlay },

@@ -310,6 +310,10 @@ export const engine = {
     });
   },
 
+  nextPatternNo: async (): Promise<number> => {
+    return await invoke("edit_next_pattern_no");
+  },
+
   createPattern: async (patternLength: number): Promise<number> => {
     return await invoke("edit_create_pattern", {
       patternLength,

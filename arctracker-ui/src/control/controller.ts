@@ -256,6 +256,9 @@ async function processCommands() {
         selection.clearPatternSelection();
         void sequence.insertAfter(command.createNewPattern);
         break;
+      case "Create pattern at current position":
+        void sequence.createPatternAtCurrentPosition();
+        break;
       case "Delete sequence position":
         selection.clearPatternSelection();
         void sequence.delete();

@@ -50,6 +50,7 @@ const INSERT_SEQUENCE_AFTER_MENU_ID: &str = "insert-sequence-after";
 const INSERT_SEQUENCE_BEFORE_WITH_NEW_MENU_ID: &str = "insert-sequence-before-with-new";
 const INSERT_SEQUENCE_AFTER_WITH_NEW_MENU_ID: &str = "insert-sequence-after-with-new";
 const DELETE_SEQUENCE_POSITION_MENU_ID: &str = "delete-sequence-position";
+const CREATE_PATTERN_MENU_ID: &str = "create-pattern";
 const SET_PATTERN_LENGTH_MENU_ID: &str = "set-pattern-length";
 const NEXT_INSTRUMENT_MENU_ID: &str = "next-instrument";
 const PREVIOUS_INSTRUMENT_MENU_ID: &str = "previous-instrument";
@@ -109,6 +110,7 @@ const INSERT_SEQUENCE_BEFORE_WITH_NEW_REQUESTED_EVENT: &str =
 const INSERT_SEQUENCE_AFTER_WITH_NEW_REQUESTED_EVENT: &str =
     "insert-sequence-after-with-new-requested";
 const DELETE_SEQUENCE_POSITION_REQUESTED_EVENT: &str = "delete-sequence-position-requested";
+const CREATE_PATTERN_REQUESTED_EVENT: &str = "create-pattern-requested";
 const SET_PATTERN_LENGTH_REQUESTED_EVENT: &str = "set-pattern-length-requested";
 const EDIT_INSTRUMENT_REQUESTED_EVENT: &str = "edit-instrument-requested";
 const NEXT_INSTRUMENT_REQUESTED_EVENT: &str = "next-instrument-requested";
@@ -210,6 +212,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         DELETE_SEQUENCE_POSITION_MENU_ID => {
             request_event(app_handle, DELETE_SEQUENCE_POSITION_REQUESTED_EVENT)
         }
+        CREATE_PATTERN_MENU_ID => request_event(app_handle, CREATE_PATTERN_REQUESTED_EVENT),
         SET_PATTERN_LENGTH_MENU_ID => request_event(app_handle, SET_PATTERN_LENGTH_REQUESTED_EVENT),
         NEXT_INSTRUMENT_MENU_ID => request_event(app_handle, NEXT_INSTRUMENT_REQUESTED_EVENT),
         PREVIOUS_INSTRUMENT_MENU_ID => {
@@ -688,14 +691,21 @@ fn build_sequence_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
 }
 
 fn build_pattern_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
+    let create_pattern = MenuItem::with_id(
+        app,
+        CREATE_PATTERN_MENU_ID,
+        "Create Pattern",
+        true,
+        Some("CmdOrCtrl+Enter"),
+    )?;
     let set_length = MenuItem::with_id(
         app,
         SET_PATTERN_LENGTH_MENU_ID,
-        "Set Pattern Length...",
+        "Set Length...",
         true,
         Some("CmdOrCtrl+L"),
     )?;
-    Submenu::with_items(app, "Pattern", true, &[&set_length])
+    Submenu::with_items(app, "Pattern", true, &[&create_pattern, &set_length])
 }
 
 fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {

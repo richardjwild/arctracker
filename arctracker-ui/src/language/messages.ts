@@ -161,6 +161,7 @@ const messageFns = {
     undid: (p: string) => `Undone: ${p}.`,
     redid: (p: string) => `Redone: ${p}.`,
     setTrackCount: (p: string) => `set track count to ${p}`,
+    createNewPatternAt: (p: string) => `create new pattern at ${p}`,
     insertSequenceBefore: (p: string) => `insert sequence position before ${p}`,
     insertSequenceAfter: (p: string) => `insert sequence position after ${p}`,
     deleteSequencePosition: (p: string) => `delete sequence position ${p}`,

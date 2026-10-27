@@ -102,6 +102,7 @@ export type Command =
       type: "Insert sequence position after";
       createNewPattern: boolean;
     }
+  | { type: "Create pattern at current position" }
   | { type: "Delete sequence position" }
   | { type: "Add instrument" }
   | { type: "Open instrument editor" }
@@ -265,6 +266,8 @@ export const commands = {
       type: "Insert sequence position after",
       createNewPattern,
     }),
+  createPatternAtCurrentPosition: () =>
+    commandQueue.push({ type: "Create pattern at current position" }),
   deleteSequencePosition: () =>
     commandQueue.push({ type: "Delete sequence position" }),
   addInstrument: () => commandQueue.push({ type: "Add instrument" }),
