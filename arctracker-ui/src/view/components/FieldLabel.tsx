@@ -7,13 +7,13 @@ export default function FieldLabel({
   hotkey,
 }: {
   text: string;
-  className: string;
+  className?: string;
   associatedField?: string;
-  hotkey: number;
+  hotkey?: number;
 }) {
   return (
-    <div className={`${className} padded sampleEditLabel fieldLabel`}>
-      <div className="hotKey">{hotkey}</div>
+    <div className={`${className} padded fieldLabel`}>
+      {hotkey && <div className="hotKey">{hotkey}</div>}
       <label htmlFor={associatedField}>{text}</label>
     </div>
   );

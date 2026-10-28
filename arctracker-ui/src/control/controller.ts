@@ -101,6 +101,9 @@ async function processCommands() {
         transport.sequenceSeekToEnd();
         sequence.goToEnd();
         break;
+      case "Open sequence seek dialog":
+        editor.setEditMode("goToPosition");
+        break;
       case "Next instrument":
         editInstrument.nextInstrument();
         break;
@@ -252,6 +255,9 @@ async function processCommands() {
       case "Insert sequence position after":
         selection.clearPatternSelection();
         void sequence.insertAfter(command.createNewPattern);
+        break;
+      case "Create pattern at current position":
+        void sequence.createPatternAtCurrentPosition();
         break;
       case "Delete sequence position":
         selection.clearPatternSelection();

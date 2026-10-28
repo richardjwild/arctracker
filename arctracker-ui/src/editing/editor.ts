@@ -15,7 +15,8 @@ export type EditMode =
   | "trackCount"
   | "tempo"
   | "setMultipleEffects"
-  | "appConfig";
+  | "appConfig"
+  | "goToPosition";
 
 export type EditorState = {
   editMode: EditMode;

@@ -3,7 +3,7 @@ import "./SampleEditDialog.css";
 import { useStore } from "../store/useStore.ts";
 import { hexadecimal } from "../rendering/hexadecimal.ts";
 import { commands } from "../control/commands.ts";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { alerting } from "../alerting/alert.ts";
 import {
   editInstrument,
@@ -16,6 +16,7 @@ import { primaryModifier } from "../keyboard/keyBinding.ts";
 import { KeyHandler } from "../keyboard/keyHandler.ts";
 import FieldLabel from "./components/FieldLabel.tsx";
 import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+import { DecrementButton, IncrementButton } from "./components/SpinnerButtons.tsx";
 
 type InputState = {
   transpose: string;
@@ -23,10 +24,6 @@ type InputState = {
   repeatStart: string;
   repeatEnd: string;
   baseNote: string;
-};
-
-type SpinnerButtonProps = {
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
 };
 
 const emptyInputState: InputState = {
@@ -267,46 +264,6 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
-  const IncrementButton = ({ onClick }: SpinnerButtonProps) => {
-    return (
-      <button
-        type="button"
-        className={"increment"}
-        onClick={onClick}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          height="24px"
-          viewBox="0 -960 960 960"
-          width="24px"
-          fill="currentColor"
-        >
-          <path d="m280-400 200-200 200 200H280Z" />
-        </svg>
-      </button>
-    );
-  };
-
-  const DecrementButton = ({ onClick }: SpinnerButtonProps) => {
-    return (
-      <button
-        type="button"
-        className={"decrement"}
-        onClick={onClick}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          height="24px"
-          viewBox="0 -960 960 960"
-          width="24px"
-          fill="currentColor"
-        >
-          <path d="M480-360 280-560h400L480-360Z" />
-        </svg>
-      </button>
-    );
-  };
-
   return (
     <Modal ref={modalRef} className="sampleEdit">
       <h1 className="instrumentEditTitle padded">
@@ -353,7 +310,7 @@ export default function SampleEditDialog() {
           }}
           ref={defaultVolumeInputRef}
         />
-        <span className="defaultVolumeValue">
+        <span className="rangeValue">
           {Math.round((100 * draftInstrument.defaultVolume) / 255) + "%"}
         </span>
       </div>
@@ -403,9 +360,10 @@ export default function SampleEditDialog() {
       </div>
       {draftInstrument.sample.sampleLength > 0 && (
         <>
-          <div className="sampleLengthLabel padded sampleEditLabel">
-            <label>{message("instrumentSampleLengthLabel")}</label>
-          </div>
+          <FieldLabel
+            text={message("instrumentSampleLengthLabel")}
+            className="sampleLengthLabel"
+          />
           <div className="sampleLengthEdit padded sampleEditField">
             <input
               type="text"
@@ -414,9 +372,10 @@ export default function SampleEditDialog() {
               value={draftInstrument.sample.sampleLength}
             />
           </div>
-          <div className="sampleRateLabel padded sampleEditLabel">
-            <label>{message("sampleRateLabel")}</label>
-          </div>
+          <FieldLabel
+            text={message("sampleRateLabel")}
+            className="sampleRateLabel"
+          />
           <div className="sampleRateEdit padded sampleEditField">
             <input
               type="text"
@@ -542,7 +501,7 @@ export default function SampleEditDialog() {
             associatedField={draftInstrument.repeats ? "sampleRepeatsYes" : "sampleRepeatsNo"}
             hotkey={6}
           />
-          <div className="sampleRepeatsEdit padded sampleEditField">
+          <div className="sampleRepeatsEdit padded sampleEditField radio">
             <input
               type="radio"
               id="sampleRepeatsYes"
@@ -616,7 +575,7 @@ export default function SampleEditDialog() {
           </div>
         </>
       )}
-      <div className="saveCloseButtons uiArea padded rounded">
+      <div className="saveCloseButtons">
         <button type="button" onClick={commands.loadSample}>
           {message("loadSampleButtonLabel")}
         </button>

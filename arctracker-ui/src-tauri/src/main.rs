@@ -20,6 +20,7 @@ const SEEK_FORWARDS_MENU_ID: &str = "seek-forward";
 const SEEK_BACKWARDS_MENU_ID: &str = "seek-backward";
 const SEEK_TO_START_MENU_ID: &str = "seek-to-start";
 const SEEK_TO_END_MENU_ID: &str = "seek-to-end";
+const OPEN_SEEK_DIALOG: &str = "open-seek-dialog";
 const TOGGLE_MUTE_MENU_ID: &str = "toggle-mute";
 const INCREASE_EFFECTS_DISPLAYED_MENU_ID: &str = "increase-effects-displayed";
 const DECREASE_EFFECTS_DISPLAYED_MENU_ID: &str = "decrease-effects-displayed";
@@ -49,6 +50,7 @@ const INSERT_SEQUENCE_AFTER_MENU_ID: &str = "insert-sequence-after";
 const INSERT_SEQUENCE_BEFORE_WITH_NEW_MENU_ID: &str = "insert-sequence-before-with-new";
 const INSERT_SEQUENCE_AFTER_WITH_NEW_MENU_ID: &str = "insert-sequence-after-with-new";
 const DELETE_SEQUENCE_POSITION_MENU_ID: &str = "delete-sequence-position";
+const CREATE_PATTERN_MENU_ID: &str = "create-pattern";
 const SET_PATTERN_LENGTH_MENU_ID: &str = "set-pattern-length";
 const NEXT_INSTRUMENT_MENU_ID: &str = "next-instrument";
 const PREVIOUS_INSTRUMENT_MENU_ID: &str = "previous-instrument";
@@ -79,6 +81,7 @@ const SEEK_FORWARDS_REQUESTED_EVENT: &str = "seek-forwards-requested";
 const SEEK_BACKWARDS_REQUESTED_EVENT: &str = "seek-backwards-requested";
 const SEEK_TO_START_REQUESTED_EVENT: &str = "seek-to-start-requested";
 const SEEK_TO_END_REQUESTED_EVENT: &str = "seek-to-end-requested";
+const OPEN_SEEK_DIALOG_REQUESTED_EVENT: &str = "open-seek-dialog-requested";
 const TOGGLE_MUTE_REQUESTED_EVENT: &str = "toggle-mute-requested";
 const INCREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT: &str = "increase-effects-displayed-requested";
 const DECREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT: &str = "decrease-effects-displayed-requested";
@@ -107,6 +110,7 @@ const INSERT_SEQUENCE_BEFORE_WITH_NEW_REQUESTED_EVENT: &str =
 const INSERT_SEQUENCE_AFTER_WITH_NEW_REQUESTED_EVENT: &str =
     "insert-sequence-after-with-new-requested";
 const DELETE_SEQUENCE_POSITION_REQUESTED_EVENT: &str = "delete-sequence-position-requested";
+const CREATE_PATTERN_REQUESTED_EVENT: &str = "create-pattern-requested";
 const SET_PATTERN_LENGTH_REQUESTED_EVENT: &str = "set-pattern-length-requested";
 const EDIT_INSTRUMENT_REQUESTED_EVENT: &str = "edit-instrument-requested";
 const NEXT_INSTRUMENT_REQUESTED_EVENT: &str = "next-instrument-requested";
@@ -163,6 +167,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         SEEK_BACKWARDS_MENU_ID => request_event(app_handle, SEEK_BACKWARDS_REQUESTED_EVENT),
         SEEK_TO_START_MENU_ID => request_event(app_handle, SEEK_TO_START_REQUESTED_EVENT),
         SEEK_TO_END_MENU_ID => request_event(app_handle, SEEK_TO_END_REQUESTED_EVENT),
+        OPEN_SEEK_DIALOG => request_event(app_handle, OPEN_SEEK_DIALOG_REQUESTED_EVENT),
         TOGGLE_MUTE_MENU_ID => request_event(app_handle, TOGGLE_MUTE_REQUESTED_EVENT),
         INCREASE_EFFECTS_DISPLAYED_MENU_ID => {
             request_event(app_handle, INCREASE_EFFECTS_DISPLAYED_REQUESTED_EVENT)
@@ -207,6 +212,7 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         DELETE_SEQUENCE_POSITION_MENU_ID => {
             request_event(app_handle, DELETE_SEQUENCE_POSITION_REQUESTED_EVENT)
         }
+        CREATE_PATTERN_MENU_ID => request_event(app_handle, CREATE_PATTERN_REQUESTED_EVENT),
         SET_PATTERN_LENGTH_MENU_ID => request_event(app_handle, SET_PATTERN_LENGTH_REQUESTED_EVENT),
         NEXT_INSTRUMENT_MENU_ID => request_event(app_handle, NEXT_INSTRUMENT_REQUESTED_EVENT),
         PREVIOUS_INSTRUMENT_MENU_ID => {
@@ -530,6 +536,13 @@ fn build_transport_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
         true,
         Some("Alt+CmdOrCtrl+Right"),
     )?;
+    let open_seek_dialog = MenuItem::with_id(
+        app,
+        OPEN_SEEK_DIALOG,
+        "Seek to position...",
+        true,
+        Some("CmdOrCtrl+G"),
+    )?;
     let separator = PredefinedMenuItem::separator(app)?;
     Submenu::with_items(
         app,
@@ -543,6 +556,7 @@ fn build_transport_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
             &seek_backwards,
             &seek_to_start,
             &seek_to_end,
+            &open_seek_dialog,
         ],
     )
 }
@@ -677,14 +691,21 @@ fn build_sequence_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
 }
 
 fn build_pattern_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
+    let create_pattern = MenuItem::with_id(
+        app,
+        CREATE_PATTERN_MENU_ID,
+        "Create Pattern",
+        true,
+        Some("CmdOrCtrl+Enter"),
+    )?;
     let set_length = MenuItem::with_id(
         app,
         SET_PATTERN_LENGTH_MENU_ID,
-        "Set Pattern Length...",
+        "Set Length...",
         true,
         Some("CmdOrCtrl+L"),
     )?;
-    Submenu::with_items(app, "Pattern", true, &[&set_length])
+    Submenu::with_items(app, "Pattern", true, &[&create_pattern, &set_length])
 }
 
 fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> {
@@ -716,7 +737,7 @@ fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> 
         ADD_INSTRUMENT_MENU_ID,
         "Add Instrument...",
         true,
-        None::<String>,
+        Some("Shift+CmdOrCtrl+I"),
     )?;
     let edit_instrument = MenuItem::with_id(
         app,

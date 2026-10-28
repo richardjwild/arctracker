@@ -3,14 +3,14 @@
 
 #include "player/module.h"
 
-#define EDIT_SUCCESS (edit_result_t) {\
-    .success = true\
-}
-
 typedef struct {
     bool success;
     char *error_message;
 } edit_result_t;
+
+static const edit_result_t EDIT_SUCCESS = {
+    .success = true,
+};
 
 edit_result_t editor_get_event(const module_t *module, int pattern_no, int pattern_index, int track, event_t *event_buffer);
 

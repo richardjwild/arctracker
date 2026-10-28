@@ -101,6 +101,30 @@ export const sequence = {
     void setPattern(sequencePosition, pattern - 1);
   },
 
+  createPatternAtCurrentPosition: async () => {
+    if (transport.playing()) return;
+    const originalSequence = useStore.getState().sequence;
+    const sequencePosition = sequence.currentPosition();
+    const command: EditCommand = {
+      apply: async () => {
+        const newPatternNo = await pattern.createPattern();
+        const updatedSequence = [...originalSequence];
+        updatedSequence[sequencePosition] = newPatternNo;
+        useStore.getState().setSequence(updatedSequence);
+        await engine.setSequence(updatedSequence);
+        return true;
+      },
+      undo: async () => {
+        const createdPatternNo = useStore.getState().sequence[sequencePosition];
+        useStore.getState().setSequence(originalSequence);
+        await engine.setSequence(originalSequence);
+        await pattern.deletePattern(createdPatternNo);
+      },
+      undoMessage: messageFn("createNewPatternAt")(sequencePosition.toString())
+    }
+    await editor.applyEdit(command);
+  },
+
   insertBefore: async (createNewPattern: boolean = false) => {
     if (transport.playing()) return;
     const sequencePosition = sequence.currentPosition();

@@ -59,7 +59,7 @@ export default function MasterGain() {
         value={masterGain}
         onChange={(e) => updateMasterGain(Number(e.target.value))}
       />
-      <span className="gainValue">{Math.round(masterGain * 100) + "%"}</span>
+      <span className="rangeValue">{Math.round(masterGain * 100) + "%"}</span>
       <canvas
         className="vuMeter"
         ref={canvasRef}
