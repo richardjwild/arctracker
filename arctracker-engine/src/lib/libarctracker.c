@@ -1,6 +1,5 @@
 #include <stddef.h>
-#include <pthread.h>
-#include <unistd.h>
+#include "concurrency/threads.h"
 #include <string.h>
 #include "libarctracker.h"
 
@@ -28,7 +27,7 @@ static void get_player_transport_state(const playback_audio_subsystem_t *playbac
 static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks);
 static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event);
 static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event);
-static void* run_export(void *arg);
+static void run_export(void *arg);
 static void remove_module(arctracker_t *);
 static api_result_t failure(char *);
 static void count_resources(resource_group_t, char *);
@@ -581,8 +580,8 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
     arctracker->export.player = player_create(arctracker->module, arctracker->export.event_queue, arctracker->midi_queue);
     if (arctracker->export.player == NULL)
         return failure(EXPORT_INIT_FAILED);
-    pthread_t export_thread;
-    const int err = pthread_create(&export_thread, NULL, run_export, arctracker);
+    arc_thread_t export_thread;
+    const int err = arc_thread_create(&export_thread, run_export, arctracker);
     if (err != 0)
     {
         error(strerror(err));
@@ -594,7 +593,7 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
     return SUCCESS;
 }
 
-static void *run_export(void *arg)
+static void run_export(void *arg)
 {
     arctracker_t *arctracker = arg;
     const export_audio_subsystem_t export_subsystem = arctracker->export;
@@ -611,7 +610,7 @@ static void *run_export(void *arg)
             if (!export_collect_audio(&wav_export, frames_filled))
             {
                 arctracker->export_state = FAILED;
-                return NULL;
+                return;
             }
         }
         if (result.song_ended)
@@ -620,7 +619,6 @@ static void *run_export(void *arg)
         }
     }
     arctracker->export_state = export_finish(&wav_export) ? COMPLETE : FAILED;
-    return NULL;
 }
 
 api_result_t arctracker_export_sample(arctracker_t *arctracker, int instrument_no, char *output_filename)
@@ -661,7 +659,7 @@ api_result_t arctracker_export_cleanup(arctracker_t *arctracker)
         return failure(BAD_ARCTRACKER_HANDLE);
     if (!arctracker->export.thread_active)
         return failure(EXPORT_NOT_STARTED);
-    pthread_join(arctracker->export.audio_thread, NULL);
+    arc_thread_join(&arctracker->export.audio_thread);
     arctracker->export.thread_active = false;
     player_destroy(arctracker->export.player);
     arctracker->export.player = NULL;

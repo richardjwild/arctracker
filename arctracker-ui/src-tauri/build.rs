@@ -38,6 +38,7 @@ fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: 
                 "-Ddefault_library=static".as_ref(),
                 "-Dasan=false".as_ref(),
                 "-Db_sanitize=none".as_ref(),
+                "-Db_vscrt=mt".as_ref(),
             ],
         );
     } else {
@@ -50,6 +51,7 @@ fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: 
                 format!("-Dbuildtype={build_type}").as_ref(),
                 "-Ddefault_library=static".as_ref(),
                 "-Dasan=false".as_ref(),
+                "-Db_vscrt=mt".as_ref(),
             ],
         );
     }
@@ -87,10 +89,6 @@ fn main() {
     let rtmidi_library_directory = engine_build_directory.join("subprojects/rtmidi-6.0.0");
     println!(
         "cargo:rustc-link-search=native={}",
-        engine_build_directory.display()
-    );
-    println!(
-        "cargo:rustc-link-search=native={}",
         portaudio_library_directory.display()
     );
     println!(
@@ -113,7 +111,12 @@ fn main() {
         // RtMidi is implemented in C++.
         println!("cargo:rustc-link-lib=c++");
     }
-    println!("cargo:rustc-link-lib=static=arctracker");
+    #[cfg(target_os = "windows")]
+    {
+        println!("cargo:rustc-link-lib=winmm");
+        println!("cargo:rustc-link-lib=ole32");
+        println!("cargo:rustc-link-lib=uuid");
+    }
     println!(
         "cargo:rerun-if-changed={}",
         engine_source_directory.join("meson.build").display()

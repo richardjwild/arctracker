@@ -1,3 +1,17 @@
+#ifdef _WIN32
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(const int argc, char *argv[]) {
+    (void) argc;
+    (void) argv;
+    printf("arctracker-console is not implemented for Windows\n");
+    exit(EXIT_SUCCESS);
+}
+
+#else
+
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -190,3 +204,5 @@ static void destroy(arctracker_t *arctracker_handle, midi_subsystem_t *midi)
         exit(EXIT_FAILURE);
     }
 }
+
+#endif

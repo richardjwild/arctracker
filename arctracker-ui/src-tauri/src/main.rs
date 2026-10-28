@@ -790,6 +790,7 @@ fn build_instrument_menu<R: Runtime>(app: &App<R>) -> tauri::Result<Submenu<R>> 
 
 fn handle_run_event<R: Runtime>(app_handle: &AppHandle<R>, event: RunEvent) {
     match event {
+        #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
             if let Some(path) = urls
                 .into_iter()

@@ -1,3 +1,9 @@
+#ifdef _WIN32
+
+void;
+
+#else
+
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -208,3 +214,6 @@ static bool handle_export_events(arctracker_t *arctracker_handle)
     }
     return true;
 }
+
+#endif
+

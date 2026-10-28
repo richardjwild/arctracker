@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <errno.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include "loader.h"
 #include "format_arctracker.h"
@@ -11,6 +10,13 @@
 #include "audio_file/wav.h"
 #include "io/error.h"
 #include "memory/heap.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#else
+#include <sys/mman.h>
+#endif
 
 #define MAX_FILE_PATH_LENGTH 4096
 #define NUM_FORMATS 4
@@ -48,6 +54,7 @@ static const char *WRITE_BINARY = "wb";
 static const int OFFSET = 0;
 
 static mapped_file_t load_file(FILE *);
+static void unmap_file(mapped_file_t);
 static size_t file_size(int);
 static format_t *known_formats(void);
 static int16_t clamp_to_pcm16(float sample);
@@ -73,12 +80,12 @@ load_module_result_t load_module(const char *filename)
         const format_t format = formats[i];
         if (format.is_this_format(file)) {
             module_t *module = format.read_module(file);
-            munmap(file.addr, file.size);
+            unmap_file(file);
             if (module == NULL) return FAILED_TO_LOAD_MODULE;
             return successfully_loaded_module(module);
         }
     }
-    munmap(file.addr, file.size);
+    unmap_file(file);
     return UNRECOGNISED_MODULE_FORMAT;
 }
 
@@ -128,7 +135,7 @@ load_sample_result_t load_sample(const char *filename)
         return FAILED_TO_READ_SAMPLE_FILE;
     }
     const audio_t audio_data = wav_read_audio(file.addr, file.size);
-    munmap(file.addr, file.size);
+    unmap_file(file);
     if (has_error())
     {
         return FAILED_TO_READ_SAMPLE_FILE;
@@ -165,6 +172,90 @@ bool export_sample(const module_t *module, const int instrument_index, const cha
     return ok;
 }
 
+#ifdef _WIN32
+
+#include <windows.h>
+#include <io.h>
+
+static mapped_file_t load_file(FILE *file_pointer)
+{
+    mapped_file_t mapped_file = {
+        .addr = NULL,
+        .size = 0
+    };
+
+    const int fd = _fileno(file_pointer);
+    if (fd == -1) {
+        system_error(errno);
+        return mapped_file;
+    }
+
+    const intptr_t os_handle = _get_osfhandle(fd);
+    if (os_handle == -1) {
+        system_error(errno);
+        return mapped_file;
+    }
+
+    HANDLE file_handle = (HANDLE)os_handle;
+
+    LARGE_INTEGER file_size;
+    if (!GetFileSizeEx(file_handle, &file_size)) {
+        // Report GetLastError() using your Windows error handling
+        return mapped_file;
+    }
+
+    if (file_size.QuadPart == 0) {
+        error(FILE_EMPTY);
+        return mapped_file;
+    }
+
+    if (file_size.QuadPart < 0 ||
+        (uint64_t)file_size.QuadPart > SIZE_MAX) {
+        error("File is too large to map");
+        return mapped_file;
+        }
+
+    HANDLE mapping = CreateFileMapping(
+        file_handle,
+        NULL,
+        PAGE_READONLY,
+        0,
+        0,
+        NULL
+    );
+
+    if (mapping == NULL) {
+        // Report GetLastError()
+        return mapped_file;
+    }
+
+    void *addr = MapViewOfFile(
+        mapping,
+        FILE_MAP_READ,
+        0,
+        0,
+        0
+    );
+
+    CloseHandle(mapping);
+
+    if (addr == NULL) {
+        // Report GetLastError()
+        return mapped_file;
+    }
+
+    mapped_file.addr = addr;
+    mapped_file.size = (size_t)file_size.QuadPart;
+
+    return mapped_file;
+}
+
+static void unmap_file(mapped_file_t file) {
+    UnmapViewOfFile(file.addr);
+}
+
+#else
+
 static mapped_file_t load_file(FILE *file_pointer)
 {
     mapped_file_t mapped_file = {
@@ -193,6 +284,12 @@ static mapped_file_t load_file(FILE *file_pointer)
     }
     return mapped_file;
 }
+
+static void unmap_file(mapped_file_t file) {
+    munmap(file.addr, file.size);
+}
+
+#endif
 
 static size_t file_size(const int file_descriptor)
 {

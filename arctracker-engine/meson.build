@@ -1,11 +1,18 @@
 project('arctracker', ['c', 'cpp'],
     version: '0.4.2',
     default_options: [
-        'warning_level=2',
+        'c_std=c11',
+        'warning_level=3',
         'werror=false',
         'b_sanitize=none'
     ]
 )
+
+cc = meson.get_compiler('c')
+
+if cc.get_id() == 'msvc'
+    add_project_arguments('/experimental:c11atomics', language: 'c')
+endif
 
 cmake = import('cmake')
 
@@ -32,6 +39,11 @@ rtmidi_options.add_cmake_defines({
     'RTMIDI_BUILD_SHARED_LIBS': false,
     'RTMIDI_BUILD_TESTING': false,
 })
+if host_machine.system() == 'windows'
+    rtmidi_options.add_cmake_defines({
+        'CMAKE_MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
+    })
+endif
 rtmidi_options.set_override_option('warning_level', '0')
 rtmidi_options.append_compile_args('c', '-w')
 rtmidi_options.append_compile_args('cpp', '-w')
@@ -40,12 +52,6 @@ rtmidi_project = cmake.subproject(
     options: rtmidi_options,
 )
 rtmidi = rtmidi_project.dependency('rtmidi')
-
-add_project_arguments(
-  '-Wpedantic',
-  '-Werror=implicit-function-declaration',
-  language: 'c'
-)
 
 subdir('src')
 project_includes = include_directories('src')
