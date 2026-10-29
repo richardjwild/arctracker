@@ -230,6 +230,17 @@ fn setup_app<R: Runtime>(app: &mut App<R>) -> Result<(), Box<dyn Error>> {
         SHOW_COMMAND_REFERENCE_MENU_ID => request_event(app_handle, SHOW_COMMAND_REFERENCE_EVENT),
         _ => {}
     });
+    //
+    // If Arctracker has received a command line argument, assume it is a module and try opening it.
+    //
+    if let Some(path) = std::env::args_os()
+        .skip(1)
+        .map(std::path::PathBuf::from)
+        .find(|path| path.is_file())
+    {
+        let pending = app.state::<PendingOpenRequest>();
+        pending.set(path);
+    }
     Ok(())
 }
 
