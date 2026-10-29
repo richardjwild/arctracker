@@ -24,8 +24,8 @@ export default function AppRuntime({ children }: AppRuntimeProps) {
   useExportMonitoring();
   useKeyboardInput();
   useAnimation();
-  useAppConfig();
-  useOpenFileListener();
+  const appConfigReady = useAppConfig();
+  useOpenFileListener(appConfigReady);
   useWelcomeMessage();
   return <>{children}</>;
 }

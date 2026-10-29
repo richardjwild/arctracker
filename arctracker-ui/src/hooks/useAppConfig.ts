@@ -1,14 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { appConfig } from "../config/appConfig.ts";
 import { messageFn } from "../language/messages.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
-let readConfig = false;
+let configInitialisation: Promise<void> | undefined;
 
-export default function useAppConfig() {
-  useEffect(() => {
-    if (readConfig) return;
-    appConfig
+function initialiseAppConfig(): Promise<void> {
+  if (!configInitialisation) {
+    configInitialisation = appConfig
       .load()
       .then((config) => appConfig.apply(config))
       .catch((e) => {
@@ -16,8 +15,22 @@ export default function useAppConfig() {
           type: "warning",
           message: messageFn("failedToLoadConfig")(e as string),
         });
-        appConfig.setToDefault();
+        return appConfig.setToDefault();
       });
-    readConfig = true;
+  }
+  return configInitialisation;
+}
+
+export default function useAppConfig() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void initialiseAppConfig().then(() => {
+      if (!cancelled) setReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+  return ready;
 }
