@@ -122,7 +122,7 @@ export class PatternRenderer {
       horizontalScroll.firstVisibleTrack,
       horizontalScroll.trackOffset,
     );
-    this.ctx.textBaseline = "hanging";
+    this.ctx.textBaseline = "top";
     this.topFade = this.createTopFade();
     this.bottomFade = this.createBottomFade();
   }
