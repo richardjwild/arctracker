@@ -63,7 +63,12 @@ fn main() {
     let out_directory = PathBuf::from(env::var("OUT_DIR").unwrap());
     let profile = env::var("PROFILE").unwrap();
     let engine_source_directory = manifest_dir.join("../../arctracker-engine");
-    let engine_build_directory = out_directory.join("arctracker-engine");
+    // Keep the Meson build directory shallow to avoid CMake's
+    // object-file path length limit on Windows.
+    let engine_build_directory = out_directory.ancestors()
+        .nth(3)
+        .expect("Unexpected Cargo OUT_DIR layout")
+        .join("arctracker-engine");
     let meson_build_type = match profile.as_str() {
         "release" => "release",
         _ => "debug",
