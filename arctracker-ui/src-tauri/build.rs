@@ -1,5 +1,5 @@
 use std::env;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};
 use tauri_build::build;
@@ -26,35 +26,22 @@ where
 
 fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: &str) {
     let core_data = build_directory.join("meson-private/coredata.dat");
+    let mut args: Vec<OsString> = vec!["setup".into()];
     if core_data.exists() {
-        run(
-            "meson",
-            [
-                "setup".as_ref(),
-                "--reconfigure".as_ref(),
-                build_directory.as_os_str(),
-                source_directory.as_os_str(),
-                format!("-Dbuildtype={build_type}").as_ref(),
-                "-Ddefault_library=static".as_ref(),
-                "-Dasan=false".as_ref(),
-                "-Db_sanitize=none".as_ref(),
-                "-Db_vscrt=mt".as_ref(),
-            ],
-        );
-    } else {
-        run(
-            "meson",
-            [
-                "setup".as_ref(),
-                build_directory.as_os_str(),
-                source_directory.as_os_str(),
-                format!("-Dbuildtype={build_type}").as_ref(),
-                "-Ddefault_library=static".as_ref(),
-                "-Dasan=false".as_ref(),
-                "-Db_vscrt=mt".as_ref(),
-            ],
-        );
+        args.push("--reconfigure".into());
     }
+    args.extend([
+        build_directory.as_os_str().to_owned(),
+        source_directory.as_os_str().to_owned(),
+        format!("-Dbuildtype={build_type}").into(),
+        "-Ddefault_library=static".into(),
+        "-Dasan=false".into(),
+        "-Db_sanitize=none".into(),
+    ]);
+    if cfg!(target_os = "windows") {
+        args.push("-Db_vscrt=mt".into());
+    }
+    run("meson", args);
 }
 
 fn main() {
