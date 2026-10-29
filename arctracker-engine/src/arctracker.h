@@ -1,7 +1,7 @@
 #ifndef ARCTRACKER_ARCTRACKER_H
 #define ARCTRACKER_ARCTRACKER_H
 
-#include <pthread.h>
+#include "concurrency/threads.h"
 #include "portaudio.h"
 #include "audio_export/audio_export.h"
 #include "player/player.h"
@@ -23,7 +23,7 @@ typedef struct {
     player_t *player;
     player_event_queue_t *event_queue;
     bool thread_active;
-    pthread_t audio_thread;
+    arc_thread_t audio_thread;
     wav_export_t wav_export;
 } export_audio_subsystem_t;
 

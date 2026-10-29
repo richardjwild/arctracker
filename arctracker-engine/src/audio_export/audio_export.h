@@ -2,6 +2,7 @@
 #define ARCTRACKER_API_WAV_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define MAX_FILE_PATH_LENGTH 4096
 

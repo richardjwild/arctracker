@@ -3,8 +3,9 @@ import { listen } from "@tauri-apps/api/event";
 import { engine } from "../engine/engine.ts";
 import { commands } from "../control/commands.ts";
 
-export function useOpenFileListener() {
+export function useOpenFileListener(ready: boolean) {
   useEffect(() => {
+    if (!ready) return;
     let unlisten: (() => void) | undefined;
     let cancelled = false;
 
@@ -31,5 +32,5 @@ export function useOpenFileListener() {
       cancelled = true;
       unlisten?.();
     };
-  }, []);
+  }, [ready]);
 }

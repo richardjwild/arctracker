@@ -3,7 +3,7 @@
 
 #include <stdatomic.h>
 #include <stdbool.h>
-#include <sys/_pthread/_pthread_mutex_t.h>
+#include "concurrency/mutexes.h"
 #include "player_command.h"
 
 #define CMD_QUEUE_SIZE 64
@@ -12,7 +12,7 @@ typedef struct {
     player_command_t buffer[CMD_QUEUE_SIZE];
     atomic_int head;
     atomic_int tail;
-    pthread_mutex_t producer_mutex;
+    arc_mutex_t producer_mutex;
 } player_command_queue_t;
 
 player_command_queue_t *command_queue_init(void);

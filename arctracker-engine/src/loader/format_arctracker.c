@@ -1,6 +1,5 @@
 #include "format_arctracker.h"
 #include <string.h>
-#include <unistd.h>
 #include "messages.h"
 #include "io/error.h"
 #include "memory/heap.h"

@@ -1,5 +1,5 @@
 use std::env;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};
 use tauri_build::build;
@@ -26,33 +26,22 @@ where
 
 fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: &str) {
     let core_data = build_directory.join("meson-private/coredata.dat");
+    let mut args: Vec<OsString> = vec!["setup".into()];
     if core_data.exists() {
-        run(
-            "meson",
-            [
-                "setup".as_ref(),
-                "--reconfigure".as_ref(),
-                build_directory.as_os_str(),
-                source_directory.as_os_str(),
-                format!("-Dbuildtype={build_type}").as_ref(),
-                "-Ddefault_library=static".as_ref(),
-                "-Dasan=false".as_ref(),
-                "-Db_sanitize=none".as_ref(),
-            ],
-        );
-    } else {
-        run(
-            "meson",
-            [
-                "setup".as_ref(),
-                build_directory.as_os_str(),
-                source_directory.as_os_str(),
-                format!("-Dbuildtype={build_type}").as_ref(),
-                "-Ddefault_library=static".as_ref(),
-                "-Dasan=false".as_ref(),
-            ],
-        );
+        args.push("--reconfigure".into());
     }
+    args.extend([
+        build_directory.as_os_str().to_owned(),
+        source_directory.as_os_str().to_owned(),
+        format!("-Dbuildtype={build_type}").into(),
+        "-Ddefault_library=static".into(),
+        "-Dasan=false".into(),
+        "-Db_sanitize=none".into(),
+    ]);
+    if cfg!(target_os = "windows") {
+        args.push("-Db_vscrt=mt".into());
+    }
+    run("meson", args);
 }
 
 fn main() {
@@ -61,7 +50,12 @@ fn main() {
     let out_directory = PathBuf::from(env::var("OUT_DIR").unwrap());
     let profile = env::var("PROFILE").unwrap();
     let engine_source_directory = manifest_dir.join("../../arctracker-engine");
-    let engine_build_directory = out_directory.join("arctracker-engine");
+    // Keep the Meson build directory shallow to avoid CMake's
+    // object-file path length limit on Windows.
+    let engine_build_directory = out_directory.ancestors()
+        .nth(3)
+        .expect("Unexpected Cargo OUT_DIR layout")
+        .join("arctracker-engine");
     let meson_build_type = match profile.as_str() {
         "release" => "release",
         _ => "debug",
@@ -87,10 +81,6 @@ fn main() {
     let rtmidi_library_directory = engine_build_directory.join("subprojects/rtmidi-6.0.0");
     println!(
         "cargo:rustc-link-search=native={}",
-        engine_build_directory.display()
-    );
-    println!(
-        "cargo:rustc-link-search=native={}",
         portaudio_library_directory.display()
     );
     println!(
@@ -113,7 +103,12 @@ fn main() {
         // RtMidi is implemented in C++.
         println!("cargo:rustc-link-lib=c++");
     }
-    println!("cargo:rustc-link-lib=static=arctracker");
+    #[cfg(target_os = "windows")]
+    {
+        println!("cargo:rustc-link-lib=winmm");
+        println!("cargo:rustc-link-lib=ole32");
+        println!("cargo:rustc-link-lib=uuid");
+    }
     println!(
         "cargo:rerun-if-changed={}",
         engine_source_directory.join("meson.build").display()

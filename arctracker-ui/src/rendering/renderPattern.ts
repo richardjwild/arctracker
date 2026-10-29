@@ -94,6 +94,7 @@ export class PatternRenderer {
   private readonly gridViewportFit: GridViewportFit;
   private readonly topFade: CanvasGradient;
   private readonly bottomFade: CanvasGradient;
+  private glyphOffsetY: number = 0;
 
   public constructor(
     ctx: CanvasRenderingContext2D,
@@ -122,9 +123,15 @@ export class PatternRenderer {
       horizontalScroll.firstVisibleTrack,
       horizontalScroll.trackOffset,
     );
-    this.ctx.textBaseline = "hanging";
+    this.ctx.textBaseline = "top";
     this.topFade = this.createTopFade();
     this.bottomFade = this.createBottomFade();
+    this.measureText();
+  }
+
+  private measureText() {
+    const { fontBoundingBoxAscent } = this.ctx.measureText("C");
+    this.glyphOffsetY = fontBoundingBoxAscent;
   }
 
   private createTopFade(): CanvasGradient {
@@ -615,7 +622,7 @@ export class PatternRenderer {
   }
 
   private renderGlyph(glyph: string, x: number, y: number): PatternRenderer {
-    this.ctx.fillText(glyph, x, y + 1);
+    this.ctx.fillText(glyph, x, y + 1 + this.glyphOffsetY);
     return this;
   }
 

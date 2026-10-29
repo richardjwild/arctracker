@@ -1,5 +1,4 @@
 #include "midi_cmd_queue.h"
-#include <pthread.h>
 #include "memory/heap.h"
 
 midi_command_queue_t *midi_queue_init(void)
@@ -8,24 +7,24 @@ midi_command_queue_t *midi_queue_init(void)
     if (queue == NULL) return NULL;
     atomic_init(&queue->head, 0);
     atomic_init(&queue->tail, 0);
-    pthread_mutex_init(&queue->producer_mutex, NULL);
+    arc_mutex_init(&queue->producer_mutex);
     return queue;
 }
 
 bool midi_queue_add(midi_command_queue_t *queue, const midi_command_t command_in)
 {
-    pthread_mutex_lock(&queue->producer_mutex);
+    arc_mutex_lock(&queue->producer_mutex);
     const int current_head = atomic_load_explicit(&queue->head, memory_order_relaxed);
     const int current_tail = atomic_load_explicit(&queue->tail, memory_order_acquire);
     const int next_slot = (current_head + 1) % MIDI_CMD_QUEUE_SIZE;
     if (next_slot == current_tail)
     {
-        pthread_mutex_unlock(&queue->producer_mutex);
+        arc_mutex_unlock(&queue->producer_mutex);
         return false;
     }
     queue->buffer[current_head] = command_in;
     atomic_store_explicit(&queue->head, next_slot, memory_order_release);
-    pthread_mutex_unlock(&queue->producer_mutex);
+    arc_mutex_unlock(&queue->producer_mutex);
     return true;
 }
 
@@ -43,7 +42,7 @@ void midi_queue_destroy(midi_command_queue_t *queue)
 {
     if (queue != NULL)
     {
-        pthread_mutex_destroy(&queue->producer_mutex);
+        arc_mutex_destroy(&queue->producer_mutex);
         deallocate(PLAYER, queue);
     }
 }
