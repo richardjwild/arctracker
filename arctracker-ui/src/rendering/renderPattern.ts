@@ -125,6 +125,8 @@ export class PatternRenderer {
     this.ctx.textBaseline = "top";
     this.topFade = this.createTopFade();
     this.bottomFade = this.createBottomFade();
+    const metrics = ctx.measureText("C3 01 -C07");
+    console.log(`font metrics: { font: ${ctx.font}, baseline: ${ctx.textBaseline}, ascent: ${metrics.actualBoundingBoxAscent}, descent: ${metrics.actualBoundingBoxDescent}, fontAscent: ${metrics.fontBoundingBoxAscent}, fontDescent: ${metrics.fontBoundingBoxDescent} }`);
   }
 
   private createTopFade(): CanvasGradient {
