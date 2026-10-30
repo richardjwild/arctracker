@@ -21,7 +21,7 @@
 }
 
 .userMessages .messages .message {
-    font-family: sans-serif;
+    font-family: LatoRegular, sans-serif;
     font-size: 12px;
     color: var(--colour-text);
     height: 20px;

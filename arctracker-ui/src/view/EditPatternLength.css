@@ -1,5 +1,5 @@
 .editPatternLength {
-    width: 200px;
+    width: 187px;
     height: 50px;
     display: flex;
     flex-direction: row;
@@ -7,9 +7,10 @@
     gap: 15px;
 }
 
-.editPatternLength label {
+.editPatternLength label.patternLengthLabel {
     display: block;
-    font-family: sans-serif;
+    min-width: 110px;
+    font-family: LatoRegular, sans-serif;
     font-weight: bold;
     color: var(--colour-title-text);
 }

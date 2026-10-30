@@ -1,11 +1,11 @@
 @font-face {
-  font-family: FiraCode;
-  src: url('assets/fonts/FiraCode-Medium.woff2') format('woff2');
+  font-family: LatoRegular;
+  src: url('assets/fonts/Lato-Regular.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: PixelCode;
-  src: url('assets/fonts/PixelCode.woff2') format('woff2');
+  font-family: LatoBold;
+  src: url('assets/fonts/Lato-Bold.woff2') format('woff2');
 }
 
 @font-face {
@@ -78,7 +78,9 @@ button.right {
 }
 
 label {
+  font-family: LatoRegular, sans-serif;
   font-size: 16px;
+  padding-bottom: 2px;
 }
 
 input[type='text'] {
@@ -127,18 +129,17 @@ input[type="radio"]:focus + label {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 5px;
+  gap: 0;
 }
 
 .radio label {
   display: inline;
   font-size: 16px;
-  font-family: sans-serif;
-  font-weight: bold;
+  font-family: LatoBold, sans-serif;
   color: var(--colour-input-text);
-  margin: 12px 10px 11px 0;
+  margin: 12px 10px 11px 3px;
   height: 25px;
-  padding: 0 5px;
+  padding: 0 5px 3px 5px;
   line-height: 27px;
   border-radius: 3px;
 }
@@ -200,6 +201,8 @@ body.sliderDragging, body.sliderDragging * {
 }
 
 .saveCloseButtons button {
+  font-family: LatoRegular, sans-serif;
+  font-size: 12px;
   height: 30px;
   width: 90px;
   border-radius: 5px;

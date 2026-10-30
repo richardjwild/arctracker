@@ -14,7 +14,7 @@
     border-radius: 8px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     padding: 20px;
-    font-family: sans-serif;
+    font-family: LatoRegular, sans-serif;
     z-index: 1001;
     color: var(--colour-text);
 }

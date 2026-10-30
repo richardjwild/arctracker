@@ -10,7 +10,7 @@
     height: 30px;
     width: 30px;
     border-radius: 7px;
-    font-family: sans-serif;
+    font-family: LatoRegular, sans-serif;
     font-size: 12px;
     border: solid 1px var(--colour-button-border);
     background: var(--colour-button-bg);

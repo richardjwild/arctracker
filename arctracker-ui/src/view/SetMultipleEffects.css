@@ -1,6 +1,6 @@
 .setMultipleEffects {
     width: 315px;
-    height: 210px;
+    height: 215px;
     display: grid;
     grid-template-columns: 155px 1fr;
     grid-template-rows: 50px 50px 50px 40px;
