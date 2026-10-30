@@ -37,6 +37,14 @@ pub struct MidiDeviceInfo {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct UiPlaybackState {
+    pub running: bool,
+    pub sample_rate: f64,
+    pub reported_latency: f64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct NewModuleParams {
     pub num_tracks: c_int,
     pub default_pattern_length: c_int,
@@ -298,6 +306,7 @@ extern "C" {
         sample_rate: u32,
     ) -> ApiResult;
     pub fn arctracker_use_default_output(handle: *mut ArctrackerHandle, sample_rate: u32) -> ApiResult;
+    pub fn arctracker_get_playback_state(handle: *mut ArctrackerHandle, playback_state: *mut UiPlaybackState) -> ApiResult;
     pub fn arctracker_get_available_midi_count(handle: *mut MidiHandle) -> c_int;
     pub fn arctracker_get_available_midi_devices(
         handle: *mut MidiHandle,

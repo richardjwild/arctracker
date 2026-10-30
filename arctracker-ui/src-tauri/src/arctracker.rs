@@ -36,6 +36,24 @@ impl From<ffi::AudioDeviceInfo> for AudioDeviceInfo {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PlaybackState {
+    pub running: bool,
+    pub sample_rate: f64,
+    pub reported_latency: f64,
+}
+
+impl From<ffi::UiPlaybackState> for PlaybackState {
+    fn from(playback_state: ffi::UiPlaybackState) -> Self {
+        Self {
+            running: playback_state.running,
+            sample_rate: playback_state.sample_rate,
+            reported_latency: playback_state.reported_latency,
+        }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MidiDeviceInfo {
     pub name: String,
 }
@@ -419,6 +437,18 @@ impl Arctracker {
             return Err(c_string_to_rust(&result.error_message));
         }
         Ok(())
+    }
+    
+    pub fn get_playback_state(&mut self) -> Result<PlaybackState, String> {
+        let mut playback_state = std::mem::MaybeUninit::<ffi::UiPlaybackState>::uninit();
+        let result = unsafe {
+            ffi::arctracker_get_playback_state(self.handle, playback_state.as_mut_ptr())
+        };
+        if !result.success {
+            return Err(c_string_to_rust(&result.error_message));
+        }
+        let playback_state = unsafe { playback_state.assume_init() };
+        Ok(PlaybackState::from(playback_state))
     }
 
     pub fn use_default_output(&mut self, sample_rate: Option<u32>) -> Result<(), String> {

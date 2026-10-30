@@ -326,8 +326,15 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
         return failure(PLAYER_INIT_FAILED);
     }
     const open_stream_result_t result = open_portaudio_stream(&arctracker->audio_config, &arctracker->playback.pa_stream, portaudio_callback, arctracker->playback.player);
-    if (!result.success)
+    if (result.success)
     {
+        arctracker->playback.sample_rate = result.sample_rate;
+        arctracker->playback.reported_latency = result.reported_latency;
+    }
+    else
+    {
+        arctracker->playback.sample_rate = 0;
+        arctracker->playback.reported_latency = 0;
         player_destroy(arctracker->playback.player);
         return failure(FAILED_TO_OPEN_STREAM);
     }
@@ -344,11 +351,6 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
         return failure(FAILED_TO_START_STREAM);
     }
     arctracker->playback.stream_started = true;
-    //
-    // TODO: Return sample_rate and reported_latency from open_portaudio_stream to the UI.
-    //
-    printf("Actual sample rate: %.0f\n", result.sample_rate);
-    printf("Reported latency: %.0f", result.reported_latency);
     return SUCCESS;
 }
 
@@ -365,6 +367,18 @@ static int portaudio_callback(
     (void) status_flags;
     player_render_audio(player, output, frames_requested, false);
     return paContinue;
+}
+
+api_result_t arctracker_get_playback_state(arctracker_t *arctracker, ui_playback_state_t *playback_state)
+{
+    if (arctracker == NULL)
+        return failure(BAD_ARCTRACKER_HANDLE);
+    if (!arctracker->portaudio_initialised)
+        return failure(AUDIO_SYSTEM_NOT_INITIALISED);
+    playback_state->running = arctracker->playback.stream_started;
+    playback_state->sample_rate = arctracker->playback.sample_rate;
+    playback_state->reported_latency = arctracker->playback.reported_latency;
+    return SUCCESS;
 }
 
 bool arctracker_player_cmd(arctracker_t *arctracker, player_command_t *command)

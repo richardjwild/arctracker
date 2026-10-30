@@ -69,6 +69,8 @@ api_result_t arctracker_module_create(arctracker_t *handle, new_module_params_t 
 
 api_result_t arctracker_player_start(arctracker_t *handle);
 
+api_result_t arctracker_get_playback_state(arctracker_t *arctracker, ui_playback_state_t *playback_state);
+
 bool arctracker_player_cmd(arctracker_t *handle, player_command_t *command);
 
 bool arctracker_poll_playback_event(arctracker_t *handle, player_event_t *event);

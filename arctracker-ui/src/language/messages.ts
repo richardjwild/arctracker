@@ -148,6 +148,7 @@ const messages = {
     commandEE: "Delay next pattern line",
     panic: "Silence all audio generators",
     updateModuleMetadata: "update module metadata",
+    playerNotRunning: "Audio subsystem is not running",
   },
 } as const;
 
@@ -186,6 +187,7 @@ const messageFns2 = {
     setPatternAtPosition: (pos: string, pat: string) => `set pattern at position ${pos} to ${pat}`,
     setEvent: (track: string, row: string) => `set event (track=${track}, row=${row})`,
     setPatternLength: (pat: string, length: string) => `set pattern ${pat} length to ${length}`,
+    outputDeviceOpened: (sampleRate: string, latency: string) => `Output audio device opened at rate ${sampleRate}Hz (reported latency: ${latency}ms)`,
   },
 } as const;
 
