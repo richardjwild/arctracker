@@ -189,6 +189,7 @@ void player_restore_state(player_t *player, const player_restore_state_t state)
 {
     player->sequence = state.sequence;
     player->tick_scheduler = state.tick_scheduler;
+    tick_scheduler_set_sample_rate(&player->tick_scheduler, player->audio_out.sample_rate);
 }
 
 void player_destroy(player_t *player)

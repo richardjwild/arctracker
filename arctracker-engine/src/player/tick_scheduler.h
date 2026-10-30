@@ -25,6 +25,8 @@ typedef struct {
 
 tick_scheduler_t tick_scheduler_create(tempo_t tempo, double sample_rate_in);
 
+void tick_scheduler_set_sample_rate(tick_scheduler_t *, double sample_rate_in);
+
 void tick_scheduler_set_tempo(tick_scheduler_t *, tempo_t);
 
 void tick_scheduler_set_ticks_per_second(tick_scheduler_t *tick_scheduler, int new_ticks_per_second);

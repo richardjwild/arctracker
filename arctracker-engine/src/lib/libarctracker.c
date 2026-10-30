@@ -347,6 +347,8 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     //
     // TODO: Return sample_rate and reported_latency from open_portaudio_stream to the UI.
     //
+    printf("Actual sample rate: %.0f\n", result.sample_rate);
+    printf("Reported latency: %.0f", result.reported_latency);
     return SUCCESS;
 }
 

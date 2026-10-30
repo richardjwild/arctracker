@@ -20,6 +20,11 @@ tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const double sample_
     return tick_scheduler;
 }
 
+void tick_scheduler_set_sample_rate(tick_scheduler_t *tick_scheduler, const double sample_rate_in)
+{
+    tick_scheduler->audio_accumulator.sample_rate = (int) sample_rate_in;
+}
+
 void tick_scheduler_set_tempo(tick_scheduler_t *tick_scheduler, const tempo_t new_tempo)
 {
     if (new_tempo.actual_bpm > 0.0001) printf("Actual BPM: %0.3f\n", new_tempo.actual_bpm);
