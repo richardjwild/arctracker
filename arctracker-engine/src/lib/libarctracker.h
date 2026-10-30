@@ -39,9 +39,9 @@ int arctracker_get_available_output_count(arctracker_t *handle);
 
 api_result_t arctracker_get_available_outputs(arctracker_t *handle, ui_audio_device_info_t *output_devices, int requested_outputs);
 
-api_result_t arctracker_use_output(arctracker_t *handle, int device_index, const char *name, const char *host_api_name);
+api_result_t arctracker_use_output(arctracker_t *handle, int device_index, const char *name, const char *host_api_name, uint32_t sample_rate);
 
-api_result_t arctracker_use_default_output(arctracker_t *handle);
+api_result_t arctracker_use_default_output(arctracker_t *handle, uint32_t sample_rate);
 
 int arctracker_get_available_midi_count(midi_subsystem_t *handle);
 
@@ -68,6 +68,8 @@ api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_l
 api_result_t arctracker_module_create(arctracker_t *handle, new_module_params_t params, ui_module_info_t *module_info);
 
 api_result_t arctracker_player_start(arctracker_t *handle);
+
+api_result_t arctracker_get_playback_state(arctracker_t *arctracker, ui_playback_state_t *playback_state);
 
 bool arctracker_player_cmd(arctracker_t *handle, player_command_t *command);
 

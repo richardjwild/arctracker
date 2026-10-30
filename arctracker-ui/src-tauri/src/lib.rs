@@ -2,10 +2,7 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use crate::arctracker::{
-    default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams,
-    UiPlayerSnapshot, VolumeMappingType,
-};
+use crate::arctracker::{default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams, PlaybackState, UiPlayerSnapshot, VolumeMappingType};
 use crate::arctracker::{
     InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
     UiPeakLevels,
@@ -27,19 +24,26 @@ fn use_output(
     device_index: i32,
     name: String,
     host_api_name: String,
+    sample_rate: Option<u32>,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .use_output(device_index, &name, &host_api_name)
+        .use_output(device_index, &name, &host_api_name, sample_rate)
         .map_err(|e| e)?;
     Ok(())
 }
 
 #[tauri::command]
-fn use_default_output(state: State<Arc<AppState>>) -> Result<(), String> {
+fn use_default_output(state: State<Arc<AppState>>, sample_rate: Option<u32>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.use_default_output().map_err(|e| e)?;
+    tracker.use_default_output(sample_rate).map_err(|e| e)?;
     Ok(())
+}
+
+#[tauri::command]
+fn get_playback_state(state: State<Arc<AppState>>) -> Result<PlaybackState, String> {
+    let mut tracker = state.tracker.lock().unwrap();
+    tracker.get_playback_state()
 }
 
 #[tauri::command]
@@ -475,6 +479,7 @@ pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
             get_available_outputs,
             use_output,
             use_default_output,
+            get_playback_state,
             get_available_midi_devices,
             use_midi_device,
             set_midi_playback_channel,

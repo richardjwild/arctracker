@@ -17,6 +17,8 @@ typedef struct {
     player_event_queue_t *event_queue;
     bool stream_started;
     PaStream *pa_stream;
+    double sample_rate;
+    double reported_latency;
 } playback_audio_subsystem_t;
 
 typedef struct {

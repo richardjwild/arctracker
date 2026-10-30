@@ -32,6 +32,7 @@
 #define EXPORT_NOT_STARTED "No export job was started"
 #define PLAYER_INIT_FAILED "Failed to initialize player"
 #define FAILED_TO_OPEN_STREAM "Failed to open PortAudio stream"
+#define GET_STREAM_INFO_FAILED "Failed to get PortAudio stream info"
 #define EXPORT_INIT_FAILED "Failed to export audio"
 #define CHANNEL_INIT_FAILED "Failed to initialise audio channels"
 #define AUDIO_INIT_FAILED "Failed to initialise audio"

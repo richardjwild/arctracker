@@ -5,10 +5,10 @@
 #include "audio_channel.h"
 #include "audio_out/stereo_frame.h"
 
-#define SAMPLE_RATE 44100
 #define AUDIO_BUFFER_SIZE_FRAMES 512
 
 typedef struct {
+    double sample_rate;
     int num_channels;
     float master_gain;
     float *mono_channel_buffer;
@@ -23,7 +23,7 @@ typedef struct {
     const char *error_message;
 } audio_out_result_t;
 
-bool initialise_audio(audio_out_t *audio_out, int num_channels, float master_gain);
+bool initialise_audio(audio_out_t *audio_out, int num_channels, double sample_rate, float master_gain);
 
 void write_audio_data(audio_out_t *, audio_channel_t *, unsigned int, float *);
 

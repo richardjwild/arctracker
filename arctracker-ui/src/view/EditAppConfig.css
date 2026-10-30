@@ -1,12 +1,13 @@
 .editAppConfig {
     width: 835px;
-    height: 330px;
+    height: 395px;
     display: grid;
     grid-template-columns: 215px 0.5fr 215px 0.5fr;
-    grid-template-rows: 50px 50px 50px 50px 50px 40px;
+    grid-template-rows: 50px 50px 50px 50px 50px 50px 40px;
     gap: 10px;
     grid-template-areas:
         "outputDeviceLabel outputDeviceEdit outputDeviceEdit outputDeviceEdit"
+        "outputSampleRateLabel outputSampleRateEdit outputSampleRateEdit outputSampleRateEdit"
         "midiInputDeviceLabel midiInputDeviceEdit midiInputDeviceEdit midiInputDeviceEdit"
         "defaultAuthorNameLabel defaultAuthorNameEdit defaultAuthorNameEdit defaultAuthorNameEdit"
         "defaultPatternLengthLabel defaultPatternLengthEdit defaultTrackCountLabel defaultTrackCountEdit"
@@ -20,6 +21,14 @@
 
 .outputDeviceEdit {
     grid-area: outputDeviceEdit;
+}
+
+.outputSampleRateLabel {
+    grid-area: outputSampleRateLabel;
+}
+
+.outputSampleRateEdit {
+    grid-area: outputSampleRateEdit;
 }
 
 .midiInputDeviceLabel {

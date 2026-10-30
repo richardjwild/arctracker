@@ -4,7 +4,7 @@ import { Sample } from "../editing/editInstrument.ts";
 import { Module, NewModuleParams } from "../module/module.ts";
 import { Effect, PatternEvent, PatternLine } from "../editing/patternEvents.ts";
 import { ExportState } from "../audioExport/audioExport.ts";
-import { AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
+import { AudioDeviceInfo, PlaybackState } from "../audioDevice/audioDevice.ts";
 import { MidiDeviceInfo } from "../midi/midi.ts";
 import { alerting } from "../alerting/alert.ts";
 import { messageFn } from "../language/messages.ts";
@@ -83,16 +83,23 @@ export const engine = {
     return await invoke<AudioDeviceInfo[]>("get_available_outputs");
   },
 
-  useOutput: async (deviceIndex: number, name: string, hostApiName: string) => {
+  useOutput: async (deviceIndex: number, name: string, hostApiName: string, sampleRate: number | null) => {
     return await invoke("use_output", {
       deviceIndex,
       name,
       hostApiName,
+      sampleRate,
     });
   },
 
-  useDefaultOutput: async () => {
-    return await invoke("use_default_output");
+  useDefaultOutput: async (sampleRate: number | null) => {
+    return await invoke("use_default_output", {
+      sampleRate,
+    });
+  },
+
+  getPlaybackState: async (): Promise<PlaybackState> => {
+    return await invoke<PlaybackState>("get_playback_state");
   },
 
   getAvailableMidiDevices: async (): Promise<MidiDeviceInfo[]> => {

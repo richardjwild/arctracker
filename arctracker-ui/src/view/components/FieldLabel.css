@@ -2,17 +2,18 @@
     display: flex;
     flex-direction: row;
     gap: 5px;
-    font-family: sans-serif;
+    font-family: LatoRegular, sans-serif;
+    font-size: 16px;
     font-weight: bold;
     color: var(--colour-title-text);
-    padding-top: 13px;
+    padding-top: 12px;
 }
 
 .fieldLabel .hotKey {
     background-color: var(--colour-hotKey-hint);
     color: var(--colour-panel-bg);
     display: block;
-    margin-top: 5px;
+    margin-top: 6px;
     width: 13px;
     height: 13px;
     line-height: 13px;

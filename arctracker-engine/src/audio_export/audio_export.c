@@ -13,7 +13,7 @@
 static bool ensure_capacity(wav_export_t *wav_export, unsigned long required_frames);
 static int16_t clamp_to_pcm16(float);
 
-bool export_init(const char *output_filename, wav_export_t *wav_export)
+bool export_init(const char *output_filename, const double sample_rate, wav_export_t *wav_export)
 {
     if (strlen(output_filename) > MAX_FILE_PATH_LENGTH)
     {
@@ -29,6 +29,7 @@ bool export_init(const char *output_filename, wav_export_t *wav_export)
     wav_export->frames_written = 0;
     wav_export->data_capacity = 0;
     wav_export->audio_data = NULL;
+    wav_export->sample_rate = (int) sample_rate;
     snprintf(wav_export->output_filename, sizeof(wav_export->output_filename), "%s", output_filename);
     return true;
 }
@@ -85,7 +86,7 @@ static int16_t clamp_to_pcm16(const float sample)
 bool export_finish(wav_export_t *wav_export)
 {
     const wav_pcm16_t wav = {
-        .sample_rate = SAMPLE_RATE,
+        .sample_rate = wav_export->sample_rate,
         .channels = NUM_CHANNELS,
         .bits_per_sample = 16,
         .frames = (int) wav_export->frames_written,

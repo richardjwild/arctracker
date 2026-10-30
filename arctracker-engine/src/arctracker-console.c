@@ -166,7 +166,7 @@ static void print_instrument_slots(arctracker_t *arctracker_handle)
 
 static void start_player(arctracker_t *arctracker_handle)
 {
-    const api_result_t result = arctracker_use_default_output(arctracker_handle);
+    const api_result_t result = arctracker_use_default_output(arctracker_handle, 0);
     if (!result.success)
     {
         fprintf(stderr, "Player failed to start: %s\n", result.error_message);

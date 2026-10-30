@@ -88,6 +88,7 @@ typedef struct {
 } player_render_audio_result_t;
 
 typedef struct player {
+    bool initialised;
     bool playing;
     float master_gain;
     int current_bpm;
@@ -108,7 +109,9 @@ typedef struct player {
     const char *error_message;
 } player_t;
 
-player_t *player_create(module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue);
+player_t *player_create(void);
+
+bool player_init(player_t *player, module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue, double sample_rate);
 
 player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, unsigned long frames_requested, bool halt_at_sequence_end);
 

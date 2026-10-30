@@ -12,10 +12,11 @@ typedef struct {
     unsigned long data_capacity;
     float *audio_buffer;
     unsigned long audio_buffer_size;
+    int sample_rate;
     int16_t *audio_data;
 } wav_export_t;
 
-bool export_init(const char *output_filename, wav_export_t *wav_export);
+bool export_init(const char *output_filename, double sample_rate, wav_export_t *wav_export);
 
 bool export_collect_audio(wav_export_t *wav_export, unsigned long frames_in_buffer);
 

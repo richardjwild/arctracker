@@ -4,40 +4,84 @@
 #include <stdio.h>
 #include <string.h>
 #include "messages.h"
-#include "audio_out/audio_out.h"
 #include "io/error.h"
 #include "memory/heap.h"
 
 static bool get_output_parameters(const portaudio_config_t *config, PaStreamParameters *output_parameters);
 static bool get_device_index(const portaudio_config_t *config, int *device_index);
 
-bool open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data)
+static const open_stream_result_t OPEN_STREAM_FAILED = {
+    .success = false,
+};
+
+open_stream_result_t open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data)
 {
+    *pa_stream = NULL;
     PaStreamParameters output_parameters;
     if (!get_output_parameters(config, &output_parameters))
     {
-        return false;
+        return OPEN_STREAM_FAILED;
     }
-    const PaError err = Pa_OpenStream(
-        pa_stream,
-        NULL,
-        &output_parameters,
-        SAMPLE_RATE,
-        0,
-        paClipOff,
-        callback,
-        user_data);
-    if (err != paNoError)
+    const PaDeviceInfo *device_info = Pa_GetDeviceInfo(output_parameters.device);
+    if (device_info == NULL)
     {
-        error(Pa_GetErrorText(err));
-        return false;
+        return OPEN_STREAM_FAILED;
     }
-    const PaStreamInfo *stream_info = Pa_GetStreamInfo(*pa_stream);
-    if (stream_info != NULL)
+    double sample_rate_candidates[] = { device_info->defaultSampleRate, 48000.0, 44100.0 };
+    size_t candidate_count = 3;
+    if (config->sample_rate > 0.0)
     {
-        printf("Actual latency: %f\n", stream_info->outputLatency);
+        // The user has requested a specific sample rate, so don't try any others.
+        candidate_count = 1;
+        sample_rate_candidates[0] = config->sample_rate;
     }
-    return true;
+    PaError err = paInvalidSampleRate;
+    for (size_t candidate = 0; candidate < candidate_count; candidate++)
+    {
+        bool already_tried = false;
+        for (size_t previous_candidate = 0; previous_candidate < candidate; previous_candidate++)
+        {
+            if (sample_rate_candidates[candidate] == sample_rate_candidates[previous_candidate])
+            {
+                already_tried = true;
+                break;
+            }
+        }
+        if (already_tried) continue;
+        err = Pa_OpenStream(
+            pa_stream,
+            NULL,
+            &output_parameters,
+            sample_rate_candidates[candidate],
+            paFramesPerBufferUnspecified,
+            paClipOff,
+            callback,
+            user_data
+        );
+        if (err != paNoError)
+        {
+            printf("Failed to open audio stream at %.0fHz: %s\n", sample_rate_candidates[candidate], Pa_GetErrorText(err));
+            continue;
+        }
+        const PaStreamInfo *stream_info = Pa_GetStreamInfo(*pa_stream);
+        if (stream_info == NULL)
+        {
+            error(GET_STREAM_INFO_FAILED);
+            Pa_CloseStream(*pa_stream);
+            *pa_stream = NULL;
+            return OPEN_STREAM_FAILED;
+        }
+        //
+        // If we reach here, the audio device has been successfully opened.
+        //
+        return (open_stream_result_t) {
+            .success = true,
+            .sample_rate = stream_info->sampleRate,
+            .reported_latency = stream_info->outputLatency,
+        };
+    }
+    error(Pa_GetErrorText(err));
+    return OPEN_STREAM_FAILED;
 }
 
 bool start_portaudio_stream(PaStream *pa_stream)

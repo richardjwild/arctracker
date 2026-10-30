@@ -112,4 +112,10 @@ typedef struct ui_midi_device_info {
     char name[128];
 } ui_midi_device_info_t;
 
+typedef struct {
+    bool running;
+    double sample_rate;
+    double reported_latency;
+} ui_playback_state_t;
+
 #endif //ARCTRACKER_UI_H

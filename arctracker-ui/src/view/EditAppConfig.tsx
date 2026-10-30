@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AppConfig,
   appConfig, DraftAppConfig,
-  SelectedAudioDevice
+  SelectedAudioDevice, SelectedSampleRate
 } from "../config/appConfig.ts";
 import { alerting } from "../alerting/alert.ts";
 import { midi, MidiDeviceInfo } from "../midi/midi.ts";
@@ -19,6 +19,7 @@ import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
   selectedAudioDevice: "default",
+  selectedSampleRate: "auto",
   selectedMidiDevice: null,
   defaultAuthorName: null,
   defaultPatternLength: 64,
@@ -61,6 +62,7 @@ export default function EditAppConfig() {
     MidiDeviceInfo[]
   >([]);
   const outputDeviceSelectRef = useRef<HTMLSelectElement>(null);
+  const outputSampleRateRef = useRef<HTMLInputElement>(null);
   const midiInputDeviceSelectRef = useRef<HTMLSelectElement>(null);
   const defaultAuthorNameInputRef = useRef<HTMLInputElement>(null);
   const defaultPatternLengthInputRef = useRef<HTMLInputElement>(null);
@@ -79,21 +81,24 @@ export default function EditAppConfig() {
       outputDeviceSelectRef.current?.focus();
       return true;
     } else if (e.code === "Digit2" && primaryModifier(e)) {
-      midiInputDeviceSelectRef.current?.focus();
+      outputSampleRateRef.current?.focus();
       return true;
     } else if (e.code === "Digit3" && primaryModifier(e)) {
-      defaultAuthorNameInputRef.current?.focus();
+      midiInputDeviceSelectRef.current?.focus();
       return true;
     } else if (e.code === "Digit4" && primaryModifier(e)) {
-      defaultPatternLengthInputRef.current?.focus();
+      defaultAuthorNameInputRef.current?.focus();
       return true;
     } else if (e.code === "Digit5" && primaryModifier(e)) {
-      defaultTrackCountInputRef.current?.focus();
+      defaultPatternLengthInputRef.current?.focus();
       return true;
     } else if (e.code === "Digit6" && primaryModifier(e)) {
-      defaultLinesPerBeatInputRef.current?.focus();
+      defaultTrackCountInputRef.current?.focus();
       return true;
     } else if (e.code === "Digit7" && primaryModifier(e)) {
+      defaultLinesPerBeatInputRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit8" && primaryModifier(e)) {
       defaultBeatsPerMinuteInputRef.current?.focus();
       return true;
     }
@@ -121,6 +126,7 @@ export default function EditAppConfig() {
           ) ?? null);
     setDraftAppConfig({
       selectedAudioDevice,
+      selectedSampleRate: currentConfig.selectedSampleRate || "auto",
       selectedMidiDevice,
       defaultAuthorName: currentConfig.defaultAuthorName,
       defaultPatternLength: currentConfig.defaultPatternLength,
@@ -159,6 +165,13 @@ export default function EditAppConfig() {
         selectedAudioDevice: selectedOutput,
       });
     }
+  };
+
+  const setSelectedSampleRate = (selectedSampleRate: SelectedSampleRate) => {
+    setDraftAppConfig({
+      ...draftAppConfig,
+      selectedSampleRate,
+    })
   };
 
   const setSelectedMidiDevice = (deviceName: string) => {
@@ -277,9 +290,62 @@ export default function EditAppConfig() {
         </select>
       </div>
       <FieldLabel
+        className="outputSampleRateLabel"
+        associatedField="outputSampleRateInput"
+        hotkey={2}
+        text={message("outputSampleRateLabel")}
+      />
+      <div className="outputSampleRateEdit radio">
+        <input
+          type="radio"
+          id="outputSampleRateAuto"
+          name="outputSampleRate"
+          checked={draftAppConfig.selectedSampleRate === "auto"}
+          onChange={() => setSelectedSampleRate("auto")}
+          ref={draftAppConfig.selectedSampleRate === "auto" ? outputSampleRateRef : null}
+        />
+        <label htmlFor="outputSampleRateAuto">{message("sampleRateAuto")}</label>
+        <input
+          type="radio"
+          id="outputSampleRate44"
+          name="outputSampleRate"
+          checked={draftAppConfig.selectedSampleRate === 44100}
+          onChange={() => setSelectedSampleRate(44100)}
+          ref={draftAppConfig.selectedSampleRate === 44100 ? outputSampleRateRef : null}
+        />
+        <label htmlFor="outputSampleRate44">{message("sampleRate44")}</label>
+        <input
+          type="radio"
+          id="outputSampleRate48"
+          name="outputSampleRate"
+          checked={draftAppConfig.selectedSampleRate === 48000}
+          onChange={() => setSelectedSampleRate(48000)}
+          ref={draftAppConfig.selectedSampleRate === 48000 ? outputSampleRateRef : null}
+        />
+        <label htmlFor="outputSampleRate48">{message("sampleRate48")}</label>
+        <input
+          type="radio"
+          id="outputSampleRate88"
+          name="outputSampleRate"
+          checked={draftAppConfig.selectedSampleRate === 88200}
+          onChange={() => setSelectedSampleRate(88200)}
+          ref={draftAppConfig.selectedSampleRate === 88200 ? outputSampleRateRef : null}
+        />
+        <label htmlFor="outputSampleRate88">{message("sampleRate88")}</label>
+        <input
+          type="radio"
+          id="outputSampleRate96"
+          name="outputSampleRate"
+          checked={draftAppConfig.selectedSampleRate === 96000}
+          onChange={() => setSelectedSampleRate(96000)}
+          ref={draftAppConfig.selectedSampleRate === 96000 ? outputSampleRateRef : null}
+        />
+        <label htmlFor="outputSampleRate96">{message("sampleRate96")}</label>
+      </div>
+      <FieldLabel
         className="midiInputDeviceLabel"
         associatedField="midiInputDeviceSelect"
-        hotkey={2}
+        hotkey={3}
         text={message("midiInputDeviceLabel")}
         />
       <div className="midiInputDeviceEdit uiArea padded rounded">
@@ -301,7 +367,7 @@ export default function EditAppConfig() {
       <FieldLabel
         className="defaultAuthorNameLabel"
         associatedField="defaultAuthorNameInput"
-        hotkey={3}
+        hotkey={4}
         text={message("defaultAuthorNameLabel")}
       />
       <div className="defaultAuthorNameEdit uiArea padded rounded">
@@ -322,7 +388,7 @@ export default function EditAppConfig() {
       <FieldLabel
         className="defaultPatternLengthLabel"
         associatedField="defaultPatternLengthInput"
-        hotkey={4}
+        hotkey={5}
         text={message("defaultPatternLengthLabel")}
       />
       <div className="defaultPatternLengthEdit uiArea padded rounded">
@@ -339,7 +405,7 @@ export default function EditAppConfig() {
       <FieldLabel
         className="defaultTrackCountLabel"
         associatedField="defaultTrackCountInput"
-        hotkey={5}
+        hotkey={6}
         text={message("defaultTrackCountLabel")}
       />
       <div className="defaultTrackCountEdit uiArea padded rounded">
@@ -356,7 +422,7 @@ export default function EditAppConfig() {
       <FieldLabel
         className="defaultLinesPerBeatLabel"
         associatedField="defaultLinesPerBeatInput"
-        hotkey={6}
+        hotkey={7}
         text={message("defaultLinesPerBeatLabel")}
       />
       <div className="defaultLinesPerBeatEdit uiArea padded rounded">
@@ -373,7 +439,7 @@ export default function EditAppConfig() {
       <FieldLabel
         className="defaultBeatsPerMinuteLabel"
         associatedField="defaultBeatsPerMinuteInput"
-        hotkey={7}
+        hotkey={8}
         text={message("defaultBeatsPerMinuteLabel")}
       />
       <div className="defaultBeatsPerMinuteEdit uiArea padded rounded">
