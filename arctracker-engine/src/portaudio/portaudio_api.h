@@ -21,7 +21,13 @@ typedef struct {
     char host_api_name[HOST_API_NAME_SIZE];
 } audio_device_info_t;
 
-bool open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data);
+typedef struct {
+    bool success;
+    double sample_rate;
+    double reported_latency;
+} open_stream_result_t;
+
+open_stream_result_t open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data);
 
 bool start_portaudio_stream(PaStream *pa_stream);
 

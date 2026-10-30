@@ -23,7 +23,7 @@ typedef struct {
     event_scheduler_t event_scheduler;
 } tick_scheduler_t;
 
-tick_scheduler_t tick_scheduler_create(tempo_t tempo, int sample_rate_in);
+tick_scheduler_t tick_scheduler_create(tempo_t tempo, double sample_rate_in);
 
 void tick_scheduler_set_tempo(tick_scheduler_t *, tempo_t);
 

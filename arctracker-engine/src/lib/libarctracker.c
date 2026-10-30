@@ -320,22 +320,33 @@ api_result_t arctracker_player_start(arctracker_t *arctracker)
     {
         return failure(AUDIO_INIT_FAILED);
     }
-    arctracker->playback.player = player_create(arctracker->module, arctracker->playback.event_queue, arctracker->midi_queue);
+    arctracker->playback.player = player_create();
     if (arctracker->playback.player == NULL)
     {
         return failure(PLAYER_INIT_FAILED);
     }
-    if (!open_portaudio_stream(&arctracker->audio_config, &arctracker->playback.pa_stream, portaudio_callback, arctracker->playback.player))
+    const open_stream_result_t result = open_portaudio_stream(&arctracker->audio_config, &arctracker->playback.pa_stream, portaudio_callback, arctracker->playback.player);
+    if (!result.success)
     {
         player_destroy(arctracker->playback.player);
         return failure(FAILED_TO_OPEN_STREAM);
     }
+    if (!player_init(arctracker->playback.player, arctracker->module, arctracker->playback.event_queue, arctracker->midi_queue, result.sample_rate))
+    {
+        player_destroy(arctracker->playback.player);
+        close_portaudio_stream(arctracker->playback.pa_stream);
+        return failure(PLAYER_INIT_FAILED);
+    }
     if (!start_portaudio_stream(arctracker->playback.pa_stream))
     {
         player_destroy(arctracker->playback.player);
+        close_portaudio_stream(arctracker->playback.pa_stream);
         return failure(FAILED_TO_START_STREAM);
     }
     arctracker->playback.stream_started = true;
+    //
+    // TODO: Return sample_rate and reported_latency from open_portaudio_stream to the UI.
+    //
     return SUCCESS;
 }
 
@@ -577,16 +588,23 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
         return failure(NO_MODULE_LOADED);
     if (arctracker->export.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
-    if (!export_init(output_filename, &arctracker->export.wav_export))
+    const double export_sample_rate = 44100.0; // TODO: Make this configurable.
+    if (!export_init(output_filename, export_sample_rate, &arctracker->export.wav_export))
         return failure(EXPORT_INIT_FAILED);
-    arctracker->export.player = player_create(arctracker->module, arctracker->export.event_queue, arctracker->midi_queue);
+    arctracker->export.player = player_create();
     if (arctracker->export.player == NULL)
         return failure(EXPORT_INIT_FAILED);
+    if (!player_init(arctracker->export.player, arctracker->module, arctracker->export.event_queue, arctracker->midi_queue, export_sample_rate))
+    {
+        player_destroy(arctracker->export.player);
+        return failure(EXPORT_INIT_FAILED);
+    }
     arc_thread_t export_thread;
     const int err = arc_thread_create(&export_thread, run_export, arctracker);
     if (err != 0)
     {
         error(strerror(err));
+        player_destroy(arctracker->export.player);
         return failure(EXPORT_THREAD_CREATE_FAILED);
     }
     arctracker->export.thread_active = true;

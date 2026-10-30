@@ -58,12 +58,18 @@ static void player_seek(player_t *, int, int);
 static void clear_loop_state(player_t *);
 static player_event_t create_user_midi_event(int note);
 
-player_t *player_create(module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue)
+player_t *player_create(void)
 {
     player_t *player = allocate_array(PLAYER, 1, sizeof(player_t));
+    if (player != NULL) player->initialised = false;
+    return player;
+}
+
+bool player_init(player_t *player, module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue, const double sample_rate)
+{
     if (player == NULL)
     {
-        return NULL;
+        return false;
     }
     player->module = module;
     player->playing = false;
@@ -71,30 +77,30 @@ player_t *player_create(module_t *module, player_event_queue_t *player_event_que
     player->master_gain = module->master_gain;
     player->current_bpm = module->initial_bpm;
     const tempo_t initial_tempo = module_get_initial_tempo(module);
-    player->tick_scheduler = tick_scheduler_create(initial_tempo, SAMPLE_RATE);
+    player->tick_scheduler = tick_scheduler_create(initial_tempo, sample_rate);
     player->sequence = sequencer_initialise(module);
     player->command_queue = command_queue_init();
     if (player->command_queue == NULL)
     {
-        goto init_failed;
+        return false;
     }
     player->midi_queue = midi_queue;
     player->audio_channels = initialise_audio_channels(player->module);
     if (player->audio_channels == NULL)
     {
-        goto init_failed;
+        return false;
     }
     player->tracks = initialise_tracks(player->module->num_tracks, player->audio_channels);
     if (player->tracks == NULL)
     {
-        goto init_failed;
+        return false;
     }
     initialise_spatialisers(player);
-    const bool audio_init_result = initialise_audio(&player->audio_out, module->num_tracks, player->master_gain);
+    const bool audio_init_result = initialise_audio(&player->audio_out, module->num_tracks, sample_rate, player->master_gain);
     if (!audio_init_result)
     {
         error_with_detail(AUDIO_INIT_FAILED, get_error_message());
-        goto init_failed;
+        return false;
     }
     synchronise_playback_policy(player);
     tick_scheduler_restart(&player->tick_scheduler);
@@ -104,15 +110,13 @@ player_t *player_create(module_t *module, player_event_queue_t *player_event_que
     player_update_instruments(player);
     define_implicit_loop_start(player);
     lfo_init_waveforms();
-    return player;
-
-init_failed:
-    player_destroy(player);
-    return NULL;
+    player->initialised = true;
+    return true;
 }
 
 player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, const unsigned long frames_requested, const bool halt_at_sequence_end)
 {
+    assert(player->initialised);
     unsigned long frames_unwritten = frames_requested;
     audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
     unsigned long frames_until_next_tick = player->audio_out.frames_until_next_tick;
@@ -244,7 +248,7 @@ static void synchronise_instrument(player_t *player, const int instrument_index)
         return;
     }
     const float base_period = period_for_note(sample.base_note, 1.0f);
-    const float output_rate = SAMPLE_RATE;
+    const float output_rate = (float) player->audio_out.sample_rate;
     const float phase_increment_per_period = base_period * sample.sample_rate / output_rate;
     player->instruments[instrument_index] = (player_instrument_t) {
         .assigned = true,

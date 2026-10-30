@@ -2,14 +2,14 @@
 
 #include <stdio.h>
 
-tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const int sample_rate_in)
+tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const double sample_rate_in)
 {
     if (tempo.actual_bpm > 0.0001) printf("Actual BPM: %0.3f\n", tempo.actual_bpm);
     const event_scheduler_t event_scheduler = {
         .ticks_per_event = tempo.ticks_per_event,
     };
     const audio_accumulator_t audio_accumulator = {
-        .sample_rate = sample_rate_in,
+        .sample_rate = (int) sample_rate_in,
         .ticks_per_second = tempo.ticks_per_second,
         .sample_fraction = fraction_create(0, tempo.ticks_per_second),
     };

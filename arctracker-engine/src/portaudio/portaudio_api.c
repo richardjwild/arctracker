@@ -4,25 +4,29 @@
 #include <stdio.h>
 #include <string.h>
 #include "messages.h"
-#include "audio_out/audio_out.h"
 #include "io/error.h"
 #include "memory/heap.h"
 
 static bool get_output_parameters(const portaudio_config_t *config, PaStreamParameters *output_parameters);
 static bool get_device_index(const portaudio_config_t *config, int *device_index);
 
-bool open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data)
+static const open_stream_result_t OPEN_STREAM_FAILED = {
+    .success = false,
+};
+
+open_stream_result_t open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_stream, PaStreamCallback *callback, void *user_data)
 {
+    *pa_stream = NULL;
     PaStreamParameters output_parameters;
     if (!get_output_parameters(config, &output_parameters))
     {
-        return false;
+        return OPEN_STREAM_FAILED;
     }
     const PaError err = Pa_OpenStream(
         pa_stream,
         NULL,
         &output_parameters,
-        SAMPLE_RATE,
+        44100, // TODO: Replace with configured sample rate.
         0,
         paClipOff,
         callback,
@@ -30,14 +34,21 @@ bool open_portaudio_stream(const portaudio_config_t *config, PaStream **pa_strea
     if (err != paNoError)
     {
         error(Pa_GetErrorText(err));
-        return false;
+        return OPEN_STREAM_FAILED;
     }
     const PaStreamInfo *stream_info = Pa_GetStreamInfo(*pa_stream);
-    if (stream_info != NULL)
+    if (stream_info == NULL)
     {
-        printf("Actual latency: %f\n", stream_info->outputLatency);
+        error(GET_STREAM_INFO_FAILED);
+        Pa_CloseStream(*pa_stream);
+        *pa_stream = NULL;
+        return OPEN_STREAM_FAILED;
     }
-    return true;
+    return (open_stream_result_t) {
+        .success = true,
+        .sample_rate = stream_info->sampleRate,
+        .reported_latency = stream_info->outputLatency,
+    };
 }
 
 bool start_portaudio_stream(PaStream *pa_stream)

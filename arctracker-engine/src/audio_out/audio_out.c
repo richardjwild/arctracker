@@ -10,9 +10,10 @@ static void apply_master_gain(float, unsigned int, float *);
 static void find_peak_levels(atomic_uint *peak_l, atomic_uint *peak_r, unsigned int, const float *);
 static void atomic_peak_max(atomic_uint *peak, float value);
 
-bool initialise_audio(audio_out_t *audio_out, const int num_channels, const float master_gain)
+bool initialise_audio(audio_out_t *audio_out, const int num_channels, const double sample_rate, const float master_gain)
 {
     audio_out->num_channels = num_channels;
+    audio_out->sample_rate = sample_rate;
     audio_out->master_gain = master_gain;
     audio_out->peak_l = 0;
     audio_out->peak_r = 0;
