@@ -102,12 +102,13 @@ api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, ui_audio
     return result;
 }
 
-api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_index, const char *name, const char *host_api_name)
+api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_index, const char *name, const char *host_api_name, const uint32_t sample_rate)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     portaudio_config_t config = (portaudio_config_t) {
         .device_index = device_index,
+        .sample_rate = (double) sample_rate,
     };
     snprintf(config.host_api_name, sizeof(config.host_api_name), "%s", host_api_name);
     snprintf(config.name, sizeof(config.name), "%s", name);
@@ -128,11 +129,12 @@ api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_in
     return result;
 }
 
-api_result_t arctracker_use_default_output(arctracker_t *arctracker)
+api_result_t arctracker_use_default_output(arctracker_t *arctracker, const uint32_t sample_rate)
 {
     if (arctracker == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     arctracker->audio_config.device_index = DEFAULT_PORTAUDIO_DEVICE_INDEX;
+    arctracker->audio_config.sample_rate = (double) sample_rate;
     player_restore_state_t player_state = {0};
     bool restore = false;
     if (arctracker->playback.stream_started)

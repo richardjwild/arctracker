@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AppConfig,
   appConfig, DraftAppConfig,
-  SelectedAudioDevice
+  SelectedAudioDevice, SelectedSampleRate
 } from "../config/appConfig.ts";
 import { alerting } from "../alerting/alert.ts";
 import { midi, MidiDeviceInfo } from "../midi/midi.ts";
@@ -19,6 +19,7 @@ import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
   selectedAudioDevice: "default",
+  selectedSampleRate: "auto",
   selectedMidiDevice: null,
   defaultAuthorName: null,
   defaultPatternLength: 64,
@@ -61,6 +62,7 @@ export default function EditAppConfig() {
     MidiDeviceInfo[]
   >([]);
   const outputDeviceSelectRef = useRef<HTMLSelectElement>(null);
+  const outputSampleRateRef = useRef<HTMLInputElement>(null);
   const midiInputDeviceSelectRef = useRef<HTMLSelectElement>(null);
   const defaultAuthorNameInputRef = useRef<HTMLInputElement>(null);
   const defaultPatternLengthInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +79,9 @@ export default function EditAppConfig() {
       return true;
     } else if (e.code === "Digit1" && primaryModifier(e)) {
       outputDeviceSelectRef.current?.focus();
+      return true;
+    } else if (e.code === "Digit2" && primaryModifier(e)) {
+      outputSampleRateRef.current?.focus();
       return true;
     } else if (e.code === "Digit3" && primaryModifier(e)) {
       midiInputDeviceSelectRef.current?.focus();
@@ -121,6 +126,7 @@ export default function EditAppConfig() {
           ) ?? null);
     setDraftAppConfig({
       selectedAudioDevice,
+      selectedSampleRate: currentConfig.selectedSampleRate || "auto",
       selectedMidiDevice,
       defaultAuthorName: currentConfig.defaultAuthorName,
       defaultPatternLength: currentConfig.defaultPatternLength,
@@ -159,6 +165,13 @@ export default function EditAppConfig() {
         selectedAudioDevice: selectedOutput,
       });
     }
+  };
+
+  const setSelectedSampleRate = (selectedSampleRate: SelectedSampleRate) => {
+    setDraftAppConfig({
+      ...draftAppConfig,
+      selectedSampleRate,
+    })
   };
 
   const setSelectedMidiDevice = (deviceName: string) => {
@@ -287,35 +300,45 @@ export default function EditAppConfig() {
           type="radio"
           id="outputSampleRateAuto"
           name="outputSampleRate"
-          checked={true}
+          checked={draftAppConfig.selectedSampleRate === "auto"}
+          onChange={() => setSelectedSampleRate("auto")}
+          ref={draftAppConfig.selectedSampleRate === "auto" ? outputSampleRateRef : null}
         />
         <label htmlFor="outputSampleRateAuto">{message("sampleRateAuto")}</label>
         <input
           type="radio"
-          id="outputSampleRate48"
-          name="outputSampleRate"
-          checked={false}
-        />
-        <label htmlFor="outputSampleRate48">{message("sampleRate44")}</label>
-        <input
-          type="radio"
           id="outputSampleRate44"
           name="outputSampleRate"
-          checked={false}
+          checked={draftAppConfig.selectedSampleRate === 44100}
+          onChange={() => setSelectedSampleRate(44100)}
+          ref={draftAppConfig.selectedSampleRate === 44100 ? outputSampleRateRef : null}
         />
-        <label htmlFor="outputSampleRate44">{message("sampleRate48")}</label>
+        <label htmlFor="outputSampleRate44">{message("sampleRate44")}</label>
+        <input
+          type="radio"
+          id="outputSampleRate48"
+          name="outputSampleRate"
+          checked={draftAppConfig.selectedSampleRate === 48000}
+          onChange={() => setSelectedSampleRate(48000)}
+          ref={draftAppConfig.selectedSampleRate === 48000 ? outputSampleRateRef : null}
+        />
+        <label htmlFor="outputSampleRate48">{message("sampleRate48")}</label>
         <input
           type="radio"
           id="outputSampleRate88"
           name="outputSampleRate"
-          checked={false}
+          checked={draftAppConfig.selectedSampleRate === 88200}
+          onChange={() => setSelectedSampleRate(88200)}
+          ref={draftAppConfig.selectedSampleRate === 88200 ? outputSampleRateRef : null}
         />
         <label htmlFor="outputSampleRate88">{message("sampleRate88")}</label>
         <input
           type="radio"
           id="outputSampleRate96"
           name="outputSampleRate"
-          checked={false}
+          checked={draftAppConfig.selectedSampleRate === 96000}
+          onChange={() => setSelectedSampleRate(96000)}
+          ref={draftAppConfig.selectedSampleRate === 96000 ? outputSampleRateRef : null}
         />
         <label htmlFor="outputSampleRate96">{message("sampleRate96")}</label>
       </div>

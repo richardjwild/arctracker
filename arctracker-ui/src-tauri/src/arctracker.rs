@@ -401,6 +401,7 @@ impl Arctracker {
         device_index: i32,
         name: &str,
         host_api_name: &str,
+        sample_rate: Option<u32>,
     ) -> Result<(), String> {
         let c_name = CString::new(name).map_err(|_| "Invalid device name".to_string())?;
         let c_host_api_name =
@@ -411,6 +412,7 @@ impl Arctracker {
                 device_index,
                 c_name.as_ptr(),
                 c_host_api_name.as_ptr(),
+                sample_rate.unwrap_or(0),
             )
         };
         if !result.success {
@@ -419,8 +421,8 @@ impl Arctracker {
         Ok(())
     }
 
-    pub fn use_default_output(&mut self) -> Result<(), String> {
-        let result = unsafe { ffi::arctracker_use_default_output(self.handle) };
+    pub fn use_default_output(&mut self, sample_rate: Option<u32>) -> Result<(), String> {
+        let result = unsafe { ffi::arctracker_use_default_output(self.handle, sample_rate.unwrap_or(0)) };
         if !result.success {
             return Err(c_string_to_rust(&result.error_message));
         }

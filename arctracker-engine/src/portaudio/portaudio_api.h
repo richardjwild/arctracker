@@ -12,6 +12,7 @@ typedef struct {
     int device_index;
     char name[AUDIO_DEVICE_NAME_SIZE];
     char host_api_name[HOST_API_NAME_SIZE];
+    double sample_rate;
 } portaudio_config_t;
 
 typedef struct {

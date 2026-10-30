@@ -9,8 +9,11 @@ import { message } from "../language/messages.ts";
 
 export type SelectedAudioDevice = "default" | { name: string; hostApiName: string };
 
+export type SelectedSampleRate = "auto" | 44100 | 48000 | 88200 | 96000;
+
 export type AppConfig = {
   selectedAudioDevice: SelectedAudioDevice;
+  selectedSampleRate?: SelectedSampleRate;
   selectedMidiDevice: MidiDeviceInfo | null;
   defaultAuthorName: string | null;
   defaultPatternLength: number;
@@ -21,6 +24,7 @@ export type AppConfig = {
 
 export type DraftAppConfig = {
   selectedAudioDevice: "default" | AudioDeviceInfo;
+  selectedSampleRate: SelectedSampleRate;
   selectedMidiDevice: MidiDeviceInfo | null;
   defaultAuthorName: string | null;
   defaultPatternLength: number;
@@ -32,6 +36,7 @@ export type DraftAppConfig = {
 const configFileName = "app-config.json";
 const defaultConfig: AppConfig = {
   selectedAudioDevice: "default",
+  selectedSampleRate: "auto",
   selectedMidiDevice: null,
   defaultAuthorName: null,
   defaultPatternLength: 64,
@@ -54,11 +59,21 @@ function audioDeviceChanged(newDevice: SelectedAudioDevice) {
   );
 }
 
+function selectedSampleRateChanged(newSampleRate: SelectedSampleRate) {
+  if (config === null || config.selectedSampleRate === null) return true;
+  return config.selectedSampleRate !== newSampleRate;
+}
+
+function audioConfigChanged(newDevice: SelectedAudioDevice, newSampleRate: SelectedSampleRate) {
+  return audioDeviceChanged(newDevice) || selectedSampleRateChanged(newSampleRate);
+}
+
 async function applyAudioDeviceConfig(
   selectedAudioDevice: SelectedAudioDevice,
+  selectedSampleRate: SelectedSampleRate,
 ) {
   if (selectedAudioDevice === "default") {
-    await audioDevice.useDefaultOutputDevice();
+    await audioDevice.useDefaultOutputDevice(selectedSampleRate);
     return true;
   }
   let foundMatchingDevice = false;
@@ -68,13 +83,13 @@ async function applyAudioDeviceConfig(
       output.hostApiName === selectedAudioDevice.hostApiName &&
       output.name === selectedAudioDevice.name
     ) {
-      await audioDevice.useOutputDevice(output);
+      await audioDevice.useOutputDevice(output, selectedSampleRate);
       foundMatchingDevice = true;
       break;
     }
   }
   if (!foundMatchingDevice) {
-    await audioDevice.useDefaultOutputDevice();
+    await audioDevice.useDefaultOutputDevice(selectedSampleRate);
   }
   return foundMatchingDevice;
 }
@@ -131,8 +146,8 @@ export const appConfig = {
   },
 
   apply: async (newConfig: AppConfig) => {
-    if (audioDeviceChanged(newConfig.selectedAudioDevice)) {
-      const ok = await applyAudioDeviceConfig(newConfig.selectedAudioDevice);
+    if (audioConfigChanged(newConfig.selectedAudioDevice, newConfig.selectedSampleRate || "auto")) {
+      const ok = await applyAudioDeviceConfig(newConfig.selectedAudioDevice, newConfig.selectedSampleRate || "auto");
       if (!ok) newConfig.selectedAudioDevice = "default";
     }
     if (midiDeviceChanged(newConfig.selectedMidiDevice)) {
@@ -152,6 +167,7 @@ export const appConfig = {
     try {
       await appConfig.apply({
         selectedAudioDevice: draftAppConfig.selectedAudioDevice,
+        selectedSampleRate: draftAppConfig.selectedSampleRate,
         selectedMidiDevice: draftAppConfig.selectedMidiDevice,
         defaultAuthorName: draftAppConfig.defaultAuthorName,
         defaultPatternLength: draftAppConfig.defaultPatternLength,

@@ -27,18 +27,19 @@ fn use_output(
     device_index: i32,
     name: String,
     host_api_name: String,
+    sample_rate: Option<u32>,
 ) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
-        .use_output(device_index, &name, &host_api_name)
+        .use_output(device_index, &name, &host_api_name, sample_rate)
         .map_err(|e| e)?;
     Ok(())
 }
 
 #[tauri::command]
-fn use_default_output(state: State<Arc<AppState>>) -> Result<(), String> {
+fn use_default_output(state: State<Arc<AppState>>, sample_rate: Option<u32>) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
-    tracker.use_default_output().map_err(|e| e)?;
+    tracker.use_default_output(sample_rate).map_err(|e| e)?;
     Ok(())
 }
 

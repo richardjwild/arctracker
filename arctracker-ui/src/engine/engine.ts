@@ -83,16 +83,19 @@ export const engine = {
     return await invoke<AudioDeviceInfo[]>("get_available_outputs");
   },
 
-  useOutput: async (deviceIndex: number, name: string, hostApiName: string) => {
+  useOutput: async (deviceIndex: number, name: string, hostApiName: string, sampleRate: number | null) => {
     return await invoke("use_output", {
       deviceIndex,
       name,
       hostApiName,
+      sampleRate,
     });
   },
 
-  useDefaultOutput: async () => {
-    return await invoke("use_default_output");
+  useDefaultOutput: async (sampleRate: number | null) => {
+    return await invoke("use_default_output", {
+      sampleRate,
+    });
   },
 
   getAvailableMidiDevices: async (): Promise<MidiDeviceInfo[]> => {

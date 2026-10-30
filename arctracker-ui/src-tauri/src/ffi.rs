@@ -295,8 +295,9 @@ extern "C" {
         device_index: c_int,
         name: *const c_char,
         host_api_name: *const c_char,
+        sample_rate: u32,
     ) -> ApiResult;
-    pub fn arctracker_use_default_output(handle: *mut ArctrackerHandle) -> ApiResult;
+    pub fn arctracker_use_default_output(handle: *mut ArctrackerHandle, sample_rate: u32) -> ApiResult;
     pub fn arctracker_get_available_midi_count(handle: *mut MidiHandle) -> c_int;
     pub fn arctracker_get_available_midi_devices(
         handle: *mut MidiHandle,
