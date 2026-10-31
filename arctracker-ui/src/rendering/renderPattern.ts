@@ -67,7 +67,6 @@ export type Colours = {
 
 const FULL_CIRCLE = 2 * Math.PI;
 const FADE_HEIGHT = 10;
-const DASH = "–";
 
 export type RenderPatternView = {
   playheadIndex: number;
@@ -285,7 +284,7 @@ export class PatternRenderer {
     const cursorField = cursor.currentField();
     const effectLaneWidth = FIELDS_PER_EFFECT + 1;
     if (cursorField.field === "note") {
-      cursorWidth = this.layout.glyphWidth * 3;
+      cursorWidth = this.layout.glyphWidth * 3 - 4;
     } else if (cursorField.field === "sampleHigh") {
       cursorX += this.layout.glyphWidth * 4;
     } else if (cursorField.field === "sampleLow") {
@@ -304,7 +303,7 @@ export class PatternRenderer {
   }
 
   private renderPatternLines(view: RenderPatternView) {
-    this.withFont(this.patternDataFont);
+    this.withFont(this.patternDataFont).withLineWidth(1);
     let y = this.layout.trackHeaderHeight + this.gridViewportFit.lineOffset;
     for (let screenLine = 0; screenLine < this.gridViewportFit.linesToShow; screenLine++) {
       const patternIndex = view.playheadIndex - this.gridViewportFit.playheadLocationOnScreen + screenLine;
@@ -473,7 +472,9 @@ export class PatternRenderer {
     else
       colour = this.colours(atPlayhead).note;
     if (noteStr === "–––") {
-      this.withFillStyle(colour).renderGlyph(noteStr, x, y)
+      const offset = this.layout.rowHeight / 2 - 0.5;
+      const width = (this.layout.glyphWidth * 3) - 6;
+      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset },{ x: x + width, y: y + offset }]);
       return this.layout.glyphWidth * 4;
     }
     if (noteStr.length === 2)
@@ -490,8 +491,8 @@ export class PatternRenderer {
 
   private renderSample(view: RenderPatternView, x: number, y: number, sampleNo: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean) {
     if (sampleNo === 0) {
-      x += this.renderSampleDigit(view, x, y, DASH, SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
-      this.renderSampleDigit(view, x, y, DASH, SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent, muted);
+      x += this.renderSampleDigit(view, x, y, null, SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
+      this.renderSampleDigit(view, x, y, null, SAMPLE_LOW_FIELD, atPlayhead, cursorOnEvent, muted);
     } else {
       const sampleNumber = hexadecimal.toHex(sampleNo, 2);
       x += this.renderSampleDigit(view, x, y, sampleNumber.charAt(0), SAMPLE_HIGH_FIELD, atPlayhead, cursorOnEvent, muted);
@@ -500,28 +501,34 @@ export class PatternRenderer {
     return this.layout.glyphWidth * 3;
   }
 
-  private renderSampleDigit(view: RenderPatternView, x: number, y: number, digit: string, field: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
+  private renderSampleDigit(view: RenderPatternView, x: number, y: number, digit: string | null, field: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
     let colour;
     if (muted)
       colour = this.colours().channelMuted;
     else if (cursorOnEvent && view.cursorField === field) {
       colour = this.colours().cursorText;
     } else {
-      colour = (digit === DASH) ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
+      colour = (digit === null) ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
     }
-    this.withFillStyle(colour).renderGlyph(digit, x, y);
+    if (digit === null) {
+      const offset = this.layout.rowHeight / 2 - 0.5;
+      const width = this.layout.glyphWidth - 2;
+      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset }, { x: x + width, y: y + offset }]);
+    } else {
+      this.withFillStyle(colour).renderGlyph(digit, x, y);
+    }
     return this.layout.glyphWidth;
   }
 
   private renderEffect(view: RenderPatternView, x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
     if (effect.effectCode[0] === 0 && effect.effectCode[1] === 0 && effect.effectData[0] === 0 && effect.effectData[1] === 0) {
-      x += this.renderCommandField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 0, muted);
-      x += this.renderCommandField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 1, muted);
-      x += this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 2, muted);
-      this.renderEffectField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 3, muted);
+      x += this.renderCommandField(view, x, y, effectIndex, null, atPlayhead, cursorOnEvent, 0, muted);
+      x += this.renderCommandField(view, x, y, effectIndex, null, atPlayhead, cursorOnEvent, 1, muted);
+      x += this.renderEffectField(view, x, y, effectIndex, null, atPlayhead, cursorOnEvent, 2, muted);
+      this.renderEffectField(view, x, y, effectIndex, null, atPlayhead, cursorOnEvent, 3, muted);
     } else {
       if (effect.effectCode[0] === 0)
-        x += this.renderCommandField(view, x, y, effectIndex, DASH, atPlayhead, cursorOnEvent, 0, muted);
+        x += this.renderCommandField(view, x, y, effectIndex, null, atPlayhead, cursorOnEvent, 0, muted);
       else
         x += this.renderCommandField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectCode[0]), atPlayhead, cursorOnEvent, 0, muted);
       x += this.renderCommandField(view, x, y, effectIndex, hexadecimal.toHex(effect.effectCode[1]), atPlayhead, cursorOnEvent, 1, muted);
@@ -531,7 +538,7 @@ export class PatternRenderer {
     return this.layout.glyphWidth * (FIELDS_PER_EFFECT + 1);
   }
 
-  private renderCommandField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
+  private renderCommandField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string | null, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
     const cursorField = FIRST_EFFECT_FIELD + (effectIndex * FIELDS_PER_EFFECT) + effectField;
     let colour;
     if (muted)
@@ -539,12 +546,18 @@ export class PatternRenderer {
     else if (cursorOnEvent && view.cursorField === cursorField)
       colour = this.colours().cursorText;
     else
-      colour = (effectParam === DASH) ? this.colours(atPlayhead).text : this.colours(atPlayhead).command;
-    this.withFillStyle(colour).renderGlyph(effectParam, x, y)
+      colour = (effectParam === null) ? this.colours(atPlayhead).text : this.colours(atPlayhead).command;
+    if (effectParam === null) {
+      const offset = this.layout.rowHeight / 2 - 0.5;
+      const width = this.layout.glyphWidth - 2;
+      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset }, { x: x + width, y: y + offset }]);
+    } else {
+      this.withFillStyle(colour).renderGlyph(effectParam, x, y);
+    }
     return this.layout.glyphWidth;
   }
 
-  private renderEffectField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
+  private renderEffectField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string | null, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
     const cursorField = FIRST_EFFECT_FIELD + (effectIndex * FIELDS_PER_EFFECT) + effectField;
     let colour;
     if (muted)
@@ -552,8 +565,14 @@ export class PatternRenderer {
     else if (cursorOnEvent && view.cursorField === cursorField)
       colour = this.colours().cursorText;
     else
-      colour = (effectParam === DASH) ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;
-    this.withFillStyle(colour).renderGlyph(effectParam, x, y)
+      colour = (effectParam === null) ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;
+    if (effectParam === null) {
+      const offset = this.layout.rowHeight / 2 - 0.5;
+      const width = this.layout.glyphWidth - 2;
+      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset }, { x: x + width, y: y + offset }]);
+    } else {
+      this.withFillStyle(colour).renderGlyph(effectParam, x, y);
+    }
     return this.layout.glyphWidth;
   }
 
