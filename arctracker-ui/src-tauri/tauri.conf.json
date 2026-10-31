@@ -13,14 +13,12 @@
     "windows": [
       {
         "title": "Arctracker",
-        "width": 1386,
-        "height": 940,
         "visible": true,
         "resizable": true,
         "decorations": true,
         "transparent": false,
         "fullscreen": false,
-        "maximized": false
+        "maximized": true
       }
     ],
     "security": {
