@@ -1,7 +1,7 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import "./TransportBar.css";
-import { commands } from "../control/commands.ts";
-import { message } from "../language/messages.ts";
+import { commands } from "../../../../control/commands.ts";
+import { message } from "../../../../language/messages.ts";
 
 export default function TransportBar() {
   const PlayIcon = () => (

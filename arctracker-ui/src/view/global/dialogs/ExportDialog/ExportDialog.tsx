@@ -1,7 +1,7 @@
-import { useStore } from "../store/useStore.ts";
-import Modal from "./Modal.tsx";
+import { useStore } from "../../../../store/useStore.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
 import "./ExportDialog.css";
-import { message } from "../language/messages.ts";
+import { message } from "../../../../language/messages.ts";
 
 export default function ExportDialog() {
   const exportMonitoring = useStore((s) => s.exportMonitoring);

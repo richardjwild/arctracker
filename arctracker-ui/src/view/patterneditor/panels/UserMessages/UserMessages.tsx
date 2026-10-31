@@ -1,6 +1,6 @@
 import "./UserMessages.css";
-import { useStore } from "../store/useStore.ts";
-import { UserMessage } from "../messages/userMessages.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import { UserMessage } from "../../../../messages/userMessages.ts";
 
 interface MessageProps {
   message?: UserMessage;

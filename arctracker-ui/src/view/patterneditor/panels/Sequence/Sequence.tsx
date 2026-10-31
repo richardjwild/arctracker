@@ -1,11 +1,11 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import React, { useEffect, useRef, useState } from "react";
-import { engine } from "../engine/engine.ts";
+import { engine } from "../../../../engine/engine.ts";
 import "./Sequence.css";
-import useSyncSequenceWithTransport from "../hooks/useSyncSequenceWithTransport.ts";
-import { commands } from "../control/commands.ts";
-import useSequencePosition from "../hooks/useSequencePosition.ts";
-import { message, messageFn } from "../language/messages.ts";
+import useSyncSequenceWithTransport from "../../../../hooks/useSyncSequenceWithTransport.ts";
+import { commands } from "../../../../control/commands.ts";
+import useSequencePosition from "../../../../hooks/useSequencePosition.ts";
+import { message, messageFn } from "../../../../language/messages.ts";
 
 export default function Sequence() {
   const moduleId = useStore((state) => state.moduleId);

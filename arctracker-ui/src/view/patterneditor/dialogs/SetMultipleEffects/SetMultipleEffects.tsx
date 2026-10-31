@@ -1,18 +1,18 @@
-import Modal from "./Modal.tsx";
-import { message } from "../language/messages.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
+import { message } from "../../../../language/messages.ts";
 import "./SetMultipleEffects.css";
 import { useEffect, useRef, useState } from "react";
-import { editor } from "../editing/editor.ts";
-import { hexadecimal } from "../rendering/hexadecimal.ts";
-import { commands } from "../control/commands.ts";
-import { useStore } from "../store/useStore.ts";
-import { alerting } from "../alerting/alert.ts";
-import { Effect } from "../editing/patternEvents.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { DecrementButton, IncrementButton } from "./components/SpinnerButtons.tsx";
-import { primaryModifier } from "../keyboard/keyBinding.ts";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+import { editor } from "../../../../editing/editor.ts";
+import { hexadecimal } from "../../../../rendering/hexadecimal.ts";
+import { commands } from "../../../../control/commands.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import { alerting } from "../../../../alerting/alert.ts";
+import { Effect } from "../../../../editing/patternEvents.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { DecrementButton, IncrementButton } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
+import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 export default function SetMultipleEffects() {
   const [effectLane, setEffectLane] = useState(1);

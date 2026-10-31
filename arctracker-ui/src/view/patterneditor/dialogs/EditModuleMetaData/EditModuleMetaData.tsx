@@ -1,20 +1,20 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import "./EditModuleMetaData.css";
-import Modal from "./Modal.tsx";
+import Modal from "../../../components/Modal/Modal.tsx";
 import { useEffect, useRef, useState } from "react";
 import {
   InterpolationType,
   ModuleMetaData,
   moduleMetaData,
   VolumeMappingType
-} from "../editing/moduleMetaData.ts";
-import { commands } from "../control/commands.ts";
-import { alerting } from "../alerting/alert.ts";
-import { message } from "../language/messages.ts";
-import { primaryModifier } from "../keyboard/keyBinding.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+} from "../../../../editing/moduleMetaData.ts";
+import { commands } from "../../../../control/commands.ts";
+import { alerting } from "../../../../alerting/alert.ts";
+import { message } from "../../../../language/messages.ts";
+import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 const ModuleNameMaxLength = 65;
 const AuthorMaxLength = 65;

@@ -1,8 +1,8 @@
 import "./KeyboardOctave.css";
-import { message } from "../language/messages.ts";
+import { message } from "../../../../language/messages.ts";
 import React, { useEffect, useRef } from "react";
-import { useStore } from "../store/useStore.ts";
-import { commands } from "../control/commands.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import { commands } from "../../../../control/commands.ts";
 
 function cssProperty(name: string): string {
   return getComputedStyle(document.documentElement)

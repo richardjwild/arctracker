@@ -1,20 +1,20 @@
-import Modal from "./Modal.tsx";
-import { message } from "../language/messages.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
+import { message } from "../../../../language/messages.ts";
 import "./EditAppConfig.css";
-import { useStore } from "../store/useStore.ts";
-import { audioDevice, AudioDeviceInfo } from "../audioDevice/audioDevice.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import { audioDevice, AudioDeviceInfo } from "../../../../audioDevice/audioDevice.ts";
 import { useEffect, useRef, useState } from "react";
 import {
   AppConfig,
   appConfig, DraftAppConfig,
   SelectedAudioDevice, SelectedSampleRate
-} from "../config/appConfig.ts";
-import { alerting } from "../alerting/alert.ts";
-import { midi, MidiDeviceInfo } from "../midi/midi.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { primaryModifier } from "../keyboard/keyBinding.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+} from "../../../../config/appConfig.ts";
+import { alerting } from "../../../../alerting/alert.ts";
+import { midi, MidiDeviceInfo } from "../../../../midi/midi.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {

@@ -1,23 +1,23 @@
 import "./PatternView.css";
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { engine } from "../engine/engine.ts";
-import { animation } from "../rendering/animation.ts";
+import { engine } from "../../../../engine/engine.ts";
+import { animation } from "../../../../rendering/animation.ts";
 import {
   Colours,
   getPatternContentDimensions,
   PatternRenderer,
-} from "../rendering/renderPattern.ts";
-import useSyncCursorWithTransport from "../hooks/useSyncCursorWithTransport.ts";
-import { patternGrid } from "../editing/patternGrid.ts";
-import useSequencePosition from "../hooks/useSequencePosition.ts";
-import { commands } from "../control/commands.ts";
-import { HorizontalScroll, patternLayout } from "../rendering/patternLayout.ts";
-import { patternEvents } from "../editing/patternEvents.ts";
-import { Cursor } from "../editing/cursor.ts";
-import { hexadecimal } from "../rendering/hexadecimal.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+} from "../../../../rendering/renderPattern.ts";
+import useSyncCursorWithTransport from "../../../../hooks/useSyncCursorWithTransport.ts";
+import { patternGrid } from "../../../../editing/patternGrid.ts";
+import useSequencePosition from "../../../../hooks/useSequencePosition.ts";
+import { commands } from "../../../../control/commands.ts";
+import { HorizontalScroll, patternLayout } from "../../../../rendering/patternLayout.ts";
+import { patternEvents } from "../../../../editing/patternEvents.ts";
+import { Cursor } from "../../../../editing/cursor.ts";
+import { hexadecimal } from "../../../../rendering/hexadecimal.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 type PanDrag = {
   track: number;

@@ -1,14 +1,14 @@
 import "./HexCalculator.css";
-import { message } from "../language/messages.ts";
-import { useStore } from "../store/useStore.ts";
-import Modal from "./Modal.tsx";
+import { message } from "../../../../language/messages.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
 import { useEffect, useRef, useState } from "react";
-import { commands } from "../control/commands.ts";
-import { hexadecimal } from "../rendering/hexadecimal.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { primaryModifier } from "../keyboard/keyBinding.ts";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+import { commands } from "../../../../control/commands.ts";
+import { hexadecimal } from "../../../../rendering/hexadecimal.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 export default function HexCalculator() {
   const calculatorActive = useStore((state) => state.hexCalculatorActive);

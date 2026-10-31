@@ -1,10 +1,10 @@
-import { message } from "../language/messages";
+import { message } from "../../../../language/messages.ts";
 import "./CommandReference.css";
-import Modal from "./Modal";
-import { useStore } from "../store/useStore.ts";
-import { commands } from "../control/commands.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
+import { useStore } from "../../../../store/useStore.ts";
+import { commands } from "../../../../control/commands.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 const commandsColumn1 = [
   [" 1", message("command01")],

@@ -1,12 +1,12 @@
 import "./MasterGain.css";
-import { useStore } from "../store/useStore.ts";
-import { engine } from "../engine/engine.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import { engine } from "../../../../engine/engine.ts";
 import { useEffect, useMemo, useRef } from "react";
-import { animation } from "../rendering/animation.ts";
+import { animation } from "../../../../rendering/animation.ts";
 import {
   VuMeterColours,
   VuMeterRenderer,
-} from "../rendering/renderVuMeters.ts";
+} from "../../../../rendering/renderVuMeters.ts";
 
 function cssColour(name: string): string {
   return getComputedStyle(document.documentElement)

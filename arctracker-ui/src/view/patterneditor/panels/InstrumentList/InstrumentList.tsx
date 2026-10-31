@@ -1,10 +1,10 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import "./InstrumentList.css";
-import { hexadecimal } from "../rendering/hexadecimal.ts";
-import { commands } from "../control/commands.ts";
+import { hexadecimal } from "../../../../rendering/hexadecimal.ts";
+import { commands } from "../../../../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
-import { Instrument } from "../editing/editInstrument.ts";
-import { message } from "../language/messages.ts";
+import { Instrument } from "../../../../editing/editInstrument.ts";
+import { message } from "../../../../language/messages.ts";
 
 const InstrumentAssignedIcon = () => (
   <svg

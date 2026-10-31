@@ -1,8 +1,8 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import "./ModuleHeader.css";
-import { commands } from "../control/commands.ts";
-import { Module } from "../module/module.ts";
-import { message } from "../language/messages.ts";
+import { commands } from "../../../../control/commands.ts";
+import { Module } from "../../../../module/module.ts";
+import { message } from "../../../../language/messages.ts";
 
 export default function ModuleHeader() {
   const module = useStore((state) => state.module);

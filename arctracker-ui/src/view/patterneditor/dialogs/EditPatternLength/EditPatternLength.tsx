@@ -1,10 +1,10 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import "./EditPatternLength.css";
-import Modal from "./Modal.tsx";
+import Modal from "../../../components/Modal/Modal.tsx";
 import { useEffect, useRef, useState } from "react";
-import { alerting } from "../alerting/alert.ts";
-import { commands } from "../control/commands.ts";
-import { message } from "../language/messages.ts";
+import { alerting } from "../../../../alerting/alert.ts";
+import { commands } from "../../../../control/commands.ts";
+import { message } from "../../../../language/messages.ts";
 
 export default function EditPatternLength() {
   const editingPatternLength =

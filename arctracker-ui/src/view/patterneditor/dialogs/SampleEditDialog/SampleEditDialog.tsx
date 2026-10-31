@@ -1,22 +1,22 @@
-import Modal from "./Modal.tsx";
+import Modal from "../../../components/Modal/Modal.tsx";
 import "./SampleEditDialog.css";
-import { useStore } from "../store/useStore.ts";
-import { hexadecimal } from "../rendering/hexadecimal.ts";
-import { commands } from "../control/commands.ts";
+import { useStore } from "../../../../store/useStore.ts";
+import { hexadecimal } from "../../../../rendering/hexadecimal.ts";
+import { commands } from "../../../../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
-import { alerting } from "../alerting/alert.ts";
+import { alerting } from "../../../../alerting/alert.ts";
 import {
   editInstrument,
   emptyInstrument, Instrument,
   SampleNameMaxLength
-} from "../editing/editInstrument.ts";
-import { message, messageFn } from "../language/messages.ts";
-import { notes } from "../rendering/notes.ts";
-import { primaryModifier } from "../keyboard/keyBinding.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
-import { DecrementButton, IncrementButton } from "./components/SpinnerButtons.tsx";
+} from "../../../../editing/editInstrument.ts";
+import { message, messageFn } from "../../../../language/messages.ts";
+import { notes } from "../../../../rendering/notes.ts";
+import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
+import { DecrementButton, IncrementButton } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
 
 type InputState = {
   transpose: string;

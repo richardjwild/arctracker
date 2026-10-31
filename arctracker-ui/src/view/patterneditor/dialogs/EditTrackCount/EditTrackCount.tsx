@@ -1,10 +1,10 @@
-import Modal from "./Modal.tsx";
-import { commands } from "../control/commands.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
+import { commands } from "../../../../control/commands.ts";
 import { useEffect, useRef, useState } from "react";
-import { alerting } from "../alerting/alert.ts";
-import { useStore } from "../store/useStore.ts";
+import { alerting } from "../../../../alerting/alert.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import './EditTrackCount.css';
-import { message } from "../language/messages.ts";
+import { message } from "../../../../language/messages.ts";
 
 export default function EditTrackCount() {
   const editingTrackCount =

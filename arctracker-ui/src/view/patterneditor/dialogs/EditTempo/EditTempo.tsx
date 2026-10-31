@@ -1,15 +1,15 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import { useEffect, useRef, useState } from "react";
-import Modal from "./Modal.tsx";
-import { tempo } from "../editing/tempo.ts";
-import { alerting } from "../alerting/alert.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
+import { tempo } from "../../../../editing/tempo.ts";
+import { alerting } from "../../../../alerting/alert.ts";
 import "./EditTempo.css";
-import { commands } from "../control/commands.ts";
-import { message } from "../language/messages.ts";
-import { primaryModifier } from "../keyboard/keyBinding.ts";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+import { commands } from "../../../../control/commands.ts";
+import { message } from "../../../../language/messages.ts";
+import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 const LinesPerBeatMaxLength = 2;
 const TempoMaxLength = 3;

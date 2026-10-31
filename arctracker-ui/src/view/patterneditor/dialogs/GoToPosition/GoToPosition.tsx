@@ -1,14 +1,14 @@
-import { useStore } from "../store/useStore.ts";
+import { useStore } from "../../../../store/useStore.ts";
 import "./GoToPosition.css"
 import { useEffect, useRef, useState } from "react";
-import { alerting } from "../alerting/alert.ts";
-import { commands } from "../control/commands.ts";
-import { message } from "../language/messages.ts";
-import Modal from "./Modal.tsx";
-import { editor } from "../editing/editor.ts";
-import FieldLabel from "./components/FieldLabel.tsx";
-import { KeyHandler } from "../keyboard/keyHandler.ts";
-import { useKeyboardHandler } from "../hooks/useKeyboardHandler.ts";
+import { alerting } from "../../../../alerting/alert.ts";
+import { commands } from "../../../../control/commands.ts";
+import { message } from "../../../../language/messages.ts";
+import Modal from "../../../components/Modal/Modal.tsx";
+import { editor } from "../../../../editing/editor.ts";
+import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
+import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
+import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
 export default function GoToPosition() {
   const dialogVisible = useStore((state) => state.editorState.editMode) === "goToPosition";
