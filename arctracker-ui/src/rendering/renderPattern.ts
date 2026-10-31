@@ -510,14 +510,7 @@ export class PatternRenderer {
     } else {
       colour = (digit === null) ? this.colours(atPlayhead).text : this.colours(atPlayhead).sample;
     }
-    if (digit === null) {
-      const offset = this.layout.rowHeight / 2 - 0.5;
-      const width = this.layout.glyphWidth - 2;
-      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset }, { x: x + width, y: y + offset }]);
-    } else {
-      this.withFillStyle(colour).renderGlyph(digit, x, y);
-    }
-    return this.layout.glyphWidth;
+    return this.renderPatternDigit(digit, colour, x, y);
   }
 
   private renderEffect(view: RenderPatternView, x: number, y: number, effectIndex: number, effect: Effect, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean): number {
@@ -547,14 +540,7 @@ export class PatternRenderer {
       colour = this.colours().cursorText;
     else
       colour = (effectParam === null) ? this.colours(atPlayhead).text : this.colours(atPlayhead).command;
-    if (effectParam === null) {
-      const offset = this.layout.rowHeight / 2 - 0.5;
-      const width = this.layout.glyphWidth - 2;
-      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset }, { x: x + width, y: y + offset }]);
-    } else {
-      this.withFillStyle(colour).renderGlyph(effectParam, x, y);
-    }
-    return this.layout.glyphWidth;
+    return this.renderPatternDigit(effectParam, colour, x, y);
   }
 
   private renderEffectField(view: RenderPatternView, x: number, y: number, effectIndex: number, effectParam: string | null, atPlayhead: boolean, cursorOnEvent: boolean, effectField: number, muted: boolean): number {
@@ -566,12 +552,19 @@ export class PatternRenderer {
       colour = this.colours().cursorText;
     else
       colour = (effectParam === null) ? this.colours(atPlayhead).text : this.colours(atPlayhead).effect;
-    if (effectParam === null) {
+    return this.renderPatternDigit(effectParam, colour, x, y);
+  }
+
+  private renderPatternDigit(digit: string | null, colour: string, x: number, y: number): number {
+    if (digit === null) {
       const offset = this.layout.rowHeight / 2 - 0.5;
       const width = this.layout.glyphWidth - 2;
-      this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset }, { x: x + width, y: y + offset }]);
+      this.withStrokeStyle(colour).strokePath([
+        { x: x + 1, y: y + offset },
+        { x: x + width, y: y + offset },
+      ]);
     } else {
-      this.withFillStyle(colour).renderGlyph(effectParam, x, y);
+      this.withFillStyle(colour).renderGlyph(digit, x, y);
     }
     return this.layout.glyphWidth;
   }
