@@ -39,7 +39,7 @@ async function setPattern(sequenceIndex: number, patternNo: number) {
   updatedSequence[sequenceIndex] = patternNo;
   const command = {
     ...basicEditCommand(sequence, updatedSequence),
-    undoMessage: messageFn2("setPatternAtPosition")(sequenceIndex.toString(), patternNo.toString()),
+    undoMessage: messageFn2("setPatternAtPosition")(sequenceIndex.toString(), (patternNo + 1).toString()),
   };
   await editor.applyEdit(command);
 }
@@ -120,7 +120,7 @@ export const sequence = {
         await engine.setSequence(originalSequence);
         await pattern.deletePattern(createdPatternNo);
       },
-      undoMessage: messageFn("createNewPatternAt")(sequencePosition.toString())
+      undoMessage: messageFn("createNewPatternAt")((sequencePosition + 1).toString())
     }
     await editor.applyEdit(command);
   },
@@ -152,7 +152,7 @@ export const sequence = {
         }
         ensureSequencePosition();
       },
-      undoMessage: messageFn("insertSequenceBefore")(sequencePosition.toString())
+      undoMessage: messageFn("insertSequenceBefore")((sequencePosition + 1).toString())
     }
     await editor.applyEdit(command);
   },
@@ -185,7 +185,7 @@ export const sequence = {
         }
         ensureSequencePosition();
       },
-      undoMessage: messageFn("insertSequenceAfter")(sequencePosition.toString()),
+      undoMessage: messageFn("insertSequenceAfter")((sequencePosition + 1).toString()),
     }
     await editor.applyEdit(command);
   },
@@ -199,7 +199,7 @@ export const sequence = {
     updatedSequence.splice(sequencePosition, 1);
     const command = {
       ...basicEditCommand(moduleSequence, updatedSequence),
-      undoMessage: messageFn("deleteSequencePosition")(sequencePosition.toString()),
+      undoMessage: messageFn("deleteSequencePosition")((sequencePosition + 1).toString()),
     };
     await editor.applyEdit(command);
   },

@@ -284,19 +284,19 @@ export class PatternRenderer {
     const cursorField = cursor.currentField();
     const effectLaneWidth = FIELDS_PER_EFFECT + 1;
     if (cursorField.field === "note") {
-      cursorWidth = this.layout.glyphWidth * 3 - 4;
+      cursorWidth = this.layout.noteWidth + 1;
     } else if (cursorField.field === "sampleHigh") {
-      cursorX += this.layout.glyphWidth * 4;
+      cursorX += this.layout.noteWidth + this.layout.glyphWidth;
     } else if (cursorField.field === "sampleLow") {
-      cursorX += this.layout.glyphWidth * 5;
+      cursorX += this.layout.noteWidth + this.layout.glyphWidth * 2;
     } else if (cursorField.field === "effectCode1") {
-      cursorX += this.layout.glyphWidth * (7 + (cursorField.effectIndex * effectLaneWidth));
+      cursorX += this.layout.noteWidth + this.layout.glyphWidth * (4 + cursorField.effectIndex * effectLaneWidth);
     } else if (cursorField.field === "effectCode2") {
-      cursorX += this.layout.glyphWidth * (8 + (cursorField.effectIndex * effectLaneWidth));
+      cursorX += this.layout.noteWidth + this.layout.glyphWidth * (5 + cursorField.effectIndex * effectLaneWidth);
     } else if (cursorField.field === "effectData1") {
-      cursorX += this.layout.glyphWidth * (9 + (cursorField.effectIndex * effectLaneWidth));
+      cursorX += this.layout.noteWidth + this.layout.glyphWidth * (6 + cursorField.effectIndex * effectLaneWidth);
     } else if (cursorField.field === "effectData2") {
-      cursorX += this.layout.glyphWidth * (10 + (cursorField.effectIndex * effectLaneWidth));
+      cursorX += this.layout.noteWidth + this.layout.glyphWidth * (7 + cursorField.effectIndex * effectLaneWidth);
     }
     this.withFillStyle(this.colours().cursor)
       .fillRect(cursorX, y, cursorWidth, this.layout.rowHeight);
@@ -473,9 +473,9 @@ export class PatternRenderer {
       colour = this.colours(atPlayhead).note;
     if (noteStr === "–––") {
       const offset = this.layout.rowHeight / 2 - 0.5;
-      const width = (this.layout.glyphWidth * 3) - 6;
+      const width = this.layout.noteWidth - 1;
       this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset },{ x: x + width, y: y + offset }]);
-      return this.layout.glyphWidth * 4;
+      return this.layout.noteWidth + this.layout.glyphWidth;
     }
     if (noteStr.length === 2)
       this.withFillStyle(colour)
@@ -486,7 +486,7 @@ export class PatternRenderer {
         .renderGlyph(noteStr.charAt(0), x, y)
         .renderGlyph(noteStr.charAt(1), x - 2 + this.layout.glyphWidth, y)
         .renderGlyph(noteStr.charAt(2), x - 4 + this.layout.glyphWidth * 2, y);
-    return this.layout.glyphWidth * 4;
+    return this.layout.noteWidth + this.layout.glyphWidth;
   }
 
   private renderSample(view: RenderPatternView, x: number, y: number, sampleNo: number, atPlayhead: boolean, cursorOnEvent: boolean, muted: boolean) {

@@ -4,6 +4,7 @@ export type PatternLayout = {
   viewportSize: { width: number; height: number };
   leftPadding: number;
   glyphWidth: number;
+  noteWidth: number;
   rowHeight: number;
   gutterWidth: number;
   trackHeaderHeight: number;
@@ -55,6 +56,7 @@ export const patternLayout = {
       viewportSize,
       leftPadding,
       glyphWidth,
+      noteWidth: glyphWidth * 3 - 5,
       rowHeight: glyphHeight,
       trackHeaderHeight: glyphHeight + 1,
       trackFooterHeight: glyphHeight + 5,
