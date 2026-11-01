@@ -52,11 +52,12 @@ export const patternLayout = {
         ? effectsDisplayed[track]
         : 1;
     const rowNumberWidth = glyphWidth * 5;
+    const noteWidth = glyphWidth * 3 - 5;
     return {
       viewportSize,
       leftPadding,
       glyphWidth,
-      noteWidth: glyphWidth * 3 - 5,
+      noteWidth,
       rowHeight: glyphHeight,
       trackHeaderHeight: glyphHeight + 1,
       trackFooterHeight: glyphHeight + 5,
@@ -64,7 +65,7 @@ export const patternLayout = {
       rowNumberWidth,
       gutterWidth: leftPadding + rowNumberWidth - glyphWidth,
       getEventWidth: (track: number) =>
-        glyphWidth * 8 + getEffectsDisplayed(track) * glyphWidth * 5,
+        noteWidth + glyphWidth * 5 + getEffectsDisplayed(track) * glyphWidth * 5,
       maxLines: 1000,
     };
   },
