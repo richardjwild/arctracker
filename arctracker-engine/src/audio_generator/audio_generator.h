@@ -17,14 +17,14 @@ typedef union {
  * by the audio subsystem when it requires the generator to place the requested number of sample  *
  * frames in the channel buffer.                                                                  *
  *                                                                                                *
- * The tick function is called on every non-zero tick, and gives the generator its opportunity to *
- * update its internal state if it needs to. This might be so that it can implement vibrato,      *
- * tremolo, pitch and volume slides, etc. But the generator is free to do nothing here if it does *
- * not need to do anything.                                                                       *
+ * The tick function is called on every tick, including tick zero, and gives the generator its    *
+ * opportunity to update its internal state if it needs to. This might be so that it can          *
+ * implement vibrato, tremolo, pitch and volume slides, etc. If the generator does not need to do *
+ * anything here, it is free to do nothing.                                                       *
  *                                                                                                *
  * The remaining functions are called in response to tracker commands, and are there to control   *
  * generator effects such as the aforementioned vibrato, tremolo, pitch and volume slides, etc.   *
- * The generator may or may not implement these effects, and if not, it is once again free to do  *
+ * The generator may or may not implement these effects. If not, it is once again free to do      *
  * nothing when any of these functions are called.                                                *
  *                                                                                                *
  * The null audio generator is attached to a channel by default, when no other sound is playing.  *
