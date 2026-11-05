@@ -1,6 +1,5 @@
 player_sources = files(
     'commands.c',
-    'gain_curve.c',
     'lfo.c',
     'player.c',
     'module.c',

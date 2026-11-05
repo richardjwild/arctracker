@@ -1,6 +1,6 @@
 .editTempo {
-    width: 220px;
-    height: 150px;
+    width: 245px;
+    height: 155px;
     display: grid;
     grid-template-columns: 155px 1fr;
     grid-template-rows: 50px 50px 40px;
@@ -15,10 +15,9 @@
     outline: none;
 }
 
-.editTempo .linesPerBeatEdit {
-    width: 32px;
-}
-
-.editTempo .beatsPerMinuteEdit {
-    width: 32px;
+.editTempo .linesPerBeatEdit, .editTempo .beatsPerMinuteEdit {
+    width: 60px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }

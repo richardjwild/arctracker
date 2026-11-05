@@ -472,7 +472,7 @@ export class PatternRenderer {
     else
       colour = this.colours(atPlayhead).note;
     if (noteStr === "–––") {
-      const offset = this.layout.rowHeight / 2 - 0.5;
+      const offset = this.layout.rowHeight / 2;
       const width = this.layout.noteWidth - 1;
       this.withStrokeStyle(colour).strokePath([{ x: x + 1, y: y + offset },{ x: x + width, y: y + offset }]);
       return this.layout.noteWidth + this.layout.glyphWidth;
@@ -557,7 +557,7 @@ export class PatternRenderer {
 
   private renderPatternDigit(digit: string | null, colour: string, x: number, y: number): number {
     if (digit === null) {
-      const offset = this.layout.rowHeight / 2 - 0.5;
+      const offset = this.layout.rowHeight / 2;
       const width = this.layout.glyphWidth - 2;
       this.withStrokeStyle(colour).strokePath([
         { x: x + 1, y: y + offset },

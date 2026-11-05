@@ -1,5 +1,5 @@
 .goToPosition {
-    width: 210px;
+    width: 225px;
     height: 50px;
     display: flex;
     flex-direction: row;
@@ -9,5 +9,12 @@
 
 .newPositionLabel {
     display: block;
-    min-width: 105px;
+    width: 100px;
+}
+
+.newPositionInput {
+    width: 75px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }

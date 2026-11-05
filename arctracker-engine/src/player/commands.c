@@ -7,10 +7,10 @@ static bool is_volume_slide_cmd(command_t);
 static const effect_t *get_priority_cmd(const event_t *, bool (*is_of_group)(command_t));
 static const effect_t *get_track_effect(const event_t *, command_t);
 static void process_pitch_slide_cmd(const effect_t *, audio_generator_t *, const track_command_state_t *);
-static void process_volume_slide_cmd(const effect_t *, audio_generator_t *);
+static void process_volume_slide_cmd(const effect_t *, gainer_state_t *);
 static void process_vibrato_cmd(const event_t *, audio_generator_t *, const track_command_state_t *);
-static void process_tremolo_cmd(const event_t *, audio_generator_t *, const track_command_state_t *);
-static void process_set_volume_cmd(const event_t *, audio_generator_t *, track_command_state_t *);
+static void process_tremolo_cmd(const event_t *, gainer_state_t *, const track_command_state_t *);
+static void process_set_volume_cmd(const event_t *, gainer_state_t *);
 static void process_set_glissando_cmd(const event_t *, audio_generator_t *);
 static void process_set_vibrato_waveform_cmd(const event_t *, track_command_state_t *);
 static void process_set_tremolo_waveform_cmd(const event_t *, track_command_state_t *);
@@ -60,13 +60,14 @@ void process_track_event_commands(const event_t *event, const player_instrument_
 {
     audio_channel_t *channel = track->audio_channel;
     audio_generator_t *generator = &channel->audio_generator;
+    gainer_state_t *gainer_state = &channel->gainer_state;
     audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
     track_command_state_t *command_state = &track->command_state;
     process_pitch_slide_cmd(get_priority_cmd(event, is_pitch_slide_cmd), generator, command_state);
-    process_volume_slide_cmd(get_priority_cmd(event, is_volume_slide_cmd), generator);
+    process_volume_slide_cmd(get_priority_cmd(event, is_volume_slide_cmd), gainer_state);
     process_vibrato_cmd(event, generator, command_state);
-    process_tremolo_cmd(event, generator, command_state);
-    process_set_volume_cmd(event, generator, command_state);
+    process_tremolo_cmd(event, gainer_state, command_state);
+    process_set_volume_cmd(event, gainer_state);
     process_set_glissando_cmd(event, generator);
     process_set_vibrato_waveform_cmd(event, command_state);
     process_set_tremolo_waveform_cmd(event, command_state);
@@ -151,11 +152,11 @@ static void process_pitch_slide_cmd(const effect_t *effect, audio_generator_t *g
     }
 }
 
-static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *generator)
+static void process_volume_slide_cmd(const effect_t *effect, gainer_state_t *gainer_state)
 {
     if (effect == NULL)
     {
-        generator->volume_slide_off(&generator->state);
+        gainer_volume_slide_off(gainer_state);
         return;
     }
     switch (effect->command)
@@ -164,17 +165,17 @@ static void process_volume_slide_cmd(const effect_t *effect, audio_generator_t *
         {
             int slide_rate = effect->data &0x7f;
             if ((effect->data & 0x80) == 0) slide_rate *= -1;
-            generator->volume_slide_on(&generator->state, slide_rate, false);
+            gainer_volume_slide_on(gainer_state, slide_rate, false);
             break;
         }
         case VOLUME_SLIDE_UP_FINE:
-            generator->volume_slide_on(&generator->state, effect->data, true);
+            gainer_volume_slide_on(gainer_state, effect->data, true);
             break;
         case VOLUME_SLIDE_DOWN_FINE:
-            generator->volume_slide_on(&generator->state, effect->data * -1, true);
+            gainer_volume_slide_on(gainer_state, effect->data * -1, true);
             break;
         default:
-            generator->volume_slide_off(&generator->state);
+            gainer_volume_slide_off(gainer_state);
             break;
     }
 }
@@ -202,12 +203,12 @@ static void process_vibrato_cmd(const event_t *event, audio_generator_t *generat
     generator->vibrato_on(&generator->state, rate, depth, waveform, retrigger);
 }
 
-static void process_tremolo_cmd(const event_t *event, audio_generator_t *generator, const track_command_state_t *command_state)
+static void process_tremolo_cmd(const event_t *event, gainer_state_t *gainer_state, const track_command_state_t *command_state)
 {
     const effect_t *effect = get_track_effect(event, TREMOLO);
     if (effect == NULL)
     {
-        generator->tremolo_off(&generator->state);
+        gainer_tremolo_off(gainer_state);
         return;
     }
     int rate = effect->data >> 4;
@@ -222,15 +223,14 @@ static void process_tremolo_cmd(const event_t *event, audio_generator_t *generat
     }
     const bool retrigger = command_state->tremolo_retrigger;
     const pt_waveform_t waveform = command_state->tremolo_waveform;
-    generator->tremolo_on(&generator->state, rate, depth, waveform, retrigger);
+    gainer_tremolo_on(gainer_state, rate, depth, waveform, retrigger);
 }
 
-static void process_set_volume_cmd(const event_t *event, audio_generator_t *generator, track_command_state_t *command_state)
+static void process_set_volume_cmd(const event_t *event, gainer_state_t *gainer_state)
 {
     const effect_t *effect = get_track_effect(event, SET_VOLUME);
     if (effect == NULL) return;
-    generator->set_volume(&generator->state, effect->data);
-    command_state->volume = effect->data;
+    gainer_set_volume(gainer_state, effect->data);
 }
 
 static void process_set_glissando_cmd(const event_t *event, audio_generator_t *generator)
@@ -380,7 +380,7 @@ static const effect_t *get_global_effect(const event_t *events, const int num_tr
 
 static void set_tempo(player_t *player, const uint8_t data)
 {
-    if (data <= 32)
+    if (data < MIN_BPM)
         player->tick_scheduler.event_scheduler.ticks_per_event = data;
     else if (player->module->lines_per_beat > 0)
         player_set_bpm(player, data);

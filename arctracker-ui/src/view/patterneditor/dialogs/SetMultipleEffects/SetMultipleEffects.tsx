@@ -10,7 +10,10 @@ import { alerting } from "../../../../alerting/alert.ts";
 import { Effect } from "../../../../editing/patternEvents.ts";
 import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
 import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
-import { DecrementButton, IncrementButton } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
+import {
+  getSpinnerKeyboardEventHandler,
+  SpinnerButtons,
+} from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
 import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
 import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
 
@@ -19,8 +22,12 @@ export default function SetMultipleEffects() {
   const [inputEffectLane, setInputEffectLane] = useState("1");
   const [inputEffectValue, setInputEffectValue] = useState("");
   const [onlyNoteOns, setOnlyNoteOns] = useState(false);
-  const [effect, setEffect] = useState<Effect>({ effectCode: [0, 0], effectData: [0, 0]});
-  const editing = useStore((state) => state.editorState.editMode) === "setMultipleEffects";
+  const [effect, setEffect] = useState<Effect>({
+    effectCode: [0, 0],
+    effectData: [0, 0],
+  });
+  const editing =
+    useStore((state) => state.editorState.editMode) === "setMultipleEffects";
   const effectLaneEditRef = useRef<HTMLInputElement>(null);
   const effectValueEditRef = useRef<HTMLInputElement>(null);
   const onlyNoteOnsRef = useRef<HTMLInputElement>(null);
@@ -37,19 +44,19 @@ export default function SetMultipleEffects() {
   };
 
   const handleKeys: KeyHandler = (e) => {
-    if (e.code === 'Escape') {
+    if (e.code === "Escape") {
       cancel();
       return true;
-    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+    } else if (e.code === "KeyS" && primaryModifier(e)) {
       apply();
       return true;
-    } else if (e.code === 'Digit1' && primaryModifier(e)) {
+    } else if (e.code === "Digit1" && primaryModifier(e)) {
       effectLaneEditRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit2' && primaryModifier(e)) {
+    } else if (e.code === "Digit2" && primaryModifier(e)) {
       effectValueEditRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit3' && primaryModifier(e)) {
+    } else if (e.code === "Digit3" && primaryModifier(e)) {
       onlyNoteOnsRef.current?.focus();
       return true;
     }
@@ -62,7 +69,7 @@ export default function SetMultipleEffects() {
     if (!editing) return;
     setInputEffectLane("1");
     setInputEffectValue("");
-    setEffect({ effectCode: [0, 0], effectData: [0, 0]});
+    setEffect({ effectCode: [0, 0], effectData: [0, 0] });
     setOnlyNoteOns(false);
   }, [editing]);
 
@@ -76,7 +83,19 @@ export default function SetMultipleEffects() {
       return;
     }
     setEffectLane(numberValue);
-  }
+  };
+
+  const incrementEffectLane = () => {
+    if (effectLane == 4) return;
+    setInputEffectLane((effectLane + 1).toString());
+    setEffectLane(effectLane + 1);
+  };
+
+  const decrementEffectLane = () => {
+    if (effectLane == 1) return;
+    setInputEffectLane((effectLane - 1).toString());
+    setEffectLane(effectLane - 1);
+  };
 
   const validateEffectValue = () => {
     const numberValue = hexadecimal.fromHex(inputEffectValue);
@@ -85,8 +104,8 @@ export default function SetMultipleEffects() {
       setInputEffectValue("");
       return;
     }
-    const effectCode = [ numberValue >>> 12, (numberValue >>> 8) & 0xF ];
-    const effectData = [ (numberValue >>> 4) & 0xF, numberValue & 0xF];
+    const effectCode = [numberValue >>> 12, (numberValue >>> 8) & 0xf];
+    const effectData = [(numberValue >>> 4) & 0xf, numberValue & 0xf];
     setEffect({ effectCode, effectData });
     setInputEffectValue(inputEffectValue.toUpperCase());
   };
@@ -108,24 +127,16 @@ export default function SetMultipleEffects() {
             value={inputEffectLane}
             onChange={(e) => setInputEffectLane(e.target.value)}
             onBlur={validateEffectLane}
+            onKeyDown={getSpinnerKeyboardEventHandler(
+              incrementEffectLane,
+              decrementEffectLane,
+            )}
             ref={effectLaneEditRef}
           />
-          <div className="spinnerButtons">
-            <IncrementButton
-              onClick={() => {
-                if (effectLane == 4) return;
-                setInputEffectLane((effectLane + 1).toString());
-                setEffectLane(effectLane + 1);
-              }}
-            />
-            <DecrementButton
-              onClick={() => {
-                if (effectLane == 1) return;
-                setInputEffectLane((effectLane - 1).toString());
-                setEffectLane(effectLane - 1);
-              }}
-            />
-          </div>
+          <SpinnerButtons
+            incrementFn={incrementEffectLane}
+            decrementFn={decrementEffectLane}
+          />
         </div>
       </div>
       <FieldLabel

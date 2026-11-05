@@ -4,7 +4,6 @@
 #include <math.h>
 #include "sequencer.h"
 #include "commands.h"
-#include "gain_curve.h"
 #include "lfo.h"
 #include "period.h"
 #include "memory/heap.h"
@@ -16,6 +15,7 @@
 static const int NULL_INSTRUMENT_INDEX = NUM_INSTRUMENT_SLOTS;
 
 static void synchronise_instrument(player_t *, int);
+static void initialise_playback_policy(player_t *player);
 static void synchronise_playback_policy(player_t *player);
 static void synchronise_track_panning(player_t *player, uint8_t track);
 static void silence_all_audio(player_t *player);
@@ -39,13 +39,13 @@ static void set_current_frame(player_t *, bool, bool);
 static void define_implicit_loop_start(player_t *);
 static void player_tick(player_t *player);
 static bool player_step(player_t *player);
-static audio_channel_t *initialise_audio_channels(const module_t *);
+static audio_channel_t *initialise_audio_channels(const module_t *, const gain_curves_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
 static void initialise_spatialisers(const player_t *player);
 static event_t *get_events(const player_t *);
 static void action_scheduled_note_ons(const player_t *);
 static void note_on(int, const player_instrument_t *, uint8_t, player_track_t *, const event_t *, const playback_policy_t *);
-static audio_generator_t init_audio_generator(int, player_track_t *track, const player_instrument_t *, uint8_t, uint8_t, const playback_policy_t *);
+static audio_generator_t init_audio_generator(int, player_track_t *track, const player_instrument_t *, uint8_t, const playback_policy_t *);
 static sampler_state_t *get_available_sample_player(player_track_t *);
 static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
@@ -85,7 +85,13 @@ bool player_init(player_t *player, module_t *module, player_event_queue_t *playe
         return false;
     }
     player->midi_queue = midi_queue;
-    player->audio_channels = initialise_audio_channels(player->module);
+    player->gain_curves = allocate_array(PLAYER, 1, sizeof(gain_curves_t));
+    if (player->gain_curves == NULL)
+    {
+        return false;
+    }
+    gainer_init_curves(player->gain_curves);
+    player->audio_channels = initialise_audio_channels(player->module, player->gain_curves);
     if (player->audio_channels == NULL)
     {
         return false;
@@ -96,13 +102,13 @@ bool player_init(player_t *player, module_t *module, player_event_queue_t *playe
         return false;
     }
     initialise_spatialisers(player);
+    initialise_playback_policy(player);
     const bool audio_init_result = initialise_audio(&player->audio_out, module->num_tracks, sample_rate, player->master_gain);
     if (!audio_init_result)
     {
         error_with_detail(AUDIO_INIT_FAILED, get_error_message());
         return false;
     }
-    synchronise_playback_policy(player);
     tick_scheduler_restart(&player->tick_scheduler);
     set_current_frame(player, true, true);
     init_null_instrument(player);
@@ -196,6 +202,7 @@ void player_destroy(player_t *player)
 {
     command_queue_destroy(player->command_queue);
     destroy_audio_resources(&player->audio_out);
+    deallocate(PLAYER, player->gain_curves);
     deallocate(PLAYER, player->audio_channels);
     deallocate(PLAYER, player->tracks);
     deallocate(PLAYER, player);
@@ -275,14 +282,30 @@ static void synchronise_instrument(player_t *player, const int instrument_index)
     }
 }
 
+static void initialise_playback_policy(player_t *player)
+{
+    const module_t *module = player->module;
+    player->playback_policy = (playback_policy_t) {
+        .initialised = true,
+        .relative_pitch_bend = module->relative_pitch_bend,
+        .interpolation_type = module->interpolation_type,
+        .volume_mapping = module->volume_mapping_type,
+    };
+}
+
 static void synchronise_playback_policy(player_t *player)
 {
     const module_t *module = player->module;
     player->playback_policy = (playback_policy_t) {
+        .initialised = true,
         .relative_pitch_bend = module->relative_pitch_bend,
         .interpolation_type = module->interpolation_type,
     };
-    calculate_gain_curve(player->playback_policy.gain_curve, module->volume_mapping_type);
+    for (int track = 0; track < player->module->num_tracks; track++)
+    {
+        gainer_state_t *gainer_state = &player->tracks[track].audio_channel->gainer_state;
+        gainer_set_volume_mapping(gainer_state, module->volume_mapping_type);
+    }
 }
 
 static void synchronise_track_panning(player_t *player, const uint8_t track)
@@ -479,18 +502,20 @@ static void process_track_mute_state_changed_command(const player_t *player, con
     channel->muted = new_state;
 }
 
-static audio_channel_t *initialise_audio_channels(const module_t *module)
+static audio_channel_t *initialise_audio_channels(const module_t *module, const gain_curves_t *gain_curves)
 {
     audio_channel_t *channels = allocate_array(PLAYER, module->num_tracks, sizeof(audio_channel_t));
     if (channels == NULL)
     {
         return NULL;
     }
+    const gainer_state_t gainer_state = gainer_init(gain_curves, module->volume_mapping_type);
     for (int channel = 0; channel < module->num_tracks; channel++)
     {
         audio_channel_silence(&channels[channel]);
         channels[channel].muted = module->tracks[channel].muted;
         channels[channel].gain = 1.0f;
+        channels[channel].gainer_state = gainer_state;
     }
     return channels;
 }
@@ -626,8 +651,8 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
     }
     else if (event->instrument_no && instrument->assigned)
     {
-        audio_generator_t *generator = &track->audio_channel->audio_generator;
-        generator->set_volume(&generator->state, instrument->default_volume);
+        gainer_state_t *gainer_state = &track->audio_channel->gainer_state;
+        gainer_set_volume(gainer_state, instrument->default_volume);
     }
     if (!track->scheduler.scheduled)
     {
@@ -646,6 +671,7 @@ static void tick_audio_dsps(const player_t *player, const event_scheduler_t *eve
         audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
         audio_generator->tick(&audio_generator->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
         spatialiser->tick(&spatialiser->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
+        gainer_tick(&channel->gainer_state, event_scheduler->ticks, event_scheduler->ticks_per_event);
     }
 }
 
@@ -665,26 +691,19 @@ static void action_scheduled_note_ons(const player_t *player)
 
 static void note_on(const int note, const player_instrument_t *instrument, const uint8_t slice_index, player_track_t *track, const event_t *event, const playback_policy_t *playback_policy)
 {
-    //
-    // The event argument will be NULL when the note-on is due to a user MIDI action. In this case we must use the
-    // default volume, and we must not try to process track commands.
-    //
-    uint8_t volume = instrument->default_volume;
-    if (event != NULL)
+    const bool is_midi_event = event == NULL;
+    if (is_midi_event || event->instrument_no)
     {
-        if (event->instrument_no)
-            track->command_state.volume = instrument->default_volume;
-        else
-            volume = track->command_state.volume;
+        gainer_set_volume(&track->audio_channel->gainer_state, instrument->default_volume);
     }
-    track->audio_channel->audio_generator = init_audio_generator(note, track, instrument, slice_index, volume, playback_policy);
-    if (event != NULL)
+    track->audio_channel->audio_generator = init_audio_generator(note, track, instrument, slice_index, playback_policy);
+    if (!is_midi_event)
     {
         process_track_event_commands(event, instrument, track);
     }
 }
 
-static audio_generator_t init_audio_generator(const int note, player_track_t *track, const player_instrument_t *instrument, const uint8_t slice_index, const uint8_t volume, const playback_policy_t *playback_policy)
+static audio_generator_t init_audio_generator(const int note, player_track_t *track, const player_instrument_t *instrument, const uint8_t slice_index, const playback_policy_t *playback_policy)
 {
     if (!instrument->assigned)
     {
@@ -698,7 +717,7 @@ static audio_generator_t init_audio_generator(const int note, player_track_t *tr
     const player_sample_t *sample = &instrument->sample;
     const player_sample_slice_t slice = instrument->sample_slices[slice_index];
     sampler_state_t *sampler_state = get_available_sample_player(track);
-    return init_sampler(note_to_play, sample, slice, volume, playback_policy, sampler_state);
+    return init_sampler(note_to_play, sample, slice, playback_policy, sampler_state);
 }
 
 static sampler_state_t *get_available_sample_player(player_track_t *track)

@@ -68,6 +68,7 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
     {
         audio_channel_silence(channel);
     }
+    gainer_apply(&channel->gainer_state, mono_channel_buffer, frames_to_fill);
     //
     // This is the point where we may apply mono effects: filtering, compression, distortion, etc.
     //

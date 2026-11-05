@@ -9,6 +9,7 @@ import { editor } from "../../../../editing/editor.ts";
 import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
 import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
 import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
+import { getSpinnerKeyboardEventHandler, SpinnerButtons } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
 
 export default function GoToPosition() {
   const dialogVisible = useStore((state) => state.editorState.editMode) === "goToPosition";
@@ -29,31 +30,56 @@ export default function GoToPosition() {
   const newPositionInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!dialogVisible) return;
-    setInputNewPosition("");
+    setInputNewPosition(currentPosition.toString());
     newPositionInputRef.current?.focus();
   }, [dialogVisible]);
 
   const validateNewPosition = (): number | null => {
-    if (inputNewPosition === "") {
-      setInputNewPosition(currentPosition.toString());
-      return currentPosition;
-    }
     const newPosition = Number(inputNewPosition);
     if (Number.isInteger(newPosition) && newPosition >= 1 && newPosition <= sequenceLength) {
       return newPosition;
     } else {
-      setInputNewPosition("");
-      void alerting.showInfo(message("invalidSequencePosition"));
       return null;
     }
   }
+
+  const keyHandler = (e: React.KeyboardEvent) => {
+    if (e.code === 'Enter') {
+      const newPosition = validateNewPosition();
+      if (newPosition) {
+        commands.sequenceSeek(newPosition - 1);
+        editor.restorePreviousEditMode();
+      } else {
+        setInputNewPosition(currentPosition.toString());
+        alerting.showInfo(message("invalidSequencePosition")).then(() => newPositionInputRef.current?.focus());
+      }
+      return true;
+    }
+    if (e.code === 'Escape') {
+      editor.restorePreviousEditMode();
+      return true;
+    }
+    return false;
+  };
+
+  const incrementNewPosition = () => {
+    const newPosition = Number(inputNewPosition);
+    if (newPosition === sequenceLength) return;
+    setInputNewPosition((newPosition + 1).toString());
+  };
+
+  const decrementNewPosition = () => {
+    const newPosition = Number(inputNewPosition);
+    if (newPosition === 1) return;
+    setInputNewPosition((newPosition - 1).toString());
+  };
 
   if (!dialogVisible) return null;
 
   return (
     <Modal className="goToPosition">
       <FieldLabel className="newPositionLabel" text={message("newPositionLabel")} associatedField="newPosition" />
-      <div className="uiArea padded rounded">
+      <div className="newPositionInput uiArea padded rounded">
         <input
           className="noFocusStyle"
           type="text"
@@ -61,17 +87,16 @@ export default function GoToPosition() {
           ref={newPositionInputRef}
           maxLength={5}
           value={inputNewPosition}
-          onBlur={(e) => {
-            e.preventDefault();
-            const newPosition = validateNewPosition();
-            if (newPosition) {
-              commands.sequenceSeek(newPosition - 1);
-              editor.restorePreviousEditMode();
-            } else {
-              newPositionInputRef.current?.focus();
-            }
-          }}
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementNewPosition,
+            decrementNewPosition,
+            keyHandler,
+          )}
           onChange={(e) => setInputNewPosition(e.target.value)}
+        />
+        <SpinnerButtons
+          incrementFn={incrementNewPosition}
+          decrementFn={decrementNewPosition}
         />
       </div>
     </Modal>

@@ -3,6 +3,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
+
+_Static_assert(sizeof(float) == sizeof(uint32_t), "32-bit float required");
 
 static inline unsigned int mask_and_shift_right(const unsigned int value, const unsigned int mask, const unsigned int shift)
 {
@@ -49,6 +52,34 @@ static inline uint32_t round_up_to_power_of_two(uint32_t n)
     n |= n >> 8;
     n |= n >> 16;
     return n + 1;
+}
+
+static inline uint8_t read_u8(const uint8_t *addr)
+{
+    return *addr;
+}
+
+static inline int8_t read_s8(const uint8_t *addr)
+{
+    return (int8_t) *addr;
+}
+
+static inline uint16_t read_u16_le(const uint8_t *addr)
+{
+    return addr[0] | addr[1] << 8;
+}
+
+static inline uint32_t read_u32_le(const uint8_t *addr)
+{
+    return addr[0] | addr[1] << 8 | addr[2] << 16 | addr[3] << 24;
+}
+
+static inline float read_f32_le(const uint8_t *addr)
+{
+    const uint32_t bits = read_u32_le(addr);
+    float value;
+    memcpy(&value, &bits, sizeof value);
+    return value;
 }
 
 #endif //ARCTRACKER_BITS_H

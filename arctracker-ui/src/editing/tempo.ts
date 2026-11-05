@@ -5,6 +5,10 @@ import { messageFn2 } from "../language/messages.ts";
 
 export type ModuleTempo = { linesPerBeat: number; beatsPerMinute: number };
 
+export const MaxLinesPerBeat = 256;
+export const MinBeatsPerMinute = 33;
+export const MaxBeatsPerMinute = 255;
+
 export const tempo = {
   editing: () => useStore.getState().editorState.editMode === "tempo",
 

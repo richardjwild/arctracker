@@ -13,6 +13,8 @@ function ensurePatternIndex() {
     cursor.updatePatternIndex(currentLength - 1);
 }
 
+export const MaxPatternLength = 1000;
+
 export const pattern = {
   editCurrentPatternLength: () => {
     editor.setEditMode("patternLength");

@@ -1,6 +1,7 @@
 #include "threads.h"
 #include "io/error.h"
 #include "memory/heap.h"
+#include "messages.h"
 #include <string.h>
 
 #ifdef _WIN32
@@ -12,9 +13,11 @@ typedef struct {
     void *arg;
 } thread_context_t;
 
-static thread_context_t *make_context(arc_thread_fn start_routine, void *arg) {
+static thread_context_t *make_context(const arc_thread_fn start_routine, void *arg)
+{
     thread_context_t *context = allocate_array(MAIN, 1, sizeof(*context));
-    if (context != NULL) {
+    if (context != NULL)
+    {
         context->start_routine = start_routine;
         context->arg = arg;
     }
@@ -23,37 +26,37 @@ static thread_context_t *make_context(arc_thread_fn start_routine, void *arg) {
 
 #ifdef _WIN32
 
-static unsigned __stdcall thread_entry(void *arg) {
+static unsigned __stdcall thread_entry(void *arg)
+{
     thread_context_t *context = arg;
-
     arc_thread_fn start_routine = context->start_routine;
     void *user_arg = context->arg;
     deallocate(MAIN, context);
-
     start_routine(user_arg);
     return 0;
 }
 
-bool arc_thread_create(arc_thread_t *thread, arc_thread_fn start_routine, void *arg) {
+bool arc_thread_create(arc_thread_t *thread, arc_thread_fn start_routine, void *arg)
+{
     thread_context_t *context = make_context(start_routine, arg);
-    if (context == NULL) {
-        error("Unable to allocate thread context");
+    if (context == NULL)
+    {
+        error(UNABLE_TO_CREATE_THREAD_CONTEXT);
         return false;
     }
-
     uintptr_t handle = _beginthreadex(NULL, 0, thread_entry, context, 0, NULL);
-
-    if (handle == 0) {
+    if (handle == 0)
+    {
         deallocate(MAIN, context);
-        error("Unable to create thread");
+        error(THREAD_CREATE_FAILED);
         return false;
     }
-
     thread->native = (HANDLE)handle;
     return true;
 }
 
-void arc_thread_join(arc_thread_t *thread) {
+void arc_thread_join(arc_thread_t *thread)
+{
     WaitForSingleObject(thread->native, INFINITE);
     CloseHandle(thread->native);
     thread->native = NULL;
@@ -61,36 +64,36 @@ void arc_thread_join(arc_thread_t *thread) {
 
 #else
 
-static void *thread_entry(void *arg) {
+static void *thread_entry(void *arg)
+{
     thread_context_t *context = arg;
-
-    arc_thread_fn start_routine = context->start_routine;
+    const arc_thread_fn start_routine = context->start_routine;
     void *user_arg = context->arg;
     deallocate(MAIN, context);
-
     start_routine(user_arg);
     return NULL;
 }
 
-bool arc_thread_create(arc_thread_t *thread, arc_thread_fn start_routine, void *arg) {
+bool arc_thread_create(arc_thread_t *thread, const arc_thread_fn start_routine, void *arg)
+{
     thread_context_t *context = make_context(start_routine, arg);
-    if (context == NULL) {
-        error("Unable to allocate thread context");
+    if (context == NULL)
+    {
+        error(UNABLE_TO_CREATE_THREAD_CONTEXT);
         return false;
     }
-
     const int err = pthread_create(&thread->native, NULL, thread_entry, context);
-
-    if (err != 0) {
+    if (err != 0)
+    {
         deallocate(MAIN, context);
         error(strerror(err));
         return false;
     }
-
     return true;
 }
 
-void arc_thread_join(arc_thread_t *thread) {
+void arc_thread_join(arc_thread_t *thread)
+{
     pthread_join(thread->native, NULL);
 }
 

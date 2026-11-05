@@ -15,6 +15,8 @@ import { appConfig } from "../config/appConfig.ts";
 import { InterpolationType, VolumeMappingType } from "../editing/moduleMetaData.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
+export const MaxTrackCount = 256;
+
 export type Module = {
   fileName: string | null;
   name: string;

@@ -16,7 +16,6 @@
 #define MAX_EFFECTS 4
 #define NUM_INSTRUMENT_SLOTS 256
 #define NUM_SAMPLE_SLICES 256
-#define INTERNAL_GAIN_MAX 255
 
 typedef enum
 {
@@ -89,7 +88,7 @@ typedef struct {
     int repeat_offset;
     int repeat_length;
     int sample_index;
-    sample_slice_t sample_slices[256];
+    sample_slice_t sample_slices[NUM_SAMPLE_SLICES];
 } instrument_t;
 
 typedef struct

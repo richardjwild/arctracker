@@ -1,6 +1,8 @@
 #ifndef ARCTRACKER_ENGINE_TEMPO_H
 #define ARCTRACKER_ENGINE_TEMPO_H
 
+#define MIN_BPM 33
+
 typedef struct {
     float actual_bpm;
     int ticks_per_event;

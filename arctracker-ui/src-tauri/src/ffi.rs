@@ -181,6 +181,13 @@ pub struct UiSampleInfo {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
+pub struct UiSampleSlice {
+    pub offset: c_int,
+    pub length: c_int,
+}
+
+#[repr(C)]
 pub struct UiInstrumentInfo {
     pub assigned: bool,
     pub name: [c_char; 33],
@@ -190,6 +197,7 @@ pub struct UiInstrumentInfo {
     pub repeat_start: c_int,
     pub repeat_end: c_int,
     pub sample_info: UiSampleInfo,
+    pub sample_slices: [UiSampleSlice; 256],
 }
 
 #[repr(C)]

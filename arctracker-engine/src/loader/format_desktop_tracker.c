@@ -243,7 +243,7 @@ static bool decode_desktop_tracker_event(const uint8_t *event_p, instrument_t *i
 {
     const uint32_t *raw = (uint32_t *) event_p;
     decoded->instrument_no = (int) mask_6_shift_right(*raw, 0);
-    instrument_t *instrument = &instruments[decoded->instrument_no];
+    instrument_t *instrument = decoded->instrument_no > 0 ? &instruments[decoded->instrument_no] : NULL;
     const int note = (int) mask_6_shift_right(*raw, 6);
     decoded->note = note == 0 ? 0 : note + 12;
     if (is_single_effect(*raw))
@@ -458,6 +458,13 @@ static void copy_int_array(const uint8_t *source, int *dest, int num_elements)
 
 static bool find_or_create_sample_slice(const uint32_t required_offset, instrument_t *instrument, const sample_t *samples, uint8_t *slice_index)
 {
+    if (instrument == NULL)
+    {
+        // TODO: Find out if Desktop Tracker honours 06 commands on events without an instrument number.
+        // TODO: (If it does, I have got a problem).
+        *slice_index = 0;
+        return true;
+    }
     if (!instrument->assigned)
     {
         // Don't worry about it because it won't be played anyway.

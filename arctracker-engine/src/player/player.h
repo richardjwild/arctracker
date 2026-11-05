@@ -38,7 +38,6 @@ typedef struct {
 } effect_memory_t;
 
 typedef struct {
-    uint8_t volume;
     effect_memory_t effect_memory;
     pt_waveform_t vibrato_waveform;
     bool vibrato_retrigger;
@@ -96,6 +95,7 @@ typedef struct player {
     player_track_t *tracks;
     module_t *module;
     playback_policy_t playback_policy;
+    gain_curves_t *gain_curves;
     sequence_t sequence;
     pt_loop_state_t loop_state;
     player_instrument_t instruments[NUM_INSTRUMENT_SLOTS + 1];

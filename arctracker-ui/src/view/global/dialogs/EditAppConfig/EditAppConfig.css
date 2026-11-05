@@ -57,6 +57,10 @@
 
 .defaultPatternLengthEdit {
     grid-area: defaultPatternLengthEdit;
+    width: 65px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }
 
 .defaultTrackCountLabel {
@@ -65,6 +69,10 @@
 
 .defaultTrackCountEdit {
     grid-area: defaultTrackCountEdit;
+    width: 55px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }
 
 .defaultLinesPerBeatLabel {
@@ -73,6 +81,10 @@
 
 .defaultLinesPerBeatEdit {
     grid-area: defaultLinesPerBeatEdit;
+    width: 55px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }
 
 .defaultBeatsPerMinuteLabel {
@@ -81,20 +93,8 @@
 
 .defaultBeatsPerMinuteEdit {
     grid-area: defaultBeatsPerMinuteEdit;
-}
-
-.defaultPatternLengthEdit {
-    width: 40px;
-}
-
-.defaultTrackCountEdit {
-    width: 30px;
-}
-
-.defaultLinesPerBeatEdit {
-    width: 30px;
-}
-
-.defaultBeatsPerMinuteEdit {
-    width: 30px;
+    width: 55px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }

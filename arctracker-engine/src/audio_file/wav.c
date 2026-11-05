@@ -1,11 +1,11 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <string.h>
 #include "wav.h"
 #include "messages.h"
 #include "io/error.h"
 #include "memory/heap.h"
+#include "memory/bits.h"
 
 #define RIFF_CHUNK_SIZE 36
 #define CHUNK_HEADER_SIZE 8
@@ -64,8 +64,6 @@ static bool write_16_le(FILE *fp, int16_t);
 static bool write_u32_le(FILE *fp, uint32_t);
 static bool read_fmt_chunk(const uint8_t *, size_t, wav_file_in_t *);
 static bool chunk_is(const char *, const uint8_t *);
-static uint32_t read_u32_le(const uint8_t *data);
-static int16_t read_u16_le(const uint8_t *data);
 static float *copy_sample_data_8(const uint8_t *, int, int);
 static float *copy_sample_data_16(const int16_t *, int, int);
 static float *copy_sample_data_24(const uint8_t *, int, int);
@@ -316,16 +314,6 @@ static bool read_fmt_chunk(const uint8_t *data, const size_t data_size, wav_file
 static bool chunk_is(const char *chunk_id, const uint8_t *addr)
 {
     return memcmp(chunk_id, addr, 4) == 0;
-}
-
-static uint32_t read_u32_le(const uint8_t *data)
-{
-    return data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
-}
-
-static int16_t read_u16_le(const uint8_t *data)
-{
-    return data[0] + (data[1] << 8);
 }
 
 static float *copy_sample_data_8(const uint8_t *sample_data, const int channels, const int frames)

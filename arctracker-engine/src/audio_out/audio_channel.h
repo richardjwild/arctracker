@@ -5,9 +5,11 @@
 #include <stdint.h>
 #include "audio_generator/audio_generator.h"
 #include "audio_spatialiser/audio_spatialiser.h"
+#include "audio_out/gainer.h"
 
 typedef struct {
     audio_generator_t audio_generator;
+    gainer_state_t gainer_state;
     audio_spatialiser_t audio_spatialiser;
     bool muted;
     float gain;

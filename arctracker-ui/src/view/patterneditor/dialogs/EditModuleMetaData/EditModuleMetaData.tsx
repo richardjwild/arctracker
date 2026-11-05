@@ -15,10 +15,12 @@ import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
 import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
 import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
 import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
+import { getSpinnerKeyboardEventHandler, SpinnerButtons } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
+import { MaxPatternLength } from "../../../../editing/pattern.ts";
 
 const ModuleNameMaxLength = 65;
 const AuthorMaxLength = 65;
-const DefaultPatternLengthMaxLength = 3;
+const DefaultPatternLengthMaxLength = 4;
 const emptyDraft: ModuleMetaData = {
   moduleName: "",
   author: "",
@@ -114,7 +116,7 @@ export default function EditModuleMetaData() {
     if (
       Number.isInteger(defaultPatternLength) &&
       defaultPatternLength >= 1 &&
-      defaultPatternLength <= 1000
+      defaultPatternLength <= MaxPatternLength
     ) {
       updateDraftDefaultPatternLength(defaultPatternLength);
       return true;
@@ -123,6 +125,20 @@ export default function EditModuleMetaData() {
       setDefaultPatternLengthInput(module.defaultPatternLength.toString());
       return false;
     }
+  };
+
+  const incrementDefaultPatternLength = () => {
+    if (!draftModuleMetaData) return;
+    if (draftModuleMetaData.defaultPatternLength === MaxPatternLength) return;
+    updateDraftDefaultPatternLength(draftModuleMetaData.defaultPatternLength + 1);
+    setDefaultPatternLengthInput((draftModuleMetaData.defaultPatternLength + 1).toString());
+  };
+
+  const decrementDefaultPatternLength = () => {
+    if (!draftModuleMetaData) return;
+    if (draftModuleMetaData.defaultPatternLength === 1) return;
+    updateDraftDefaultPatternLength(draftModuleMetaData.defaultPatternLength - 1);
+    setDefaultPatternLengthInput((draftModuleMetaData.defaultPatternLength - 1).toString());
   };
 
   const setInterpolationType = (interpolationType: InterpolationType) => {
@@ -189,7 +205,7 @@ export default function EditModuleMetaData() {
         hotkey={3}
       />
       <div className="defaultPatternLengthEdit">
-        <div className="uiArea padded rounded">
+        <div className="defaultPatternLengthInput uiArea padded rounded">
           <input
             type="text"
             id="defaultPatternLengthInput"
@@ -197,7 +213,15 @@ export default function EditModuleMetaData() {
             value={defaultPatternLengthInput}
             onBlur={validateDefaultPatternLength}
             onChange={(e) => setDefaultPatternLengthInput(e.target.value)}
+            onKeyDown={getSpinnerKeyboardEventHandler(
+              incrementDefaultPatternLength,
+              decrementDefaultPatternLength,
+            )}
             ref={defaultPatternLengthInputRef}
+          />
+          <SpinnerButtons
+            incrementFn={incrementDefaultPatternLength}
+            decrementFn={decrementDefaultPatternLength}
           />
         </div>
       </div>

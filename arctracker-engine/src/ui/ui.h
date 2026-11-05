@@ -5,6 +5,7 @@
 #define TUNE_NAME_MAX_LEN 65
 #define AUTHOR_NAME_MAX_LEN 65
 #define MAX_LEN_SAMPLENAME 33
+#define NUM_SAMPLE_SLICES 256
 #define MAX_TRACKS 256
 
 typedef struct ui_sample_info {
@@ -15,6 +16,11 @@ typedef struct ui_sample_info {
     int fine_tuning;
 } ui_sample_info_t;
 
+typedef struct {
+    uint32_t offset;
+    uint32_t length;
+} ui_sample_slice_t;
+
 typedef struct ui_instrument_info {
     bool assigned;
     char name[MAX_LEN_SAMPLENAME];
@@ -24,6 +30,7 @@ typedef struct ui_instrument_info {
     int repeat_start;
     int repeat_end;
     ui_sample_info_t sample_info;
+    ui_sample_slice_t sample_slices[NUM_SAMPLE_SLICES];
 } ui_instrument_info_t;
 
 typedef struct ui_instrument_update {

@@ -616,10 +616,8 @@ api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_file
         return failure(EXPORT_INIT_FAILED);
     }
     arc_thread_t export_thread;
-    const int err = arc_thread_create(&export_thread, run_export, arctracker);
-    if (err != 0)
+    if (!arc_thread_create(&export_thread, run_export, arctracker))
     {
-        error(strerror(err));
         player_destroy(arctracker->export.player);
         return failure(EXPORT_THREAD_CREATE_FAILED);
     }

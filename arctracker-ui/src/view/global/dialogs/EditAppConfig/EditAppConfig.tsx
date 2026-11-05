@@ -15,6 +15,10 @@ import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
 import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
 import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
 import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
+import { getSpinnerKeyboardEventHandler, SpinnerButtons } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
+import { MaxPatternLength } from "../../../../editing/pattern.ts";
+import { MaxTrackCount } from "../../../../module/module.ts";
+import { MaxBeatsPerMinute, MaxLinesPerBeat, MinBeatsPerMinute } from "../../../../editing/tempo.ts";
 
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
@@ -206,6 +210,28 @@ export default function EditAppConfig() {
     }
   };
 
+  const incrementDefaultPatternLength = () => {
+    let defaultPatternLength = draftAppConfig.defaultPatternLength;
+    if (defaultPatternLength === MaxPatternLength) return;
+    defaultPatternLength += 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultPatternLength,
+    })
+    setInputPatternLength(defaultPatternLength.toString());
+  };
+
+  const decrementDefaultPatternLength = () => {
+    let defaultPatternLength = draftAppConfig.defaultPatternLength;
+    if (defaultPatternLength === 1) return;
+    defaultPatternLength -= 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultPatternLength,
+    })
+    setInputPatternLength(defaultPatternLength.toString());
+  };
+
   const validateDefaultTrackCount = (): boolean => {
     const trackCount = Number(inputTrackCount);
     if (
@@ -225,12 +251,34 @@ export default function EditAppConfig() {
     }
   };
 
+  const incrementDefaultTrackCount = () => {
+    let defaultTrackCount = draftAppConfig.defaultTrackCount;
+    if (defaultTrackCount === MaxTrackCount) return;
+    defaultTrackCount += 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultTrackCount,
+    })
+    setInputTrackCount(defaultTrackCount.toString());
+  };
+
+  const decrementDefaultTrackCount = () => {
+    let defaultTrackCount = draftAppConfig.defaultTrackCount;
+    if (defaultTrackCount === 1) return;
+    defaultTrackCount -= 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultTrackCount,
+    })
+    setInputTrackCount(defaultTrackCount.toString());
+  };
+
   const validateDefaultLinesPerBeat = (): boolean => {
     const linesPerBeat = Number(inputLinesPerBeat);
     if (
       Number.isInteger(linesPerBeat) &&
       linesPerBeat >= 1 &&
-      linesPerBeat <= 256
+      linesPerBeat <= MaxLinesPerBeat
     ) {
       setDraftAppConfig({
         ...draftAppConfig,
@@ -244,12 +292,34 @@ export default function EditAppConfig() {
     }
   };
 
+  const incrementDefaultLinesPerBeat = () => {
+    let defaultLinesPerBeat = draftAppConfig.defaultLinesPerBeat;
+    if (defaultLinesPerBeat === MaxLinesPerBeat) return;
+    defaultLinesPerBeat += 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultLinesPerBeat,
+    });
+    setInputLinesPerBeat(defaultLinesPerBeat.toString());
+  };
+
+  const decrementDefaultLinesPerBeat = () => {
+    let defaultLinesPerBeat = draftAppConfig.defaultLinesPerBeat;
+    if (defaultLinesPerBeat === 1) return;
+    defaultLinesPerBeat -= 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultLinesPerBeat,
+    });
+    setInputLinesPerBeat(defaultLinesPerBeat.toString());
+  };
+
   const validateDefaultBeatsPerMinute = (): boolean => {
     const beatsPerMinute = Number(inputBeatsPerMinute);
     if (
       Number.isInteger(beatsPerMinute) &&
-      beatsPerMinute >= 1 &&
-      beatsPerMinute <= 256
+      beatsPerMinute >= MinBeatsPerMinute &&
+      beatsPerMinute <= MaxBeatsPerMinute
     ) {
       setDraftAppConfig({
         ...draftAppConfig,
@@ -261,6 +331,28 @@ export default function EditAppConfig() {
       setInputBeatsPerMinute(draftAppConfig.defaultBeatsPerMinute.toString());
       return false;
     }
+  };
+
+  const incrementDefaultBeatsPerMinute = () => {
+    let defaultBeatsPerMinute = draftAppConfig.defaultBeatsPerMinute;
+    if (defaultBeatsPerMinute === MaxBeatsPerMinute) return;
+    defaultBeatsPerMinute += 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultBeatsPerMinute,
+    });
+    setInputBeatsPerMinute(defaultBeatsPerMinute.toString());
+  };
+
+  const decrementDefaultBeatsPerMinute = () => {
+    let defaultBeatsPerMinute = draftAppConfig.defaultBeatsPerMinute;
+    if (defaultBeatsPerMinute === MinBeatsPerMinute) return;
+    defaultBeatsPerMinute -= 1;
+    setDraftAppConfig({
+      ...draftAppConfig,
+      defaultBeatsPerMinute,
+    });
+    setInputBeatsPerMinute(defaultBeatsPerMinute.toString());
   };
 
   return (
@@ -282,8 +374,11 @@ export default function EditAppConfig() {
           <option value={defaultOutputDeviceIndex}>
             {message("defaultOutputDevice")}
           </option>
-          {availableOutputs.map((output, i) => (
-            <option key={i} value={output.deviceIndex}>
+          {availableOutputs.toSorted(
+            (a: AudioDeviceInfo, b: AudioDeviceInfo) =>
+              a.hostApiName.localeCompare(b.hostApiName) ||
+              a.name.localeCompare(b.name)).map((output: AudioDeviceInfo) => (
+            <option key={output.deviceIndex} value={output.deviceIndex}>
               {`${output.name} (${output.hostApiName})`}
             </option>
           ))}
@@ -399,7 +494,15 @@ export default function EditAppConfig() {
           value={inputPatternLength}
           onChange={(e) => setInputPatternLength(e.target.value)}
           onBlur={validateDefaultPatternLength}
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementDefaultPatternLength,
+            decrementDefaultPatternLength,
+          )}
           ref={defaultPatternLengthInputRef}
+        />
+        <SpinnerButtons
+          incrementFn={incrementDefaultPatternLength}
+          decrementFn={decrementDefaultPatternLength}
         />
       </div>
       <FieldLabel
@@ -416,7 +519,15 @@ export default function EditAppConfig() {
           value={inputTrackCount}
           onChange={(e) => setInputTrackCount(e.target.value)}
           onBlur={validateDefaultTrackCount}
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementDefaultTrackCount,
+            decrementDefaultTrackCount,
+          )}
           ref={defaultTrackCountInputRef}
+        />
+        <SpinnerButtons
+          incrementFn={incrementDefaultTrackCount}
+          decrementFn={decrementDefaultTrackCount}
         />
       </div>
       <FieldLabel
@@ -433,7 +544,15 @@ export default function EditAppConfig() {
           value={inputLinesPerBeat}
           onChange={(e) => setInputLinesPerBeat(e.target.value)}
           onBlur={validateDefaultLinesPerBeat}
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementDefaultLinesPerBeat,
+            decrementDefaultLinesPerBeat,
+          )}
           ref={defaultLinesPerBeatInputRef}
+        />
+        <SpinnerButtons
+          incrementFn={incrementDefaultLinesPerBeat}
+          decrementFn={decrementDefaultLinesPerBeat}
         />
       </div>
       <FieldLabel
@@ -450,7 +569,15 @@ export default function EditAppConfig() {
           value={inputBeatsPerMinute}
           onChange={(e) => setInputBeatsPerMinute(e.target.value)}
           onBlur={validateDefaultBeatsPerMinute}
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementDefaultBeatsPerMinute,
+            decrementDefaultBeatsPerMinute,
+          )}
           ref={defaultBeatsPerMinuteInputRef}
+        />
+        <SpinnerButtons
+          incrementFn={incrementDefaultBeatsPerMinute}
+          decrementFn={decrementDefaultBeatsPerMinute}
         />
       </div>
       <div className="saveCloseButtons">

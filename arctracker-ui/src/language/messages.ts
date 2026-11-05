@@ -5,7 +5,7 @@ const messages = {
     sampleLoadFailed: "Failed to load sample",
     exportAudioFailed: "Export audio encountered an error",
     invalidTrackCount: "Number of tracks must be a number between 1 and 256.",
-    invalidTempo: "Tempo must be a number between 0 and 255.",
+    invalidTempo: "Tempo must be a number between 33 and 255.",
     invalidPatternLength: "Pattern length must be a number between 1 and 1000.",
     invalidDefaultPatternLength:
       "Default pattern length must be a number between 1 and 1000.",

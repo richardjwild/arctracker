@@ -19,13 +19,13 @@ typedef union {
  *                                                                                                *
  * The tick function is called on every tick, including tick zero, and gives the generator its    *
  * opportunity to update its internal state if it needs to. This might be so that it can          *
- * implement vibrato, tremolo, pitch and volume slides, etc. If the generator does not need to do *
- * anything here, it is free to do nothing.                                                       *
+ * implement vibrato, pitch slides, etc. If the generator does not need to do anything here, it   *
+ * is free to do nothing.                                                                         *
  *                                                                                                *
  * The remaining functions are called in response to tracker commands, and are there to control   *
- * generator effects such as the aforementioned vibrato, tremolo, pitch and volume slides, etc.   *
- * The generator may or may not implement these effects. If not, it is once again free to do      *
- * nothing when any of these functions are called.                                                *
+ * generator effects such as the aforementioned vibrato, pitch slides, etc. The generator may or  *
+ * may not implement these effects. If not, it is once again free to do nothing when any of these *
+ * functions are called.                                                                          *
  *                                                                                                *
  * The null audio generator is attached to a channel by default, when no other sound is playing.  *
  * Its generate_audio function always writes zeros to the channel buffer, and none of its other   *
@@ -36,9 +36,6 @@ typedef struct {
     audio_generator_state_t state;
     bool (*generate_audio)(audio_generator_state_t *state, float *channel_buffer, int frames_requested);
     void (*tick)(audio_generator_state_t *state, int ticks, int ticks_per_event);
-    void (*set_volume)(audio_generator_state_t *state, uint8_t volume);
-    void (*volume_slide_on)(audio_generator_state_t *state, int slide_rate, bool fine);
-    void (*volume_slide_off)(audio_generator_state_t *state);
     void (*pitch_slide_on)(audio_generator_state_t *state, int slide_rate, bool fine);
     void (*pitch_slide_off)(audio_generator_state_t *state);
     void (*set_tone_portamento_target)(audio_generator_state_t *state, int target_note);
@@ -46,8 +43,6 @@ typedef struct {
     void (*tone_portamento_off)(audio_generator_state_t *state);
     void (*vibrato_on)(audio_generator_state_t *state, int rate, int depth, pt_waveform_t waveform, bool retrigger);
     void (*vibrato_off)(audio_generator_state_t *state);
-    void (*tremolo_on)(audio_generator_state_t *state, int rate, int depth, pt_waveform_t waveform, bool retrigger);
-    void (*tremolo_off)(audio_generator_state_t *state);
     void (*arpeggio_on)(audio_generator_state_t *state, int root_note, int interval_1, int interval_2, int speed);
     void (*arpeggio_off)(audio_generator_state_t *state);
     void (*set_glissando)(audio_generator_state_t *state, bool enabled);

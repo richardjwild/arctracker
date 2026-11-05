@@ -269,20 +269,7 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
     instrument_info->default_volume = instrument.default_volume;
     instrument_info->transpose = instrument.transpose;
     instrument_info->assigned = instrument.assigned;
-    if (instrument.assigned)
-    {
-        const sample_t sample = module->samples[instrument.sample_index];
-        instrument_info->sample_info.sample_index = instrument.sample_index;
-        instrument_info->sample_info.sample_length = sample.sample_length;
-        instrument_info->sample_info.sample_rate = sample.sample_rate;
-        instrument_info->sample_info.base_note = sample.base_note;
-        instrument_info->sample_info.fine_tuning = (int) sample.finetune;
-        instrument_info->repeats = instrument.repeats;
-        instrument_info->repeat_start = instrument.repeat_offset;
-        // Minus one because the sample at repeat_end is included in the loop:
-        instrument_info->repeat_end = instrument.repeat_offset + instrument.repeat_length - 1;
-    }
-    else
+    if (!instrument.assigned)
     {
         instrument_info->sample_info.sample_index = 0;
         instrument_info->sample_info.sample_length = 0;
@@ -292,12 +279,39 @@ void module_get_instrument_info(const module_t *module, const int instrument_ind
         instrument_info->repeats = false;
         instrument_info->repeat_start = 0;
         instrument_info->repeat_end = 0;
+        return;
+    }
+    const sample_t sample = module->samples[instrument.sample_index];
+    instrument_info->sample_info.sample_index = instrument.sample_index;
+    instrument_info->sample_info.sample_length = sample.sample_length;
+    instrument_info->sample_info.sample_rate = sample.sample_rate;
+    instrument_info->sample_info.base_note = sample.base_note;
+    instrument_info->sample_info.fine_tuning = (int) sample.finetune;
+    instrument_info->repeats = instrument.repeats;
+    instrument_info->repeat_start = instrument.repeat_offset;
+    // Minus one because the sample at repeat_end is included in the loop:
+    instrument_info->repeat_end = instrument.repeat_offset + instrument.repeat_length - 1;
+    for (int i = 0; i < NUM_SAMPLE_SLICES; i++)
+    {
+        const sample_slice_t slice = instrument.sample_slices[i];
+        instrument_info->sample_slices[i] = (ui_sample_slice_t) {
+            .offset = slice.offset,
+            .length = slice.length,
+        };
     }
 }
 
 void module_set_instrument(module_t *module, const int instrument_index, const instrument_t instrument_update)
 {
-    module->instruments[instrument_index] = instrument_update;
+    instrument_t *instrument = &module->instruments[instrument_index];
+    instrument->assigned = instrument_update.assigned;
+    snprintf(instrument->name, sizeof(instrument->name), "%s", instrument_update.name);
+    instrument->transpose = instrument_update.transpose;
+    instrument->sample_index = instrument_update.sample_index;
+    instrument->default_volume = instrument_update.default_volume;
+    instrument->repeat_length = instrument_update.repeat_length;
+    instrument->repeat_offset = instrument_update.repeat_offset;
+    instrument->repeats = instrument_update.repeats;
 }
 
 bool module_link_sample(module_t *module, const float *sample_data, const int sample_length, const float sample_rate, int *sample_index, sample_t *linked_sample)

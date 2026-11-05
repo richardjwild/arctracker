@@ -3,6 +3,7 @@
 #include "messages.h"
 #include "io/error.h"
 #include "memory/heap.h"
+#include "memory/bits.h"
 #include "player/period.h"
 
 /*****************************************************************************
@@ -235,11 +236,6 @@ static bool is_arctracker_module(mapped_file_t);
 static bool chunk_is(const char *, const uint8_t *);
 static module_t *read_arctracker_module(mapped_file_t);
 static module_t *instantiate_module(const uint8_t *, size_t);
-static uint8_t read_u8(const uint8_t *);
-static int8_t read_s8(const uint8_t *);
-static uint16_t read_u16_le(const uint8_t *);
-static uint32_t read_u32_le(const uint8_t *);
-static float read_f32_le(const uint8_t *);
 static uint8_t *next_chunk_address(uint8_t *);
 static float read_gain(uint32_t);
 static bool read_sequence_chunk(const uint8_t *, size_t, module_t *);
@@ -457,34 +453,6 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
 read_module_metadata_failed:
     module_destroy(module);
     return NULL;
-}
-
-static uint8_t read_u8(const uint8_t *addr)
-{
-    return *addr;
-}
-
-static int8_t read_s8(const uint8_t *addr)
-{
-    return (int8_t) *addr;
-}
-
-static uint16_t read_u16_le(const uint8_t *addr)
-{
-    return addr[0] | addr[1] << 8;
-}
-
-static uint32_t read_u32_le(const uint8_t *addr)
-{
-    return addr[0] | addr[1] << 8 | addr[2] << 16 | addr[3] << 24;
-}
-
-static float read_f32_le(const uint8_t *addr)
-{
-    const uint32_t bits = read_u32_le(addr);
-    float value;
-    memcpy(&value, &bits, sizeof value);
-    return value;
 }
 
 static uint8_t *next_chunk_address(uint8_t *chunk_address)
@@ -1047,7 +1015,6 @@ static bool write_sample_chunks(const module_t *module, const bool *samples_used
 
 static bool write_sample_chunk(const module_t *module, const uint32_t sample_index, FILE *fp)
 {
-    _Static_assert(sizeof(float) == 4, "float must be 32-bit");
     const sample_t sample = module->samples[sample_index];
     if (!write_fourcc(fp, SAMPLE_CHUNK_ID)) return false;
     if (!write_u32_le(fp, 14 + sample.sample_length * 4)) return false;
@@ -1057,7 +1024,9 @@ static bool write_sample_chunk(const module_t *module, const uint32_t sample_ind
     if (!write_u8(fp, sample.base_note)) return false;
     if (!write_s8(fp, sample.finetune)) return false;
     for (int i = 0; i < sample.sample_length; i++)
+    {
         if (!write_f32_le(fp, sample.sample_data[i])) return false;
+    }
     return true;
 }
 

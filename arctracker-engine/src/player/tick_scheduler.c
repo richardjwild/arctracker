@@ -1,5 +1,4 @@
 #include "tick_scheduler.h"
-
 #include <stdio.h>
 
 tick_scheduler_t tick_scheduler_create(const tempo_t tempo, const double sample_rate_in)

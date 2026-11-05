@@ -6,6 +6,12 @@ import { alerting } from "../alerting/alert.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
+export type SampleSlice = {
+  id: number;
+  offset: number;
+  length: number;
+};
+
 export type Instrument = {
   assigned: boolean;
   name: string;
@@ -15,6 +21,7 @@ export type Instrument = {
   repeatStart: number;
   repeatEnd: number;
   sample: Sample;
+  sampleSlices: SampleSlice[];
 };
 
 export type Sample = {
@@ -43,6 +50,7 @@ export function emptyInstrument(): Instrument {
       baseNote: 24,
       fineTuning: 0,
     },
+    sampleSlices: [],
   };
 }
 

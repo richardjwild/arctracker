@@ -10,9 +10,6 @@
 static bool generate_audio(audio_generator_state_t *, float *, int);
 static float interpolate_linear(const float *, float);
 static float interpolate_none(const float *, float);
-static void set_volume(audio_generator_state_t *state, uint8_t);
-static void volume_slide_on(audio_generator_state_t *state, int, bool);
-static void volume_slide_off(audio_generator_state_t *state);
 static void pitch_slide_on(audio_generator_state_t *state, int, bool);
 static void pitch_slide_off(audio_generator_state_t *state);
 static void set_tone_portamento_target(audio_generator_state_t *, int);
@@ -20,8 +17,6 @@ static void tone_portamento_on(audio_generator_state_t *, int);
 static void tone_portamento_off(audio_generator_state_t *);
 static void vibrato_on(audio_generator_state_t *, int, int, pt_waveform_t, bool);
 static void vibrato_off(audio_generator_state_t *);
-static void tremolo_on(audio_generator_state_t *, int, int, pt_waveform_t, bool);
-static void tremolo_off(audio_generator_state_t *);
 static void arpeggio_on(audio_generator_state_t *, int, int, int, int);
 static void arpeggio_off(audio_generator_state_t *);
 static void set_glissando(audio_generator_state_t *, bool);
@@ -31,11 +26,9 @@ static void advance_phase(audio_generator_state_t *, int);
 static void clear_repeat(audio_generator_state_t *, int);
 static void cancel_clear_repeat(audio_generator_state_t *);
 static void tick(audio_generator_state_t *, int, int);
-static void apply_volume_slide(sampler_state_t *);
 static void apply_pitch_slide(sampler_state_t *);
 static void apply_tone_portamento(sampler_state_t *);
 static void apply_vibrato(sampler_state_t *);
-static void apply_tremolo(sampler_state_t *);
 static void apply_arpeggio(sampler_state_t *, int);
 static void apply_silence_after_delay(sampler_state_t *, int);
 static void apply_retrigger(sampler_state_t *, int);
@@ -45,7 +38,6 @@ audio_generator_t init_sampler(
     const int note,
     const player_sample_t *sample,
     const player_sample_slice_t slice,
-    const uint8_t volume,
     const playback_policy_t *playback_policy,
     sampler_state_t *sampler_state)
 {
@@ -71,14 +63,11 @@ audio_generator_t init_sampler(
     sampler_state->pitch_slide_factor = 1.0f;
     sampler_state->interpolation_type = playback_policy->interpolation_type;
     sampler_state->relative_pitch_bend = playback_policy->relative_pitch_bend;
-    sampler_state->gain_curve = playback_policy->gain_curve;
-    sampler_state->volume = volume;
-    sampler_state->volume_slide_rate = 0;
+    sampler_state->muted = false;
     sampler_state->vibrato_period_modulation = 0.0f;
     sampler_state->arpeggio_period_modulation = 0.0f;
     sampler_state->glissando_period_modulation = 0.0f;
     sampler_state->vibrato = (lfo_effect_t) {0};
-    sampler_state->tremolo = (lfo_effect_t) {0};
     sampler_state->repeat_cleared = false;
     sampler_state->clear_repeat_delay = 0;
     if (slice.length > 0 && slice.offset < (uint32_t) sample->sample_end)
@@ -93,9 +82,6 @@ audio_generator_t init_sampler(
     return (audio_generator_t) {
         .state = generator_state,
         .generate_audio = generate_audio,
-        .set_volume = set_volume,
-        .volume_slide_on = volume_slide_on,
-        .volume_slide_off = volume_slide_off,
         .pitch_slide_on = pitch_slide_on,
         .pitch_slide_off = pitch_slide_off,
         .set_tone_portamento_target = set_tone_portamento_target,
@@ -103,8 +89,6 @@ audio_generator_t init_sampler(
         .tone_portamento_off = tone_portamento_off,
         .vibrato_on = vibrato_on,
         .vibrato_off = vibrato_off,
-        .tremolo_on = tremolo_on,
-        .tremolo_off = tremolo_off,
         .arpeggio_on = arpeggio_on,
         .arpeggio_off = arpeggio_off,
         .set_glissando = set_glissando,
@@ -127,9 +111,6 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
         memset(channel_buffer, 0, frames_to_write * sizeof(float));
         return false;
     }
-    int volume = sampler->volume + sampler->volume_modulation;
-    if (volume > 255) volume = 255;
-    if (volume < 0) volume = 0;
     float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
     const float *sample_data = sampler->sample_data;
     const float phase_increment = sampler->phase_increment_per_period / (float) period;
@@ -138,10 +119,9 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     const float sample_end = sample_repeats ? (float) sampler->repeat_end : (float) sampler->sample_end;
     float phase_accumulator = sampler->phase_accumulator;
     int offset = 0;
-    const float gain = sampler->gain_curve[volume];
-    while (frames_to_write > 0)
+    while (!sampler->muted && frames_to_write > 0)
     {
-        channel_buffer[offset++] = interpolate(sample_data, phase_accumulator) * gain;
+        channel_buffer[offset++] = interpolate(sample_data, phase_accumulator);
         frames_to_write--;
         phase_accumulator += phase_increment;
         if (phase_accumulator > sample_end)
@@ -152,7 +132,7 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     }
     if (frames_to_write > 0)
     {
-        // The sample ended before we wrote all the requested frames.
+        // The sample ended before we wrote all the requested frames, or it is muted.
         // Fill the remainder of the buffer with silence.
         memset(channel_buffer + offset, 0, frames_to_write * sizeof(float));
         return false;
@@ -173,32 +153,6 @@ static float interpolate_linear(const float *sample, const float phase_accumulat
 static float interpolate_none(const float *sample, const float phase_accumulator)
 {
     return sample[(int) phase_accumulator];
-}
-
-static void set_volume(audio_generator_state_t *state, const uint8_t volume)
-{
-    sampler_state_t *sampler = state->sampler;
-    sampler->volume = volume;
-}
-
-static void volume_slide_on(audio_generator_state_t *state, const int slide_rate, const bool fine)
-{
-    sampler_state_t *sampler = state->sampler;
-    sampler->volume_slide_rate = slide_rate;
-    sampler->volume_slide_fine = fine;
-    if (sampler->volume_slide_fine)
-    {
-        int new_volume = sampler->volume + sampler->volume_slide_rate;
-        if (new_volume < 0) new_volume = 0;
-        if (new_volume > 255) new_volume = 255;
-        sampler->volume = new_volume;
-    }
-}
-
-static void volume_slide_off(audio_generator_state_t *state)
-{
-    sampler_state_t *sampler = state->sampler;
-    sampler->volume_slide_rate = 0;
 }
 
 static void pitch_slide_on(audio_generator_state_t *state, const int slide_rate, const bool fine)
@@ -276,26 +230,6 @@ static void vibrato_off(audio_generator_state_t *state)
     sampler_state_t *sampler = state->sampler;
     sampler->vibrato.enabled = false;
     sampler->vibrato_period_modulation = 0;
-}
-
-static void tremolo_on(audio_generator_state_t *state, const int rate, const int depth, const pt_waveform_t waveform, const bool retrigger)
-{
-    sampler_state_t *sampler = state->sampler;
-    sampler->tremolo.rate = rate;
-    sampler->tremolo.depth = depth;
-    sampler->tremolo.waveform = waveform;
-    if (retrigger && !sampler->tremolo.enabled)
-    {
-        sampler->tremolo.phase = 0;
-    }
-    sampler->tremolo.enabled = true;
-}
-
-static void tremolo_off(audio_generator_state_t *state)
-{
-    sampler_state_t *sampler = state->sampler;
-    sampler->tremolo.enabled = false;
-    sampler->volume_modulation = 0;
 }
 
 static void arpeggio_on(audio_generator_state_t *state, const int bottom_note, const int interval_1, const int interval_2, const int speed)
@@ -403,16 +337,12 @@ static void tick(audio_generator_state_t *state, const int tick, const int ticks
     #ifdef DEBUG_SAMPLER
     print_state(sampler, tick, ticks_per_event);
     #endif
-    if (sampler->volume_slide_rate != 0 && !sampler->volume_slide_fine)
-        apply_volume_slide(sampler);
     if (sampler->pitch_slide_on && !sampler->pitch_slide_fine)
         apply_pitch_slide(sampler);
     if (sampler->tone_portamento_on)
         apply_tone_portamento(sampler);
     if (sampler->vibrato.enabled)
         apply_vibrato(sampler);
-    if (sampler->tremolo.enabled)
-        apply_tremolo(sampler);
     if (sampler->arpeggio.enabled)
         apply_arpeggio(sampler, tick);
     if (sampler->silence_delay != 0)
@@ -421,14 +351,6 @@ static void tick(audio_generator_state_t *state, const int tick, const int ticks
         apply_retrigger(sampler, tick);
     if (sampler->clear_repeat_delay != 0)
         apply_clear_repeat(sampler, tick);
-}
-
-static void apply_volume_slide(sampler_state_t *sampler)
-{
-    int new_volume = sampler->volume + sampler->volume_slide_rate;
-    if (new_volume < 0) new_volume = 0;
-    if (new_volume > 255) new_volume = 255;
-    sampler->volume = new_volume;
 }
 
 static void apply_pitch_slide(sampler_state_t *sampler)
@@ -495,16 +417,6 @@ static void apply_vibrato(sampler_state_t *sampler)
     sampler->vibrato.phase = (sampler->vibrato.phase + rate) % PT_LFO_WAVELENGTH;
 }
 
-static void apply_tremolo(sampler_state_t *sampler)
-{
-    const uint8_t rate = sampler->tremolo.rate;
-    const uint8_t depth = sampler->tremolo.depth;
-    const float lfo_value = lfo_pt_waveform(sampler->tremolo.waveform, sampler->tremolo.phase);
-    const float volume_modulation = lfo_value * (float) depth * 16.0f;
-    sampler->volume_modulation = (int) volume_modulation;
-    sampler->tremolo.phase = (sampler->tremolo.phase + rate) % PT_LFO_WAVELENGTH;
-}
-
 static void apply_arpeggio(sampler_state_t *sampler, const int tick)
 {
     if (tick % sampler->arpeggio.speed != 0) return;
@@ -515,7 +427,7 @@ static void apply_arpeggio(sampler_state_t *sampler, const int tick)
 static void apply_silence_after_delay(sampler_state_t *sampler, const int tick)
 {
     if (tick == sampler->silence_delay)
-        sampler->volume = 0;
+        sampler->muted = true;
 }
 
 static void apply_retrigger(sampler_state_t *sampler, const int tick)

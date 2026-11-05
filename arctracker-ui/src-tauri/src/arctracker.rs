@@ -1,8 +1,5 @@
 use crate::ffi;
-use crate::ffi::{
-    UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN,
-    MIDI_DEVICE_NAME_LEN,
-};
+use crate::ffi::{UiInterpolationType, UiSampleSlice, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
 
@@ -158,6 +155,14 @@ pub struct Sample {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SampleSlice {
+    pub id: i32,
+    pub offset: i32,
+    pub length: i32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Instrument {
     pub assigned: bool,
     pub(crate) name: String,
@@ -167,6 +172,7 @@ pub struct Instrument {
     pub repeat_start: i32,
     pub repeat_end: i32,
     pub sample: Sample,
+    pub sample_slices: Vec<SampleSlice>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -684,6 +690,16 @@ impl Arctracker {
             });
         }
         let instrument = unsafe { instrument.assume_init() };
+        let mut sample_slices: Vec<SampleSlice> = Vec::new();
+        for i in 0..256 {
+            if instrument.sample_slices[i].length > 0 {
+                sample_slices.push(SampleSlice {
+                    id: i as i32,
+                    offset: instrument.sample_slices[i].offset,
+                    length: instrument.sample_slices[i].length,
+                })
+            }
+        }
         Ok(Instrument {
             assigned: instrument.assigned,
             name: c_string_to_rust(&instrument.name),
@@ -699,6 +715,7 @@ impl Arctracker {
                 base_note: instrument.sample_info.base_note,
                 fine_tuning: instrument.sample_info.fine_tuning,
             },
+            sample_slices,
         })
     }
 

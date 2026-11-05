@@ -138,7 +138,8 @@ const initialInstrument: Instrument = {
     sampleRate: 0,
     baseNote: 24,
     fineTuning: 0,
-  }
+  },
+  sampleSlices: [],
 };
 
 

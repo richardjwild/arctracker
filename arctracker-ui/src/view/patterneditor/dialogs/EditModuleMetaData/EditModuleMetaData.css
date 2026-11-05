@@ -59,6 +59,9 @@
     grid-area: saveCloseButtons;
 }
 
-.defaultPatternLengthEdit .uiArea {
-    width: 35px;
+.defaultPatternLengthInput {
+    min-width: 65px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
 }

@@ -7,8 +7,9 @@ import { useEffect, useRef, useState } from "react";
 import { alerting } from "../../../../alerting/alert.ts";
 import {
   editInstrument,
-  emptyInstrument, Instrument,
-  SampleNameMaxLength
+  emptyInstrument,
+  Instrument,
+  SampleNameMaxLength,
 } from "../../../../editing/editInstrument.ts";
 import { message, messageFn } from "../../../../language/messages.ts";
 import { notes } from "../../../../rendering/notes.ts";
@@ -16,7 +17,10 @@ import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
 import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
 import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
 import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
-import { DecrementButton, IncrementButton } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
+import {
+  SpinnerButtons,
+  getSpinnerKeyboardEventHandler,
+} from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
 
 type InputState = {
   transpose: string;
@@ -54,8 +58,8 @@ export default function SampleEditDialog() {
 
   const syncInputStateWithDraft = () => {
     setInputState({
-      transpose: (draftInstrument.transpose).toString(),
-      fineTuning: (draftInstrument.sample.fineTuning).toString(),
+      transpose: draftInstrument.transpose.toString(),
+      fineTuning: draftInstrument.sample.fineTuning.toString(),
       repeatStart: draftInstrument.repeatStart.toString(),
       repeatEnd: draftInstrument.repeatEnd.toString(),
       baseNote: notes.toString(draftInstrument.sample.baseNote + 1),
@@ -63,40 +67,40 @@ export default function SampleEditDialog() {
   };
 
   const handleInstrumentEditorInput: KeyHandler = (e) => {
-    if (e.code === 'Escape') {
+    if (e.code === "Escape") {
       void commands.restoreAndCloseInstrumentEditor();
       return true;
-    } else if (e.code === 'KeyL' && primaryModifier(e)) {
+    } else if (e.code === "KeyL" && primaryModifier(e)) {
       void commands.loadSample();
       return true;
-    } else if (e.code === 'KeyD' && primaryModifier(e)) {
+    } else if (e.code === "KeyD" && primaryModifier(e)) {
       void commands.deleteSample();
       return true;
-    } else if (e.code === 'KeyS' && primaryModifier(e)) {
+    } else if (e.code === "KeyS" && primaryModifier(e)) {
       void commands.saveAndCloseInstrumentEditor();
       return true;
-    } else if (e.code === 'Digit1' && primaryModifier(e)) {
+    } else if (e.code === "Digit1" && primaryModifier(e)) {
       sampleNameRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit2' && primaryModifier(e)) {
+    } else if (e.code === "Digit2" && primaryModifier(e)) {
       defaultVolumeInputRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit3' && primaryModifier(e)) {
+    } else if (e.code === "Digit3" && primaryModifier(e)) {
       transposeInputRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit4' && primaryModifier(e)) {
+    } else if (e.code === "Digit4" && primaryModifier(e)) {
       baseNoteInputRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit5' && primaryModifier(e)) {
+    } else if (e.code === "Digit5" && primaryModifier(e)) {
       fineTuneInputRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit6' && primaryModifier(e)) {
+    } else if (e.code === "Digit6" && primaryModifier(e)) {
       sampleRepeatsInputRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit7' && primaryModifier(e)) {
+    } else if (e.code === "Digit7" && primaryModifier(e)) {
       repeatStartInputRef.current?.focus();
       return true;
-    } else if (e.code === 'Digit8' && primaryModifier(e)) {
+    } else if (e.code === "Digit8" && primaryModifier(e)) {
       repeatEndInputRef.current?.focus();
       return true;
     }
@@ -116,7 +120,7 @@ export default function SampleEditDialog() {
 
   const updateDraftInstrument = (updatedDraftInstrument: Instrument) => {
     setDraftInstrument(updatedDraftInstrument);
-  }
+  };
 
   useEffect(() => {
     syncInputStateWithDraft();
@@ -138,10 +142,28 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
+  const incrementTranspose = () => {
+    if (draftInstrument.transpose == 12) return;
+    updateDraftInstrument({
+      ...draftInstrument,
+      transpose: draftInstrument.transpose + 1,
+    });
+  };
+
+  const decrementTranspose = () => {
+    if (draftInstrument.transpose == -12) return;
+    updateDraftInstrument({
+      ...draftInstrument,
+      transpose: draftInstrument.transpose - 1,
+    });
+  };
+
   const getOctave = (baseNote: string): number | null => {
-    const octave = Number(baseNote.length === 3 ? baseNote.substring(2) : baseNote.substring(1));
+    const octave = Number(
+      baseNote.length === 3 ? baseNote.substring(2) : baseNote.substring(1),
+    );
     return octave >= 0 && octave <= 4 ? octave : null;
-  }
+  };
 
   const validateBaseNote = () => {
     const baseNote = inputState.baseNote;
@@ -161,8 +183,27 @@ export default function SampleEditDialog() {
       void alerting.showInfo(message("invalidBaseNoteOctave"));
       return;
     }
-    const note = (baseNote.length === 3 ? baseNote.substring(0, 2) : baseNote.substring(0, 1)).replace("♯", "#").toUpperCase();
-    const recognisedNotes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const note = (
+      baseNote.length === 3
+        ? baseNote.substring(0, 2)
+        : baseNote.substring(0, 1)
+    )
+      .replace("♯", "#")
+      .toUpperCase();
+    const recognisedNotes = [
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+    ];
     let relativeNoteIndex = recognisedNotes.indexOf(note);
     if (relativeNoteIndex === -1) {
       if (note === "E#") {
@@ -193,6 +234,28 @@ export default function SampleEditDialog() {
     });
   };
 
+  const incrementBaseNote = () => {
+    if (draftInstrument.sample.baseNote == notes.allNotes().length - 1) return;
+    updateDraftInstrument({
+      ...draftInstrument,
+      sample: {
+        ...draftInstrument.sample,
+        baseNote: draftInstrument.sample.baseNote + 1,
+      },
+    });
+  };
+
+  const decrementBaseNote = () => {
+    if (draftInstrument.sample.baseNote == 0) return;
+    updateDraftInstrument({
+      ...draftInstrument,
+      sample: {
+        ...draftInstrument.sample,
+        baseNote: draftInstrument.sample.baseNote - 1,
+      },
+    });
+  };
+
   const validateFineTune = () => {
     const fineTune = Number(inputState.fineTuning);
     if (Number.isInteger(fineTune) && fineTune >= -128 && fineTune <= 127) {
@@ -201,13 +264,35 @@ export default function SampleEditDialog() {
         sample: {
           ...draftInstrument.sample,
           fineTuning: fineTune,
-        }
-      })
+        },
+      });
     } else {
       syncInputStateWithDraft();
       void alerting.showInfo(message("invalidFineTune"));
     }
-  }
+  };
+
+  const incrementFineTune = () => {
+    if (draftInstrument.sample.fineTuning == 127) return;
+    updateDraftInstrument({
+      ...draftInstrument,
+      sample: {
+        ...draftInstrument.sample,
+        fineTuning: draftInstrument.sample.fineTuning + 1,
+      },
+    });
+  };
+
+  const decrementFineTune = () => {
+    if (draftInstrument.sample.fineTuning == -128) return;
+    updateDraftInstrument({
+      ...draftInstrument,
+      sample: {
+        ...draftInstrument.sample,
+        fineTuning: draftInstrument.sample.fineTuning - 1,
+      },
+    });
+  };
 
   const setSampleRepeats = () => {
     const repeatEnd =
@@ -246,6 +331,22 @@ export default function SampleEditDialog() {
     loseFocus();
   };
 
+  const incrementRepeatStart = () => {
+    if (draftInstrument.repeatStart >= draftInstrument.repeatEnd - 1) return;
+    setDraftInstrument({
+      ...draftInstrument,
+      repeatStart: draftInstrument.repeatStart + 1,
+    });
+  };
+
+  const decrementRepeatStart = () => {
+    if (draftInstrument.repeatStart <= 0) return;
+    setDraftInstrument({
+      ...draftInstrument,
+      repeatStart: draftInstrument.repeatStart - 1,
+    });
+  };
+
   const updateRepeatEnd = () => {
     const repeatEnd = Number(inputState.repeatEnd);
     if (
@@ -262,6 +363,22 @@ export default function SampleEditDialog() {
       void alerting.showInfo(message("invalidRepeatEnd"));
     }
     loseFocus();
+  };
+
+  const incrementRepeatEnd = () => {
+    if (draftInstrument.repeatEnd >= draftInstrument.sample.sampleLength - 1) return;
+    setDraftInstrument({
+      ...draftInstrument,
+      repeatEnd: draftInstrument.repeatEnd + 1,
+    });
+  };
+
+  const decrementRepeatEnd = () => {
+    if (draftInstrument.repeatEnd <= draftInstrument.repeatStart + 1) return;
+    setDraftInstrument({
+      ...draftInstrument,
+      repeatEnd: draftInstrument.repeatEnd - 1,
+    });
   };
 
   return (
@@ -335,28 +452,16 @@ export default function SampleEditDialog() {
             e.preventDefault();
             validateTranspose();
           }}
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementTranspose,
+            decrementTranspose,
+          )}
           ref={transposeInputRef}
         />
-        <div className="spinnerButtons">
-          <IncrementButton
-            onClick={() => {
-              if (draftInstrument.transpose == 12) return;
-              updateDraftInstrument({
-                ...draftInstrument,
-                transpose: draftInstrument.transpose + 1,
-              });
-            }}
-          />
-          <DecrementButton
-            onClick={() => {
-              if (draftInstrument.transpose == -12) return;
-              updateDraftInstrument({
-                ...draftInstrument,
-                transpose: draftInstrument.transpose - 1,
-              });
-            }}
-          />
-        </div>
+        <SpinnerButtons
+          incrementFn={incrementTranspose}
+          decrementFn={decrementTranspose}
+        />
       </div>
       {draftInstrument.sample.sampleLength > 0 && (
         <>
@@ -411,38 +516,16 @@ export default function SampleEditDialog() {
                 validateBaseNote();
                 loseFocus();
               }}
+              onKeyDown={getSpinnerKeyboardEventHandler(
+                incrementBaseNote,
+                decrementBaseNote,
+              )}
               ref={baseNoteInputRef}
             />
-            <div className="spinnerButtons">
-              <IncrementButton
-                onClick={() => {
-                  if (
-                    draftInstrument.sample.baseNote ==
-                    notes.allNotes().length - 1
-                  )
-                    return;
-                  updateDraftInstrument({
-                    ...draftInstrument,
-                    sample: {
-                      ...draftInstrument.sample,
-                      baseNote: draftInstrument.sample.baseNote + 1,
-                    },
-                  });
-                }}
-              />
-              <DecrementButton
-                onClick={() => {
-                  if (draftInstrument.sample.baseNote == 0) return;
-                  updateDraftInstrument({
-                    ...draftInstrument,
-                    sample: {
-                      ...draftInstrument.sample,
-                      baseNote: draftInstrument.sample.baseNote - 1,
-                    },
-                  });
-                }}
-              />
-            </div>
+            <SpinnerButtons
+              incrementFn={incrementBaseNote}
+              decrementFn={decrementBaseNote}
+            />
           </div>
           <FieldLabel
             text={message("instrumentFineTuneLabel")}
@@ -466,39 +549,23 @@ export default function SampleEditDialog() {
                 e.preventDefault();
                 validateFineTune();
               }}
+              onKeyDown={getSpinnerKeyboardEventHandler(
+                incrementFineTune,
+                decrementFineTune,
+              )}
               ref={fineTuneInputRef}
             />
-            <div className="spinnerButtons">
-              <IncrementButton
-                onClick={() => {
-                  if (draftInstrument.sample.fineTuning == 127) return;
-                  updateDraftInstrument({
-                    ...draftInstrument,
-                    sample: {
-                      ...draftInstrument.sample,
-                      fineTuning: draftInstrument.sample.fineTuning + 1,
-                    },
-                  });
-                }}
-              />
-              <DecrementButton
-                onClick={() => {
-                  if (draftInstrument.sample.fineTuning == -128) return;
-                  updateDraftInstrument({
-                    ...draftInstrument,
-                    sample: {
-                      ...draftInstrument.sample,
-                      fineTuning: draftInstrument.sample.fineTuning - 1,
-                    },
-                  });
-                }}
-              />
-            </div>
+            <SpinnerButtons
+              incrementFn={incrementFineTune}
+              decrementFn={decrementFineTune}
+            />
           </div>
           <FieldLabel
             text={message("instrumentSampleLoopsLabel")}
             className="sampleRepeatsLabel"
-            associatedField={draftInstrument.repeats ? "sampleRepeatsYes" : "sampleRepeatsNo"}
+            associatedField={
+              draftInstrument.repeats ? "sampleRepeatsYes" : "sampleRepeatsNo"
+            }
             hotkey={6}
           />
           <div className="sampleRepeatsEdit padded sampleEditField radio">
@@ -546,7 +613,15 @@ export default function SampleEditDialog() {
                 e.preventDefault();
                 updateRepeatStart();
               }}
+              onKeyDown={getSpinnerKeyboardEventHandler(
+                incrementRepeatStart,
+                decrementRepeatStart,
+              )}
               ref={repeatStartInputRef}
+            />
+            <SpinnerButtons
+              incrementFn={incrementRepeatStart}
+              decrementFn={decrementRepeatStart}
             />
           </div>
           <FieldLabel
@@ -570,7 +645,15 @@ export default function SampleEditDialog() {
                 e.preventDefault();
                 updateRepeatEnd();
               }}
+              onKeyDown={getSpinnerKeyboardEventHandler(
+                incrementRepeatEnd,
+                decrementRepeatEnd,
+              )}
               ref={repeatEndInputRef}
+            />
+            <SpinnerButtons
+              incrementFn={incrementRepeatEnd}
+              decrementFn={decrementRepeatEnd}
             />
           </div>
         </>

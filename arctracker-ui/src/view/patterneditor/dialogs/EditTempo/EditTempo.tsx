@@ -1,7 +1,7 @@
 import { useStore } from "../../../../store/useStore.ts";
 import { useEffect, useRef, useState } from "react";
 import Modal from "../../../components/Modal/Modal.tsx";
-import { tempo } from "../../../../editing/tempo.ts";
+import { MaxBeatsPerMinute, MaxLinesPerBeat, MinBeatsPerMinute, tempo } from "../../../../editing/tempo.ts";
 import { alerting } from "../../../../alerting/alert.ts";
 import "./EditTempo.css";
 import { commands } from "../../../../control/commands.ts";
@@ -10,8 +10,9 @@ import { primaryModifier } from "../../../../keyboard/keyBinding.ts";
 import { KeyHandler } from "../../../../keyboard/keyHandler.ts";
 import FieldLabel from "../../../components/FieldLabel/FieldLabel.tsx";
 import { useKeyboardHandler } from "../../../../hooks/useKeyboardHandler.ts";
+import { getSpinnerKeyboardEventHandler, SpinnerButtons } from "../../../components/SpinnerButtons/SpinnerButtons.tsx";
 
-const LinesPerBeatMaxLength = 2;
+const LinesPerBeatMaxLength = 3;
 const TempoMaxLength = 3;
 const emptyInput = { linesPerBeat: "", beatsPerMinute: "" };
 
@@ -63,7 +64,7 @@ export default function EditTempo() {
     if (
       Number.isInteger(linesPerBeat) &&
       linesPerBeat >= 0 &&
-      linesPerBeat <= 256
+      linesPerBeat <= MaxLinesPerBeat
     ) {
       setDraftTempo({
         linesPerBeat,
@@ -83,6 +84,34 @@ export default function EditTempo() {
     }
   };
 
+  const incrementLinesPerBeat = () => {
+    let linesPerBeat = draftTempo.linesPerBeat;
+    if (linesPerBeat === 0 || linesPerBeat === MaxLinesPerBeat) return;
+    linesPerBeat += 1;
+    setDraftTempo({
+      ...draftTempo,
+      linesPerBeat,
+    });
+    setInputState({
+      ...inputState,
+      linesPerBeat: linesPerBeat.toString(),
+    });
+  };
+
+  const decrementLinesPerBeat = () => {
+    let linesPerBeat = draftTempo.linesPerBeat;
+    if (linesPerBeat <= 1) return;
+    linesPerBeat -= 1;
+    setDraftTempo({
+      ...draftTempo,
+      linesPerBeat,
+    });
+    setInputState({
+      ...inputState,
+      linesPerBeat: linesPerBeat.toString(),
+    });
+  };
+
   const validateBeatsPerMinute = () => {
     const beatsPerMinute =
       inputState.beatsPerMinute === "" ? 0 : Number(inputState.beatsPerMinute);
@@ -94,7 +123,7 @@ export default function EditTempo() {
       });
       return;
     }
-    if (beatsPerMinute >= 0 && beatsPerMinute <= 255) {
+    if (beatsPerMinute >= 0 && beatsPerMinute <= MaxBeatsPerMinute) {
       setDraftTempo({
         ...draftTempo,
         beatsPerMinute,
@@ -110,6 +139,34 @@ export default function EditTempo() {
         beatsPerMinute: "",
       });
     }
+  };
+
+  const incrementBeatsPerMinute = () => {
+    let beatsPerMinute = draftTempo.beatsPerMinute;
+    if (beatsPerMinute === 0 || beatsPerMinute === MaxBeatsPerMinute) return;
+    beatsPerMinute += 1;
+    setDraftTempo({
+      ...draftTempo,
+      beatsPerMinute,
+    });
+    setInputState({
+      ...inputState,
+      beatsPerMinute: beatsPerMinute.toString(),
+    });
+  };
+
+  const decrementBeatsPerMinute = () => {
+    let beatsPerMinute = draftTempo.beatsPerMinute;
+    if (beatsPerMinute <= MinBeatsPerMinute) return;
+    beatsPerMinute -= 1;
+    setDraftTempo({
+      ...draftTempo,
+      beatsPerMinute,
+    });
+    setInputState({
+      ...inputState,
+      beatsPerMinute: beatsPerMinute.toString(),
+    });
   };
 
   if (!editing) return null;
@@ -135,7 +192,15 @@ export default function EditTempo() {
               beatsPerMinute: inputState.beatsPerMinute,
             })
           }
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementLinesPerBeat,
+            decrementLinesPerBeat,
+          )}
           ref={linesPerBeatInputRef}
+        />
+        <SpinnerButtons
+          incrementFn={incrementLinesPerBeat}
+          decrementFn={decrementLinesPerBeat}
         />
       </div>
       <FieldLabel
@@ -157,7 +222,15 @@ export default function EditTempo() {
               beatsPerMinute: e.target.value,
             })
           }
+          onKeyDown={getSpinnerKeyboardEventHandler(
+            incrementBeatsPerMinute,
+            decrementBeatsPerMinute,
+          )}
           ref={beatsPerMinuteInputRef}
+        />
+        <SpinnerButtons
+          incrementFn={incrementBeatsPerMinute}
+          decrementFn={decrementBeatsPerMinute}
         />
       </div>
       <div className="saveCloseButtons">

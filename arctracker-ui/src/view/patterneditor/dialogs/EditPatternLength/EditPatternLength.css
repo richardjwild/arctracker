@@ -1,5 +1,5 @@
 .editPatternLength {
-    width: 187px;
+    width: 210px;
     height: 50px;
     display: flex;
     flex-direction: row;
@@ -15,7 +15,14 @@
     color: var(--colour-title-text);
 }
 
-.editPatternLength input[type='text'] {
+.patternLengthInput {
+    width: 65px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+}
+
+.patternLengthInput input[type='text'] {
     width: 40px;
     height: 28px;
     border-radius: 0;
@@ -27,6 +34,6 @@
     accent-color: var(--colour-input-text);
 }
 
-.editPatternLength input:focus {
+.patternLengthInput input:focus {
     outline: none;
 }
