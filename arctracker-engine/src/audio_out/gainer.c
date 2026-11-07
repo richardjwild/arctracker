@@ -51,9 +51,10 @@ void gainer_apply(gainer_state_t *state, float *channel_buffer, const int frames
     }
 }
 
-void gainer_tick(gainer_state_t *state, const int ticks, const int ticks_per_event)
+void gainer_tick(gainer_state_t *state, const int ticks, const int ticks_per_event, const unsigned long frames_until_next_tick)
 {
     (void) ticks_per_event;
+    (void) frames_until_next_tick;
     if (ticks == 0) return;
     if (state->slide_rate != 0 && !state->slide_fine)
         apply_volume_slide(state);

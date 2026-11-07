@@ -29,7 +29,7 @@ gainer_state_t gainer_init(const gain_curves_t *gain_curves, volume_mapping_type
 
 void gainer_apply(gainer_state_t *state, float *channel_buffer, int frames_requested);
 
-void gainer_tick(gainer_state_t *state, int ticks, int ticks_per_event);
+void gainer_tick(gainer_state_t *state, int ticks, int ticks_per_event, unsigned long frames_until_next_tick);
 
 void gainer_set_volume(gainer_state_t *state, int volume);
 

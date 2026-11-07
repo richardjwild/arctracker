@@ -37,7 +37,7 @@ static void process_set_master_gain_command(player_t *player, master_gain_comman
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool, bool);
 static void define_implicit_loop_start(player_t *);
-static void player_tick(player_t *player);
+static void player_tick(player_t *player, unsigned long);
 static bool player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *, const gain_curves_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
@@ -51,7 +51,7 @@ static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
 static void on_new_pattern_line(player_t *);
 static void on_new_event(const player_t *, event_t *, player_track_t *);
-static void tick_audio_dsps(const player_t *, const event_scheduler_t *);
+static void tick_audio_dsps(const player_t *, int, int, unsigned long);
 static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
@@ -144,8 +144,8 @@ player_render_audio_result_t player_render_audio(player_t *player, float *output
         }
         if (frames_until_next_tick == 0)
         {
-            player_tick(player);
             frames_until_next_tick = tick_scheduler_samples_next_tick(audio_accumulator);
+            player_tick(player, frames_until_next_tick);
         }
     }
     player->audio_out.frames_until_next_tick = frames_until_next_tick;
@@ -564,7 +564,7 @@ static void define_implicit_loop_start(player_t *player)
     player->loop_state.looping = false;
 }
 
-static void player_tick(player_t *player)
+static void player_tick(player_t *player, const unsigned long frames_until_next_tick)
 {
     process_player_commands(player);
     if (player->playing)
@@ -575,7 +575,9 @@ static void player_tick(player_t *player)
         }
         action_scheduled_note_ons(player);
         event_scheduler_t *event_scheduler = &player->tick_scheduler.event_scheduler;
-        tick_audio_dsps(player, event_scheduler);
+        const int ticks = event_scheduler->ticks;
+        const int ticks_per_event = event_scheduler->ticks_per_event;
+        tick_audio_dsps(player, ticks, ticks_per_event, frames_until_next_tick);
         tick_scheduler_advance_tick(event_scheduler);
     }
 }
@@ -662,16 +664,16 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
     update_effect_memories(event, &track->command_state.effect_memory);
 }
 
-static void tick_audio_dsps(const player_t *player, const event_scheduler_t *event_scheduler)
+static void tick_audio_dsps(const player_t *player, const int ticks, const int ticks_per_event, const unsigned long frames_until_next_tick)
 {
     for (int track_no = 0; track_no < player->module->num_tracks; track_no++)
     {
         audio_channel_t *channel = player->tracks[track_no].audio_channel;
         audio_generator_t *audio_generator = &channel->audio_generator;
         audio_spatialiser_t *spatialiser = &channel->audio_spatialiser;
-        audio_generator->tick(&audio_generator->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
-        spatialiser->tick(&spatialiser->state, event_scheduler->ticks, event_scheduler->ticks_per_event);
-        gainer_tick(&channel->gainer_state, event_scheduler->ticks, event_scheduler->ticks_per_event);
+        audio_generator->tick(&audio_generator->state, ticks, ticks_per_event);
+        spatialiser->tick(&spatialiser->state, ticks, ticks_per_event);
+        gainer_tick(&channel->gainer_state, ticks, ticks_per_event, frames_until_next_tick);
     }
 }
 

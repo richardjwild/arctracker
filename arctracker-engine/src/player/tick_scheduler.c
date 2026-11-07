@@ -48,13 +48,13 @@ void tick_scheduler_restart(tick_scheduler_t *tick_scheduler)
 
 int tick_scheduler_samples_next_tick(audio_accumulator_t *accumulator)
 {
-    const fraction_t accumulated_samples = fraction_add_numerator(accumulator->sample_fraction, accumulator->sample_rate);
+    const fraction_t accumulated_samples = fraction_accumulate(accumulator->sample_fraction, accumulator->sample_rate);
     // Since accumulated_samples is denominated in ticks per second, taking the whole part effectively divides the
     // sample rate (which is samples per second) plus the accumulated fraction by the ticks per second, which gives us
     // the whole number of samples per tick. In other words, the number of samples we need to write in the next tick.
     // Taking the fractional part gives us the fraction of a sample left over to be carried forward to the next tick.
-    accumulator->sample_fraction = fractional_part(accumulated_samples);
-    return whole_part(accumulated_samples);
+    accumulator->sample_fraction = fraction_create(fraction_remainder(accumulated_samples), accumulator->ticks_per_second);
+    return fraction_whole_part(accumulated_samples);
 }
 
 void tick_scheduler_advance_tick(event_scheduler_t *event_scheduler)
