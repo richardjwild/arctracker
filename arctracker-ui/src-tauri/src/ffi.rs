@@ -85,6 +85,7 @@ pub struct PlayerEvent {
     pub data: PlayerEventData,
 }
 
+#[allow(dead_code)]
 #[derive(Copy, Clone)]
 #[repr(i32)]
 pub enum PlayerCommandType {
@@ -299,7 +300,6 @@ pub struct ApiResult {
 #[link(name = "arctracker")]
 extern "C" {
     pub fn arctracker_init() -> ArctrackerInitResult;
-    pub fn arctracker_create() -> *mut ArctrackerHandle;
     pub fn arctracker_get_available_output_count(handle: *mut ArctrackerHandle) -> c_int;
     pub fn arctracker_get_available_outputs(
         handle: *mut ArctrackerHandle,

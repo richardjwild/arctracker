@@ -2,7 +2,6 @@ use std::env;
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};
-use tauri_build::build;
 
 fn run<I, S>(program: &str, arguments: I) -> ExitStatus
 where
@@ -35,7 +34,6 @@ fn configure_meson(source_directory: &Path, build_directory: &Path, build_type: 
         source_directory.as_os_str().to_owned(),
         format!("-Dbuildtype={build_type}").into(),
         "-Ddefault_library=static".into(),
-        "-Dasan=false".into(),
         "-Db_sanitize=none".into(),
     ]);
     if cfg!(target_os = "windows") {

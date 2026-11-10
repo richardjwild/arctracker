@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "loader.h"
+#include "files.h"
 #include "format_arctracker.h"
 #include "format_desktop_tracker.h"
 #include "format_soundtracker.h"
@@ -11,14 +12,6 @@
 #include "io/error.h"
 #include "memory/heap.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <io.h>
-#else
-#include <sys/mman.h>
-#endif
-
-#define MAX_FILE_PATH_LENGTH 4096
 #define NUM_FORMATS 4
 
 static const load_module_result_t FAILED_TO_READ_MODULE_FILE = {
@@ -49,13 +42,6 @@ static const load_sample_result_t FAILED_TO_READ_SAMPLE_FILE = {
     .sample_data = NULL,
 };
 
-static const char *READONLY = "r";
-static const char *WRITE_BINARY = "wb";
-static const int OFFSET = 0;
-
-static mapped_file_t load_file(FILE *);
-static void unmap_file(mapped_file_t);
-static size_t file_size(int);
 static format_t *known_formats(void);
 static int16_t clamp_to_pcm16(float sample);
 static load_module_result_t successfully_loaded_module(module_t *);
@@ -63,7 +49,7 @@ static load_sample_result_t successfully_loaded_sample(int length, float rate, f
 
 load_module_result_t load_module(const char *filename)
 {
-    FILE *file_pointer = fopen(filename, READONLY);
+    FILE *file_pointer = file_open(filename, MODE_READ_BINARY);
     if (file_pointer == NULL)
     {
         return FAILED_TO_READ_MODULE_FILE;
@@ -98,23 +84,25 @@ bool save_module(const module_t *module, const char *filename, const format_t fo
     }
     char tmp_filename[MAX_FILE_PATH_LENGTH];
     snprintf(tmp_filename, sizeof tmp_filename, "%s.tmp", filename);
-    FILE *file_pointer = fopen(tmp_filename, WRITE_BINARY);
+    FILE *file_pointer = file_open(tmp_filename, MODE_WRITE_BINARY);
     if (file_pointer == NULL)
     {
         system_error(errno);
         return false;
     }
     bool ok = format.write_module(module, file_pointer);
-    if (fclose(file_pointer) != 0) {
+    if (fclose(file_pointer) != 0)
+    {
         system_error(errno);
         ok = false;
     }
-    if (!ok) {
+    if (!ok)
+    {
         remove(tmp_filename);
         return false;
     }
-    if (rename(tmp_filename, filename) != 0) {
-        system_error(errno);
+    if (!file_replace(tmp_filename, filename))
+    {
         remove(tmp_filename);
         return false;
     }
@@ -123,7 +111,7 @@ bool save_module(const module_t *module, const char *filename, const format_t fo
 
 load_sample_result_t load_sample(const char *filename)
 {
-    FILE *file_pointer = fopen(filename, READONLY);
+    FILE *file_pointer = file_open(filename, MODE_READ_BINARY);
     if (file_pointer == NULL)
     {
         return FAILED_TO_READ_SAMPLE_FILE;
@@ -170,136 +158,6 @@ bool export_sample(const module_t *module, const int instrument_index, const cha
     const bool ok = wav_write_pcm16(filename, &to_write);
     deallocate(MAIN, sample_data_pcm16);
     return ok;
-}
-
-#ifdef _WIN32
-
-#include <windows.h>
-#include <io.h>
-
-static mapped_file_t load_file(FILE *file_pointer)
-{
-    mapped_file_t mapped_file = {
-        .addr = NULL,
-        .size = 0
-    };
-
-    const int fd = _fileno(file_pointer);
-    if (fd == -1) {
-        system_error(errno);
-        return mapped_file;
-    }
-
-    const intptr_t os_handle = _get_osfhandle(fd);
-    if (os_handle == -1) {
-        system_error(errno);
-        return mapped_file;
-    }
-
-    HANDLE file_handle = (HANDLE)os_handle;
-
-    LARGE_INTEGER file_size;
-    if (!GetFileSizeEx(file_handle, &file_size)) {
-        // Report GetLastError() using your Windows error handling
-        return mapped_file;
-    }
-
-    if (file_size.QuadPart == 0) {
-        error(FILE_EMPTY);
-        return mapped_file;
-    }
-
-    if (file_size.QuadPart < 0 ||
-        (uint64_t)file_size.QuadPart > SIZE_MAX) {
-        error("File is too large to map");
-        return mapped_file;
-        }
-
-    HANDLE mapping = CreateFileMapping(
-        file_handle,
-        NULL,
-        PAGE_READONLY,
-        0,
-        0,
-        NULL
-    );
-
-    if (mapping == NULL) {
-        // Report GetLastError()
-        return mapped_file;
-    }
-
-    void *addr = MapViewOfFile(
-        mapping,
-        FILE_MAP_READ,
-        0,
-        0,
-        0
-    );
-
-    CloseHandle(mapping);
-
-    if (addr == NULL) {
-        // Report GetLastError()
-        return mapped_file;
-    }
-
-    mapped_file.addr = addr;
-    mapped_file.size = (size_t)file_size.QuadPart;
-
-    return mapped_file;
-}
-
-static void unmap_file(mapped_file_t file) {
-    UnmapViewOfFile(file.addr);
-}
-
-#else
-
-static mapped_file_t load_file(FILE *file_pointer)
-{
-    mapped_file_t mapped_file = {
-        .addr = NULL,
-        .size = 0
-    };
-    const int file_descriptor = fileno(file_pointer);
-    const size_t size = file_size(file_descriptor);
-    if (size == 0)
-    {
-        error(FILE_EMPTY);
-    }
-    if (has_error())
-    {
-        return mapped_file;
-    }
-    uint8_t *addr = mmap(NULL, size, PROT_READ, MAP_PRIVATE, file_descriptor, OFFSET);
-    if (addr == MAP_FAILED)
-    {
-        system_error(errno);
-    }
-    else
-    {
-        mapped_file.size = size;
-        mapped_file.addr = addr;
-    }
-    return mapped_file;
-}
-
-static void unmap_file(mapped_file_t file) {
-    munmap(file.addr, file.size);
-}
-
-#endif
-
-static size_t file_size(const int file_descriptor)
-{
-    struct stat statbuf;
-    if (fstat(file_descriptor, &statbuf) != 0)
-    {
-        system_error(errno);
-        return 0;
-    }
-    return statbuf.st_size;
 }
 
 static format_t *known_formats(void)

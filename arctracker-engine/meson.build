@@ -1,7 +1,9 @@
 project('arctracker', ['c', 'cpp'],
     version: '0.4.2',
+    meson_version: '>=1.1.0',
     default_options: [
         'c_std=c11',
+        'cpp_std=c++17',
         'warning_level=3',
         'werror=false',
         'b_sanitize=none'
@@ -39,6 +41,10 @@ rtmidi_options.add_cmake_defines({
     'RTMIDI_BUILD_SHARED_LIBS': false,
     'RTMIDI_BUILD_TESTING': false,
 })
+rtmidi_includes = include_directories(
+    'subprojects/rtmidi-6.0.0',
+    is_system: true,
+)
 if host_machine.system() == 'windows'
     rtmidi_options.add_cmake_defines({
         'CMAKE_MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
@@ -57,15 +63,19 @@ subdir('src')
 project_includes = include_directories('src')
 
 libarctracker = static_library('arctracker',
-  libarctracker_sources,
-  dependencies: [portaudio, rtmidi],
-  include_directories: project_includes,
+    libarctracker_sources,
+    dependencies: [portaudio, rtmidi],
+    include_directories: [project_includes, rtmidi_includes],
 )
 
 executable('arctracker-console',
-  arctracker_console_sources,
-  link_with: libarctracker,
-  dependencies: [portaudio, rtmidi],
-  include_directories: project_includes,
-  install: true
+    arctracker_console_sources,
+    link_with: libarctracker,
+    dependencies: [portaudio, rtmidi],
+    include_directories: project_includes,
+    install: true
 )
+
+if get_option('tests')
+    subdir('tests')
+endif

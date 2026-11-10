@@ -4,6 +4,7 @@
 #include "wav.h"
 #include "messages.h"
 #include "io/error.h"
+#include "loader/files.h"
 #include "memory/heap.h"
 #include "memory/bits.h"
 
@@ -22,7 +23,6 @@ static const char *RIFF_CHUNK_ID = "RIFF";
 static const char *FORMAT_WAVE = "WAVE";
 static const char *FMT_SUBCHUNK = "fmt ";
 static const char *DATA_SUBCHUNK = "data";
-static const char *WRITEONLY_BINARY = "wb";
 static const int SUB_CHUNK_1_SIZE = 16;
 static const uint16_t BITS_PER_SAMPLE_PCM16 = 16;
 
@@ -59,9 +59,6 @@ static bool write_format_subchunk(FILE *, int, int, uint32_t);
 static bool write_data_subchunk(FILE *, size_t);
 static bool write_audio_data(FILE *, const int16_t *, int, int);
 static bool write_fourcc(FILE *fp, const char *ch);
-static bool write_u16_le(FILE *fp, uint16_t);
-static bool write_16_le(FILE *fp, int16_t);
-static bool write_u32_le(FILE *fp, uint32_t);
 static bool read_fmt_chunk(const uint8_t *, size_t, wav_file_in_t *);
 static bool chunk_is(const char *, const uint8_t *);
 static float *copy_sample_data_8(const uint8_t *, int, int);
@@ -77,7 +74,7 @@ static float *copy_sample_data_float(const float *, int, int);
 bool wav_write_pcm16(const char *filename, const wav_pcm16_t *wav)
 {
     const size_t data_size = wav->frames * wav->channels * (BITS_PER_SAMPLE_PCM16 / 8);
-    FILE *fp = fopen(filename, WRITEONLY_BINARY);
+    FILE *fp = file_open(filename, MODE_WRITE_BINARY);
     if (fp == NULL)
     {
         system_error(errno);
@@ -121,7 +118,7 @@ static bool write_audio_data(FILE *fp, const int16_t *pcm16, const int frames, c
     const int samples = frames * channels;
     for (int i = 0; i < samples; i++)
     {
-        if (!write_16_le(fp, pcm16[i]))
+        if (!write_s16_le(fp, pcm16[i]))
             return false;
     }
     return true;
@@ -130,21 +127,6 @@ static bool write_audio_data(FILE *fp, const int16_t *pcm16, const int frames, c
 static bool write_fourcc(FILE *fp, const char *ch)
 {
     return fwrite(ch, sizeof(char), 4, fp) == 4;
-}
-
-static bool write_u16_le(FILE *fp, const uint16_t value)
-{
-    return fwrite(&value, sizeof value, 1, fp) == 1;
-}
-
-static bool write_16_le(FILE *fp, const int16_t value)
-{
-    return fwrite(&value, sizeof value, 1, fp) == 1;
-}
-
-static bool write_u32_le(FILE *fp, const uint32_t value)
-{
-    return fwrite(&value, sizeof value, 1, fp) == 1;
 }
 
 /******************************************************************************

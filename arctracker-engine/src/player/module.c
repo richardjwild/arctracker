@@ -379,15 +379,14 @@ static bool ensure_sample_capacity(module_t *module, const int required_samples)
     {
         return false;
     }
-    for (int sample = module->sample_slots; sample < required_capacity; sample++)
+    for (int sample = module->sample_capacity; sample < required_capacity; sample++)
     {
-        module->samples[sample] = (sample_t) {0};
+        new_samples[sample] = (sample_t) {0};
     }
     module->samples = new_samples;
     module->sample_capacity = required_capacity;
     return true;
 }
-
 void module_set_name(module_t *module, const char *name)
 {
     snprintf(module->name, sizeof module->name, "%s", name);

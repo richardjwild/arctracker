@@ -1,5 +1,6 @@
 #include "format_arctracker.h"
-#include <string.h>
+
+#include "files.h"
 #include "messages.h"
 #include "io/error.h"
 #include "memory/heap.h"
@@ -271,12 +272,6 @@ static bool write_sample_slices_chunks(const module_t *, FILE *);
 static bool write_sample_slices_chunk(const module_t *, uint8_t, uint8_t, FILE *);
 static uint32_t write_gain(float);
 static bool write_fourcc(FILE *, const char *);
-static bool write_cc(FILE *, const char *, size_t);
-static bool write_u8(FILE *, uint8_t);
-static bool write_s8(FILE *, int8_t);
-static bool write_u16_le(FILE *, uint16_t);
-static bool write_u32_le(FILE *, uint32_t);
-static bool write_f32_le(FILE *fp, float);
 
 format_t arctracker_format(void)
 {
@@ -1074,46 +1069,4 @@ static uint32_t write_gain(const float gain)
 static bool write_fourcc(FILE *fp, const char *ch)
 {
     return write_cc(fp, ch, 4);
-}
-
-static bool write_cc(FILE *fp, const char *ch, const size_t len)
-{
-    return fwrite(ch, sizeof(char), len, fp) == len;
-}
-
-static bool write_u8(FILE *fp, const uint8_t value)
-{
-    return fwrite(&value, sizeof value, 1, fp) == 1;
-}
-
-static bool write_s8(FILE *fp, const int8_t value)
-{
-    return fwrite(&value, sizeof value, 1, fp) == 1;
-}
-
-static bool write_u16_le(FILE *fp, const uint16_t value)
-{
-    const uint8_t bytes[2] = {
-        (uint8_t) (value & 0xFF),
-        (uint8_t) (value >> 8 & 0xFF)
-    };
-    return fwrite(bytes, sizeof bytes, 1, fp) == 1;
-}
-
-static bool write_u32_le(FILE *fp, const uint32_t value)
-{
-    const uint8_t bytes[4] = {
-        (uint8_t) (value & 0xFF),
-        (uint8_t) (value >> 8 & 0xFF),
-        (uint8_t) (value >> 16 & 0xFF),
-        (uint8_t) (value >> 24 & 0xFF)
-    };
-    return fwrite(bytes, sizeof bytes, 1, fp) == 1;
-}
-
-static bool write_f32_le(FILE *fp, const float value)
-{
-    uint32_t bits;
-    memcpy(&bits, &value, sizeof bits);
-    return write_u32_le(fp, bits);
 }

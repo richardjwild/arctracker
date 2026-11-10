@@ -1,5 +1,5 @@
 use crate::ffi;
-use crate::ffi::{UiInterpolationType, UiSampleSlice, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
+use crate::ffi::{UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
 

@@ -483,7 +483,7 @@ static bool find_or_create_sample_slice(const uint32_t required_offset, instrume
     //
     // No slice with the required offset exists yet, create one if possible.
     //
-    const int sample_length = samples[instrument->sample_index].sample_length;
+    const uint32_t sample_length = samples[instrument->sample_index].sample_length;
     if (required_offset >= sample_length)
     {
         // TODO: Figure out what Desktop Tracker does in this case.

@@ -47,3 +47,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# GoogleTest
+/arctracker-engine/subprojects/googletest-*/
+/arctracker-engine/subprojects/packagecache/

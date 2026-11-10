@@ -12,6 +12,7 @@
 #define BAD_FILENAME "Bad filename"
 #define FILE_OPEN_FAILED "Could not open file"
 #define FILE_EMPTY "File is empty"
+#define FILE_TOO_LARGE "File is too large to map"
 #define MODULE_TYPE_UNRECOGNISED "Not a recognised module type"
 #define MODULE_LOAD_FAILED "Failed to load module, either file corrupted or ran out of memory"
 #define SAVE_MODULE_NOT_SUPPORTED "Saving not supported for this module format"

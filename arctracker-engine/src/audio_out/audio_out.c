@@ -86,7 +86,7 @@ static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_
 
 static void mix_to_output_buffer(const stereo_frame_t *channel_buffer, float *output_buffer, const unsigned int frames, const float gain)
 {
-    for (int frame = 0; frame < frames; frame++)
+    for (unsigned int frame = 0; frame < frames; frame++)
     {
         output_buffer[frame * 2] += channel_buffer[frame].l * gain;
         output_buffer[frame * 2 + 1] += channel_buffer[frame].r * gain;
@@ -95,7 +95,7 @@ static void mix_to_output_buffer(const stereo_frame_t *channel_buffer, float *ou
 
 static void apply_master_gain(const float master_gain, const unsigned int frames_filled, float *output_buffer)
 {
-    for (int frame = 0; frame < frames_filled; frame++)
+    for (unsigned int frame = 0; frame < frames_filled; frame++)
     {
         output_buffer[frame * 2] *= master_gain;
         output_buffer[1 + frame * 2] *= master_gain;
@@ -104,7 +104,7 @@ static void apply_master_gain(const float master_gain, const unsigned int frames
 
 static void find_peak_levels(atomic_uint *peak_l, atomic_uint *peak_r, const unsigned int frames_filled, const float *output_buffer)
 {
-    for (int frame = 0; frame < frames_filled; frame++)
+    for (unsigned int frame = 0; frame < frames_filled; frame++)
     {
         atomic_peak_max(peak_l, output_buffer[frame * 2]);
         atomic_peak_max(peak_r, output_buffer[1 + frame * 2]);

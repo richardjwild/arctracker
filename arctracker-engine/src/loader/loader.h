@@ -3,11 +3,7 @@
 
 #include <stdio.h>
 #include "player/module.h"
-
-typedef struct {
-    uint8_t *addr;
-    size_t size;
-} mapped_file_t;
+#include "files.h"
 
 typedef struct {
     bool (*is_this_format)(mapped_file_t);
