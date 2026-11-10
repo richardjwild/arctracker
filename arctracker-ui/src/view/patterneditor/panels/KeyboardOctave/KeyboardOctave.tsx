@@ -17,7 +17,7 @@ const WhiteKeySpacing = 6;
 const WhiteKeyWidth = WhiteKeySpacing - 1;
 const WhiteKeyHeight = 30;
 const BlackKeyOffset = 3.5;
-const BlackKeyWidth = 4;
+const BlackKeyWidth = 3;
 const BlackKeyHeight = 20;
 const OctaveWidth = WhiteKeySpacing * 7;
 
@@ -66,7 +66,7 @@ export default function KeyboardOctave() {
     ctx.fillStyle = blackKeyColor;
     [0, 1, 3, 4, 5].forEach((blackNote) =>
       ctx.fillRect(
-        x + BlackKeyOffset + blackNote * WhiteKeySpacing,
+        0.5 + x + BlackKeyOffset + blackNote * WhiteKeySpacing,
         KeyboardTop,
         BlackKeyWidth,
         BlackKeyHeight,
