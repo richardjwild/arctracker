@@ -39,11 +39,12 @@
     --colour-selection-outline: rgba(80, 140, 255, 0.5);
     --colour-modal-background: #222222;
     --colour-modal-border: #555555;
-    --colour-button-bg: linear-gradient(to top, #aaaaaa, #dddddd);
-    --colour-button-bg-disabled: linear-gradient(to top, #777777, #aaaaaa);
-    --colour-button-bg-hover: #ffffff;
-    --colour-button-fg: #1c1c1c;
-    --colour-button-fg-disabled: #777777;
+    --colour-button-bg: linear-gradient(to top, #444444, #555555);
+    --colour-button-bg-disabled: #444444;
+    --colour-button-bg-hover: linear-gradient(to top, #555555, #666666);
+    --colour-button-fg: #bbbbbb;
+    --colour-button-fg-disabled: #666666;
+    --colour-instrument-list-button-fg: #1c1c1c;
     --colour-button-border: #1c1c1c;
     --colour-slider: #eeee33;
     --colour-slider-focus: #ff7733;

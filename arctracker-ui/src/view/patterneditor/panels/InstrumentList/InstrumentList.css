@@ -10,7 +10,7 @@
 
 .sampleList button {
     background-color: var(--colour-samplelist-button-bg);
-    color: var(--colour-button-fg);
+    color: var(--colour-instrument-list-button-fg);
     font-family: SplineSansMono, monospace;
     font-size: 12px;
     width: 100%;
