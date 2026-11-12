@@ -1,8 +1,8 @@
 ## How to build the engine
 With Address Sanitizer:
 ```shell
-mkdir builddir-asan                             # You only need to do this the first time.
-meson setup builddir-asan -Db_sanitize=address  # You only need to do this the first time.
+mkdir builddir-asan                                             # You only need to do this the first time.
+meson setup builddir-asan -Db_sanitize=address -Db_lundef=false # You only need to do this the first time.
 meson compile -C builddir-asan
 ```
 

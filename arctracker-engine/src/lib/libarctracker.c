@@ -1,7 +1,8 @@
 #include <stddef.h>
 #include "concurrency/threads.h"
-#include <string.h>
 #include "libarctracker.h"
+
+#include <assert.h>
 
 #include "arctracker.h"
 #include "messages.h"
@@ -30,7 +31,6 @@ static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event);
 static void run_export(void *arg);
 static void remove_module(arctracker_t *);
 static api_result_t failure(char *);
-static void count_resources(resource_group_t, char *);
 
 arctracker_init_result_t arctracker_init(void)
 {
@@ -71,18 +71,18 @@ arctracker_t *arctracker_create(void)
     return arctracker;
 }
 
-int arctracker_get_available_output_count(arctracker_t *arctracker)
+int arctracker_get_available_output_count(arctracker_t *handle)
 {
-    if (arctracker == NULL || !arctracker->portaudio_initialised)
+    if (handle == NULL || !handle->portaudio_initialised)
         return 0;
     return get_available_output_count();
 }
 
-api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, ui_audio_device_info_t *output_devices, int requested_outputs)
+api_result_t arctracker_get_available_outputs(arctracker_t *handle, ui_audio_device_info_t *output_devices, const int requested_outputs)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (!arctracker->portaudio_initialised)
+    if (!handle->portaudio_initialised)
         return failure(AUDIO_SYSTEM_NOT_INITIALISED);
     audio_device_info_t *devices = allocate_array(MAIN, sizeof(audio_device_info_t), requested_outputs);
     api_result_t result;
@@ -102,9 +102,9 @@ api_result_t arctracker_get_available_outputs(arctracker_t *arctracker, ui_audio
     return result;
 }
 
-api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_index, const char *name, const char *host_api_name, const uint32_t sample_rate)
+api_result_t arctracker_use_output(arctracker_t *handle, const int device_index, const char *name, const char *host_api_name, const uint32_t sample_rate)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     portaudio_config_t config = (portaudio_config_t) {
         .device_index = device_index,
@@ -112,63 +112,63 @@ api_result_t arctracker_use_output(arctracker_t *arctracker, const int device_in
     };
     snprintf(config.host_api_name, sizeof(config.host_api_name), "%s", host_api_name);
     snprintf(config.name, sizeof(config.name), "%s", name);
-    arctracker->audio_config = config;
+    handle->audio_config = config;
     player_restore_state_t player_state = {0};
     bool restore = false;
-    if (arctracker->playback.stream_started)
+    if (handle->playback.stream_started)
     {
-        player_state = player_get_restore_state(arctracker->playback.player);
+        player_state = player_get_restore_state(handle->playback.player);
         restore = true;
-        const api_result_t result = arctracker_player_shutdown(arctracker);
+        const api_result_t result = arctracker_player_shutdown(handle);
         if (!result.success)
             return result;
     }
-    const api_result_t result =  arctracker_player_start(arctracker);
+    const api_result_t result =  arctracker_player_start(handle);
     if (restore && result.success)
-        player_restore_state(arctracker->playback.player, player_state);
+        player_restore_state(handle->playback.player, player_state);
     return result;
 }
 
-api_result_t arctracker_use_default_output(arctracker_t *arctracker, const uint32_t sample_rate)
+api_result_t arctracker_use_default_output(arctracker_t *handle, const uint32_t sample_rate)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    arctracker->audio_config.device_index = DEFAULT_PORTAUDIO_DEVICE_INDEX;
-    arctracker->audio_config.sample_rate = (double) sample_rate;
+    handle->audio_config.device_index = DEFAULT_PORTAUDIO_DEVICE_INDEX;
+    handle->audio_config.sample_rate = (double) sample_rate;
     player_restore_state_t player_state = {0};
     bool restore = false;
-    if (arctracker->playback.stream_started)
+    if (handle->playback.stream_started)
     {
-        player_state = player_get_restore_state(arctracker->playback.player);
+        player_state = player_get_restore_state(handle->playback.player);
         restore = true;
-        const api_result_t result = arctracker_player_shutdown(arctracker);
+        const api_result_t result = arctracker_player_shutdown(handle);
         if (!result.success)
             return result;
     }
-    const api_result_t result =  arctracker_player_start(arctracker);
+    const api_result_t result =  arctracker_player_start(handle);
     if (restore && result.success)
-        player_restore_state(arctracker->playback.player, player_state);
+        player_restore_state(handle->playback.player, player_state);
     return result;
 }
 
-int arctracker_get_available_midi_count(midi_subsystem_t *midi)
+int arctracker_get_available_midi_count(midi_subsystem_t *handle)
 {
-    if (midi == NULL)
+    if (handle == NULL)
         return 0;
     unsigned int count = 0;
-    midi_get_device_count(midi, &count);
+    midi_get_device_count(handle, &count);
     return (int) count;
 }
 
-api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *midi, ui_midi_device_info_t *devices_out, int requested_count)
+api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *handle, ui_midi_device_info_t *devices_out, const int requested_count)
 {
-    if (midi == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     midi_device_info_t *devices = allocate_array(MAIN, sizeof(midi_device_info_t), requested_count);
     if (devices == NULL)
         return failure(MEMORY_ALLOCATION_FAILED);
     api_result_t result;
-    if (!midi_get_devices(midi, devices, requested_count))
+    if (!midi_get_devices(handle, devices, requested_count))
         result = failure(FAILED_TO_GET_AVAILABLE_MIDI_DEVICES);
     else
     {
@@ -180,46 +180,46 @@ api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *midi, ui_mi
     return result;
 }
 
-api_result_t arctracker_use_midi_device(midi_subsystem_t *midi, const char *name)
+api_result_t arctracker_use_midi_device(midi_subsystem_t *handle, const char *name)
 {
-    if (midi == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (!midi_use_device(midi, name))
+    if (!midi_use_device(handle, name))
         return failure(FAILED_TO_USE_MIDI_DEVICE);
     return SUCCESS;
 }
 
-void arctracker_midi_set_playback_channel(midi_subsystem_t *midi, const int channel)
+void arctracker_midi_set_playback_channel(midi_subsystem_t *handle, const int channel)
 {
-    if (midi != NULL)
-        midi_set_playback_channel(midi, channel);
+    if (handle != NULL)
+        midi_set_playback_channel(handle, channel);
 }
 
-void arctracker_midi_set_playback_instrument(midi_subsystem_t *midi, const uint8_t instrument)
+void arctracker_midi_set_playback_instrument(midi_subsystem_t *handle, const uint8_t instrument)
 {
-    if (midi != NULL)
-        midi_set_playback_instrument(midi, instrument);
+    if (handle != NULL)
+        midi_set_playback_instrument(handle, instrument);
 }
 
-void arctracker_midi_keyboard_note_on(const midi_subsystem_t *midi, const int note)
+void arctracker_midi_keyboard_note_on(const midi_subsystem_t *handle, const int note)
 {
-    if (midi != NULL)
-        keyboard_note_on(midi, note);
+    if (handle != NULL)
+        keyboard_note_on(handle, note);
 }
 
-api_result_t arctracker_get_current_module(arctracker_t *arctracker, ui_module_info_t *module_info)
+api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_t *module_info)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     memset(module_info, 0, sizeof(ui_module_info_t));
-    if (arctracker->module != NULL)
-        module_get_info(arctracker->module, module_info);
+    if (handle->module != NULL)
+        module_get_info(handle->module, module_info);
     return SUCCESS;
 }
 
-api_result_t arctracker_module_load(arctracker_t *arctracker, char *mod_filename, ui_module_info_t *module_info)
+api_result_t arctracker_module_load(arctracker_t *handle, char *mod_filename, ui_module_info_t *module_info)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     const load_module_result_t load_result = load_module(mod_filename);
     if (!load_result.file_read)
@@ -228,69 +228,69 @@ api_result_t arctracker_module_load(arctracker_t *arctracker, char *mod_filename
         return failure(MODULE_TYPE_UNRECOGNISED);
     if (!load_result.module_loaded)
         return failure(MODULE_LOAD_FAILED);
-    if (arctracker->playback.stream_started)
-        arctracker_player_shutdown(arctracker);
-    if (arctracker->module != NULL)
-        remove_module(arctracker);
-    arctracker->module = load_result.module;
-    module_get_info(arctracker->module, module_info);
+    if (handle->playback.stream_started)
+        arctracker_player_shutdown(handle);
+    if (handle->module != NULL)
+        remove_module(handle);
+    handle->module = load_result.module;
+    module_get_info(handle->module, module_info);
     return SUCCESS;
 }
 
-api_result_t arctracker_module_save(const arctracker_t *arctracker, const char *mod_filename, const int format)
+api_result_t arctracker_module_save(const arctracker_t *handle, const char *mod_filename, const int format)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (mod_filename == NULL || strlen(mod_filename) == 0)
         return failure(BAD_FILENAME);
     if (format != FORMAT_ARCTRACKER)
         return failure(BAD_FORMAT);
-    if (!save_module(arctracker->module, mod_filename, arctracker_format()))
+    if (!save_module(handle->module, mod_filename, arctracker_format()))
         return failure(MODULE_SAVE_FAILED);
     return SUCCESS;
 }
 
-api_result_t arctracker_get_instrument_info(arctracker_t *arctracker, uint8_t slot, ui_instrument_info_t *instrument_info)
+api_result_t arctracker_get_instrument_info(arctracker_t *handle, const uint8_t slot, ui_instrument_info_t *instrument_info)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (instrument_info == NULL)
         return failure(BAD_BUFFER);
-    module_get_instrument_info(arctracker->module, slot, instrument_info);
+    module_get_instrument_info(handle->module, slot, instrument_info);
     return SUCCESS;
 }
 
-api_result_t arctracker_module_create(arctracker_t *arctracker, const new_module_params_t params, ui_module_info_t *module_info)
+api_result_t arctracker_module_create(arctracker_t *handle, const new_module_params_t params, ui_module_info_t *module_info)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
     module_t *module = module_create(params.num_tracks, 1, 1, 0);
     if (module == NULL || !module_init(module, params.default_pattern_length, params.lines_per_beat, params.beats_per_minute))
         return failure(MODULE_CREATE_FAILED);
     strncpy(module->name, NEW_MODULE_TITLE, MAX_LEN_TUNE_NAME);
     strncpy(module->author, params.author, MAX_LEN_AUTHOR);
-    if (arctracker->playback.stream_started)
-        arctracker_player_shutdown(arctracker);
-    if (arctracker->module != NULL)
-        remove_module(arctracker);
-    arctracker->module = module;
-    module_get_info(arctracker->module, module_info);
+    if (handle->playback.stream_started)
+        arctracker_player_shutdown(handle);
+    if (handle->module != NULL)
+        remove_module(handle);
+    handle->module = module;
+    module_get_info(handle->module, module_info);
     return SUCCESS;
 }
 
-api_result_t arctracker_get_pattern_lengths(arctracker_t *arctracker, int *pattern_lengths, int num_patterns)
+api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_lengths, const int num_patterns)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (pattern_lengths == NULL)
         return failure(BAD_PATTERN_LENGTH_BUFFER);
-    const module_t *module = arctracker->module;
+    const module_t *module = handle->module;
     if (num_patterns != module->num_patterns)
         return failure(INVALID_PATTERN_COUNT);
     for (int pattern = 0; pattern < num_patterns; pattern++)
@@ -306,51 +306,51 @@ static int portaudio_callback(
     PaStreamCallbackFlags status_flags,
     void *player);
 
-api_result_t arctracker_player_start(arctracker_t *arctracker)
+api_result_t arctracker_player_start(arctracker_t *handle)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (!arctracker->portaudio_initialised)
+    if (!handle->portaudio_initialised)
         return failure(AUDIO_SYSTEM_NOT_INITIALISED);
-    if (arctracker->playback.stream_started)
+    if (handle->playback.stream_started)
         return failure(PLAYER_ALREADY_RUNNING);
     if (has_error())
     {
         return failure(AUDIO_INIT_FAILED);
     }
-    arctracker->playback.player = player_create();
-    if (arctracker->playback.player == NULL)
+    handle->playback.player = player_create();
+    if (handle->playback.player == NULL)
     {
         return failure(PLAYER_INIT_FAILED);
     }
-    const open_stream_result_t result = open_portaudio_stream(&arctracker->audio_config, &arctracker->playback.pa_stream, portaudio_callback, arctracker->playback.player);
+    const open_stream_result_t result = open_portaudio_stream(&handle->audio_config, &handle->playback.pa_stream, portaudio_callback, handle->playback.player);
     if (result.success)
     {
-        arctracker->playback.sample_rate = result.sample_rate;
-        arctracker->playback.reported_latency = result.reported_latency;
+        handle->playback.sample_rate = result.sample_rate;
+        handle->playback.reported_latency = result.reported_latency;
     }
     else
     {
-        arctracker->playback.sample_rate = 0;
-        arctracker->playback.reported_latency = 0;
-        player_destroy(arctracker->playback.player);
+        handle->playback.sample_rate = 0;
+        handle->playback.reported_latency = 0;
+        player_destroy(handle->playback.player);
         return failure(FAILED_TO_OPEN_STREAM);
     }
-    if (!player_init(arctracker->playback.player, arctracker->module, arctracker->playback.event_queue, arctracker->midi_queue, result.sample_rate))
+    if (!player_init(handle->playback.player, handle->module, handle->playback.event_queue, handle->midi_queue, result.sample_rate))
     {
-        player_destroy(arctracker->playback.player);
-        close_portaudio_stream(arctracker->playback.pa_stream);
+        player_destroy(handle->playback.player);
+        close_portaudio_stream(handle->playback.pa_stream);
         return failure(PLAYER_INIT_FAILED);
     }
-    if (!start_portaudio_stream(arctracker->playback.pa_stream))
+    if (!start_portaudio_stream(handle->playback.pa_stream))
     {
-        player_destroy(arctracker->playback.player);
-        close_portaudio_stream(arctracker->playback.pa_stream);
+        player_destroy(handle->playback.player);
+        close_portaudio_stream(handle->playback.pa_stream);
         return failure(FAILED_TO_START_STREAM);
     }
-    arctracker->playback.stream_started = true;
+    handle->playback.stream_started = true;
     return SUCCESS;
 }
 
@@ -369,90 +369,90 @@ static int portaudio_callback(
     return paContinue;
 }
 
-api_result_t arctracker_get_playback_state(arctracker_t *arctracker, ui_playback_state_t *playback_state)
+api_result_t arctracker_get_playback_state(arctracker_t *handle, ui_playback_state_t *playback_state)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (!arctracker->portaudio_initialised)
+    if (!handle->portaudio_initialised)
         return failure(AUDIO_SYSTEM_NOT_INITIALISED);
-    playback_state->running = arctracker->playback.stream_started;
-    playback_state->sample_rate = arctracker->playback.sample_rate;
-    playback_state->reported_latency = arctracker->playback.reported_latency;
+    playback_state->running = handle->playback.stream_started;
+    playback_state->sample_rate = handle->playback.sample_rate;
+    playback_state->reported_latency = handle->playback.reported_latency;
     return SUCCESS;
 }
 
-bool arctracker_player_cmd(arctracker_t *arctracker, player_command_t *command)
+bool arctracker_player_cmd(arctracker_t *handle, player_command_t *command)
 {
-    if (arctracker == NULL || !arctracker->playback.stream_started) return false;
-    return player_queue_command(arctracker->playback.player, *command);
+    if (handle == NULL || !handle->playback.stream_started) return false;
+    return player_queue_command(handle->playback.player, *command);
 }
 
-bool arctracker_poll_playback_event(arctracker_t *arctracker, player_event_t *event)
+bool arctracker_poll_playback_event(arctracker_t *handle, player_event_t *event)
 {
-    if (arctracker == NULL) return false;
-    return event_queue_read(arctracker->playback.event_queue, event);
+    if (handle == NULL) return false;
+    return event_queue_read(handle->playback.event_queue, event);
 }
 
-bool arctracker_poll_export_event(arctracker_t *arctracker, player_event_t *event)
+bool arctracker_poll_export_event(arctracker_t *handle, player_event_t *event)
 {
-    if (arctracker == NULL) return false;
-    if (!event_queue_read(arctracker->export.event_queue, event))
+    if (handle == NULL) return false;
+    if (!event_queue_read(handle->export.event_queue, event))
         return false;
-    return (event->type == PLAYER_ERROR);
+    return event->type == PLAYER_ERROR;
 }
 
-void arctracker_get_transport_state(arctracker_t *arctracker, ui_transport_state_t *transport_state)
+void arctracker_get_transport_state(arctracker_t *handle, ui_transport_state_t *transport_state)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return;
-    if (arctracker->playback.stream_started)
+    if (handle->playback.stream_started)
     {
-        get_player_transport_state(&arctracker->playback, arctracker->module, transport_state);
+        get_player_transport_state(&handle->playback, handle->module, transport_state);
         return;
     }
-    const int pattern_no = arctracker->module->sequence[0];
+    const int pattern_no = handle->module->sequence[0];
     transport_state->playing = false;
     transport_state->playback_available = false;
     transport_state->looping = false;
     transport_state->sequence_pos = 0;
     transport_state->pattern_index = 0;
     transport_state->pattern_no = pattern_no;
-    transport_state->pattern_length = arctracker->module->patterns[pattern_no].num_lines;
+    transport_state->pattern_length = handle->module->patterns[pattern_no].num_lines;
     transport_state->current_bpm = 0;
 }
 
-void arctracker_get_track_state(arctracker_t *arctracker, ui_track_state_t *track_state, const int track)
+void arctracker_get_track_state(arctracker_t *handle, ui_track_state_t *track_state, const int track)
 {
-    if (arctracker == NULL || arctracker->module == NULL)
+    if (handle == NULL || handle->module == NULL)
         return;
-    if (track < 0 || track >= arctracker->module->num_tracks)
+    if (track < 0 || track >= handle->module->num_tracks)
         return;
-    track_state->effects_displayed = arctracker->module->tracks[track].effects_displayed;
-    track_state->muted = arctracker->module->tracks[track].muted;
-    if (arctracker->playback.stream_started)
-        track_state->panning = audio_channel_get_stereo(arctracker->playback.player->tracks[track].audio_channel);
+    track_state->effects_displayed = handle->module->tracks[track].effects_displayed;
+    track_state->muted = handle->module->tracks[track].muted;
+    if (handle->playback.stream_started)
+        track_state->panning = audio_channel_get_stereo(handle->playback.player->tracks[track].audio_channel);
     else
-        track_state->panning = arctracker->module->tracks[track].panning;
+        track_state->panning = handle->module->tracks[track].panning;
 }
 
-void arctracker_toggle_mute_state(arctracker_t *arctracker, const int track)
+void arctracker_toggle_mute_state(arctracker_t *handle, const int track)
 {
-    if (arctracker == NULL || arctracker->module == NULL)
+    if (handle == NULL || handle->module == NULL)
         return;
-    if (track < 0 || track >= arctracker->module->num_tracks)
+    if (track < 0 || track >= handle->module->num_tracks)
         return;
-    module_toggle_mute_state(arctracker->module, track);
+    module_toggle_mute_state(handle->module, track);
 }
 
-void arctracker_set_effects_displayed(arctracker_t *arctracker, int track, int effects_displayed)
+void arctracker_set_effects_displayed(arctracker_t *handle, const int track, const int effects_displayed)
 {
-    if (arctracker == NULL || arctracker->module == NULL)
+    if (handle == NULL || handle->module == NULL)
         return;
-    if (track < 0 || track >= arctracker->module->num_tracks)
+    if (track < 0 || track >= handle->module->num_tracks)
         return;
     if (effects_displayed < 0 || effects_displayed > 4)
         return;
-    module_set_effects_displayed(arctracker->module, track, effects_displayed);
+    module_set_effects_displayed(handle->module, track, effects_displayed);
 }
 
 void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t *peak_levels)
@@ -466,9 +466,9 @@ void arctracker_get_and_reset_peak_levels(arctracker_t *handle, ui_peak_level_t 
     player_get_and_reset_peaks(handle->playback.player, &peak_levels->left, &peak_levels->right);
 }
 
-void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *export_state)
+void arctracker_get_export_state(arctracker_t *handle, ui_export_state_t *export_state)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
     {
         export_state->running = false;
         export_state->failed = false;
@@ -476,12 +476,12 @@ void arctracker_get_export_state(arctracker_t *arctracker, ui_export_state_t *ex
         export_state->error_message[0] = '\0';
         return;
     }
-    switch (arctracker->export_state)
+    switch (handle->export_state)
     {
         case RENDERING:
             export_state->running = true;
             export_state->failed = false;
-            export_state->percent_complete = arctracker->export.player->sequence.sequence_index * 100 / arctracker->module->sequence_length;
+            export_state->percent_complete = handle->export.player->sequence.sequence_index * 100 / handle->module->sequence_length;
             export_state->error_message[0] = '\0';
             break;
         case WRITING:
@@ -526,15 +526,15 @@ static void get_player_transport_state(const playback_audio_subsystem_t *playbac
     transport_state->pattern_length = module->patterns[pattern_no].num_lines;
 }
 
-void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern_event_t *pattern_buffer, int requested_lines, int requested_tracks)
+void arctracker_get_pattern(arctracker_t *handle, const int pattern_no, ui_pattern_event_t *pattern_buffer, const int requested_lines, const int requested_tracks)
 {
     if (pattern_buffer == NULL || requested_lines <= 0 || requested_tracks <= 0)
         return;
     const size_t requested_events = (size_t) requested_lines * (size_t) requested_tracks;
     memset(pattern_buffer, 0, sizeof(ui_pattern_event_t) * requested_events);
-    if (arctracker == NULL || arctracker->module == NULL)
+    if (handle == NULL || handle->module == NULL)
         return;
-    const module_t *module = arctracker->module;
+    const module_t *module = handle->module;
     if (pattern_no < 0 || pattern_no >= module->num_patterns)
         return;
     const pattern_t pattern = module->patterns[pattern_no];
@@ -551,7 +551,7 @@ void arctracker_get_pattern(arctracker_t *arctracker, int pattern_no, ui_pattern
     }
 }
 
-static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks)
+static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, const int requested_tracks, const int module_tracks)
 {
     ui_pattern_event_t *event_buffer = line_buffer;
     event_t *event = events;
@@ -596,34 +596,34 @@ static void to_internal_event(event_t *event_buffer, ui_pattern_event_t *event)
     }
 }
 
-api_result_t arctracker_export_audio(arctracker_t *arctracker, char *output_filename)
+api_result_t arctracker_export_audio(arctracker_t *handle, char *output_filename)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->export.thread_active)
+    if (handle->export.thread_active)
         return failure(PLAYER_ALREADY_RUNNING);
     const double export_sample_rate = 44100.0; // TODO: Make this configurable.
-    if (!export_init(output_filename, export_sample_rate, &arctracker->export.wav_export))
+    if (!export_init(output_filename, export_sample_rate, &handle->export.wav_export))
         return failure(EXPORT_INIT_FAILED);
-    arctracker->export.player = player_create();
-    if (arctracker->export.player == NULL)
+    handle->export.player = player_create();
+    if (handle->export.player == NULL)
         return failure(EXPORT_INIT_FAILED);
-    if (!player_init(arctracker->export.player, arctracker->module, arctracker->export.event_queue, arctracker->midi_queue, export_sample_rate))
+    if (!player_init(handle->export.player, handle->module, handle->export.event_queue, handle->midi_queue, export_sample_rate))
     {
-        player_destroy(arctracker->export.player);
+        player_destroy(handle->export.player);
         return failure(EXPORT_INIT_FAILED);
     }
     arc_thread_t export_thread;
-    if (!arc_thread_create(&export_thread, run_export, arctracker))
+    if (!arc_thread_create(&export_thread, run_export, handle))
     {
-        player_destroy(arctracker->export.player);
+        player_destroy(handle->export.player);
         return failure(EXPORT_THREAD_CREATE_FAILED);
     }
-    arctracker->export.thread_active = true;
-    arctracker->export.audio_thread = export_thread;
-    arctracker->export_state = RENDERING;
+    handle->export.thread_active = true;
+    handle->export.audio_thread = export_thread;
+    handle->export_state = RENDERING;
     return SUCCESS;
 }
 
@@ -655,184 +655,184 @@ static void run_export(void *arg)
     arctracker->export_state = export_finish(&wav_export) ? COMPLETE : FAILED;
 }
 
-api_result_t arctracker_export_sample(arctracker_t *arctracker, int instrument_no, char *output_filename)
+api_result_t arctracker_export_sample(arctracker_t *handle, const int instrument_no, char *output_filename)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (instrument_no < 0 || instrument_no >= NUM_INSTRUMENT_SLOTS)
         return failure(INVALID_INSTRUMENT_INDEX);
-    const instrument_t instrument = arctracker->module->instruments[instrument_no];
+    const instrument_t instrument = handle->module->instruments[instrument_no];
     if (!instrument.assigned)
         return failure(BAD_INSTRUMENT_INDEX);
-    if (!export_sample(arctracker->module, instrument_no, output_filename))
+    if (!export_sample(handle->module, instrument_no, output_filename))
         return failure(EXPORT_SAMPLE_FAILED);
     return SUCCESS;
 }
 
-api_result_t arctracker_player_shutdown(arctracker_t *arctracker)
+api_result_t arctracker_player_shutdown(arctracker_t *handle)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (!arctracker->playback.stream_started)
+    if (!handle->playback.stream_started)
         return failure(PLAYER_NOT_RUNNING);
-    close_portaudio_stream(arctracker->playback.pa_stream);
+    close_portaudio_stream(handle->playback.pa_stream);
     printf("PortAudio stream closed\n");
-    arctracker->playback.stream_started = false;
+    handle->playback.stream_started = false;
     printf("Destroying player\n");
-    player_destroy(arctracker->playback.player);
-    arctracker->playback.player = NULL;
+    player_destroy(handle->playback.player);
+    handle->playback.player = NULL;
     printf("Player destroyed\n");
     return SUCCESS;
 }
 
-api_result_t arctracker_export_cleanup(arctracker_t *arctracker)
+api_result_t arctracker_export_cleanup(arctracker_t *handle)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (!arctracker->export.thread_active)
+    if (!handle->export.thread_active)
         return failure(EXPORT_NOT_STARTED);
-    arc_thread_join(&arctracker->export.audio_thread);
-    arctracker->export.thread_active = false;
-    player_destroy(arctracker->export.player);
-    arctracker->export.player = NULL;
-    arctracker->export_state = IDLE;
+    arc_thread_join(&handle->export.audio_thread);
+    handle->export.thread_active = false;
+    player_destroy(handle->export.player);
+    handle->export.player = NULL;
+    handle->export_state = IDLE;
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_get_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event_buffer)
+api_result_t arctracker_edit_get_event(arctracker_t *handle, const int pattern_no, const int pattern_index, const int track, ui_pattern_event_t *event_buffer)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (event_buffer == NULL)
         return failure(BAD_EVENT_BUFFER);
     event_t event = {0};
-    edit_result_t result = editor_get_event(arctracker->module, pattern_no, pattern_index, track, &event);
+    const edit_result_t result = editor_get_event(handle->module, pattern_no, pattern_index, track, &event);
     if (!result.success)
         return failure(result.error_message);
     to_ui_event(event_buffer, &event);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_event(arctracker_t *arctracker, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event)
+api_result_t arctracker_edit_set_event(arctracker_t *handle, const int pattern_no, const int pattern_index, const int track, ui_pattern_event_t *event)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (event == NULL)
         return failure(BAD_EVENT_BUFFER);
-    if (arctracker->playback.player->playing)
+    if (handle->playback.player->playing)
         return failure(PLAYER_PLAYING);
     event_t internal_event;
     to_internal_event(&internal_event, event);
-    edit_result_t result = editor_set_event(arctracker->module, pattern_no, pattern_index, track, &internal_event);
+    const edit_result_t result = editor_set_event(handle->module, pattern_no, pattern_index, track, &internal_event);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_get_sequence(arctracker_t *arctracker, int *sequence, int expected_sequence_len)
+api_result_t arctracker_edit_get_sequence(arctracker_t *handle, int *sequence, const int expected_sequence_len)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (sequence == NULL)
         return failure(BAD_SEQUENCE_BUFFER);
-    module_t *module = arctracker->module;
+    const module_t *module = handle->module;
     if (expected_sequence_len != module->sequence_length)
         return failure(INVALID_SEQUENCE_LENGTH);
     memcpy(sequence, module->sequence, module->sequence_length * sizeof(int));
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_sequence(arctracker_t *arctracker, const int *new_sequence, const int new_sequence_len)
+api_result_t arctracker_edit_set_sequence(arctracker_t *handle, const int *new_sequence, const int new_sequence_len)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (new_sequence == NULL)
         return failure(BAD_SEQUENCE_BUFFER);
     if (new_sequence_len <= 0)
         return failure(INVALID_SEQUENCE_LENGTH);
-    if (arctracker->playback.player->playing)
+    if (handle->playback.player->playing)
         return failure(PLAYER_PLAYING);
-    edit_result_t result = editor_set_sequence(arctracker->module, new_sequence, new_sequence_len);
+    const edit_result_t result = editor_set_sequence(handle->module, new_sequence, new_sequence_len);
     if (!result.success)
         return failure(result.error_message);
-    player_sequence_changed(arctracker->playback.player, arctracker->module);
+    player_sequence_changed(handle->playback.player, handle->module);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_create_pattern(arctracker_t *arctracker, const int pattern_length, int *new_pattern_no)
+api_result_t arctracker_edit_create_pattern(arctracker_t *handle, const int pattern_length, int *new_pattern_no)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (pattern_length < 1 || pattern_length > MAX_PATTERN_LENGTH)
         return failure(INVALID_PATTERN_LENGTH);
     if (new_pattern_no == NULL)
         return failure(BAD_BUFFER);
-    if (arctracker->playback.player->playing)
+    if (handle->playback.player->playing)
         return failure(PLAYER_PLAYING);
-    edit_result_t result = editor_create_pattern(arctracker->module, pattern_length, new_pattern_no);
+    const edit_result_t result = editor_create_pattern(handle->module, pattern_length, new_pattern_no);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_delete_pattern(arctracker_t *arctracker, const int pattern_no)
+api_result_t arctracker_edit_delete_pattern(arctracker_t *handle, const int pattern_no)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (pattern_no != arctracker->module->num_patterns - 1)
+    if (pattern_no != handle->module->num_patterns - 1)
         return failure(INVALID_PATTERN_NUMBER);
-    if (arctracker->playback.player->playing)
+    if (handle->playback.player->playing)
         return failure(PLAYER_PLAYING);
-    edit_result_t result = editor_delete_pattern(arctracker->module, pattern_no);
+    const edit_result_t result = editor_delete_pattern(handle->module, pattern_no);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_pattern_length(arctracker_t *arctracker, const int pattern_no, const int new_length)
+api_result_t arctracker_edit_set_pattern_length(arctracker_t *handle, const int pattern_no, const int new_length)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (pattern_no < 0 || pattern_no >= arctracker->module->num_patterns)
+    if (pattern_no < 0 || pattern_no >= handle->module->num_patterns)
         return failure(INVALID_PATTERN_NUMBER);
     if (new_length < 1 || new_length > MAX_PATTERN_LENGTH)
         return failure(INVALID_PATTERN_LENGTH);
-    if (arctracker->playback.player->playing)
+    if (handle->playback.player->playing)
         return failure(PLAYER_PLAYING);
-    const edit_result_t result = editor_set_pattern_length(arctracker->module, pattern_no, new_length);
+    const edit_result_t result = editor_set_pattern_length(handle->module, pattern_no, new_length);
     if (!result.success)
         return failure(result.error_message);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint8_t slot, const ui_instrument_update_t instrument_update)
+api_result_t arctracker_edit_set_instrument(arctracker_t *handle, const uint8_t slot, const ui_instrument_update_t instrument_update)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     sample_t sample = {0};
     if (instrument_update.assigned)
     {
-        if (instrument_update.sample_index >= arctracker->module->sample_slots)
+        if (instrument_update.sample_index >= handle->module->sample_slots)
             return failure(INVALID_SAMPLE_INDEX);
-        sample = arctracker->module->samples[instrument_update.sample_index];
+        sample = handle->module->samples[instrument_update.sample_index];
         if (sample.sample_length == 0)
             return failure(INVALID_SAMPLE_INDEX);
     }
@@ -851,7 +851,7 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
     if (instrument_update.fine_tuning < -128 || instrument_update.fine_tuning > 127)
         return failure(INVALID_FINE_TUNING);
     const edit_result_t result = editor_update_instrument(
-        arctracker->module,
+        handle->module,
         slot,
         instrument_update.assigned,
         instrument_update.name,
@@ -863,22 +863,22 @@ api_result_t arctracker_edit_set_instrument(arctracker_t *arctracker, const uint
         instrument_update.sample_index);
     if (!result.success)
         return failure(result.error_message);
-    editor_update_sample(arctracker->module, instrument_update.sample_index, instrument_update.base_note, instrument_update.fine_tuning);
-    player_instrument_changed(arctracker->playback.player, slot);
+    editor_update_sample(handle->module, instrument_update.sample_index, instrument_update.base_note, instrument_update.fine_tuning);
+    player_instrument_changed(handle->playback.player, slot);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *filename, ui_sample_info_t *sample_info)
+api_result_t arctracker_edit_load_sample(arctracker_t *handle, const char *filename, ui_sample_info_t *sample_info)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (sample_info == NULL)
         return failure(BAD_BUFFER);
     int sample_index;
     sample_t linked_sample;
-    const edit_result_t result = editor_load_sample(arctracker->module, filename, &sample_index, &linked_sample);
+    const edit_result_t result = editor_load_sample(handle->module, filename, &sample_index, &linked_sample);
     if (!result.success)
         return failure(result.error_message);
     sample_info->sample_index = sample_index;
@@ -890,7 +890,7 @@ api_result_t arctracker_edit_load_sample(arctracker_t *arctracker, const char *f
 }
 
 api_result_t arctracker_edit_set_module_meta_data(
-    arctracker_t *arctracker,
+    arctracker_t *handle,
     const char *name,
     const char *author,
     const int default_pattern_length,
@@ -898,9 +898,9 @@ api_result_t arctracker_edit_set_module_meta_data(
     const ui_volume_mapping_type_t volume_mapping_type,
     const bool relative_pitch_bend)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (name == NULL)
         return failure(MODULE_NAME_MISSING);
@@ -912,118 +912,118 @@ api_result_t arctracker_edit_set_module_meta_data(
         return failure(AUTHOR_TOO_LONG);
     if (default_pattern_length < 1 || default_pattern_length > MAX_PATTERN_LENGTH)
         return failure(INVALID_PATTERN_LENGTH);
-    const edit_result_t result = editor_set_module_title(arctracker->module, name, author, default_pattern_length);
+    const edit_result_t result = editor_set_module_title(handle->module, name, author, default_pattern_length);
     if (!result.success)
         return failure(result.error_message);
     bool playback_policy_changed = false;
-    if (interpolation_type == ARCTRACKER && arctracker->module->interpolation_type == NONE)
+    if (interpolation_type == ARCTRACKER && handle->module->interpolation_type == NONE)
     {
-        arctracker->module->interpolation_type = LINEAR;
+        handle->module->interpolation_type = LINEAR;
         playback_policy_changed = true;
     }
-    else if (interpolation_type == ARCHIMEDES && arctracker->module->interpolation_type == LINEAR)
+    else if (interpolation_type == ARCHIMEDES && handle->module->interpolation_type == LINEAR)
     {
-        arctracker->module->interpolation_type = NONE;
+        handle->module->interpolation_type = NONE;
         playback_policy_changed = true;
     }
-    if (volume_mapping_type == UI_VOLUME_ARCHIMEDES && arctracker->module->volume_mapping_type == VOLUME_AMIGA)
+    if (volume_mapping_type == UI_VOLUME_ARCHIMEDES && handle->module->volume_mapping_type == VOLUME_AMIGA)
     {
-        arctracker->module->volume_mapping_type = VOLUME_ARCHIMEDES;
+        handle->module->volume_mapping_type = VOLUME_ARCHIMEDES;
         playback_policy_changed = true;
     }
-    else if (volume_mapping_type == UI_VOLUME_AMIGA && arctracker->module->volume_mapping_type == VOLUME_ARCHIMEDES)
+    else if (volume_mapping_type == UI_VOLUME_AMIGA && handle->module->volume_mapping_type == VOLUME_ARCHIMEDES)
     {
-        arctracker->module->volume_mapping_type = VOLUME_AMIGA;
+        handle->module->volume_mapping_type = VOLUME_AMIGA;
         playback_policy_changed = true;
     }
-    if (relative_pitch_bend != arctracker->module->relative_pitch_bend)
+    if (relative_pitch_bend != handle->module->relative_pitch_bend)
     {
-        arctracker->module->relative_pitch_bend = relative_pitch_bend;
+        handle->module->relative_pitch_bend = relative_pitch_bend;
         playback_policy_changed = true;
     }
     if (playback_policy_changed)
     {
-        player_playback_policy_changed(arctracker->playback.player);
+        player_playback_policy_changed(handle->playback.player);
     }
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_num_tracks(arctracker_t *arctracker, const int num_tracks, const bool init_new_tracks)
+api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, const int num_tracks, const bool init_new_tracks)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (arctracker->playback.player->playing)
+    if (handle->playback.player->playing)
         return failure(PLAYER_PLAYING);
     if (num_tracks < 1 || num_tracks > MAX_TRACKS)
         return failure(INVALID_TRACK_COUNT);
-    const player_restore_state_t player_state = player_get_restore_state(arctracker->playback.player);
-    if (arctracker->playback.stream_started)
-        arctracker_player_shutdown(arctracker);
-    const edit_result_t edit_result = editor_set_num_tracks(arctracker->module, num_tracks, init_new_tracks);
+    const player_restore_state_t player_state = player_get_restore_state(handle->playback.player);
+    if (handle->playback.stream_started)
+        arctracker_player_shutdown(handle);
+    const edit_result_t edit_result = editor_set_num_tracks(handle->module, num_tracks, init_new_tracks);
     if (!edit_result.success)
         return failure(edit_result.error_message);
-    api_result_t restart_result = arctracker_player_start(arctracker);
-    player_restore_state(arctracker->playback.player, player_state);
+    api_result_t restart_result = arctracker_player_start(handle);
+    player_restore_state(handle->playback.player, player_state);
     if (!restart_result.success)
         return failure(restart_result.error_message);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_tempo(arctracker_t *arctracker, const uint8_t lines_per_beat, const uint8_t beats_per_minute)
+api_result_t arctracker_edit_set_tempo(arctracker_t *handle, const uint8_t lines_per_beat, const uint8_t beats_per_minute)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
     if (beats_per_minute > 0 && lines_per_beat == 0)
         return failure(TEMPO_UNDEFINED);
-    module_set_lines_per_beat(arctracker->module, lines_per_beat);
-    module_set_initial_bpm(arctracker->module, beats_per_minute);
-    player_initial_bpm_changed(arctracker->playback.player);
+    module_set_lines_per_beat(handle->module, lines_per_beat);
+    module_set_initial_bpm(handle->module, beats_per_minute);
+    player_initial_bpm_changed(handle->playback.player);
     return SUCCESS;
 }
 
-api_result_t arctracker_edit_set_panning(arctracker_t *arctracker, const uint8_t track, const uint8_t panning)
+api_result_t arctracker_edit_set_panning(arctracker_t *handle, const uint8_t track, const uint8_t panning)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->module == NULL)
+    if (handle->module == NULL)
         return failure(NO_MODULE_LOADED);
-    if (track >= arctracker->module->num_tracks)
+    if (track >= handle->module->num_tracks)
         return failure(INVALID_TRACK_NUMBER);
-    module_set_initial_panning(arctracker->module, track, panning);
-    player_initial_track_panning_changed(arctracker->playback.player, track);
+    module_set_initial_panning(handle->module, track, panning);
+    player_initial_track_panning_changed(handle->playback.player, track);
     return SUCCESS;
 }
 
-api_result_t arctracker_destroy(arctracker_t *arctracker)
+api_result_t arctracker_destroy(arctracker_t *handle)
 {
-    if (arctracker == NULL)
+    if (handle == NULL)
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (arctracker->playback.stream_started)
+    if (handle->playback.stream_started)
     {
-        const api_result_t result = arctracker_player_shutdown(arctracker);
+        const api_result_t result = arctracker_player_shutdown(handle);
         if (!result.success)
             fprintf(stderr, "%s\n", result.error_message);
     }
-    if (arctracker->module != NULL)
-        remove_module(arctracker);
-    event_queue_destroy(arctracker->playback.event_queue);
-    event_queue_destroy(arctracker->export.event_queue);
-    midi_queue_destroy(arctracker->midi_queue);
-    if (arctracker->portaudio_initialised && !stop_portaudio())
+    if (handle->module != NULL)
+        remove_module(handle);
+    event_queue_destroy(handle->playback.event_queue);
+    event_queue_destroy(handle->export.event_queue);
+    midi_queue_destroy(handle->midi_queue);
+    if (handle->portaudio_initialised && !stop_portaudio())
     {
         // PortAudio returned an error code when terminating, but the utility of that is only
         // that it might indicate a bug in Arctracker. It is not worth reporting to the user.
         fprintf(stderr, "%s\n", get_error_message());
     }
-    deallocate(MAIN, arctracker);
-    count_resources(MAIN, "main");
-    count_resources(MODULE, "module");
-    count_resources(PLAYER, "player");
-    count_resources(AUDIO, "audio");
+    deallocate(MAIN, handle);
+    assert(resource_count_for(MAIN) == 0);
+    assert(resource_count_for(MODULE) == 0);
+    assert(resource_count_for(PLAYER) == 0);
+    assert(resource_count_for(AUDIO) == 0);
     return SUCCESS;
 }
 
@@ -1050,11 +1050,4 @@ static api_result_t failure(char *error_message)
         snprintf(result.error_message, sizeof result.error_message, "%s", error_message);
     clear_error_state();
     return result;
-}
-
-static void count_resources(resource_group_t group, char *group_name)
-{
-    const int resource_count = resource_count_for(group);
-    if (resource_count > 0)
-        fprintf(stderr, "WARNING: %d %s resources were not deallocated\n", resource_count, group_name);
 }

@@ -9,9 +9,9 @@ typedef enum {
     MAIN = 0, MODULE = 1, PLAYER = 2, AUDIO = 3
 } resource_group_t;
 
-void *allocate_array(resource_group_t, int no_elements, size_t element_size);
+void *allocate_array(resource_group_t, unsigned int no_elements, size_t element_size);
 
-void *reallocate_array(resource_group_t resource_group, void *array_before, int no_elements, size_t element_size);
+void *reallocate_array(resource_group_t resource_group, void *array_before, unsigned int no_elements, size_t element_size);
 
 void deallocate(resource_group_t, void *);
 

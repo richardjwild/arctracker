@@ -79,7 +79,6 @@ typedef struct {
 } sample_slice_t;
 
 typedef struct {
-    // TODO: Add instrument_type here when the time comes.
     bool assigned;
     char name[MAX_LEN_SAMPLENAME];
     uint8_t default_volume;

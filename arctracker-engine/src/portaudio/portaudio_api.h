@@ -6,7 +6,7 @@
 
 #define AUDIO_DEVICE_NAME_SIZE 256
 #define HOST_API_NAME_SIZE 256
-#define DEFAULT_PORTAUDIO_DEVICE_INDEX -1
+#define DEFAULT_PORTAUDIO_DEVICE_INDEX (-1)
 
 typedef struct {
     int device_index;

@@ -13,7 +13,7 @@ typedef struct {
 
 typedef struct {
     float *audio_data;
-    int frames;
+    uint32_t frames;
     int sample_rate;
 } audio_t;
 

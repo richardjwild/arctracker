@@ -1,6 +1,5 @@
 #include "editor.h"
 #include <stdio.h>
-#include <string.h>
 #include "messages.h"
 #include "io/error.h"
 #include "loader/loader.h"
@@ -129,7 +128,7 @@ edit_result_t editor_load_sample(module_t *module, const char *filename, int *sa
     return EDIT_SUCCESS;
 }
 
-edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author, uint16_t default_pattern_length)
+edit_result_t editor_set_module_title(module_t *module, const char *name, const char *author, const uint16_t default_pattern_length)
 {
     module_set_name(module, name);
     module_set_author(module, author);

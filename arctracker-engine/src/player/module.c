@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "module.h"
-#include <math.h>
 #include "messages.h"
 #include "tempo.h"
 #include "io/error.h"
@@ -177,7 +176,6 @@ void module_delete_pattern(module_t *module, const int pattern_no)
 {
     if (pattern_no != module->num_patterns - 1)
     {
-        // TODO: Make this capable of deleting a pattern from the middle of the array.
         return;
     }
     deallocate(MODULE, module->patterns[pattern_no].events);

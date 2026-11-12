@@ -45,7 +45,7 @@ static const load_sample_result_t FAILED_TO_READ_SAMPLE_FILE = {
 static format_t *known_formats(void);
 static int16_t clamp_to_pcm16(float sample);
 static load_module_result_t successfully_loaded_module(module_t *);
-static load_sample_result_t successfully_loaded_sample(int length, float rate, float *data);
+static load_sample_result_t successfully_loaded_sample(unsigned int length, float rate, float *data);
 
 load_module_result_t load_module(const char *filename)
 {
@@ -187,7 +187,7 @@ static load_module_result_t successfully_loaded_module(module_t *module)
     };
 }
 
-static load_sample_result_t successfully_loaded_sample(const int length, const float rate, float *data)
+static load_sample_result_t successfully_loaded_sample(const unsigned int length, const float rate, float *data)
 {
     return (load_sample_result_t) {
         .file_read = true,

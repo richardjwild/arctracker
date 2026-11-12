@@ -36,7 +36,7 @@ gainer_state_t gainer_init(const gain_curves_t *gain_curves, const volume_mappin
     return state;
 }
 
-void gainer_apply(gainer_state_t *state, float *channel_buffer, const int frames_requested)
+void gainer_apply(gainer_state_t *state, float *channel_buffer, const unsigned int frames_requested)
 {
     int volume = state->volume + state->modulation;
     if (volume < 0) volume = 0;
@@ -45,7 +45,7 @@ void gainer_apply(gainer_state_t *state, float *channel_buffer, const int frames
     const float gain = curve[volume];
     assert(gain >= 0.0);
     assert(gain <= 1.0);
-    for (int frame = 0; frame < frames_requested; frame++)
+    for (unsigned int frame = 0; frame < frames_requested; frame++)
     {
         channel_buffer[frame] *= gain;
     }

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #endif
 
-static bool generate_audio(audio_generator_state_t *, float *, int);
+static bool generate_audio(audio_generator_state_t *, float *, unsigned int);
 static float interpolate_linear(const float *, float);
 static float interpolate_none(const float *, float);
 static void pitch_slide_on(audio_generator_state_t *state, int, bool);
@@ -101,7 +101,7 @@ audio_generator_t init_sampler(
     };
 }
 
-static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, int frames_to_write)
+static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, unsigned int frames_to_write)
 {
     sampler_state_t *sampler = state->sampler;
     const float period = sampler->period + sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation + sampler->glissando_period_modulation;
@@ -111,7 +111,7 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
         memset(channel_buffer, 0, frames_to_write * sizeof(float));
         return false;
     }
-    float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? interpolate_linear : interpolate_none;
+    float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? &interpolate_linear : &interpolate_none;
     const float *sample_data = sampler->sample_data;
     const float phase_increment = sampler->phase_increment_per_period / (float) period;
     const bool sample_repeats = sampler->sample_repeats && !sampler->repeat_cleared;

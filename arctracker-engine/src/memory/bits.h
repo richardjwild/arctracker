@@ -69,6 +69,11 @@ static inline uint16_t read_u16_le(const uint8_t *addr)
     return addr[0] | addr[1] << 8;
 }
 
+static inline uint16_t read_u16_be(const uint8_t *addr)
+{
+    return ((uint16_t) addr[0] << 8) | addr[1];
+}
+
 static inline uint32_t read_u32_le(const uint8_t *addr)
 {
     return addr[0] | addr[1] << 8 | addr[2] << 16 | addr[3] << 24;

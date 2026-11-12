@@ -1,7 +1,5 @@
 #ifndef ARCTRACKER_ENGINE_AUDIO_GENERATOR_H
 #define ARCTRACKER_ENGINE_AUDIO_GENERATOR_H
-
-#include <stdint.h>
 #include <stdbool.h>
 #include "player/lfo.h"
 
@@ -34,7 +32,7 @@ typedef union {
 
 typedef struct {
     audio_generator_state_t state;
-    bool (*generate_audio)(audio_generator_state_t *state, float *channel_buffer, int frames_requested);
+    bool (*generate_audio)(audio_generator_state_t *state, float *channel_buffer, unsigned int frames_requested);
     void (*tick)(audio_generator_state_t *state, int ticks, int ticks_per_event);
     void (*pitch_slide_on)(audio_generator_state_t *state, int slide_rate, bool fine);
     void (*pitch_slide_off)(audio_generator_state_t *state);

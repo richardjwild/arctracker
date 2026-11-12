@@ -11,7 +11,7 @@ void lfo_init_waveforms(void)
     for (int phase = 0; phase < PT_LFO_WAVELENGTH; phase++)
     {
         pt_sine_waveform[phase] = sinf(2 * PI * (float) phase / PT_LFO_WAVELENGTH);
-        pt_ramp_waveform[phase] = (float) phase / (PT_LFO_WAVELENGTH / 2) - 1.0f;
+        pt_ramp_waveform[phase] = (float) phase / (PT_LFO_WAVELENGTH / 2.0f) - 1.0f;
         pt_square_waveform[phase] = phase < PT_LFO_WAVELENGTH / 2 ? 1.0f : -1.0f;
     }
 }

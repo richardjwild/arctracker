@@ -13,7 +13,7 @@ typedef union {
 
 typedef struct {
     audio_spatialiser_state_t state;
-    void (*spatialise)(audio_spatialiser_state_t *state, const float *mono, stereo_frame_t *stereo, int num_frames);
+    void (*spatialise)(audio_spatialiser_state_t *state, const float *mono, stereo_frame_t *stereo, unsigned int num_frames);
     void (*set_amount)(audio_spatialiser_state_t *state, uint8_t amount);
     uint8_t (*get_amount)(audio_spatialiser_state_t *state);
     void (*slide_on)(audio_spatialiser_state_t *state, int slide_rate, int slide_amount, bool dtt_mode);

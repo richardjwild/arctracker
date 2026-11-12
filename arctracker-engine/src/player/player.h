@@ -82,7 +82,7 @@ typedef struct {
 } player_restore_state_t;
 
 typedef struct {
-    unsigned long frames_unfilled;
+    uint64_t frames_unfilled;
     bool song_ended;
 } player_render_audio_result_t;
 
@@ -113,7 +113,7 @@ player_t *player_create(void);
 
 bool player_init(player_t *player, module_t *module, player_event_queue_t *player_event_queue, midi_command_queue_t *midi_queue, double sample_rate);
 
-player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, unsigned long frames_requested, bool halt_at_sequence_end);
+player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, uint64_t frames_requested, bool halt_at_sequence_end);
 
 bool player_queue_command(const player_t *, player_command_t);
 

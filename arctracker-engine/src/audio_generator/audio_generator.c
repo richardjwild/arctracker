@@ -1,7 +1,7 @@
 #include "audio_generator/audio_generator.h"
 #include <string.h>
 
-static bool generate_audio(audio_generator_state_t *, float *, int);
+static bool generate_audio(audio_generator_state_t *, float *, unsigned int);
 static void tick(audio_generator_state_t *, int, int);
 static void pitch_slide_on(audio_generator_state_t *state, int, bool);
 static void pitch_slide_off(audio_generator_state_t *state);
@@ -43,21 +43,21 @@ audio_generator_t null_audio_generator(void)
     };
 }
 
-static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, const int no_frames)
+static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, const unsigned int no_frames)
 {
     (void) state;
     memset(channel_buffer, 0, sizeof(float) * no_frames);
     return true;
 }
 
-static void tick(audio_generator_state_t *state, int ticks, int ticks_per_event)
+static void tick(audio_generator_state_t *state, const int ticks, const int ticks_per_event)
 {
     (void) state;
     (void) ticks;
     (void) ticks_per_event;
 }
 
-static void pitch_slide_on(audio_generator_state_t *state, int slide_rate, bool fine)
+static void pitch_slide_on(audio_generator_state_t *state, const int slide_rate, const bool fine)
 {
     (void) state;
     (void) slide_rate;
@@ -69,13 +69,13 @@ static void pitch_slide_off(audio_generator_state_t *state)
     (void) state;
 }
 
-static void set_tone_portamento_target(audio_generator_state_t *state, int target_note)
+static void set_tone_portamento_target(audio_generator_state_t *state, const int target_note)
 {
     (void) state;
     (void) target_note;
 }
 
-static void tone_portamento_on(audio_generator_state_t *state, int slide_rate)
+static void tone_portamento_on(audio_generator_state_t *state, const int slide_rate)
 {
     (void) state;
     (void) slide_rate;
@@ -86,7 +86,7 @@ static void tone_portamento_off(audio_generator_state_t *state)
     (void) state;
 }
 
-static void vibrato_on(audio_generator_state_t *state, int rate, int depth, pt_waveform_t waveform, bool retrigger)
+static void vibrato_on(audio_generator_state_t *state, const int rate, const int depth, const pt_waveform_t waveform, const bool retrigger)
 {
     (void) state;
     (void) rate;
@@ -100,7 +100,7 @@ static void vibrato_off(audio_generator_state_t *state)
     (void) state;
 }
 
-static void arpeggio_on(audio_generator_state_t *state, int bottom_note, int interval_1, int interval_2, int speed)
+static void arpeggio_on(audio_generator_state_t *state, const int bottom_note, const int interval_1, const int interval_2, const int speed)
 {
     (void) state;
     (void) bottom_note,
@@ -114,31 +114,31 @@ static void arpeggio_off(audio_generator_state_t *state)
     (void) state;
 }
 
-static void set_glissando(audio_generator_state_t *state, bool glissando_on)
+static void set_glissando(audio_generator_state_t *state, const bool glissando_on)
 {
     (void) state;
     (void) glissando_on;
 
 }
-static void silence_after_delay(audio_generator_state_t *state, int ticks)
+static void silence_after_delay(audio_generator_state_t *state, const int ticks)
 {
     (void) state;
     (void) ticks;
 }
 
-static void retrigger(audio_generator_state_t *state, int ticks)
+static void retrigger(audio_generator_state_t *state, const int ticks)
 {
     (void) state;
     (void) ticks;
 }
 
-static void advance_phase(audio_generator_state_t *state, int frames)
+static void advance_phase(audio_generator_state_t *state, const int frames)
 {
     (void) state;
     (void) frames;
 }
 
-static void clear_repeat(audio_generator_state_t *state, int ticks)
+static void clear_repeat(audio_generator_state_t *state, const int ticks)
 {
     (void) state;
     (void) ticks;

@@ -45,15 +45,15 @@ api_result_t arctracker_use_default_output(arctracker_t *handle, uint32_t sample
 
 int arctracker_get_available_midi_count(midi_subsystem_t *handle);
 
-api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *handle, ui_midi_device_info_t *devices, int requested_count);
+api_result_t arctracker_get_available_midi_devices(midi_subsystem_t *handle, ui_midi_device_info_t *devices_out, int requested_count);
 
 api_result_t arctracker_use_midi_device(midi_subsystem_t *handle, const char *name);
 
-void arctracker_midi_set_playback_channel(midi_subsystem_t *midi, int channel);
+void arctracker_midi_set_playback_channel(midi_subsystem_t *handle, int channel);
 
-void arctracker_midi_set_playback_instrument(midi_subsystem_t *midi, uint8_t instrument);
+void arctracker_midi_set_playback_instrument(midi_subsystem_t *handle, uint8_t instrument);
 
-void arctracker_midi_keyboard_note_on(const midi_subsystem_t *midi, int note);
+void arctracker_midi_keyboard_note_on(const midi_subsystem_t *handle, int note);
 
 api_result_t arctracker_get_current_module(arctracker_t *handle, ui_module_info_t *module_info);
 
@@ -69,7 +69,7 @@ api_result_t arctracker_module_create(arctracker_t *handle, new_module_params_t 
 
 api_result_t arctracker_player_start(arctracker_t *handle);
 
-api_result_t arctracker_get_playback_state(arctracker_t *arctracker, ui_playback_state_t *playback_state);
+api_result_t arctracker_get_playback_state(arctracker_t *handle, ui_playback_state_t *playback_state);
 
 bool arctracker_player_cmd(arctracker_t *handle, player_command_t *command);
 
@@ -99,7 +99,7 @@ api_result_t arctracker_player_shutdown(arctracker_t *handle);
 
 api_result_t arctracker_export_cleanup(arctracker_t *handle);
 
-api_result_t arctracker_edit_get_event(arctracker_t *handle, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event);
+api_result_t arctracker_edit_get_event(arctracker_t *handle, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event_buffer);
 
 api_result_t arctracker_edit_set_event(arctracker_t *handle, int pattern_no, int pattern_index, int track, ui_pattern_event_t *event);
 

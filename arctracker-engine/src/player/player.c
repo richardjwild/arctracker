@@ -37,7 +37,7 @@ static void process_set_master_gain_command(player_t *player, master_gain_comman
 static void process_track_mute_state_changed_command(const player_t *player, track_mute_command_t data);
 static void set_current_frame(player_t *, bool, bool);
 static void define_implicit_loop_start(player_t *);
-static void player_tick(player_t *player, unsigned long);
+static void player_tick(player_t *player, uint64_t);
 static bool player_step(player_t *player);
 static audio_channel_t *initialise_audio_channels(const module_t *, const gain_curves_t *);
 static player_track_t *initialise_tracks(int, audio_channel_t *);
@@ -51,7 +51,7 @@ static void clear_scheduled_notes(const player_t *);
 static void note_off(audio_channel_t *);
 static void on_new_pattern_line(player_t *);
 static void on_new_event(const player_t *, event_t *, player_track_t *);
-static void tick_audio_dsps(const player_t *, int, int, unsigned long);
+static void tick_audio_dsps(const player_t *, int, int, uint64_t);
 static void player_start(player_t *);
 static void player_stop(player_t *);
 static void player_seek(player_t *, int, int);
@@ -120,20 +120,20 @@ bool player_init(player_t *player, module_t *module, player_event_queue_t *playe
     return true;
 }
 
-player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, const unsigned long frames_requested, const bool halt_at_sequence_end)
+player_render_audio_result_t player_render_audio(player_t *player, float *output_buffer, const uint64_t frames_requested, const bool halt_at_sequence_end)
 {
     assert(player->initialised);
-    unsigned long frames_unwritten = frames_requested;
+    uint64_t frames_unwritten = frames_requested;
     audio_accumulator_t *audio_accumulator = &player->tick_scheduler.audio_accumulator;
-    unsigned long frames_until_next_tick = player->audio_out.frames_until_next_tick;
-    unsigned long buffer_offset = 0;
+    uint64_t frames_until_next_tick = player->audio_out.frames_until_next_tick;
+    uint64_t buffer_offset = 0;
     //
     // MIDI commands are processed here because we want to service them as quickly as is feasible.
     //
     process_midi_commands(player);
     while (!(halt_at_sequence_end && player->sequence.jumped_back) && frames_unwritten > 0)
     {
-        const unsigned long frames_to_write = frames_unwritten > frames_until_next_tick ? frames_until_next_tick : frames_unwritten;
+        const uint64_t frames_to_write = frames_unwritten > frames_until_next_tick ? frames_until_next_tick : frames_unwritten;
         if (frames_to_write > 0)
         {
             assert(buffer_offset + frames_to_write * 2 <= frames_requested * 2);
@@ -564,7 +564,7 @@ static void define_implicit_loop_start(player_t *player)
     player->loop_state.looping = false;
 }
 
-static void player_tick(player_t *player, const unsigned long frames_until_next_tick)
+static void player_tick(player_t *player, const uint64_t frames_until_next_tick)
 {
     process_player_commands(player);
     if (player->playing)
@@ -664,7 +664,7 @@ static void on_new_event(const player_t *player, event_t *event, player_track_t 
     update_effect_memories(event, &track->command_state.effect_memory);
 }
 
-static void tick_audio_dsps(const player_t *player, const int ticks, const int ticks_per_event, const unsigned long frames_until_next_tick)
+static void tick_audio_dsps(const player_t *player, const int ticks, const int ticks_per_event, const uint64_t frames_until_next_tick)
 {
     for (int track_no = 0; track_no < player->module->num_tracks; track_no++)
     {

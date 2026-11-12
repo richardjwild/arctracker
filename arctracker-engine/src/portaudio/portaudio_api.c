@@ -5,7 +5,6 @@
 #include <string.h>
 #include "messages.h"
 #include "io/error.h"
-#include "memory/heap.h"
 
 static bool get_output_parameters(const portaudio_config_t *config, PaStreamParameters *output_parameters);
 static bool get_device_index(const portaudio_config_t *config, int *device_index);

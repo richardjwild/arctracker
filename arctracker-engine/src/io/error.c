@@ -1,37 +1,17 @@
+#include "error.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _WIN32
-#include <windows.h>
-#endif
+
+#define MAX_ERROR_MESSAGE_LENGTH 256
 
 static bool error_occurred = false;
-static char *error_message = NULL;
-
-void error(char *error_message_p)
-{
-    error_message = error_message_p;
-    error_occurred = true;
-}
-
-void error_with_detail(char *error_message_p, const char *detail)
-{
-    static char message_buffer[256];
-    error_occurred = true;
-    if (snprintf(message_buffer, 256, "%s [%s]", error_message_p, detail) < 256)
-        error_message = message_buffer;
-    else
-        error_message = error_message_p;
-}
-
-void system_error(int system_errno)
-{
-    error_message = strerror(system_errno);
-    error_occurred = true;
-}
+static char error_message[MAX_ERROR_MESSAGE_LENGTH];
 
 #ifdef _WIN32
+#include <windows.h>
+
 void windows_error(DWORD error)
 {
     wchar_t message[512];
@@ -47,12 +27,31 @@ void windows_error(DWORD error)
     );
     if (length == 0)
     {
-        fprintf(stderr, "Windows error %lu\n", (unsigned long)error);
+        snprintf(error_message, sizeof(error_message), "Unknown error %lu", (unsigned long) error);
         return;
     }
-    fwprintf(stderr, L"Windows error %lu: %ls\n", (unsigned long)error, message);
+    snprintf(error_message, sizeof(error_message), L"%ls\n", message);
 }
+
 #endif
+
+void error(const char *error_message_p)
+{
+    snprintf(error_message, sizeof(error_message), "%s", error_message_p);
+    error_occurred = true;
+}
+
+void error_with_detail(const char *error_message_p, const char *detail)
+{
+    snprintf(error_message, sizeof(error_message), "%s [%s]", error_message_p, detail);
+    error_occurred = true;
+}
+
+void system_error(const int system_errno)
+{
+    snprintf(error_message, sizeof(error_message), "%s", strerror(system_errno));
+    error_occurred = true;
+}
 
 bool has_error(void)
 {
@@ -67,5 +66,5 @@ char *get_error_message(void)
 void clear_error_state(void)
 {
     error_occurred = false;
-    error_message = NULL;
+    error_message[0] = '\0';
 }

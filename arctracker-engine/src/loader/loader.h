@@ -21,7 +21,7 @@ typedef struct {
 typedef struct {
     bool file_read;
     bool file_valid;
-    int sample_length;
+    unsigned int sample_length;
     float sample_rate;
     float *sample_data;
 } load_sample_result_t;

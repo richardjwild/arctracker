@@ -1,11 +1,21 @@
 #include <stdio.h>
-#include <rtmidi_c.h>
 #include "midi.h"
 #include <string.h>
 #include "messages.h"
 #include "io/error.h"
 #include "lib/libarctracker.h"
 #include "memory/heap.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wstrict-prototypes"
+#endif
+
+#include <rtmidi_c.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 typedef struct {
     atomic_uchar selected_instrument;
@@ -19,9 +29,9 @@ typedef struct midi_handle {
     bool callback_set;
 } midi_subsystem_t;
 
-const int PORT_NOT_FOUND = -1;
-const unsigned char MIDI_CHAN_1_NOTE_ON = 0x90;
-const unsigned char MIDI_CHAN_1_NOTE_OFF = 0x80;
+static const int PORT_NOT_FOUND = -1;
+static const unsigned char MIDI_CHAN_1_NOTE_ON = 0x90;
+static const unsigned char MIDI_CHAN_1_NOTE_OFF = 0x80;
 
 static void handle_message(double, const unsigned char *, size_t, void *);
 
@@ -133,7 +143,7 @@ bool midi_use_device(midi_subsystem_t *midi, const char *requested_name)
     // Configure a new callback.
     //
     rtmidi_open_port(midi->midi_in, requested_port, "Arctracker Main Input");
-    rtmidi_in_set_callback(midi->midi_in, handle_message, (void *) midi);
+    rtmidi_in_set_callback(midi->midi_in, handle_message, midi);
     midi->callback_set = true;
     return true;
 }

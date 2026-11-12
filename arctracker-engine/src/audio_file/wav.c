@@ -1,6 +1,5 @@
 #include <errno.h>
 #include <stddef.h>
-#include <stdio.h>
 #include "wav.h"
 #include "messages.h"
 #include "io/error.h"
@@ -15,7 +14,7 @@
 #define AUDIO_FORMAT_FLOAT 0x0003
 #define AUDIO_FORMAT_EXTENSIBLE  0xFFFE
 #define BASE_FMT_SIZE 16
-#define WAVEFORMATEX_SIZE 18
+#define WAVE_FORMAT_EXTENSIBLE_SIZE 18
 #define EXTENSIBLE_EXTRA_SIZE 22
 #define EXTENSIBLE_FMT_SIZE 40
 
@@ -61,11 +60,11 @@ static bool write_audio_data(FILE *, const int16_t *, int, int);
 static bool write_fourcc(FILE *fp, const char *ch);
 static bool read_fmt_chunk(const uint8_t *, size_t, wav_file_in_t *);
 static bool chunk_is(const char *, const uint8_t *);
-static float *copy_sample_data_8(const uint8_t *, int, int);
-static float *copy_sample_data_16(const int16_t *, int, int);
-static float *copy_sample_data_24(const uint8_t *, int, int);
-static float *copy_sample_data_32(const int32_t *, int, int);
-static float *copy_sample_data_float(const float *, int, int);
+static float *copy_sample_data_8(const uint8_t *, int, uint32_t);
+static float *copy_sample_data_16(const int16_t *, int, uint32_t);
+static float *copy_sample_data_24(const uint8_t *, int, uint32_t);
+static float *copy_sample_data_32(const int32_t *, int, uint32_t);
+static float *copy_sample_data_float(const float *, int, uint32_t);
 
 /******************************************************************************
  * Code for writing a WAV file.                                               *
@@ -271,7 +270,7 @@ static bool read_fmt_chunk(const uint8_t *data, const size_t data_size, wav_file
             return false;
         }
         const uint16_t extension_size = read_u16_le(data + 16);
-        if (extension_size < EXTENSIBLE_EXTRA_SIZE || WAVEFORMATEX_SIZE + extension_size > data_size)
+        if (extension_size < EXTENSIBLE_EXTRA_SIZE || WAVE_FORMAT_EXTENSIBLE_SIZE + extension_size > data_size)
         {
             error(INVALID_WAVEFORMATEXTENSIBLE_EXTENSION_SIZE);
             return false;
@@ -298,12 +297,12 @@ static bool chunk_is(const char *chunk_id, const uint8_t *addr)
     return memcmp(chunk_id, addr, 4) == 0;
 }
 
-static float *copy_sample_data_8(const uint8_t *sample_data, const int channels, const int frames)
+static float *copy_sample_data_8(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames + 2, sizeof(float));
     if (output == NULL)
         return output;
-    for (int f = 0; f < frames; f++)
+    for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
@@ -311,16 +310,16 @@ static float *copy_sample_data_8(const uint8_t *sample_data, const int channels,
             frame += ((float) *sample_data - 128.0f) / 128.0f;
             sample_data++;
         }
-        output[f] = frame / channels;
+        output[f] = frame / (float) channels;
     }
     return output;
 }
 
-static float *copy_sample_data_16(const int16_t *sample_data, const int channels, const int frames)
+static float *copy_sample_data_16(const int16_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames + 2, sizeof(float));
     if (output == NULL) return output;
-    for (int f = 0; f < frames; f++)
+    for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
@@ -329,16 +328,16 @@ static float *copy_sample_data_16(const int16_t *sample_data, const int channels
             frame += value < 0 ? (float) value / 32768.0f : (float) value / 32767.0f;
             sample_data++;
         }
-        output[f] = frame / channels;
+        output[f] = frame / (float) channels;
     }
     return output;
 }
 
-static float *copy_sample_data_24(const uint8_t *sample_data, const int channels, const int frames)
+static float *copy_sample_data_24(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames + 2, sizeof(float));
     if (output == NULL) return output;
-    for (int f = 0; f < frames; f++)
+    for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
@@ -348,16 +347,16 @@ static float *copy_sample_data_24(const uint8_t *sample_data, const int channels
             frame += value < 0 ? (float) value / 8388608.0f : (float) value / 8388607.0f;
             sample_data += 3;
         }
-        output[f] = frame / channels;
+        output[f] = frame / (float) channels;
     }
     return output;
 }
 
-static float *copy_sample_data_32(const int32_t *sample_data, const int channels, const int frames)
+static float *copy_sample_data_32(const int32_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames + 2, sizeof(float));
     if (output == NULL) return output;
-    for (int f = 0; f < frames; f++)
+    for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
@@ -366,16 +365,16 @@ static float *copy_sample_data_32(const int32_t *sample_data, const int channels
             frame += value < 0 ? (float) value / 2147483648.0f : (float) value / 2147483647.0f;
             sample_data++;
         }
-        output[f] = frame / channels;
+        output[f] = frame / (float) channels;
     }
     return output;
 }
 
-static float *copy_sample_data_float(const float *sample_data, const int channels, const int frames)
+static float *copy_sample_data_float(const float *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames + 2, sizeof(float));
     if (output == NULL) return output;
-    for (int f = 0; f < frames; f++)
+    for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
@@ -383,7 +382,7 @@ static float *copy_sample_data_float(const float *sample_data, const int channel
             frame += *sample_data;
             sample_data++;
         }
-        output[f] = frame / channels;
+        output[f] = frame / (float) channels;
     }
     return output;
 }

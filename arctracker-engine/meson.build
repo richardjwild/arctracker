@@ -5,7 +5,7 @@ project('arctracker', ['c', 'cpp'],
         'c_std=c11',
         'cpp_std=c++17',
         'warning_level=3',
-        'werror=false',
+        'werror=true',
         'b_sanitize=none'
     ]
 )
@@ -41,10 +41,6 @@ rtmidi_options.add_cmake_defines({
     'RTMIDI_BUILD_SHARED_LIBS': false,
     'RTMIDI_BUILD_TESTING': false,
 })
-rtmidi_includes = include_directories(
-    'subprojects/rtmidi-6.0.0',
-    is_system: true,
-)
 if host_machine.system() == 'windows'
     rtmidi_options.add_cmake_defines({
         'CMAKE_MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
@@ -65,7 +61,7 @@ project_includes = include_directories('src')
 libarctracker = static_library('arctracker',
     libarctracker_sources,
     dependencies: [portaudio, rtmidi],
-    include_directories: [project_includes, rtmidi_includes],
+    include_directories: project_includes,
 )
 
 executable('arctracker-console',

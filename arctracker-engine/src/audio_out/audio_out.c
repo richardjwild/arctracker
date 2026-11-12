@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdatomic.h>
 #include "audio_out.h"
-#include <math.h>
 #include "memory/heap.h"
 
 static void write_audio_for_channel(const audio_out_t *audio_out, audio_channel_t *channel, unsigned int frames_to_fill, float *output_buffer);
@@ -39,11 +38,11 @@ void write_audio_data(audio_out_t *audio_out, audio_channel_t *channels, const u
     // internal channel buffers may or may not be large enough; if not then we will need more than one pass until all
     // the requested samples are written.
     //
-    int samples_to_write = samples_requested;
-    int buffer_offset = 0;
+    unsigned int samples_to_write = samples_requested;
+    unsigned int buffer_offset = 0;
     while (samples_to_write)
     {
-        int samples_to_write_now = samples_to_write;
+        unsigned int samples_to_write_now = samples_to_write;
         if (samples_to_write_now > AUDIO_BUFFER_SIZE_FRAMES)
         {
             samples_to_write_now = AUDIO_BUFFER_SIZE_FRAMES;

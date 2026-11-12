@@ -7,9 +7,9 @@
 
 static int resource_count[RESOURCE_GROUP_COUNT] = {0, 0, 0, 0};
 
-void *allocate_array(resource_group_t resource_group, int no_elements, size_t element_size)
+void *allocate_array(const resource_group_t resource_group, const unsigned int no_elements, const size_t element_size)
 {
-    size_t requested_bytes = (no_elements * element_size);
+    const size_t requested_bytes = no_elements * element_size;
     uint8_t *array = malloc(requested_bytes);
     if (array == NULL)
     {
@@ -22,9 +22,9 @@ void *allocate_array(resource_group_t resource_group, int no_elements, size_t el
     return array;
 }
 
-void *reallocate_array(resource_group_t resource_group, void *array_before, int no_elements, size_t element_size)
+void *reallocate_array(const resource_group_t resource_group, void *array_before, const unsigned int no_elements, const size_t element_size)
 {
-    size_t requested_bytes = (no_elements * element_size);
+    const size_t requested_bytes = no_elements * element_size;
     uint8_t *array_after = realloc(array_before, requested_bytes);
     if (array_after == NULL)
     {
@@ -36,14 +36,14 @@ void *reallocate_array(resource_group_t resource_group, void *array_before, int 
     return array_after;
 }
 
-void deallocate(resource_group_t resource_group, void *ptr)
+void deallocate(const resource_group_t resource_group, void *ptr)
 {
     if (ptr != NULL && resource_group < RESOURCE_GROUP_COUNT)
         resource_count[resource_group]--;
     free(ptr);
 }
 
-int resource_count_for(resource_group_t resource_group)
+int resource_count_for(const resource_group_t resource_group)
 {
     return resource_count[resource_group];
 }

@@ -40,7 +40,7 @@ static tempo_t find_best_fit(const int desired_bpm, const int lines_per_beat, co
         {
             const float epsilon = 0.0001f;
             const float events_per_second = (float) ticks_per_second / (float) ticks_per_event;
-            const float actual_bpm = 60.0f * events_per_second / lines_per_beat;
+            const float actual_bpm = 60.0f * events_per_second / (float) lines_per_beat;
             const float error = fabsf((float) desired_bpm - actual_bpm);
             if (error < epsilon)
             {
