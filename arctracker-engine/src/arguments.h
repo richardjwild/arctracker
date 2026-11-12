@@ -10,6 +10,8 @@ typedef struct {
     char *output_filename;
 } args_t;
 
+bool handle_argument(args_t *, const char *);
+
 args_t read_configuration(int p_argc, char *p_argv[]);
 
 #endif //ARCTRACKER_CONFIGURATION_H

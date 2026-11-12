@@ -21,9 +21,7 @@ static const char *USAGE_MESSAGE =
         "\nArctracker version: " VERSION "\n"
         "\n";
 
-bool handle_argument(args_t *, const char *);
-
-args_t read_configuration(int p_argc, char *p_argv[])
+args_t read_configuration(const int p_argc, char *p_argv[])
 {
     args_t config = {
         .mod_filename = {NULL, NULL, NULL},
@@ -49,37 +47,34 @@ args_t read_configuration(int p_argc, char *p_argv[])
     return config;
 }
 
-bool matches(const char *arg, const char *long_form, const char *short_form)
+static bool matches(const char *arg, const char *long_form, const char *short_form)
 {
     return strncmp(arg, long_form, strlen(long_form)) == 0
            || strncmp(arg, short_form, strlen(short_form)) == 0;
 }
 
-const char *arg_value(const char *arg, const char *long_form, const char *short_form)
+static const char *arg_value(const char *arg, const char *long_form, const char *short_form)
 {
     if (strncmp(arg, long_form, strlen(long_form)) == 0)
+    {
         return arg + strlen(long_form);
-    else
-        return arg + strlen(short_form);
+    }
+    return arg + strlen(short_form);
 }
 
 bool handle_argument(args_t *config, const char *arg)
 {
-    bool argument_was_handled = true;
     if (matches(arg, ARG_HELP, ARG_HELP_S))
     {
         printf("%s", USAGE_MESSAGE);
         exit(EXIT_SUCCESS);
     }
-    else if (matches(arg, ARG_OUTPUT, ARG_OUTPUT_S))
+    if (matches(arg, ARG_OUTPUT, ARG_OUTPUT_S))
     {
         const char *value = arg_value(arg, ARG_OUTPUT, ARG_OUTPUT_S);
         config->output_filename = (char *) value;
         config->bounce = true;
+        return true;
     }
-    else
-    {
-        argument_was_handled = false;
-    }
-    return argument_was_handled;
+    return false;
 }

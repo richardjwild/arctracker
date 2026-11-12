@@ -16,6 +16,10 @@ if cc.get_id() == 'msvc'
     add_project_arguments('/experimental:c11atomics', language: 'c')
 endif
 
+if cc.has_argument('-Wmissing-prototypes')
+    add_project_arguments('-Wmissing-prototypes', language: 'c')
+endif
+
 cmake = import('cmake')
 
 portaudio_options = cmake.subproject_options()
