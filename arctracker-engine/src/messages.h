@@ -101,6 +101,7 @@
 #define MODFILE_CORRUPT_MISSING_SEQUENCE "File corrupt: missing sequence data"
 #define MODFILE_CORRUPT_MISSING_SAMPLE_METADATA "File corrupt: missing sample meta data"
 #define MODFILE_CORRUPT_MISSING_SAMPLE_DATA "File corrupt: missing sample data"
+#define MODFILE_INVALID_MISSING_PATTERN_DATA "File corrupt: missing pattern data"
 #define INVALID_SEQUENCE_CHUNK_LENGTH "File corrupt: sequence data size does not match tune length"
 #define FAILED_TO_SET_SEQUENCE "Failed to set sequence"
 #define INVALID_TRACK_CHUNK_LENGTH "File corrupt: invalid track data size"

@@ -264,14 +264,14 @@ static bool decode_desktop_tracker_event(const uint8_t *event_p, instrument_t *i
  * BEQ is_1_effect
  * BNE is_4_effects
  */
-static bool is_single_effect(const uint32_t raw_event)
+static bool is_single_effect(const uint32_t event)
 {
-    return (raw_event & 0x1f << 17) == 0;
+    return (event & 0x1f << 17) == 0;
 }
 
-static bool decode_single_effect(const uint32_t raw, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
+static bool decode_single_effect(const uint32_t event, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
 {
-    *decoded_effect = effect(mask_5_shift_right(raw, 12), mask_8_shift_right(raw, 24));
+    *decoded_effect = effect(mask_5_shift_right(event, 12), mask_8_shift_right(event, 24));
     if (decoded_effect->command == USE_SAMPLE_SLICE)
     {
         const uint32_t required_offset = decoded_effect->data * 256;

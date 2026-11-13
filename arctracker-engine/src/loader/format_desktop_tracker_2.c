@@ -159,6 +159,7 @@ static const instrument_t UNASSIGNED_INSTRUMENT = {
 };
 
 typedef struct {
+    const uint8_t *file_start;
     const uint8_t *sequence;
     const uint8_t *pattern_offsets;
     const uint8_t *pattern_lengths;
@@ -166,21 +167,28 @@ typedef struct {
     const uint8_t *file_end;
 } format_map_t;
 
+typedef struct {
+    uint8_t pattern_no;
+    const uint8_t *pattern_data;
+    uint8_t pattern_length;
+    const uint8_t *file_end;
+} read_pattern_info_t;
+
 static bool is_desktop_tracker_format(mapped_file_t);
 static module_t *read_desktop_tracker_module(mapped_file_t);
 static module_t *init_module(mapped_file_t);
 static void init_tracks(module_t *, uint32_t, const uint8_t *);
 static bool get_format_map(mapped_file_t, const module_t *, format_map_t *);
 static bool read_sequence(module_t *, format_map_t);
-static bool read_samples(module_t *, mapped_file_t, format_map_t);
-static bool read_sample(module_t *, mapped_file_t, const uint8_t *, int);
-static bool read_patterns(module_t *, mapped_file_t, format_map_t);
-static bool read_pattern(module_t *, int, const uint8_t *, uint8_t);
-static bool decode_desktop_tracker_event(const uint8_t *, instrument_t *, const sample_t *, event_t *, size_t *);
+static bool read_samples(module_t *, format_map_t);
+static bool read_sample(module_t *, format_map_t, const uint8_t *, int);
+static bool read_patterns(module_t *, format_map_t);
+static bool read_pattern(module_t *, read_pattern_info_t);
+static bool decode_desktop_tracker_event(read_pattern_info_t, instrument_t *, const sample_t *, event_t *, size_t *);
 static bool is_single_effect(uint32_t);
 static effect_t effect(uint8_t, uint8_t);
 static bool decode_single_effect(uint32_t, instrument_t *, const sample_t *, effect_t *);
-static bool decode_multiple_effects(const uint8_t *, instrument_t *, const sample_t *, effect_t *);
+static bool decode_multiple_effects(read_pattern_info_t, instrument_t *, const sample_t *, effect_t *);
 static bool find_or_create_sample_slice(uint32_t, instrument_t *, const sample_t *, uint8_t *);
 
 format_t desktop_tracker_format_2(void)
@@ -209,7 +217,7 @@ static module_t *read_desktop_tracker_module(const mapped_file_t file)
     {
         goto failed;
     }
-    if (!read_sequence(module, format_map) || !read_samples(module, file, format_map) || !read_patterns(module, file, format_map))
+    if (!read_sequence(module, format_map) || !read_samples(module, format_map) || !read_patterns(module, format_map))
     {
         goto failed;
     }
@@ -338,6 +346,7 @@ static bool get_format_map(const mapped_file_t file, const module_t *module, for
         return false;
     }
     *format_map = (format_map_t) {
+        .file_start = file.addr,
         .sequence = file.addr + sequence,
         .pattern_offsets = file.addr + pattern_offsets,
         .pattern_lengths =  file.addr + pattern_lengths,
@@ -367,14 +376,14 @@ static bool read_sequence(module_t *module, const format_map_t format_map)
     return true;
 }
 
-static bool read_samples(module_t *module, const mapped_file_t file, const format_map_t format_map)
+static bool read_samples(module_t *module, const format_map_t format_map)
 {
     assert(module->samples != NULL);
     assert(module->instruments != NULL);
     const uint8_t *sample_definition = format_map.sample_definitions;
     for (int sample_index = 0; sample_index < module->sample_slots; sample_index++)
     {
-        if (!read_sample(module, file, sample_definition, sample_index))
+        if (!read_sample(module, format_map, sample_definition, sample_index))
         {
             return false;
         }
@@ -383,7 +392,7 @@ static bool read_samples(module_t *module, const mapped_file_t file, const forma
     return true;
 }
 
-static bool read_sample(module_t *module, const mapped_file_t file, const uint8_t *sample_definition, const int sample_index)
+static bool read_sample(module_t *module, const format_map_t format_map, const uint8_t *sample_definition, const int sample_index)
 {
     const uint8_t base_note = read_u8(sample_definition);
     if (base_note > DSKT_NOTE_B3)
@@ -418,14 +427,14 @@ static bool read_sample(module_t *module, const mapped_file_t file, const uint8_
         module_set_instrument(module, sample_index, UNASSIGNED_INSTRUMENT);
         return true;
     }
-    const uint32_t sample_data_offset = read_u32_le(sample_definition + 60);
-    if (sample_data_offset > file.size || sample_length > file.size - sample_data_offset)
+    const size_t sample_data_offset = read_u32_le(sample_definition + 60);
+    if (sample_data_offset > (size_t) format_map.file_end - sample_length)
     {
         error(MODFILE_CORRUPT_MISSING_SAMPLE_DATA);
         return false;
     }
     const bool repeats = repeat_length > 0;
-    const uint8_t *sample_data_in = file.addr + sample_data_offset;
+    const uint8_t *sample_data_in = format_map.file_start + sample_data_offset;
     float *sample_data = allocate_array(MODULE, sample_length + 2, sizeof(float));
     if (sample_data == NULL)
     {
@@ -502,7 +511,7 @@ static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
     return NO_EFFECT;
 }
 
-static bool read_patterns(module_t *module, const mapped_file_t file, const format_map_t format_map)
+static bool read_patterns(module_t *module, const format_map_t format_map)
 {
     const uint8_t *pattern_offsets = format_map.pattern_offsets;
     const uint8_t *pattern_lengths = format_map.pattern_lengths;
@@ -513,8 +522,19 @@ static bool read_patterns(module_t *module, const mapped_file_t file, const form
         {
             return false;
         }
-        const uint8_t *pattern_data = file.addr + read_u32_le(pattern_offsets + pattern_no * 4);
-        if (!read_pattern(module, pattern_no, pattern_data, pattern_length))
+        const size_t pattern_data_offset = read_u32_le(pattern_offsets + pattern_no * 4);
+        if (format_map.file_start > format_map.file_end - pattern_data_offset)
+        {
+            error(MODFILE_INVALID_MISSING_PATTERN_DATA);
+            return false;
+        }
+        const read_pattern_info_t read_pattern_info = {
+            .pattern_no = pattern_no,
+            .pattern_data = (uint8_t *) format_map.file_start + pattern_data_offset,
+            .pattern_length = pattern_length,
+            .file_end = format_map.file_end,
+        };
+        if (!read_pattern(module, read_pattern_info))
         {
             return false;
         }
@@ -522,22 +542,27 @@ static bool read_patterns(module_t *module, const mapped_file_t file, const form
     return true;
 }
 
-static bool read_pattern(module_t *module, const int pattern_no, const uint8_t *pattern_data, const uint8_t pattern_length)
+static bool read_pattern(module_t *module, read_pattern_info_t read_pattern_info)
 {
-    for (int pattern_index = 0; pattern_index < pattern_length; pattern_index++)
+    for (int pattern_index = 0; pattern_index < read_pattern_info.pattern_length; pattern_index++)
     {
         for (uint32_t track = 0; track < module->track_capacity; track++)
         {
             const uint32_t event_index = pattern_index * module->track_capacity + track;
-            event_t *event = &module->patterns[pattern_no].events[event_index];
+            event_t *event = &module->patterns[read_pattern_info.pattern_no].events[event_index];
             if (track < (uint32_t) module->num_tracks)
             {
                 size_t event_size = 0;
-                if (!decode_desktop_tracker_event(pattern_data, module->instruments, module->samples, event, &event_size))
+                if (read_pattern_info.pattern_data > read_pattern_info.file_end - 4)
+                {
+                    error(MODFILE_INVALID_MISSING_PATTERN_DATA);
+                    return false;
+                }
+                if (!decode_desktop_tracker_event(read_pattern_info, module->instruments, module->samples, event, &event_size))
                 {
                     return false;
                 }
-                pattern_data += event_size;
+                read_pattern_info.pattern_data += event_size;
             }
             else
             {
@@ -560,23 +585,24 @@ static bool read_pattern(module_t *module, const int pattern_no, const uint8_t *
     return true;
 }
 
-static bool decode_desktop_tracker_event(const uint8_t *event_p, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
+static bool decode_desktop_tracker_event(const read_pattern_info_t read_pattern_info, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
 {
-    const uint32_t raw_event = read_u32_le(event_p);
-    decoded->instrument_no = (int) mask_6_shift_right(raw_event, 0);
+    const uint8_t *event_p = read_pattern_info.pattern_data;
+    const uint32_t event = read_u32_le(event_p);
+    decoded->instrument_no = (int) mask_6_shift_right(event, 0);
     instrument_t *instrument = decoded->instrument_no > 0 ? &instruments[decoded->instrument_no] : NULL;
-    const int note = (int) mask_6_shift_right(raw_event, 6);
+    const int note = (int) mask_6_shift_right(event, 6);
     decoded->note = note == 0 ? 0 : note + 12;
-    if (is_single_effect(raw_event))
+    if (is_single_effect(event))
     {
         *event_size = DSKT_EVENT_SIZE_SINGLE_EFFECT;
         decoded->effects[1] = effect(0, 0);
         decoded->effects[2] = effect(0, 0);
         decoded->effects[3] = effect(0, 0);
-        return decode_single_effect(raw_event, instrument, samples, &decoded->effects[0]);
+        return decode_single_effect(event, instrument, samples, &decoded->effects[0]);
     }
     *event_size = DSKT_EVENT_SIZE_MULTIPLE_EFFECT;
-    return decode_multiple_effects(event_p, instrument, samples, decoded->effects);
+    return decode_multiple_effects(read_pattern_info, instrument, samples, decoded->effects);
 }
 
 /*
@@ -586,9 +612,9 @@ static bool decode_desktop_tracker_event(const uint8_t *event_p, instrument_t *i
  * BEQ is_1_effect
  * BNE is_4_effects
  */
-static bool is_single_effect(const uint32_t raw_event)
+static bool is_single_effect(const uint32_t event)
 {
-    return (raw_event & 0x1f << 17) == 0;
+    return (event & 0x1f << 17) == 0;
 }
 
 static effect_t effect(const uint8_t code, const uint8_t data)
@@ -631,9 +657,9 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     };
 }
 
-static bool decode_single_effect(const uint32_t raw, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
+static bool decode_single_effect(const uint32_t event, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
 {
-    *decoded_effect = effect(mask_5_shift_right(raw, 12), mask_8_shift_right(raw, 24));
+    *decoded_effect = effect(mask_5_shift_right(event, 12), mask_8_shift_right(event, 24));
     if (decoded_effect->command == USE_SAMPLE_SLICE)
     {
         const uint32_t required_offset = decoded_effect->data * 256;
@@ -646,10 +672,15 @@ static bool decode_single_effect(const uint32_t raw, instrument_t *instrument, c
     return true;
 }
 
-static bool decode_multiple_effects(const uint8_t *event_p, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
+static bool decode_multiple_effects(const read_pattern_info_t read_pattern_info, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
 {
-    const uint32_t word_1 = read_u32_le(event_p);
-    const uint32_t word_2 = read_u32_le(event_p + 4);
+    if (read_pattern_info.pattern_data > read_pattern_info.file_end - 8)
+    {
+        error(MODFILE_INVALID_MISSING_PATTERN_DATA);
+        return false;
+    }
+    const uint32_t word_1 = read_u32_le(read_pattern_info.pattern_data);
+    const uint32_t word_2 = read_u32_le(read_pattern_info.pattern_data + 4);
     for (int slot = 0; slot <= 3; slot++)
     {
         const int code_offset = 12 + slot * 5;
