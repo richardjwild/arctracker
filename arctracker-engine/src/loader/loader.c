@@ -5,6 +5,7 @@
 #include "files.h"
 #include "format_arctracker.h"
 #include "format_desktop_tracker.h"
+#include "format_desktop_tracker_2.h"
 #include "format_soundtracker.h"
 #include "format_tracker.h"
 #include "messages.h"
@@ -12,7 +13,7 @@
 #include "io/error.h"
 #include "memory/heap.h"
 
-#define NUM_FORMATS 4
+#define NUM_FORMATS 5
 
 static const load_module_result_t FAILED_TO_READ_MODULE_FILE = {
     .file_read = false,
@@ -165,8 +166,9 @@ static format_t *known_formats(void)
     static format_t formats[NUM_FORMATS];
     formats[0] = arctracker_format();
     formats[1] = tracker_format();
-    formats[2] = desktop_tracker_format();
-    formats[3] = soundtracker_format();
+    formats[2] = desktop_tracker_format_2();
+    formats[3] = desktop_tracker_format();
+    formats[4] = soundtracker_format();
     return formats;
 }
 

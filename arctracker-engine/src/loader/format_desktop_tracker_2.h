@@ -1,0 +1,8 @@
+#ifndef ARCTRACKER_ENGINE_FORMAT_DESKTOP_TRACKER_2_H
+#define ARCTRACKER_ENGINE_FORMAT_DESKTOP_TRACKER_2_H
+
+#include "loader.h"
+
+format_t desktop_tracker_format_2(void);
+
+#endif //ARCTRACKER_ENGINE_FORMAT_DESKTOP_TRACKER_2_H

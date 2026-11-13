@@ -37,7 +37,7 @@ static inline unsigned int low_nybble(const unsigned int value)
     return value & 0xf;
 }
 
-static inline size_t align_to_word(const size_t length)
+static inline size_t align_to_4byte(const size_t length)
 {
     return length % 4 ? length + (4 - length % 4) : length;
 }
@@ -75,6 +75,11 @@ static inline uint16_t read_u16_be(const uint8_t *addr)
 }
 
 static inline uint32_t read_u32_le(const uint8_t *addr)
+{
+    return addr[0] | addr[1] << 8 | addr[2] << 16 | addr[3] << 24;
+}
+
+static inline int32_t read_s32_le(const uint8_t *addr)
 {
     return addr[0] | addr[1] << 8 | addr[2] << 16 | addr[3] << 24;
 }

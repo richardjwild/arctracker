@@ -114,6 +114,7 @@ static bool is_desktop_tracker_format(mapped_file_t file)
 
 static module_t *read_desktop_tracker_module(mapped_file_t file)
 {
+    printf("using old loader\n");
     module_t *module = NULL;
     int *pattern_lengths = NULL;
     dtt_file_format_t *file_format = (dtt_file_format_t *) file.addr;
@@ -149,13 +150,13 @@ static module_t *read_desktop_tracker_module(mapped_file_t file)
     }
     uint8_t *positions_start = file.addr + sizeof(dtt_file_format_t);
     copy_int_array(positions_start, module->sequence, module->sequence_length);
-    uint8_t *pattern_offsets_start = positions_start + align_to_word(module->sequence_length);
+    uint8_t *pattern_offsets_start = positions_start + align_to_4byte(module->sequence_length);
     uint8_t *pattern_lengths_start = pattern_offsets_start + (module->num_patterns * sizeof(uint32_t));
     pattern_lengths = allocate_array(MODULE, module->num_patterns, sizeof(int));
     if (pattern_lengths == NULL)
         goto fail;
     copy_int_array(pattern_lengths_start, pattern_lengths, module->num_patterns);
-    uint8_t *samples_start = pattern_lengths_start + align_to_word(module->num_patterns);
+    uint8_t *samples_start = pattern_lengths_start + align_to_4byte(module->num_patterns);
     if (!get_samples(module, (dtt_sample_format_t *) samples_start, file.addr))
         goto fail;
     if (!decode_dtt_patterns(file.addr, (uint32_t *) pattern_offsets_start, module, pattern_lengths))
