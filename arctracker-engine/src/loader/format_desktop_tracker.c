@@ -172,7 +172,7 @@ typedef struct {
     const uint8_t *pattern_data;
     uint8_t pattern_length;
     const uint8_t *file_end;
-} read_pattern_info_t;
+} pattern_read_context_t;
 
 static bool is_desktop_tracker_format(mapped_file_t);
 static module_t *read_desktop_tracker_module(mapped_file_t);
@@ -183,12 +183,12 @@ static bool read_sequence(module_t *, format_map_t);
 static bool read_samples(module_t *, format_map_t);
 static bool read_sample(module_t *, format_map_t, const uint8_t *, int);
 static bool read_patterns(module_t *, format_map_t);
-static bool read_pattern(module_t *, read_pattern_info_t);
-static bool decode_desktop_tracker_event(read_pattern_info_t, instrument_t *, const sample_t *, event_t *, size_t *);
+static bool read_pattern(module_t *, pattern_read_context_t);
+static bool decode_desktop_tracker_event(pattern_read_context_t, instrument_t *, const sample_t *, event_t *, size_t *);
 static bool is_single_effect(uint32_t);
 static effect_t effect(uint8_t, uint8_t);
 static bool decode_single_effect(uint32_t, instrument_t *, const sample_t *, effect_t *);
-static bool decode_multiple_effects(read_pattern_info_t, instrument_t *, const sample_t *, effect_t *);
+static bool decode_multiple_effects(pattern_read_context_t, instrument_t *, const sample_t *, effect_t *);
 static bool find_or_create_sample_slice(uint32_t, instrument_t *, const sample_t *, uint8_t *);
 
 format_t desktop_tracker_format_2(void)
@@ -528,7 +528,7 @@ static bool read_patterns(module_t *module, const format_map_t format_map)
             error(MODFILE_INVALID_MISSING_PATTERN_DATA);
             return false;
         }
-        const read_pattern_info_t read_pattern_info = {
+        const pattern_read_context_t read_pattern_info = {
             .pattern_no = pattern_no,
             .pattern_data = (uint8_t *) format_map.file_start + pattern_data_offset,
             .pattern_length = pattern_length,
@@ -542,27 +542,27 @@ static bool read_patterns(module_t *module, const format_map_t format_map)
     return true;
 }
 
-static bool read_pattern(module_t *module, read_pattern_info_t read_pattern_info)
+static bool read_pattern(module_t *module, pattern_read_context_t context)
 {
-    for (int pattern_index = 0; pattern_index < read_pattern_info.pattern_length; pattern_index++)
+    for (int pattern_index = 0; pattern_index < context.pattern_length; pattern_index++)
     {
         for (uint32_t track = 0; track < module->track_capacity; track++)
         {
             const uint32_t event_index = pattern_index * module->track_capacity + track;
-            event_t *event = &module->patterns[read_pattern_info.pattern_no].events[event_index];
+            event_t *event = &module->patterns[context.pattern_no].events[event_index];
             if (track < (uint32_t) module->num_tracks)
             {
                 size_t event_size = 0;
-                if (read_pattern_info.pattern_data > read_pattern_info.file_end - 4)
+                if (context.pattern_data > context.file_end - 4)
                 {
                     error(MODFILE_INVALID_MISSING_PATTERN_DATA);
                     return false;
                 }
-                if (!decode_desktop_tracker_event(read_pattern_info, module->instruments, module->samples, event, &event_size))
+                if (!decode_desktop_tracker_event(context, module->instruments, module->samples, event, &event_size))
                 {
                     return false;
                 }
-                read_pattern_info.pattern_data += event_size;
+                context.pattern_data += event_size;
             }
             else
             {
@@ -585,9 +585,9 @@ static bool read_pattern(module_t *module, read_pattern_info_t read_pattern_info
     return true;
 }
 
-static bool decode_desktop_tracker_event(const read_pattern_info_t read_pattern_info, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
+static bool decode_desktop_tracker_event(const pattern_read_context_t context, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
 {
-    const uint8_t *event_p = read_pattern_info.pattern_data;
+    const uint8_t *event_p = context.pattern_data;
     const uint32_t event = read_u32_le(event_p);
     decoded->instrument_no = (int) mask_6_shift_right(event, 0);
     instrument_t *instrument = decoded->instrument_no > 0 ? &instruments[decoded->instrument_no] : NULL;
@@ -602,7 +602,7 @@ static bool decode_desktop_tracker_event(const read_pattern_info_t read_pattern_
         return decode_single_effect(event, instrument, samples, &decoded->effects[0]);
     }
     *event_size = DSKT_EVENT_SIZE_MULTIPLE_EFFECT;
-    return decode_multiple_effects(read_pattern_info, instrument, samples, decoded->effects);
+    return decode_multiple_effects(context, instrument, samples, decoded->effects);
 }
 
 /*
@@ -672,15 +672,15 @@ static bool decode_single_effect(const uint32_t event, instrument_t *instrument,
     return true;
 }
 
-static bool decode_multiple_effects(const read_pattern_info_t read_pattern_info, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
+static bool decode_multiple_effects(const pattern_read_context_t context, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
 {
-    if (read_pattern_info.pattern_data > read_pattern_info.file_end - 8)
+    if (context.pattern_data > context.file_end - 8)
     {
         error(MODFILE_INVALID_MISSING_PATTERN_DATA);
         return false;
     }
-    const uint32_t word_1 = read_u32_le(read_pattern_info.pattern_data);
-    const uint32_t word_2 = read_u32_le(read_pattern_info.pattern_data + 4);
+    const uint32_t word_1 = read_u32_le(context.pattern_data);
+    const uint32_t word_2 = read_u32_le(context.pattern_data + 4);
     for (int slot = 0; slot <= 3; slot++)
     {
         const int code_offset = 12 + slot * 5;
