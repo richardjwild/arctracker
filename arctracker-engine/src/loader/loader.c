@@ -165,7 +165,7 @@ static format_t *known_formats(void)
     static format_t formats[NUM_FORMATS];
     formats[0] = arctracker_format();
     formats[1] = tracker_format();
-    formats[2] = desktop_tracker_format_2();
+    formats[2] = desktop_tracker_format();
     formats[3] = soundtracker_format();
     return formats;
 }

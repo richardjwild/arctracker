@@ -191,7 +191,7 @@ static bool decode_single_effect(uint32_t, instrument_t *, const sample_t *, eff
 static bool decode_multiple_effects(pattern_read_context_t, instrument_t *, const sample_t *, effect_t *);
 static bool find_or_create_sample_slice(uint32_t, instrument_t *, const sample_t *, uint8_t *);
 
-format_t desktop_tracker_format_2(void)
+format_t desktop_tracker_format(void)
 {
     return (format_t) {
         .is_this_format = is_desktop_tracker_format,
