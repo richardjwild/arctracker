@@ -21,9 +21,13 @@
  *    136 Track count (4 bytes)                                               *
  *    140 Sequence length (4 bytes)                                           *
  *    144 Initial stereo positions (8 bytes, one byte per audio channel):     *
- *          1 - full left                                                     *
+ *          1 - pan full left                                                 *
+ *          2 - pan two thirds left                                           *
+ *          3 - pan one third left                                            *
  *          4 - centre                                                        *
- *          7 - full right                                                    *
+ *          5 - pan one third right                                           *
+ *          6 - pan two thirds right                                          *
+ *          7 - pan full right                                                *
  *    152 Initial ticks per event (4 bytes)                                   *
  *    156 Song restart position (4 bytes)                                     *
  *    160 Pattern count (4 bytes)                                             *
@@ -60,7 +64,7 @@
  *                                                                            *
  *   Offset Description                                                       *
  *   ------ -----------                                                       *
- *        0 Base note (1 byte): 0 - C1, 35 - B3                               *
+ *        0 Base note (1 byte): 0..35 where 0 is C1, 35 is B3                 *
  *        1 Default volume (1 byte): 0 - minimum, 127 - maximum               *
  *        2 Unused (2 bytes)                                                  *
  *        4 Sample period (4 bytes): stored as 20.12 fixed point              *
@@ -184,11 +188,11 @@ static bool read_samples(module_t *, format_map_t);
 static bool read_sample(module_t *, format_map_t, const uint8_t *, int);
 static bool read_patterns(module_t *, format_map_t);
 static bool read_pattern(module_t *, pattern_read_context_t);
-static bool decode_desktop_tracker_event(pattern_read_context_t, instrument_t *, const sample_t *, event_t *, size_t *);
+static bool decode_event(pattern_read_context_t, instrument_t *, const sample_t *, event_t *, size_t *);
 static bool is_single_effect(uint32_t);
 static effect_t effect(uint8_t, uint8_t);
-static bool decode_single_effect(uint32_t, instrument_t *, const sample_t *, effect_t *);
-static bool decode_multiple_effects(pattern_read_context_t, instrument_t *, const sample_t *, effect_t *);
+static bool decode_effect_1(uint32_t, instrument_t *, const sample_t *, effect_t *);
+static bool decode_effect_4(pattern_read_context_t, instrument_t *, const sample_t *, effect_t *);
 static bool find_or_create_sample_slice(uint32_t, instrument_t *, const sample_t *, uint8_t *);
 
 format_t desktop_tracker_format(void)
@@ -554,7 +558,7 @@ static bool read_pattern(module_t *module, pattern_read_context_t context)
                     error(MODFILE_INVALID_MISSING_PATTERN_DATA);
                     return false;
                 }
-                if (!decode_desktop_tracker_event(context, module->instruments, module->samples, event, &event_size))
+                if (!decode_event(context, module->instruments, module->samples, event, &event_size))
                 {
                     return false;
                 }
@@ -581,7 +585,7 @@ static bool read_pattern(module_t *module, pattern_read_context_t context)
     return true;
 }
 
-static bool decode_desktop_tracker_event(const pattern_read_context_t context, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
+static bool decode_event(const pattern_read_context_t context, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
 {
     const uint8_t *event_p = context.pattern_data;
     const uint32_t event = read_u32_le(event_p);
@@ -595,10 +599,10 @@ static bool decode_desktop_tracker_event(const pattern_read_context_t context, i
         decoded->effects[1] = effect(0, 0);
         decoded->effects[2] = effect(0, 0);
         decoded->effects[3] = effect(0, 0);
-        return decode_single_effect(event, instrument, samples, &decoded->effects[0]);
+        return decode_effect_1(event, instrument, samples, &decoded->effects[0]);
     }
     *event_size = DSKT_EVENT_SIZE_MULTIPLE_EFFECT;
-    return decode_multiple_effects(context, instrument, samples, decoded->effects);
+    return decode_effect_4(context, instrument, samples, decoded->effects);
 }
 
 /*
@@ -653,7 +657,7 @@ static effect_t effect(const uint8_t code, const uint8_t data)
     };
 }
 
-static bool decode_single_effect(const uint32_t event, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
+static bool decode_effect_1(const uint32_t event, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effect)
 {
     *decoded_effect = effect(mask_5_shift_right(event, 12), mask_8_shift_right(event, 24));
     if (decoded_effect->command == USE_SAMPLE_SLICE)
@@ -668,7 +672,7 @@ static bool decode_single_effect(const uint32_t event, instrument_t *instrument,
     return true;
 }
 
-static bool decode_multiple_effects(const pattern_read_context_t context, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
+static bool decode_effect_4(const pattern_read_context_t context, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
 {
     if (context.pattern_data > context.file_end - 8)
     {
@@ -698,16 +702,22 @@ static bool decode_multiple_effects(const pattern_read_context_t context, instru
         {
             // Desktop Tracker 0x6 (play end part of sample) command consumes the following effect slot as extra data.
             // The data is packed in this strange way so that it behaves the same way the ProTracker 0x9 command does
-            // if the 0x6 command is in the last slot, or if the event is single effect.
+            // if the 0x6 command is in the last slot, or if the event is single effect. The minus one is not an error:
+            // experiment shows that if the command code in the following slot is zero, the data in that slot is
+            // ignored. Furthermore, this event:
+            //   C-1 01 0000 0627 0100
+            // as per the manual would be interpreted as an offset of 0x12710 or 75,536 decimal, which was far beyond
+            // the length of the sample I was testing with. My hypothesis is that DTT subtracts 1 from the command code
+            // before shifting it. (More testing with larger samples is required to prove this beyond doubt).
             const int next_slot = slot + 1;
-            most_significant_bits = mask_5_shift_right(word_1, 12 + next_slot * 5);
+            most_significant_bits = mask_5_shift_right(word_1, 12 + next_slot * 5) - 1;
             least_significant_bits = mask_8_shift_right(word_2, next_slot * 8);
         }
         const uint32_t required_offset = least_significant_bits | (uint32_t) data << 8 | (uint32_t) most_significant_bits << 16;
         if (!find_or_create_sample_slice(required_offset, instrument, samples, &decoded_effect.data))
         {
-            error(TOO_MANY_SAMPLE_SLICES);
-            return false;
+            // We either ran out of sample slices or we cannot determine which instrument to add the slice to.
+            continue;
         }
         decoded_effects[slot] = decoded_effect;
         if (slot < 3)
@@ -724,17 +734,21 @@ static bool find_or_create_sample_slice(const uint32_t required_offset, instrume
 {
     if (instrument == NULL)
     {
-        // TODO:
-        // Find out if Desktop Tracker honours 06 commands on events without an instrument number. (If it does, I have
-        // got a problem).
-        *slice_index = 0;
-        return true;
+        // Desktop Tracker will obey 06 commands on events without an instrument number, in similar fashion to how
+        // ProTracker obeys its 0x9 commands: it applies it to the currently selected instrument. But that gives us a
+        // problem here because we have no way to know what the currently selected instrument will be during playback.
+        // We shall ignore the command in this case, at least until a satisfactory solution presents itself (unlikely).
+        return false;
     }
     if (!instrument->assigned)
     {
-        // Don't worry about it because it won't be played anyway.
-        *slice_index = 0;
-        return true;
+        // Ignore the 06 command because there is no sample to be played anyway.
+        return false;
+    }
+    const uint32_t sample_length = samples[instrument->sample_index].sample_length;
+    if (required_offset >= sample_length)
+    {
+        return false;
     }
     for (int candidate = 0; candidate <= 255; candidate++)
     {
@@ -746,16 +760,8 @@ static bool find_or_create_sample_slice(const uint32_t required_offset, instrume
         }
     }
     //
-    // No slice with the required offset exists yet, create one if possible.
+    // No slice with the required offset exists yet, so let's create one if possible.
     //
-    const uint32_t sample_length = samples[instrument->sample_index].sample_length;
-    if (required_offset >= sample_length)
-    {
-        // TODO:
-        // Figure out what Desktop Tracker does in this case. Use that to inform the correct behaviour here.
-        *slice_index = 0;
-        return true;
-    }
     for (int candidate = 0; candidate <= 255; candidate++)
     {
         sample_slice_t *slice = &instrument->sample_slices[candidate];
