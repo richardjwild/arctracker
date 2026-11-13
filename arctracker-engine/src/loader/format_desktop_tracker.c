@@ -469,7 +469,7 @@ static bool read_sample(module_t *module, const format_map_t format_map, const u
     return true;
 }
 
-static command_t desktop_tracker_command(const uint8_t code, const uint8_t data)
+static command_t map_dskt_command(const uint8_t code, const uint8_t data)
 {
     if (code == DSKT_ARPEGGIO_CMD) return data == 0 ? NO_EFFECT : CHIPTUNE_ARPEGGIO;
     if (code == DSKT_PORTAMENTO_UP_CMD) return PORTAMENTO_UP;
@@ -619,7 +619,7 @@ static bool is_single_effect(const uint32_t event)
 
 static effect_t effect(const uint8_t code, const uint8_t data)
 {
-    const command_t command = desktop_tracker_command(code, data);
+    const command_t command = map_dskt_command(code, data);
     uint8_t effect_data = data;
     //
     // Now we have to fiddle with some of the command parameter values.
