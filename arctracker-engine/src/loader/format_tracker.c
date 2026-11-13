@@ -194,7 +194,7 @@ static command_t tracker_command(const int code, const uint8_t data)
     if (code == VOLUME_SLIDE_UP_CMD_MUSX) return VOLUME_SLIDE;
     if (code == VOLUME_SLIDE_DOWN_CMD_MUSX) return VOLUME_SLIDE;
     if (code == JUMP_CMD_MUSX) return SEQUENCE_JUMP;
-    if (code == SET_SPEED_CMD_MUSX) return SET_TEMPO;
+    if (code == SET_SPEED_CMD_MUSX) return SET_TICKS_PER_EVENT;
     if (code == SET_VOLUME_CMD_MUSX) return SET_VOLUME;
     return NO_EFFECT;
 }

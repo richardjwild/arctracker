@@ -259,12 +259,8 @@ static module_t *init_module(const mapped_file_t file)
         initial_stereo[track] = read_u8(header_offset + 12 + track);
     }
     const int32_t initial_ticks_per_event = read_s32_le(header_offset + 20);
-    if (initial_ticks_per_event < 1 || initial_ticks_per_event >= MIN_BPM)
+    if (initial_ticks_per_event < 1 || initial_ticks_per_event > DSKT_MAX_SPEED)
     {
-        // TODO:
-        // Desktop Tracker's actual maximum speed value is 255, but this can't be represented in Arctracker currently
-        // because Arctracker interprets a speed value of 33 or greater to be a BPM value, not a ticks/event value.
-        // (I should probably drop that bit of ProTracker baggage and separate the commands for BPM and ticks/event).
         error(MODFILE_INVALID_INITIAL_SPEED);
         return NULL;
     }
@@ -342,7 +338,7 @@ static bool get_format_map(const mapped_file_t file, const module_t *module, for
     const size_t sample_definitions_length = module->sample_slots * DSKT_SAMPLE_META_DATA_SIZE;
     if (sample_definitions > file.size || sample_definitions_length > file.size - sample_definitions)
     {
-        error("Map too big for file!");
+        error(MODFILE_INVALID_DATA_TRUNCATED);
         return false;
     }
     *format_map = (format_map_t) {
@@ -416,7 +412,7 @@ static bool read_sample(module_t *module, const format_map_t format_map, const u
         return false;
     }
     //
-    // Sustain start and end are ignored by Arctracker.
+    // Sustain start and end are ignored by Arctracker (see map_dskt_command for details).
     //
     const uint32_t repeat_start = read_u32_le(sample_definition + 16);
     const uint32_t repeat_length = read_u32_le(sample_definition + 20);
@@ -487,7 +483,7 @@ static command_t map_dskt_command(const uint8_t code, const uint8_t data)
     if (code == DSKT_SET_VOLUME_CMD) return SET_VOLUME;
     if (code == DSKT_SET_STEREO_CMD) return SET_STEREO;
     if (code == DSKT_STEREO_SLIDE_CMD) return DSKT_STEREO_SLIDE;
-    if (code == DSKT_SET_SPEED_CMD) return SET_TEMPO;
+    if (code == DSKT_SET_SPEED_CMD) return SET_TICKS_PER_EVENT;
     if (code == DSKT_SET_ARPEGGIO_SPEED_CMD) return SET_ARPEGGIO_SPEED;
     if (code == DSKT_FINE_PORTAMENTO_CMD && (data & 0x80) == 0) return PORTAMENTO_UP_FINE;
     if (code == DSKT_FINE_PORTAMENTO_CMD && (data & 0x80) > 0) return PORTAMENTO_DOWN_FINE;
@@ -495,7 +491,7 @@ static command_t map_dskt_command(const uint8_t code, const uint8_t data)
     if (code == DSKT_SET_VIBRATO_WAVEFORM_CMD) return SET_VIBRATO_WAVEFORM;
     if (code == DSKT_SET_LOOP_CMD) return DEFINE_PATTERN_LOOP;
     if (code == DSKT_SET_TREMOLO_WAVEFORM_CMD) return SET_TREMOLO_WAVEFORM;
-    if (code == DSKT_SET_FINE_TEMPO_CMD) return SET_TICK_RATE;
+    if (code == DSKT_SET_FINE_TEMPO_CMD) return SET_TICKS_PER_SECOND;
     if (code == DSKT_RETRIGGER_SAMPLE_CMD) return RETRIGGER_SAMPLE;
     if (code == DSKT_FINE_VOLUME_SLIDE_CMD && (data & 0x80) == 0) return VOLUME_SLIDE_UP_FINE;
     if (code == DSKT_FINE_VOLUME_SLIDE_CMD && (data & 0x80) > 0) return VOLUME_SLIDE_DOWN_FINE;

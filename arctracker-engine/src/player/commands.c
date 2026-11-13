@@ -23,8 +23,9 @@ static void process_clear_repeat_cmd(const event_t *, audio_generator_t *);
 static void process_set_stereo_cmd(const event_t *event, audio_spatialiser_t *spatialiser);
 static void process_stereo_slide_cmd(const event_t *event, audio_spatialiser_t *spatialiser);
 static const effect_t *get_global_effect(const event_t *, int, command_t);
-static void set_tempo(player_t *, uint8_t);
-static void set_tempo_fine(tick_scheduler_t *, uint8_t);
+static void set_ticks_per_event(player_t *, uint8_t);
+static void set_beats_per_minute(player_t *player, uint8_t);
+static void set_ticks_per_second(tick_scheduler_t *, uint8_t);
 static void delay_next_event(tick_scheduler_t *, uint8_t);
 static void define_loop(pt_loop_state_t *, sequence_t *, uint8_t);
 
@@ -353,14 +354,16 @@ static void process_stereo_slide_cmd(const event_t *event, audio_spatialiser_t *
 void process_global_event_commands(const event_t *events, const int num_tracks, player_t *player)
 {
     const effect_t *effect = NULL;
-    if ((effect = get_global_effect(events, num_tracks, SET_TEMPO)) != NULL)
-        set_tempo(player, effect->data);
+    if ((effect = get_global_effect(events, num_tracks, SET_TICKS_PER_EVENT)) != NULL)
+        set_ticks_per_event(player, effect->data);
+    if ((effect = get_global_effect(events, num_tracks, SET_BEATS_PER_MINUTE)) != NULL)
+        set_beats_per_minute(player, effect->data);
     if ((effect = get_global_effect(events, num_tracks, BREAK_TO_NEXT_PATTERN)) != NULL)
         sequencer_break_pattern(&player->sequence, effect->data);
     if ((effect = get_global_effect(events, num_tracks, SEQUENCE_JUMP)) != NULL)
         sequencer_set_next_sequence_index(&player->sequence, effect->data);
-    if ((effect = get_global_effect(events, num_tracks, SET_TICK_RATE)) != NULL)
-        set_tempo_fine(&player->tick_scheduler, effect->data);
+    if ((effect = get_global_effect(events, num_tracks, SET_TICKS_PER_SECOND)) != NULL)
+        set_ticks_per_second(&player->tick_scheduler, effect->data);
     if ((effect = get_global_effect(events, num_tracks, DELAY_NEXT_EVENT)) != NULL)
         delay_next_event(&player->tick_scheduler, effect->data);
     if ((effect = get_global_effect(events, num_tracks, DEFINE_PATTERN_LOOP)) != NULL)
@@ -378,24 +381,26 @@ static const effect_t *get_global_effect(const event_t *events, const int num_tr
     return NULL;
 }
 
-static void set_tempo(player_t *player, const uint8_t data)
+static void set_ticks_per_event(player_t *player, const uint8_t data)
 {
-    if (data < MIN_BPM)
-        player->tick_scheduler.event_scheduler.ticks_per_event = data;
-    else if (player->module->lines_per_beat > 0)
-        player_set_bpm(player, data);
+    if (data > 0) player->tick_scheduler.event_scheduler.ticks_per_event = data;
 }
 
-static void set_tempo_fine(tick_scheduler_t *tick_scheduler, const uint8_t data)
+static void set_beats_per_minute(player_t *player, const uint8_t data)
 {
-    if (data > 0)
-        tick_scheduler_set_ticks_per_second(tick_scheduler, data);
+    if (data > 0) player_set_bpm(player, data);
+}
+
+static void set_ticks_per_second(tick_scheduler_t *tick_scheduler, const uint8_t data)
+{
+    if (data > 0) tick_scheduler_set_ticks_per_second(tick_scheduler, data);
 }
 
 static void delay_next_event(tick_scheduler_t *tick_scheduler, const uint8_t data)
 {
-    if (data > 0)
-        tick_scheduler->event_scheduler.event_delay = data * tick_scheduler->event_scheduler.ticks_per_event;
+    if (data == 0) return;
+    const int event_delay = data * tick_scheduler->event_scheduler.ticks_per_event;
+    tick_scheduler->event_scheduler.event_delay = event_delay;
 }
 
 /******************************************************************************

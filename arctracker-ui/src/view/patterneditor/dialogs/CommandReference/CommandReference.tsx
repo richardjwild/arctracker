@@ -21,11 +21,12 @@ const commandsColumn1 = [
   [" C", message("command0C")],
   [" D", message("command0D")],
   [" F", message("command0F")],
+  ["10", message("command10")],
   ["12", message("command12")],
-  ["18", message("command18")],
 ];
 
 const commandsColumn2 = [
+  ["18", message("command18")],
   ["1E", message("command1E")],
   ["E0", message("commandE0")],
   ["E1", message("commandE1")],

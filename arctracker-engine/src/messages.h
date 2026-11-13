@@ -89,6 +89,7 @@
 #define INVALID_WAVEFORMATEXTENSIBLE_FORMAT_CHUNK "Invalid WAVEFORMATEXTENSIBLE fmt chunk"
 #define INVALID_WAVEFORMATEXTENSIBLE_EXTENSION_SIZE "Invalid WAVEFORMATEXTENSIBLE extension size"
 #define UNSUPPORTED_WAVEFORMATEXTENSIBLE_SUB_FORMAT "Unsupported WAVEFORMATEXTENSIBLE subformat"
+#define MODFILE_INVALID_DATA_TRUNCATED "File corrupt: data truncated"
 #define MODFILE_INVALID_NUM_TRACKS "File corrupt: invalid number of tracks"
 #define MODFILE_INVALID_SEQUENCE_LENGTH "File corrupt: invalid sequence length"
 #define MODFILE_INVALID_MASTER_GAIN "File corrupt: invalid master gain"
