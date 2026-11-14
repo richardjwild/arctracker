@@ -55,12 +55,12 @@
  * count given at offset 160. The value of the array at index n gives the     *
  * length (in pattern lines) of pattern number n. The array is zero-indexed.  *
  *                                                                            *
- * Samples                                                                    *
- * -------                                                                    *
- * The samples follow the pattern lengths, aligned to the next 4-byte         *
- * boundary. This is an array of structures equal in length to the sample     *
- * count given at offset 164. The structure is 64 bytes in length and its     *
- * format is:                                                                 *
+ * Sample descriptions                                                        *
+ * ------------------                                                         *
+ * The sample descriptions follow the pattern lengths, aligned to the next    *
+ * 4-byte boundary. This is an array of structures equal in length to the     *
+ * sample count given at offset 164. The structure is 64 bytes in length and  *
+ * its format is:                                                             *
  *                                                                            *
  *   Offset Description                                                       *
  *   ------ -----------                                                       *
@@ -77,8 +77,9 @@
  *       60 Sample data offset (4 bytes)                                      *
  *                                                                            *
  * The sample data offset is the offset into the file at which the sample     *
- * data is located. The sample data is 8-bit VIDC encoded (see vidc.c for     *
- * details, in particular the vidc_to_linear function).                       *
+ * data is located. The sample data is 8-bit VIDC encoded. For more details   *
+ * about the encoding, look in the vidc.c module; in particular the           *
+ * vidc_to_linear function).                                                  *
  *                                                                            *
  * Pattern data                                                               *
  * ------------                                                               *
@@ -217,14 +218,10 @@ static module_t *read_desktop_tracker_module(const mapped_file_t file)
         return NULL;
     }
     format_map_t format_map;
-    if (!get_format_map(file, module, &format_map))
-    {
-        goto failed;
-    }
-    if (!read_sequence(module, format_map) || !read_samples(module, format_map) || !read_patterns(module, format_map))
-    {
-        goto failed;
-    }
+    if (!get_format_map(file, module, &format_map)) goto failed;
+    if (!read_sequence(module, format_map)) goto failed;
+    if (!read_samples(module, format_map)) goto failed;
+    if (!read_patterns(module, format_map)) goto failed;
     return module;
 
 failed:
@@ -734,10 +731,10 @@ static bool find_or_create_sample_slice(const uint32_t required_offset, instrume
 {
     if (instrument == NULL)
     {
-        // Desktop Tracker will obey 06 commands on events without an instrument number, in similar fashion to how
-        // ProTracker obeys its 0x9 commands: it applies it to the currently selected instrument. But that gives us a
-        // problem here because we have no way to know what the currently selected instrument will be during playback.
-        // We shall ignore the command in this case, at least until a satisfactory solution presents itself (unlikely).
+        // Desktop Tracker will obey 06 commands on events without an instrument number, just as how ProTracker obeys
+        // its 0x9 commands: it applies the effect to the currently selected instrument. That presents us a problem
+        // here because we do not know what the currently selected instrument will be during playback. We shall ignore
+        // the command in this case, at least until (the unlikely event) a satisfactory solution presents itself.
         return false;
     }
     if (!instrument->assigned)
