@@ -181,9 +181,9 @@ typedef struct {
 static bool is_desktop_tracker_format(mapped_file_t);
 static module_t *read_desktop_tracker_module(mapped_file_t);
 static module_t *init_module(mapped_file_t);
-static void init_tracks(module_t *, uint32_t, const uint8_t *);
+static void init_tracks(const module_t *, uint32_t, const uint8_t *);
 static bool get_format_map(mapped_file_t, const module_t *, format_map_t *);
-static bool read_sequence(module_t *, format_map_t);
+static bool read_sequence(const module_t *, format_map_t);
 static bool read_samples(module_t *, format_map_t);
 static bool read_sample(module_t *, format_map_t, const uint8_t *, int);
 static bool read_patterns(module_t *, format_map_t);
@@ -306,7 +306,7 @@ static module_t *init_module(const mapped_file_t file)
     return module;
 }
 
-static void init_tracks(module_t *module, const uint32_t track_count, const uint8_t *initial_stereo)
+static void init_tracks(const module_t *module, const uint32_t track_count, const uint8_t *initial_stereo)
 {
     assert(module->tracks != NULL);
     for (uint32_t track = 0; track < track_count; track++)
@@ -356,7 +356,7 @@ static bool get_format_map(const mapped_file_t file, const module_t *module, for
     return true;
 }
 
-static bool read_sequence(module_t *module, const format_map_t format_map)
+static bool read_sequence(const module_t *module, const format_map_t format_map)
 {
     assert(module->sequence != NULL);
     const uint8_t *sequence_in = format_map.sequence;
