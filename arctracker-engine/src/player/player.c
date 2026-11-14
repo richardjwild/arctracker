@@ -237,6 +237,11 @@ void player_initial_track_panning_changed(player_t *player, const uint8_t track)
 
 void player_set_bpm(player_t *player, const uint8_t beats_per_minute)
 {
+    if (player->module->lines_per_beat == 0)
+    {
+        // BPM tempo requires lines per beat to be defined.
+        return;
+    }
     player->current_bpm = beats_per_minute;
     if (beats_per_minute > 0)
     {

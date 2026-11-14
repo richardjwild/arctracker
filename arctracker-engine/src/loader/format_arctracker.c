@@ -592,8 +592,9 @@ static command_t decode_command(const uint8_t code)
         case 0x50: return SET_STEREO;
         case 0x51: return DELAY_SAMPLE;
         case 0x52: return RETRIGGER_SAMPLE;
-        case 0x53: return SET_TEMPO;
-        case 0x54: return SET_TICK_RATE;
+        case 0x53: return SET_TICKS_PER_EVENT;
+        case 0x5c: return SET_BEATS_PER_MINUTE;
+        case 0x54: return SET_TICKS_PER_SECOND;
         case 0x55: return SET_GLISSANDO_MODE;
         case 0x56: return SET_VOLUME;
         case 0x57: return DEFINE_PATTERN_LOOP;
@@ -957,8 +958,9 @@ static uint8_t encode_command(const command_t command)
         case SET_STEREO: return 0x50;
         case DELAY_SAMPLE: return 0x51;
         case RETRIGGER_SAMPLE: return 0x52;
-        case SET_TEMPO: return 0x53;
-        case SET_TICK_RATE: return 0x54;
+        case SET_TICKS_PER_EVENT: return 0x53;
+        case SET_BEATS_PER_MINUTE: return 0x5c;
+        case SET_TICKS_PER_SECOND: return 0x54;
         case SET_GLISSANDO_MODE: return 0x55;
         case SET_VOLUME: return 0x56;
         case DEFINE_PATTERN_LOOP: return 0x57;

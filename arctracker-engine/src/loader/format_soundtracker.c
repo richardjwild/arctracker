@@ -873,13 +873,13 @@ static void decode_effect(const uint8_t mod_effect, const uint8_t mod_data, effe
         case 0xF:
             if (mod_data >= 1 && mod_data <= 0x20)
             {
-                effects[0].command = SET_TEMPO;
+                effects[0].command = SET_TICKS_PER_EVENT;
                 effects[0].data = mod_data;
             }
             else
             {
                 const float ticks_per_second = (float) mod_data * 2.0f / 5.0f;
-                effects[0].command = SET_TICK_RATE;
+                effects[0].command = SET_TICKS_PER_SECOND;
                 // Unfortunately, we cannot accurately represent the calculated ticks/second in an effect data field.
                 // This is the best we can do without redesigning Arctracker's timing system just for Protracker.
                 effects[0].data = (uint8_t) lround(ticks_per_second);

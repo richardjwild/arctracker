@@ -160,7 +160,7 @@ static void print_instrument_slots(arctracker_t *arctracker_handle)
         ui_instrument_info_t instrument_info;
         arctracker_get_instrument_info(arctracker_handle, slot, &instrument_info);
         if (instrument_info.assigned)
-            printf("Slot %d -> Sample %d -> %s\n", slot, instrument_info.sample_info.sample_index, instrument_info.name);
+            printf("Slot %3d -> Sample %3d -> %s\n", slot, instrument_info.sample_info.sample_index, instrument_info.name);
     }
 }
 
