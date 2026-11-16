@@ -8,6 +8,7 @@
 #endif
 
 static bool generate_audio(audio_generator_state_t *, float *, unsigned int);
+static void ensure_loop_fits(sampler_state_t *);
 static float interpolate_linear(const float *, float);
 static float interpolate_none(const float *, float);
 static void pitch_slide_on(audio_generator_state_t *state, int, bool);
@@ -70,6 +71,10 @@ audio_generator_t init_sampler(
     sampler_state->vibrato = (lfo_effect_t) {0};
     sampler_state->repeat_cleared = false;
     sampler_state->clear_repeat_delay = 0;
+    if (sampler_state->sample_repeats)
+    {
+        ensure_loop_fits(sampler_state);
+    }
     if (slice.length > 0 && slice.offset < (uint32_t) sample->sample_end)
     {
         sampler_state->phase_accumulator = (float) slice.offset;
@@ -99,6 +104,36 @@ audio_generator_t init_sampler(
         .cancel_clear_repeat = cancel_clear_repeat,
         .tick = tick,
     };
+}
+
+static void ensure_loop_fits(sampler_state_t *sampler_state)
+{
+    if (sampler_state->repeat_length <= 0)
+    {
+        sampler_state->sample_repeats = false;
+        return;
+    }
+    if (sampler_state->sample_repeats && sampler_state->repeat_end > sampler_state->sample_end)
+    {
+        const int overshoot = sampler_state->repeat_end - sampler_state->sample_end;
+        if (overshoot >= sampler_state->repeat_length)
+        {
+            sampler_state->sample_repeats = false;
+            return;
+        }
+        sampler_state->repeat_end -= overshoot;
+        sampler_state->repeat_length -= overshoot;
+    }
+    if (sampler_state->sample_repeats && sampler_state->repeat_length > sampler_state->repeat_end)
+    {
+        const int overshoot = sampler_state->repeat_length - sampler_state->repeat_end;
+        if (overshoot >= sampler_state->repeat_length)
+        {
+            sampler_state->sample_repeats = false;
+            return;
+        }
+        sampler_state->repeat_length -= overshoot;
+    }
 }
 
 static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, unsigned int frames_to_write)

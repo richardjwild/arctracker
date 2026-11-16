@@ -15,7 +15,7 @@
  *                                                                           *
  *   Offset  Size  Description                                               *
  *   0       4     Chunk id, ASCII FourCC                                    *
- *   4       4     Chunk data length in bytes, excluding this 8-byte header  *
+ *   4       4     Chunk data length in bytes (excluding the header)         *
  *   8       N     Chunk data                                                *
  *                                                                           *
  * An Arctracker module file always begins with an ARCT format chunk, which  *
