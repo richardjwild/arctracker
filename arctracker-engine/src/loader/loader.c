@@ -3,11 +3,11 @@
 #include <sys/stat.h>
 #include "loader.h"
 #include "files.h"
-#include "format_arctracker.h"
-#include "format_desktop_tracker.h"
-#include "format_soundtracker.h"
+#include "format_arctm.h"
+#include "format_dskt.h"
+#include "format_mod.h"
 #include "format_tracker.h"
-#include "format_tracker_new.h"
+#include "format_musx.h"
 #include "messages.h"
 #include "audio_file/wav.h"
 #include "io/error.h"
@@ -164,11 +164,11 @@ bool export_sample(const module_t *module, const int instrument_index, const cha
 static format_t *known_formats(void)
 {
     static format_t formats[NUM_FORMATS];
-    formats[0] = arctracker_format();
-    formats[1] = tracker_format_new();
+    formats[0] = format_arctm();
+    formats[1] = format_musx();
     formats[2] = tracker_format();
-    formats[3] = desktop_tracker_format();
-    formats[4] = soundtracker_format();
+    formats[3] = format_dskt();
+    formats[4] = format_mod();
     return formats;
 }
 

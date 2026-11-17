@@ -1,4 +1,6 @@
 #include "sample_player.h"
+
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 #include "memory/heap.h"
@@ -7,10 +9,11 @@
 #include <stdio.h>
 #endif
 
-static bool generate_audio(audio_generator_state_t *, float *, unsigned int);
 static void ensure_loop_fits(sampler_state_t *);
-static float interpolate_linear(const float *, float);
-static float interpolate_none(const float *, float);
+static bool generate_audio(audio_generator_state_t *, float *, unsigned int);
+static float period_modulation(sampler_state_t *);
+static void get_interpolation_pair(const float *, int, int, bool, int, float *, float *);
+static float interpolate(interpolation_type_t, float, float, float);
 static void pitch_slide_on(audio_generator_state_t *state, int, bool);
 static void pitch_slide_off(audio_generator_state_t *state);
 static void set_tone_portamento_target(audio_generator_state_t *, int);
@@ -113,7 +116,7 @@ static void ensure_loop_fits(sampler_state_t *sampler_state)
         sampler_state->sample_repeats = false;
         return;
     }
-    if (sampler_state->sample_repeats && sampler_state->repeat_end > sampler_state->sample_end)
+    if (sampler_state->repeat_end > sampler_state->sample_end)
     {
         const int overshoot = sampler_state->repeat_end - sampler_state->sample_end;
         if (overshoot >= sampler_state->repeat_length)
@@ -124,7 +127,7 @@ static void ensure_loop_fits(sampler_state_t *sampler_state)
         sampler_state->repeat_end -= overshoot;
         sampler_state->repeat_length -= overshoot;
     }
-    if (sampler_state->sample_repeats && sampler_state->repeat_length > sampler_state->repeat_end)
+    if (sampler_state->repeat_length > sampler_state->repeat_end)
     {
         const int overshoot = sampler_state->repeat_length - sampler_state->repeat_end;
         if (overshoot >= sampler_state->repeat_length)
@@ -139,14 +142,14 @@ static void ensure_loop_fits(sampler_state_t *sampler_state)
 static bool generate_audio(audio_generator_state_t *state, float *channel_buffer, unsigned int frames_to_write)
 {
     sampler_state_t *sampler = state->sampler;
-    const float period = sampler->period + sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation + sampler->glissando_period_modulation;
-    if (period <= 0.0f)
+    const float period = sampler->period + period_modulation(sampler);
+    if (!isfinite(period) || period <= 0.0f)
     {
         // Fill the buffer with silence.
         memset(channel_buffer, 0, frames_to_write * sizeof(float));
         return false;
     }
-    float (*interpolate)(const float *, float) = sampler->interpolation_type == LINEAR ? &interpolate_linear : &interpolate_none;
+    const interpolation_type_t interpolation_type = sampler->interpolation_type;
     const float *sample_data = sampler->sample_data;
     const float phase_increment = sampler->phase_increment_per_period / (float) period;
     const bool sample_repeats = sampler->sample_repeats && !sampler->repeat_cleared;
@@ -156,13 +159,16 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     int offset = 0;
     while (!sampler->muted && frames_to_write > 0)
     {
-        channel_buffer[offset++] = interpolate(sample_data, phase_accumulator);
+        const int phase = (int) floorf(phase_accumulator);
+        float s1, s2;
+        get_interpolation_pair(sample_data, phase, (int) sample_end, sample_repeats, (int) repeat_length, &s1, &s2);
+        channel_buffer[offset++] = interpolate(interpolation_type, s1, s2, phase_accumulator - (float) phase);
         frames_to_write--;
         phase_accumulator += phase_increment;
         if (phase_accumulator > sample_end)
         {
             if (!sample_repeats || repeat_length <= 0) break;
-            phase_accumulator -= repeat_length;
+            while (phase_accumulator > sample_end) phase_accumulator -= repeat_length;
         }
     }
     if (frames_to_write > 0)
@@ -176,18 +182,40 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
     return true;
 }
 
-static float interpolate_linear(const float *sample, const float phase_accumulator)
+static float period_modulation(sampler_state_t *sampler)
 {
-    const int frame_from = (int) phase_accumulator;
-    const float sample_from = sample[frame_from];
-    const float distance = sample[frame_from + 1] - sample_from;
-    const float fraction = phase_accumulator - (float) frame_from;
-    return sample_from + distance * fraction;
+    return sampler->vibrato_period_modulation + sampler->arpeggio_period_modulation + sampler->glissando_period_modulation;
 }
 
-static float interpolate_none(const float *sample, const float phase_accumulator)
+static void get_interpolation_pair(
+    const float *sample_data,
+    const int phase,
+    const int sample_end,
+    const bool sample_repeats,
+    const int repeat_length,
+    float *s1,
+    float *s2
+) {
+    *s1 = sample_data[phase];
+    if (phase >= sample_end - 1 && sample_repeats)
+    {
+        *s2 = sample_data[phase - repeat_length];
+    }
+    else if (phase >= sample_end - 1 && !sample_repeats)
+    {
+        *s2 = *s1;
+    }
+    else
+    {
+        *s2 = sample_data[phase + 1];
+    }
+}
+
+static float interpolate(const interpolation_type_t type, const float s1, const float s2, const float fraction)
 {
-    return sample[(int) phase_accumulator];
+    return type == INTERPOLATE_LINEAR
+        ? s1 + (s2 - s1) * fraction
+        : s1;
 }
 
 static void pitch_slide_on(audio_generator_state_t *state, const int slide_rate, const bool fine)

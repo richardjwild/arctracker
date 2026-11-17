@@ -3,6 +3,6 @@
 
 #include "loader.h"
 
-format_t desktop_tracker_format(void);
+format_t format_dskt(void);
 
 #endif //ARCTRACKER_ENGINE_FORMAT_DESKTOP_TRACKER_2_H

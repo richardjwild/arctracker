@@ -1,4 +1,4 @@
-#include "format_soundtracker.h"
+#include "format_mod.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -408,9 +408,7 @@ typedef struct {
     int num_tracks;
     int sequence_length;
     int num_patterns;
-    size_t pattern_data_size;
     size_t sample_data_offset;
-    size_t total_sample_data_size;
 } mod_info_t;
 
 static bool is_this_format(mapped_file_t);
@@ -429,7 +427,7 @@ static bool range_available(mapped_file_t, size_t offset, size_t);
 static void copy_mod_string(char *, size_t, const uint8_t *, size_t);
 static int decimal_digit(uint8_t);
 
-format_t soundtracker_format(void)
+format_t format_mod(void)
 {
     return (format_t) {
         .is_this_format = is_this_format,
@@ -463,7 +461,7 @@ static module_t *read_module(const mapped_file_t file)
     module->initial_ticks_per_event = 6;
     module->default_pattern_length = MOD_PATTERN_LINES;
     module->master_gain = 0.25f;
-    module->interpolation_type = NONE;
+    module->interpolation_type = INTERPOLATE_NONE;
     module->volume_mapping_type = VOLUME_AMIGA;
     module->relative_pitch_bend = false;
     for (int track = 0; track < module->num_tracks; track++)
@@ -566,9 +564,7 @@ static bool inspect_mod(const mapped_file_t file, mod_info_t *info)
         info->num_tracks = num_tracks;
         info->sequence_length = sequence_length;
         info->num_patterns = num_patterns;
-        info->pattern_data_size = pattern_data_size;
         info->sample_data_offset = sample_data_offset;
-        info->total_sample_data_size = total_sample_data_size;
     }
     return true;
 }
@@ -967,7 +963,7 @@ static bool load_samples(module_t *module, const mapped_file_t file, const mod_i
         {
             return false;
         }
-        float *sample_data = allocate_array(MODULE, sample_length + 2, sizeof(float));
+        float *sample_data = allocate_array(MODULE, sample_length, sizeof(float));
         if (sample_data == NULL)
         {
             return false;

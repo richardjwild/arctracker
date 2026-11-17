@@ -1,4 +1,4 @@
-#include "format_tracker_new.h"
+#include "format_musx.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -62,21 +62,23 @@
  * PNUM                                                                                                              *
  *   - Number of patterns in the module                                                                              *
  *   - 4 bytes                                                                                                       *
+ *   - Minimum: 1, maximum: 64.                                                                                      *
  *                                                                                                                   *
  * PLEN                                                                                                              *
  *   - Pattern lengths                                                                                               *
  *   - 64 bytes                                                                                                      *
  *   - One byte per pattern, the byte at offset 0 is the length of pattern 0, etc. The maximum length of any pattern *
- *     in a Tracker module is 64.                                                                                    *
+ *     in a Tracker module is 64. This array is always 64 bytes long irrespective of the number specified in PNUM.   *
  *                                                                                                                   *
  * PATT                                                                                                              *
  *   - Pattern data                                                                                                  *
  *   - (4 * num tracks * pattern length) bytes                                                                       *
  *   - The manual states that PATT chunks are always 2048 bytes in length but this is not the case. The manual also  *
  *     states that events are stored for all eight tracks and 64 lines irrespective of the number of tracks in the   *
- *     module and the number of lines in the pattern. This is also not the case. The PATT chunk data comprises the   *
- *     pattern events stored in row-major order, i.e. (for a 4-track module) row 0 track 0, row 0 track 1, row 0     *
- *     track 2, row 0 track 3, row 1 track 0, etc. The events are packed into a 4-byte word like this:               *
+ *     module and the number of lines in the pattern. This is also not the case: the PATT chunk data contains the    *
+ *     number of events that are visible in the pattern, i.e. (num tracks * pattern length). The pattern events are  *
+ *     stored in row-major order, i.e. (for a 4-track module) row 0 track 0, row 0 track 1, row 0 track 2, row 0     *
+ *     track 3, then row 1 track 0, row 1 track 1, etc. The events are packed into a 4-byte word like this:          *
  *                                                                                                                   *
  *       Offset Description                                                                                          *
  *       ------ -------------------                                                                                  *
@@ -116,8 +118,8 @@
  *     RLEN                                                                                                          *
  *       - Repeat length                                                                                             *
  *       - 4 bytes                                                                                                   *
- *       - As with the Amiga SoundTracker clones, a repeat offset of 0 plus a repeat length of 2 is interpreted as   *
- *         meaning no loop.                                                                                          *
+ *       - A repeat offset of 0 plus a repeat length of 2 is interpreted by Tracker as meaning no loop, but          *
+ *         Arctracker uses the Amiga MOD convention of repeat length <= 2 meaning no loop irrespective of offset.    *
  *                                                                                                                   *
  *     SDAT                                                                                                          *
  *       - Sample data                                                                                               *
@@ -239,7 +241,7 @@ static bool read_sample_definition(const uint8_t *chunk_addr, size_t end, sample
 static bool samp_sub_chunk_recognised(const uint8_t *);
 static void copy_string(char *, const char *, int);
 
-format_t tracker_format_new(void)
+format_t format_musx(void)
 {
     return (format_t) {
         .is_this_format = is_tracker_format,
@@ -556,7 +558,7 @@ static module_t *create_module(const musx_file_t musx_file)
     module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;
-    module->interpolation_type = NONE;
+    module->interpolation_type = INTERPOLATE_NONE;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
     module->relative_pitch_bend = false;
     return module;
@@ -646,6 +648,10 @@ static void decode_tracker_event(const uint8_t *data_in, event_t *decoded)
     decoded->instrument_no = (int) mask_8_shift_right(raw, 16);
     const int note = (int) mask_8_shift_right(raw, 24);
     decoded->note = note == 0 ? 0 : note + 12;
+    if (note_out_of_range(decoded->note))
+    {
+        decoded->note = 0;
+    }
     decoded->effects[0] = effect(mask_8_shift_right(raw, 8), mask_8_shift_right(raw, 0));
     for (int i = 1; i <= 3; i++)
     {
@@ -724,7 +730,7 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
             error(MODFILE_INVALID_VOLUME);
             return false;
         }
-        float *sample_data = allocate_array(MODULE, definition.length + 2, sizeof(float));
+        float *sample_data = allocate_array(MODULE, definition.length, sizeof(float));
         if (sample_data == NULL)
         {
             return false;
@@ -766,12 +772,6 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
         // certainly wasn't useful. (Please God let there not be someone out there who did find a use for this).
         //
         const bool repeats = repeat_length > 2;
-        if (repeats)
-        {
-            // Unroll 2 samples of the loop so that the interpolation works correctly!
-            sample_data[definition.length] = sample_data[definition.repeat_offset];
-            sample_data[definition.length + 1] = sample_data[definition.repeat_offset + 1];
-        }
         instrument_t instrument = {
             .assigned = true,
             .sample_index = sample_index,

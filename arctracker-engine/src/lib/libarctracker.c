@@ -13,7 +13,7 @@
 #include "memory/heap.h"
 #include "memory/bits.h"
 #include "editor/editor.h"
-#include "loader/format_arctracker.h"
+#include "loader/format_arctm.h"
 #include "midi/midi.h"
 #include "player/period.h"
 
@@ -247,7 +247,7 @@ api_result_t arctracker_module_save(const arctracker_t *handle, const char *mod_
         return failure(BAD_FILENAME);
     if (format != FORMAT_ARCTRACKER)
         return failure(BAD_FORMAT);
-    if (!save_module(handle->module, mod_filename, arctracker_format()))
+    if (!save_module(handle->module, mod_filename, format_arctm()))
         return failure(MODULE_SAVE_FAILED);
     return SUCCESS;
 }
@@ -916,14 +916,14 @@ api_result_t arctracker_edit_set_module_meta_data(
     if (!result.success)
         return failure(result.error_message);
     bool playback_policy_changed = false;
-    if (interpolation_type == ARCTRACKER && handle->module->interpolation_type == NONE)
+    if (interpolation_type == ARCTRACKER && handle->module->interpolation_type == INTERPOLATE_NONE)
     {
-        handle->module->interpolation_type = LINEAR;
+        handle->module->interpolation_type = INTERPOLATE_LINEAR;
         playback_policy_changed = true;
     }
-    else if (interpolation_type == ARCHIMEDES && handle->module->interpolation_type == LINEAR)
+    else if (interpolation_type == ARCHIMEDES && handle->module->interpolation_type == INTERPOLATE_LINEAR)
     {
-        handle->module->interpolation_type = NONE;
+        handle->module->interpolation_type = INTERPOLATE_NONE;
         playback_policy_changed = true;
     }
     if (volume_mapping_type == UI_VOLUME_ARCHIMEDES && handle->module->volume_mapping_type == VOLUME_AMIGA)

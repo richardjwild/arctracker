@@ -12,7 +12,6 @@
 #define INITIAL_SAMPLE_CAPACITY 1024
 #define INITIAL_PATTERN_LINE_CAPACITY 64
 #define DEFAULT_TICKS_PER_SECOND 50
-#define MAX_BPM 255
 
 static bool ensure_sequence_capacity(module_t *, int);
 static bool ensure_pattern_capacity(module_t *, int);
@@ -26,6 +25,30 @@ static void destroy_pattern(pattern_t *);
 
 module_t *module_create(const int num_tracks, const int sequence_len, const int num_patterns, const int num_samples)
 {
+    if (num_tracks < 1 || num_tracks > MAX_TRACKS)
+    {
+        error(INVALID_TRACK_COUNT);
+        return NULL;
+    }
+    if (sequence_len < 1 || sequence_len > MAX_SEQUENCE_LENGTH)
+    {
+        error(INVALID_SEQUENCE_LENGTH);
+        return NULL;
+    }
+    if (num_patterns < 0 || num_patterns > MAX_PATTERNS)
+    {
+        error(INVALID_PATTERN_COUNT);
+        return NULL;
+    }
+    if (num_samples < 0 || num_samples > INITIAL_SAMPLE_CAPACITY)
+    {
+        // A module may have more samples than the initial capacity, but a new module is created without samples. The
+        // ARCTM file loader also creates a module with no samples, and subsequently adds them as it reads the file.
+        // The MUSX, DskT, and MOD loaders all create a module with their respective fixed number of sample slots, all
+        // of which are less than the initial capacity. Any value larger than this can therefore be safely rejected.
+        error(INVALID_SAMPLE_COUNT);
+        return NULL;
+    }
     module_t *module = allocate_array(MODULE, 1, sizeof(module_t));
     if (module == NULL)
     {
@@ -38,7 +61,7 @@ module_t *module_create(const int num_tracks, const int sequence_len, const int 
     module->num_patterns = num_patterns;
     module->pattern_capacity = num_patterns > INITIAL_PATTERN_CAPACITY ? num_patterns : INITIAL_PATTERN_CAPACITY;
     module->sample_slots = num_samples;
-    module->sample_capacity = num_samples > INITIAL_SAMPLE_CAPACITY ? num_samples : INITIAL_SAMPLE_CAPACITY;
+    module->sample_capacity = INITIAL_SAMPLE_CAPACITY;
     module->sequence = allocate_array(MODULE, module->sequence_capacity, sizeof(int));
     if (module->sequence == NULL)
     {
@@ -76,7 +99,7 @@ bool module_init(module_t *module, const int default_pattern_length, const int l
     module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
     module->default_pattern_length = default_pattern_length;
-    module->interpolation_type = LINEAR;
+    module->interpolation_type = INTERPOLATE_LINEAR;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
     module->relative_pitch_bend = true;
     for (int i = 0; i < module->num_tracks; i++)
@@ -207,6 +230,11 @@ static bool ensure_pattern_capacity(module_t *module, const int required_pattern
 
 bool module_set_pattern_length(const module_t *module, const int pattern_no, const int new_length)
 {
+    if (new_length <= 0 || new_length > MAX_PATTERN_LENGTH)
+    {
+        error(INVALID_PATTERN_LENGTH);
+        return false;
+    }
     pattern_t pattern = module->patterns[pattern_no];
     if (!ensure_pattern_line_capacity(&pattern, module->track_capacity, new_length))
     {
@@ -255,7 +283,7 @@ void module_get_info(module_t *module, ui_module_info_t *module_info)
     module_info->default_pattern_length = module->default_pattern_length;
     module_info->lines_per_beat = module->lines_per_beat;
     module_info->initial_bpm = module->initial_bpm;
-    module_info->interpolation_type = module->interpolation_type == LINEAR ? ARCTRACKER : ARCHIMEDES;
+    module_info->interpolation_type = module->interpolation_type == INTERPOLATE_LINEAR ? ARCTRACKER : ARCHIMEDES;
     module_info->volume_mapping_type = module->volume_mapping_type == VOLUME_ARCHIMEDES ? UI_VOLUME_ARCHIMEDES : UI_VOLUME_AMIGA;
     module_info->relative_pitch_bend = module->relative_pitch_bend;
 }
@@ -331,13 +359,22 @@ bool module_link_sample(module_t *module, const float *sample_data, const int sa
         if (!ensure_sample_capacity(module, new_sample_index + 1)) return false;
         module->sample_slots++;
     }
-    linked_sample->sample_data = sample_data;
-    linked_sample->sample_length = sample_length;
-    linked_sample->sample_rate = sample_rate;
-    linked_sample->base_note = 24;
-    linked_sample->finetune = 0;
-    module->samples[new_sample_index] = *linked_sample;
+    module->samples[new_sample_index] = (sample_t) {
+        .sample_length = sample_length,
+        .sample_data = sample_data,
+        .sample_rate = sample_rate,
+        .base_note = 24,
+        .finetune = 0,
+    };
     *sample_index = new_sample_index;
+    if (linked_sample)
+    {
+        linked_sample->sample_data = sample_data;
+        linked_sample->sample_length = sample_length;
+        linked_sample->sample_rate = sample_rate;
+        linked_sample->base_note = 24;
+        linked_sample->finetune = 0;
+    }
     return true;
 }
 
@@ -385,6 +422,7 @@ static bool ensure_sample_capacity(module_t *module, const int required_samples)
     module->sample_capacity = required_capacity;
     return true;
 }
+
 void module_set_name(module_t *module, const char *name)
 {
     snprintf(module->name, sizeof module->name, "%s", name);

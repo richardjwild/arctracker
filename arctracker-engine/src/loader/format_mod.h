@@ -3,6 +3,6 @@
 
 #include "loader.h"
 
-format_t soundtracker_format(void);
+format_t format_mod(void);
 
 #endif //ARCTRACKER_ENGINE_FORMAT_SOUNDTRACKER_H

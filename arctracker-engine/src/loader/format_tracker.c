@@ -108,7 +108,7 @@ static module_t *read_tracker_module(mapped_file_t file)
     module->initial_ticks_per_event = 6;
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;
-    module->interpolation_type = NONE;
+    module->interpolation_type = INTERPOLATE_NONE;
     module->volume_mapping_type = VOLUME_ARCHIMEDES;
     module->relative_pitch_bend = false;
     if ((chunk_address = search_tff(file.addr, array_end, STER_CHUNK)) == CHUNK_NOT_FOUND)
@@ -370,17 +370,13 @@ static bool get_sample_info(void *array_start, const long array_end, sample_t *s
     }
     else
     {
-        float *sample_data = allocate_array(MODULE, sample->sample_length + 2, sizeof(float));
+        float *sample_data = allocate_array(MODULE, sample->sample_length, sizeof(float));
         if (sample_data == NULL) goto get_sample_info_failed;
         for (int i = 0; i < sample->sample_length; i++)
         {
             sample_data[i] = vidc_to_linear(sample_data_mu_law[i]);
         }
         instrument->repeats = instrument->repeat_offset != 0 || instrument->repeat_length != 2;
-        if (instrument->repeats) {
-            sample_data[sample->sample_length] = sample_data[instrument->repeat_offset];
-            sample_data[sample->sample_length + 1] = sample_data[instrument->repeat_offset + 1];
-        }
         sample->sample_data = sample_data;
         //
         // The sample base note is chosen as C2 for convenience, but it could be any playable note.

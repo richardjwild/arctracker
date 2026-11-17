@@ -1,9 +1,12 @@
-#include "format_desktop_tracker.h"
+#include "format_dskt.h"
 #include <assert.h>
+#include <limits.h>
+
 #include "messages.h"
 #include "io/error.h"
 #include "memory/bits.h"
 #include "memory/heap.h"
+#include "player/period.h"
 #include "vidc/vidc.h"
 
 /******************************************************************************
@@ -170,13 +173,15 @@ typedef struct {
     const uint8_t *pattern_lengths;
     const uint8_t *sample_definitions;
     const uint8_t *file_end;
+    size_t file_size;
 } format_map_t;
 
 typedef struct {
     uint8_t pattern_no;
-    const uint8_t *pattern_data;
     uint8_t pattern_length;
-    const uint8_t *file_end;
+    const uint8_t *file_start;
+    size_t pattern_data_offset;
+    size_t file_size;
 } pattern_read_context_t;
 
 static bool is_desktop_tracker_format(mapped_file_t);
@@ -195,8 +200,9 @@ static effect_t effect(uint8_t, uint8_t);
 static bool decode_effect_1(uint32_t, instrument_t *, const sample_t *, effect_t *);
 static bool decode_effect_4(pattern_read_context_t, instrument_t *, const sample_t *, effect_t *);
 static bool find_or_create_sample_slice(uint32_t, instrument_t *, const sample_t *, uint8_t *);
+static void copy_string(char *, const char *, int);
 
-format_t desktop_tracker_format(void)
+format_t format_dskt(void)
 {
     return (format_t) {
         .is_this_format = is_desktop_tracker_format,
@@ -290,14 +296,14 @@ static module_t *init_module(const mapped_file_t file)
     {
         return NULL;
     }
-    snprintf(module->name, DSKT_MODULE_NAME_LEN, "%s", module_name_offset);
-    snprintf(module->author, DSKT_AUTHOR_NAME_LEN, "%s", author_name_offset);
+    copy_string(module->name, (char *) module_name_offset, DSKT_MODULE_NAME_LEN);
+    copy_string(module->author, (char *) author_name_offset, DSKT_AUTHOR_NAME_LEN);
     module->initial_ticks_per_event = initial_ticks_per_event;
     module->volume_mapping_type = flags & 1 ? VOLUME_AMIGA : VOLUME_ARCHIMEDES;
     module->relative_pitch_bend = (flags & 2) == 0;
     module->master_gain = 0.25f;
     module->default_pattern_length = 64;
-    module->interpolation_type = NONE;
+    module->interpolation_type = INTERPOLATE_NONE;
     module->restart_position = restart_position;
     init_tracks(module, track_count, initial_stereo);
     return module;
@@ -349,6 +355,7 @@ static bool get_format_map(const mapped_file_t file, const module_t *module, for
         .pattern_lengths =  file.addr + pattern_lengths,
         .sample_definitions = file.addr + sample_definitions,
         .file_end = file.addr + file.size,
+        .file_size = file.size,
     };
     return true;
 }
@@ -418,6 +425,11 @@ static bool read_sample(module_t *module, const format_map_t format_map, const u
     const uint32_t repeat_start = read_u32_le(sample_definition + 16);
     const uint32_t repeat_length = read_u32_le(sample_definition + 20);
     const uint32_t sample_length = read_u32_le(sample_definition + 24);
+    if (sample_length > INT_MAX)
+    {
+        error(MODFILE_CORRUPT_SAMPLE_TOO_LARGE);
+        return false;
+    }
     if (sample_length == 0)
     {
         // Sample length zero means the sample slot is unused, so mark the instrument unassigned and return.
@@ -425,14 +437,14 @@ static bool read_sample(module_t *module, const format_map_t format_map, const u
         return true;
     }
     const size_t sample_data_offset = read_u32_le(sample_definition + 60);
-    if (sample_data_offset > (size_t) format_map.file_end - sample_length)
+    if (sample_data_offset > format_map.file_size || sample_length > format_map.file_size - sample_data_offset)
     {
         error(MODFILE_CORRUPT_MISSING_SAMPLE_DATA);
         return false;
     }
     const bool repeats = repeat_length > 0;
     const uint8_t *sample_data_in = format_map.file_start + sample_data_offset;
-    float *sample_data = allocate_array(MODULE, sample_length + 2, sizeof(float));
+    float *sample_data = allocate_array(MODULE, sample_length, sizeof(float));
     if (sample_data == NULL)
     {
         return false;
@@ -461,7 +473,7 @@ static bool read_sample(module_t *module, const format_map_t format_map, const u
         .repeat_length = (int) repeat_length,
         .sample_index = sample_index,
     };
-    snprintf(instrument.name, DSKT_SAMPLE_NAME_LEN, "%s", (char *) sample_definition + 28);
+    copy_string(instrument.name, (char *) sample_definition + 28, DSKT_SAMPLE_NAME_LEN);
     module_set_instrument(module, sample_index, instrument);
     return true;
 }
@@ -520,16 +532,17 @@ static bool read_patterns(module_t *module, const format_map_t format_map)
             return false;
         }
         const size_t pattern_data_offset = read_u32_le(pattern_offsets + pattern_no * 4);
-        if (format_map.file_start > format_map.file_end - pattern_data_offset)
+        if (pattern_data_offset > format_map.file_size)
         {
             error(MODFILE_INVALID_MISSING_PATTERN_DATA);
             return false;
         }
         const pattern_read_context_t read_pattern_info = {
             .pattern_no = pattern_no,
-            .pattern_data = (uint8_t *) format_map.file_start + pattern_data_offset,
+            .file_start = format_map.file_start,
+            .pattern_data_offset = pattern_data_offset,
             .pattern_length = pattern_length,
-            .file_end = format_map.file_end,
+            .file_size = format_map.file_size,
         };
         if (!read_pattern(module, read_pattern_info))
         {
@@ -550,7 +563,7 @@ static bool read_pattern(module_t *module, pattern_read_context_t context)
             if (track < (uint32_t) module->num_tracks)
             {
                 size_t event_size = 0;
-                if (context.pattern_data > context.file_end - 4)
+                if (context.pattern_data_offset > context.file_size - 4)
                 {
                     error(MODFILE_INVALID_MISSING_PATTERN_DATA);
                     return false;
@@ -559,7 +572,7 @@ static bool read_pattern(module_t *module, pattern_read_context_t context)
                 {
                     return false;
                 }
-                context.pattern_data += event_size;
+                context.pattern_data_offset += event_size;
             }
             else
             {
@@ -584,12 +597,16 @@ static bool read_pattern(module_t *module, pattern_read_context_t context)
 
 static bool decode_event(const pattern_read_context_t context, instrument_t *instruments, const sample_t *samples, event_t *decoded, size_t *event_size)
 {
-    const uint8_t *event_p = context.pattern_data;
+    const uint8_t *event_p = context.file_start + context.pattern_data_offset;
     const uint32_t event = read_u32_le(event_p);
     decoded->instrument_no = (int) mask_6_shift_right(event, 0);
     instrument_t *instrument = decoded->instrument_no > 0 ? &instruments[decoded->instrument_no] : NULL;
     const int note = (int) mask_6_shift_right(event, 6);
     decoded->note = note == 0 ? 0 : note + 12;
+    if (note_out_of_range(decoded->note))
+    {
+        decoded->note = 0;
+    }
     if (is_single_effect(event))
     {
         *event_size = DSKT_EVENT_SIZE_SINGLE_EFFECT;
@@ -662,7 +679,7 @@ static bool decode_effect_1(const uint32_t event, instrument_t *instrument, cons
         const uint32_t required_offset = decoded_effect->data * 256;
         if (!find_or_create_sample_slice(required_offset, instrument, samples, &decoded_effect->data))
         {
-            error(TOO_MANY_SAMPLE_SLICES);
+            error(CANNOT_ASSIGN_SAMPLE_SLICE);
             return false;
         }
     }
@@ -671,13 +688,13 @@ static bool decode_effect_1(const uint32_t event, instrument_t *instrument, cons
 
 static bool decode_effect_4(const pattern_read_context_t context, instrument_t *instrument, const sample_t *samples, effect_t *decoded_effects)
 {
-    if (context.pattern_data > context.file_end - 8)
+    if (context.pattern_data_offset > context.file_size - 8)
     {
         error(MODFILE_INVALID_MISSING_PATTERN_DATA);
         return false;
     }
-    const uint32_t word_1 = read_u32_le(context.pattern_data);
-    const uint32_t word_2 = read_u32_le(context.pattern_data + 4);
+    const uint32_t word_1 = read_u32_le(context.file_start + context.pattern_data_offset);
+    const uint32_t word_2 = read_u32_le(context.file_start + context.pattern_data_offset + 4);
     for (int slot = 0; slot <= 3; slot++)
     {
         const int code_offset = 12 + slot * 5;
@@ -714,7 +731,8 @@ static bool decode_effect_4(const pattern_read_context_t context, instrument_t *
         if (!find_or_create_sample_slice(required_offset, instrument, samples, &decoded_effect.data))
         {
             // We either ran out of sample slices or we cannot determine which instrument to add the slice to.
-            continue;
+            error(CANNOT_ASSIGN_SAMPLE_SLICE);
+            return false;
         }
         decoded_effects[slot] = decoded_effect;
         if (slot < 3)
@@ -771,4 +789,10 @@ static bool find_or_create_sample_slice(const uint32_t required_offset, instrume
         }
     }
     return false;
+}
+
+static void copy_string(char *destination, const char *source, const int length)
+{
+    memcpy(destination, source, length);
+    destination[length] = '\0';
 }

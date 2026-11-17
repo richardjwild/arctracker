@@ -1,4 +1,6 @@
-#include "format_arctracker.h"
+#include "format_arctm.h"
+
+#include <math.h>
 
 #include "files.h"
 #include "messages.h"
@@ -214,6 +216,12 @@
 #define INSTRUMENT_TYPE_SAMPLE 0
 #define MAX_PATTERN_LENGTH 1000
 
+typedef struct {
+    uint32_t *loaded_indices;
+    int count;
+    int capacity;
+} loaded_sample_indices_t;
+
 static const uint32_t FORMAT_VERSION = 2;
 static const char *FORMAT_CHUNK_ID = "ARCT";
 static const char *META_CHUNK_ID = "META";
@@ -240,15 +248,18 @@ static module_t *instantiate_module(const uint8_t *, size_t);
 static uint8_t *next_chunk_address(uint8_t *);
 static float read_gain(uint32_t);
 static bool read_sequence_chunk(const uint8_t *, size_t, module_t *);
-static bool read_track_chunk(const uint8_t *data, size_t, const module_t *);
+static bool read_track_chunk(const uint8_t *data, size_t, const module_t *, bool *);
 static bool read_pattern_chunk(const uint8_t *data, size_t, module_t *);
 static event_t read_pattern_event(const uint8_t *);
 static command_t decode_command(uint8_t);
 static bool read_empty_pattern_chunk(const uint8_t *, size_t, module_t *);
 static bool read_instrument_chunk(const uint8_t *, size_t, module_t *);
-static bool read_sample_chunk(const uint8_t *, size_t, module_t *);
+static bool read_sample_chunk(const uint8_t *, size_t, module_t *, loaded_sample_indices_t *);
 static bool read_sample_slices_chunk(const uint8_t *, size_t, module_t *);
-static bool validate_module(const module_t *);
+static bool ensure_sample_index_capacity(loaded_sample_indices_t *, int);
+static bool record_loaded_sample_index(loaded_sample_indices_t *, uint32_t, int *);
+static bool find_assigned_sample_index(const loaded_sample_indices_t *, uint32_t, int *);
+static bool validate_module(module_t *, const bool *, const loaded_sample_indices_t *);
 static bool write_arctracker_module(const module_t *, FILE *);
 static bool write_format_chunk(FILE *);
 static bool write_meta_chunk(const module_t *, FILE *);
@@ -273,7 +284,7 @@ static bool write_sample_slices_chunk(const module_t *, uint8_t, uint8_t, FILE *
 static uint32_t write_gain(float);
 static bool write_fourcc(FILE *, const char *);
 
-format_t arctracker_format(void)
+format_t format_arctm(void)
 {
     return (format_t){
         .is_this_format = is_arctracker_module,
@@ -284,7 +295,7 @@ format_t arctracker_format(void)
 
 static bool is_arctracker_module(const mapped_file_t mapped_file)
 {
-    if (mapped_file.size < 12) return false;
+    if (mapped_file.size < CHUNK_HEADER_SIZE + FORMAT_CHUNK_LEN) return false;
     if (!chunk_is(FORMAT_CHUNK_ID, mapped_file.addr)) return false;
     const uint32_t format_version = read_u32_le(mapped_file.addr + 8);
     return format_version == FORMAT_VERSION;
@@ -301,6 +312,11 @@ static bool chunk_is(const char *chunk_id, const uint8_t *addr)
 
 static module_t *read_arctracker_module(const mapped_file_t mapped_file)
 {
+    if (mapped_file.size < CHUNK_HEADER_SIZE * 2 + FORMAT_CHUNK_LEN)
+    {
+        error(MODULE_METADATA_MISSING);
+        return NULL;
+    }
     const size_t file_end = (size_t) mapped_file.addr + mapped_file.size;
     uint8_t *chunk_addr = next_chunk_address(mapped_file.addr);
     if (!chunk_is(META_CHUNK_ID, chunk_addr))
@@ -309,27 +325,40 @@ static module_t *read_arctracker_module(const mapped_file_t mapped_file)
         return NULL;
     }
     const size_t meta_data_size = read_u32_le(chunk_addr + 4);
+    if (meta_data_size > mapped_file.size - (FORMAT_CHUNK_LEN + CHUNK_HEADER_SIZE * 2))
+    {
+        error(MODULE_METADATA_TRUNCATED);
+        return NULL;
+    }
     const uint8_t *meta_data = chunk_addr + CHUNK_HEADER_SIZE;
     module_t *module = instantiate_module(meta_data, meta_data_size);
     if (module == NULL)
     {
         return NULL;
     }
+    bool tracks_loaded[MAX_TRACKS] = {0};
+    loaded_sample_indices_t sample_indices = {0};
     chunk_addr = next_chunk_address(chunk_addr);
     while ((size_t) chunk_addr < file_end)
     {
-        bool ok = true;
-        const uint8_t *data = chunk_addr + CHUNK_HEADER_SIZE;
-        const size_t data_size = read_u32_le(chunk_addr + 4);
-        if ((size_t) data + data_size > file_end)
+        const size_t remaining = file_end - (size_t) chunk_addr;
+        if (remaining < CHUNK_HEADER_SIZE)
         {
             error(CHUNK_EXTENDS_BEYOND_EOF);
             goto read_arctracker_module_failed;
         }
+        const size_t data_size = read_u32_le(chunk_addr + 4);
+        if (data_size > remaining - CHUNK_HEADER_SIZE)
+        {
+            error(CHUNK_EXTENDS_BEYOND_EOF);
+            goto read_arctracker_module_failed;
+        }
+        const uint8_t *data = chunk_addr + CHUNK_HEADER_SIZE;
+        bool ok = true;
         if (chunk_is(SEQUENCE_CHUNK_ID, chunk_addr))
             ok = read_sequence_chunk(data, data_size, module);
         if (chunk_is(TRACK_CHUNK_ID, chunk_addr))
-            ok = read_track_chunk(data, data_size, module);
+            ok = read_track_chunk(data, data_size, module, tracks_loaded);
         if (chunk_is(PATTERN_CHUNK_ID, chunk_addr))
             ok = read_pattern_chunk(data, data_size, module);
         if (chunk_is(EMPTY_PATTERN_CHUNK_ID, chunk_addr))
@@ -337,17 +366,18 @@ static module_t *read_arctracker_module(const mapped_file_t mapped_file)
         if (chunk_is(INSTRUMENT_CHUNK_ID, chunk_addr))
             ok = read_instrument_chunk(data, data_size, module);
         if (chunk_is(SAMPLE_CHUNK_ID, chunk_addr))
-            ok = read_sample_chunk(data, data_size, module);
+            ok = read_sample_chunk(data, data_size, module, &sample_indices);
         if (chunk_is(SAMPLE_SLICES_CHUNK_ID, chunk_addr))
             ok = read_sample_slices_chunk(data, data_size, module);
         if (!ok)
             goto read_arctracker_module_failed;
         chunk_addr = next_chunk_address(chunk_addr);
     }
-    if (!validate_module(module))
+    if (!validate_module(module, tracks_loaded, &sample_indices))
     {
         goto read_arctracker_module_failed;
     }
+    deallocate(MODULE, sample_indices.loaded_indices);
     return module;
 
 read_arctracker_module_failed:
@@ -355,6 +385,7 @@ read_arctracker_module_failed:
     // Something went wrong while we were populating the module; destroy it and return nothing.
     //
     module_destroy(module);
+    deallocate(MODULE, sample_indices.loaded_indices);
     return NULL;
 }
 
@@ -378,7 +409,7 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         error(MODFILE_INVALID_SEQUENCE_LENGTH);
         return NULL;
     }
-    module_t *module = module_create(num_tracks + 1, sequence_length, 0, 0);
+    module_t *module = module_create((int) num_tracks + 1, sequence_length, 0, 0);
     if (module == NULL)
     {
         return NULL;
@@ -386,11 +417,6 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
     module_set_name(module, module_name);
     module_set_author(module, author);
     const uint16_t master_gain = read_u16_le(meta_data + 3 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
-    if (master_gain > MASTER_GAIN_MAX)
-    {
-        error(MODFILE_INVALID_MASTER_GAIN);
-        goto read_module_metadata_failed;
-    }
     module->master_gain = read_gain(master_gain);
     const uint8_t initial_speed = read_u8(meta_data + 5 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
     if (initial_speed == 0)
@@ -400,6 +426,11 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
     }
     module->initial_ticks_per_event = initial_speed;
     const uint8_t initial_bpm = read_u8(meta_data + 6 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
+    if (initial_bpm > MAX_BPM)
+    {
+        error(MODFILE_INVALID_BPM);
+        goto read_module_metadata_failed;
+    }
     const uint8_t lines_per_beat = read_u8(meta_data + 7 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
     module_set_lines_per_beat(module, lines_per_beat);
     module_set_initial_bpm(module, initial_bpm);
@@ -423,7 +454,7 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
     }
     uint16_t restart_position = 0;
     uint8_t pitch_bend_mode = 0;
-    if (data_size > META_CHUNK_LEN_MIN && data_size <= META_CHUNK_LEN_MAX)
+    if (data_size >= META_CHUNK_LEN_MAX)
     {
         restart_position = read_u16_le(meta_data + 12 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
         if (restart_position >= sequence_length)
@@ -439,7 +470,7 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
         }
     }
     module->default_pattern_length = default_pattern_length;
-    module->interpolation_type = interpolation_type == 0 ? LINEAR : NONE;
+    module->interpolation_type = interpolation_type == 0 ? INTERPOLATE_LINEAR : INTERPOLATE_NONE;
     module->volume_mapping_type = volume_mapping == 0 ? VOLUME_ARCHIMEDES : VOLUME_AMIGA;
     module->relative_pitch_bend = pitch_bend_mode == 1;
     module->restart_position = restart_position;
@@ -480,7 +511,7 @@ static bool read_sequence_chunk(const uint8_t *data, const size_t data_size, mod
     return ok;
 }
 
-static bool read_track_chunk(const uint8_t *data, const size_t data_size, const module_t *module)
+static bool read_track_chunk(const uint8_t *data, const size_t data_size, const module_t *module, bool *tracks_loaded)
 {
     if (data_size < TRACK_CHUNK_LEN)
     {
@@ -488,9 +519,14 @@ static bool read_track_chunk(const uint8_t *data, const size_t data_size, const 
         return false;
     }
     const uint8_t track = read_u8(data);
-    if (track >= (uint8_t) module->num_tracks)
+    if ((int) track >= module->num_tracks)
     {
         error(MODFILE_INVALID_TRACK_ID);
+        return false;
+    }
+    if (tracks_loaded[track])
+    {
+        error(MODFILE_INVALID_DUPLICATE_TRACK);
         return false;
     }
     const uint8_t muted = read_u8(data + TRACK_NAME_LEN + 1);
@@ -509,11 +545,17 @@ static bool read_track_chunk(const uint8_t *data, const size_t data_size, const 
     module->tracks[track].panning = initial_panning;
     module->tracks[track].muted = muted == 1;
     module->tracks[track].effects_displayed = commands_displayed;
+    tracks_loaded[track] = true;
     return true;
 }
 
 static bool read_pattern_chunk(const uint8_t *data, const size_t data_size, module_t *module)
 {
+    if (data_size < 8)
+    {
+        error(INVALID_PATTERN_CHUNK_LENGTH);
+        return false;
+    }
     const uint32_t pattern_no = read_u32_le(data);
     if (pattern_no > UINT16_MAX)
     {
@@ -521,7 +563,7 @@ static bool read_pattern_chunk(const uint8_t *data, const size_t data_size, modu
         return false;
     }
     const uint16_t num_lines = read_u16_le(data + 4);
-    if (num_lines == 0 || num_lines > 1000)
+    if (num_lines == 0 || num_lines > MAX_PATTERN_LENGTH)
     {
         error(MODFILE_INVALID_PATTERN_LENGTH);
         return false;
@@ -608,6 +650,11 @@ static command_t decode_command(const uint8_t code)
 
 static bool read_empty_pattern_chunk(const uint8_t *data, const size_t data_size, module_t *module)
 {
+    if (data_size < EMPTY_PATTERN_CHUNK_LEN)
+    {
+        error(INVALID_EPAT_CHUNK_LENGTH);
+        return false;
+    }
     const uint32_t pattern_no = read_u32_le(data);
     if (pattern_no > UINT16_MAX)
     {
@@ -618,11 +665,6 @@ static bool read_empty_pattern_chunk(const uint8_t *data, const size_t data_size
     if (num_lines == 0 || num_lines > 1000)
     {
         error(MODFILE_INVALID_PATTERN_LENGTH);
-        return false;
-    }
-    if (data_size < EMPTY_PATTERN_CHUNK_LEN)
-    {
-        error(INVALID_EPAT_CHUNK_LENGTH);
         return false;
     }
     if (!module_create_pattern(module, (int) pattern_no, num_lines))
@@ -641,6 +683,11 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
         return false;
     }
     const uint32_t instrument_index = read_u32_le(data);
+    if (instrument_index >= NUM_INSTRUMENT_SLOTS)
+    {
+        error(INVALID_INSTRUMENT_INDEX);
+        return false;
+    }
     char instrument_name[INSTRUMENT_NAME_LEN];
     memcpy(instrument_name, data + 4, INSTRUMENT_NAME_LEN);
     instrument_name[INSTRUMENT_NAME_LEN - 1] = '\0';
@@ -678,17 +725,22 @@ static bool read_instrument_chunk(const uint8_t *data, const size_t data_size, m
     return true;
 }
 
-static bool read_sample_chunk(const uint8_t *data, const size_t data_size, module_t *module)
+static bool read_sample_chunk(const uint8_t *data, const size_t data_size, module_t *module, loaded_sample_indices_t *sample_indices)
 {
-    const int sample_index = (int) read_u32_le(data);
-    const int sample_length = (int) read_u32_le(data + 4);
-    if (data_size != 14 + (size_t) sample_length * 4)
+    if (data_size < 14)
+    {
+        error(MODFILE_INVALID_SAMPLE_DATA_LENGTH);
+        return false;
+    }
+    const uint32_t loaded_index = read_u32_le(data);
+    const uint32_t sample_length = read_u32_le(data + 4);
+    if (sample_length > UINT32_MAX - 2 || data_size != 14 + (size_t) sample_length * sizeof(float))
     {
         error(MODFILE_INVALID_SAMPLE_DATA_LENGTH);
         return false;
     }
     const float sample_rate = read_f32_le(data + 8);
-    if (sample_rate <= 0.0f)
+    if (!isfinite(sample_rate) || sample_rate <= 0.0f)
     {
         error(MODFILE_INVALID_SAMPLE_RATE);
         return false;
@@ -700,20 +752,50 @@ static bool read_sample_chunk(const uint8_t *data, const size_t data_size, modul
         return false;
     }
     const int8_t finetune = read_s8(data + 13);
-    float *copied_sample_data = allocate_array(MODULE, sample_length + 2, sizeof(float));
-    if (copied_sample_data == NULL) return false;
-    for (int sample = 0; sample < sample_length; sample++)
+    float *copied_sample_data = allocate_array(MODULE, sample_length, sizeof(float));
+    if (copied_sample_data == NULL)
     {
-        copied_sample_data[sample] = read_f32_le(data + 14 + sample * 4);
+        return false;
     }
-    const bool ok = module_set_sample(module, copied_sample_data, sample_length, sample_rate, base_note, finetune, sample_index);
-    if (!ok) deallocate(MODULE, copied_sample_data);
+    for (uint32_t sample = 0; sample < sample_length; sample++)
+    {
+        const float value = read_f32_le(data + 14 + sample * 4);
+        if (!isfinite(value))
+        {
+            error(MODFILE_INVALID_SAMPLE_VALUE);
+            deallocate(MODULE, copied_sample_data);
+            return false;
+        }
+        copied_sample_data[sample] = value;
+    }
+    int assigned_index;
+    bool ok = record_loaded_sample_index(sample_indices, loaded_index, &assigned_index);
+    if (ok)
+    {
+        ok = module_set_sample(module, copied_sample_data, (int) sample_length, sample_rate, base_note, finetune, assigned_index);
+    }
+    if (!ok)
+    {
+        // If module_set_sample succeeds, the module takes ownership of the sample data and assumes the responsibility
+        // to free it. If it does not succeed, we must free it here now.
+        deallocate(MODULE, copied_sample_data);
+    }
     return ok;
 }
 
 static bool read_sample_slices_chunk(const uint8_t *data, const size_t data_size, module_t *module)
 {
+    if (data_size < 5)
+    {
+        error(MODFILE_INVALID_INVALID_SAMPLE_SLICE_LENGTH);
+        return false;
+    }
     const uint32_t instrument_index = read_u32_le(data);
+    if (instrument_index >= NUM_INSTRUMENT_SLOTS)
+    {
+        error(INVALID_INSTRUMENT_INDEX);
+        return false;
+    }
     const uint8_t slice_count = read_u8(data + 4);
     if (data_size != 5 + slice_count * 9)
     {
@@ -731,12 +813,82 @@ static bool read_sample_slices_chunk(const uint8_t *data, const size_t data_size
     return true;
 }
 
-static bool validate_module(const module_t *module)
+static bool record_loaded_sample_index(loaded_sample_indices_t *sample_indices, const uint32_t loaded_index, int *assigned_index)
 {
+    if (find_assigned_sample_index(sample_indices, loaded_index, assigned_index))
+    {
+        error(MODFILE_CORRUPT_DUPLICATE_SAMPLE_INDEX);
+        return false;
+    }
+    if (!ensure_sample_index_capacity(sample_indices, sample_indices->count + 1))
+    {
+        return false;
+    }
+    *assigned_index = sample_indices->count;
+    sample_indices->loaded_indices[*assigned_index] = loaded_index;
+    sample_indices->count += 1;
+    return true;
+}
+
+static bool ensure_sample_index_capacity(loaded_sample_indices_t *sample_indices, const int index_to_add)
+{
+    if (sample_indices->capacity > index_to_add)
+    {
+        return true;
+    }
+    int required_capacity = sample_indices->capacity;
+    while (required_capacity <= index_to_add)
+    {
+        required_capacity += 256;
+    }
+    uint32_t *new_indices = reallocate_array(MODULE, sample_indices->loaded_indices, required_capacity, sizeof(uint32_t));
+    if (new_indices == NULL)
+    {
+        return false;
+    }
+    sample_indices->loaded_indices = new_indices;
+    sample_indices->capacity = required_capacity;
+    return true;
+}
+
+static bool find_assigned_sample_index(const loaded_sample_indices_t *sample_indices, const uint32_t loaded_index, int *assigned_index)
+{
+    *assigned_index = 0;
+    while (*assigned_index < sample_indices->count)
+    {
+        if (sample_indices->loaded_indices[*assigned_index] == loaded_index) return true;
+        *assigned_index += 1;
+    }
+    return false;
+}
+
+static bool validate_module(module_t *module, const bool *tracks_loaded, const loaded_sample_indices_t *sample_indices)
+{
+    if (module->num_patterns == 0)
+    {
+        error(INVALID_PATTERN_COUNT);
+        return false;
+    }
+    for (int track = 0; track < module->num_tracks; track++)
+    {
+        if (!tracks_loaded[track])
+        {
+            error(MODFILE_INVALID_MISSING_TRACK_METADATA);
+            return false;
+        }
+    }
+    for (int pattern_no = 0; pattern_no < module->num_patterns; pattern_no++)
+    {
+        if (module->patterns[pattern_no].events == NULL)
+        {
+            error(MODFILE_INVALID_MISSING_PATTERN_DATA);
+            return false;
+        }
+    }
     for (int sequence_index = 0; sequence_index < module->sequence_length; sequence_index++)
     {
         const int pattern_no = module->sequence[sequence_index];
-        if (pattern_no >= module->num_patterns)
+        if (pattern_no < 0 || pattern_no >= module->num_patterns)
         {
             error(INVALID_SEQUENCE_PATTERN_NO);
             return false;
@@ -744,13 +896,42 @@ static bool validate_module(const module_t *module)
     }
     for (int instrument_index = 0; instrument_index < 256; instrument_index++)
     {
-        const instrument_t instrument = module->instruments[instrument_index];
-        if (!instrument.assigned) continue;
-        const int sample_index = instrument.sample_index;
-        if (sample_index >= module->sample_slots || module->samples[sample_index].sample_length == 0)
+        instrument_t *instrument = &module->instruments[instrument_index];
+        if (!instrument->assigned)
+        {
+            continue;
+        }
+        int assigned_index = 0;
+        if (!find_assigned_sample_index(sample_indices, instrument->sample_index, &assigned_index))
         {
             error(MODFILE_INVALID_SAMPLE_INDEX);
             return false;
+        }
+        //
+        // Link the instrument to the assigned sample index.
+        //
+        instrument->sample_index = assigned_index;
+        //
+        // Validate the sample.
+        //
+        const sample_t sample = module->samples[assigned_index];
+        if (instrument->repeat_offset < 0 || instrument->repeat_offset >= sample.sample_length - 1)
+        {
+            error(INVALID_REPEAT_START);
+            return false;
+        }
+        if (instrument->repeats)
+        {
+            if (instrument->repeat_length <= 1)
+            {
+                error(INVALID_REPEAT_LENGTH);
+                return false;
+            }
+            if (instrument->repeat_offset + instrument->repeat_length - 1 >= sample.sample_length)
+            {
+                error(INVALID_REPEAT_END);
+                return false;
+            }
         }
     }
     return true;
@@ -805,7 +986,7 @@ static bool write_meta_chunk(const module_t *module, FILE *fp)
     if (!write_u8(fp, module->initial_bpm)) return false;
     if (!write_u8(fp, module->lines_per_beat)) return false;
     if (!write_u16_le(fp, module->default_pattern_length)) return false;
-    if (!write_u8(fp, module->interpolation_type == LINEAR ? 0 : 1)) return false;
+    if (!write_u8(fp, module->interpolation_type == INTERPOLATE_LINEAR ? 0 : 1)) return false;
     if (!write_u8(fp, module->volume_mapping_type == VOLUME_ARCHIMEDES ? 0 : 1)) return false;
     if (!write_u16_le(fp, module->restart_position)) return false;
     if (!write_u8(fp, module->relative_pitch_bend ? 1 : 0)) return false;

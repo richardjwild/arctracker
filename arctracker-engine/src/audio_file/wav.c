@@ -299,7 +299,7 @@ static bool chunk_is(const char *chunk_id, const uint8_t *addr)
 
 static float *copy_sample_data_8(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
-    float *output = allocate_array(MODULE, frames + 2, sizeof(float));
+    float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL)
         return output;
     for (uint32_t f = 0; f < frames; f++)
@@ -317,7 +317,7 @@ static float *copy_sample_data_8(const uint8_t *sample_data, const int channels,
 
 static float *copy_sample_data_16(const int16_t *sample_data, const int channels, const uint32_t frames)
 {
-    float *output = allocate_array(MODULE, frames + 2, sizeof(float));
+    float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL) return output;
     for (uint32_t f = 0; f < frames; f++)
     {
@@ -335,7 +335,7 @@ static float *copy_sample_data_16(const int16_t *sample_data, const int channels
 
 static float *copy_sample_data_24(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
-    float *output = allocate_array(MODULE, frames + 2, sizeof(float));
+    float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL) return output;
     for (uint32_t f = 0; f < frames; f++)
     {
@@ -354,7 +354,7 @@ static float *copy_sample_data_24(const uint8_t *sample_data, const int channels
 
 static float *copy_sample_data_32(const int32_t *sample_data, const int channels, const uint32_t frames)
 {
-    float *output = allocate_array(MODULE, frames + 2, sizeof(float));
+    float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL) return output;
     for (uint32_t f = 0; f < frames; f++)
     {
@@ -372,7 +372,7 @@ static float *copy_sample_data_32(const int32_t *sample_data, const int channels
 
 static float *copy_sample_data_float(const float *sample_data, const int channels, const uint32_t frames)
 {
-    float *output = allocate_array(MODULE, frames + 2, sizeof(float));
+    float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL) return output;
     for (uint32_t f = 0; f < frames; f++)
     {

@@ -3,6 +3,6 @@
 
 #include "loader.h"
 
-format_t tracker_format_new(void);
+format_t format_musx(void);
 
 #endif //ARCTRACKER_ENGINE_FORMAT_TRACKER_NEW_H

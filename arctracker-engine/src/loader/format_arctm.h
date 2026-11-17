@@ -3,6 +3,6 @@
 
 #include "loader.h"
 
-format_t arctracker_format(void);
+format_t format_arctm(void);
 
 #endif //ARCTRACKER_ENGINE_FORMAT_ARCTRACKER_H
