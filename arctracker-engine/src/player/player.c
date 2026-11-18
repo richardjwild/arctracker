@@ -270,9 +270,9 @@ static void synchronise_instrument(player_t *player, const int instrument_index)
         .sample = (player_sample_t) {
             .phase_increment_per_period = phase_increment_per_period,
             .fine_tuning = player->fine_tuning[128 + sample.finetune],
-            .sample_end = sample.sample_length - 1,
+            .sample_length = sample.sample_length,
             .sample_repeats = instrument.repeats,
-            .repeat_end = instrument.repeat_offset + instrument.repeat_length - 1,
+            .repeat_start = instrument.repeat_offset,
             .repeat_length = instrument.repeat_length,
             .sample_data = sample.sample_data,
         },

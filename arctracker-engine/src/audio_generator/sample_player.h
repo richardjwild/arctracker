@@ -9,9 +9,9 @@
 typedef struct {
     float phase_increment_per_period;
     double fine_tuning;
-    int sample_end;
+    int sample_length;
     bool sample_repeats;
-    int repeat_end;
+    int repeat_start;
     int repeat_length;
     const float *sample_data;
 } player_sample_t;

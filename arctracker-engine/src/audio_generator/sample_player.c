@@ -1,10 +1,10 @@
 #include "sample_player.h"
-
 #include <assert.h>
 #include <math.h>
 #include <string.h>
 #include "memory/heap.h"
 #include "player/period.h"
+#include <stdio.h>
 #ifdef DEBUG_SAMPLER
 #include <stdio.h>
 #endif
@@ -56,8 +56,8 @@ audio_generator_t init_sampler(
     sampler_state->fine_tuning = sample->fine_tuning;
     sampler_state->sample_repeats = sample->sample_repeats;
     sampler_state->repeat_length = sample->repeat_length;
-    sampler_state->repeat_end = sample->repeat_end;
-    sampler_state->sample_end = sample->sample_end;
+    sampler_state->repeat_end = sample->repeat_start + sample->repeat_length;
+    sampler_state->sample_end = sample->sample_length;
     sampler_state->arpeggio.enabled = false;
     sampler_state->period = period;
     sampler_state->tone_portamento_on = false;
@@ -78,10 +78,10 @@ audio_generator_t init_sampler(
     {
         ensure_loop_fits(sampler_state);
     }
-    if (slice.length > 0 && slice.offset < (uint32_t) sample->sample_end)
+    if (slice.length > 0 && slice.offset < (uint32_t) sample->sample_length)
     {
         sampler_state->phase_accumulator = (float) slice.offset;
-        if (slice.offset + slice.length < (uint32_t) sample->sample_end)
+        if (slice.offset + slice.length < (uint32_t) sample->sample_length)
             sampler_state->sample_end = (int) (slice.offset + slice.length);
     }
     const audio_generator_state_t generator_state = {
@@ -143,43 +143,41 @@ static bool generate_audio(audio_generator_state_t *state, float *channel_buffer
 {
     sampler_state_t *sampler = state->sampler;
     const float period = sampler->period + period_modulation(sampler);
-    if (!isfinite(period) || period <= 0.0f)
-    {
-        // Fill the buffer with silence.
-        memset(channel_buffer, 0, frames_to_write * sizeof(float));
-        return false;
-    }
     const interpolation_type_t interpolation_type = sampler->interpolation_type;
     const float *sample_data = sampler->sample_data;
     const float phase_increment = sampler->phase_increment_per_period / (float) period;
     const bool sample_repeats = sampler->sample_repeats && !sampler->repeat_cleared;
     const float repeat_length = (float) sampler->repeat_length;
-    const float sample_end = sample_repeats ? (float) sampler->repeat_end : (float) sampler->sample_end;
+    const float playback_end = sample_repeats ? (float) sampler->repeat_end : (float) sampler->sample_end;
     float phase_accumulator = sampler->phase_accumulator;
+    if (!isfinite(phase_increment) || phase_accumulator >= playback_end)
+    {
+        memset(channel_buffer, 0, frames_to_write * sizeof(float));
+        return false;
+    }
     int offset = 0;
     while (!sampler->muted && frames_to_write > 0)
     {
         const int phase = (int) floorf(phase_accumulator);
         float s1, s2;
-        get_interpolation_pair(sample_data, phase, (int) sample_end, sample_repeats, (int) repeat_length, &s1, &s2);
+        get_interpolation_pair(sample_data, phase, (int) playback_end, sample_repeats, (int) repeat_length, &s1, &s2);
         channel_buffer[offset++] = interpolate(interpolation_type, s1, s2, phase_accumulator - (float) phase);
         frames_to_write--;
         phase_accumulator += phase_increment;
-        if (phase_accumulator > sample_end)
+        if (phase_accumulator >= playback_end)
         {
-            if (!sample_repeats || repeat_length <= 0) break;
-            while (phase_accumulator > sample_end) phase_accumulator -= repeat_length;
+            if (!sample_repeats || repeat_length <= 1) break;
+            while (phase_accumulator >= playback_end) phase_accumulator -= repeat_length;
         }
     }
     if (frames_to_write > 0)
     {
         // The sample ended before we wrote all the requested frames, or it is muted.
-        // Fill the remainder of the buffer with silence.
         memset(channel_buffer + offset, 0, frames_to_write * sizeof(float));
         return false;
     }
     sampler->phase_accumulator = phase_accumulator;
-    return true;
+    return !sampler->muted && phase_accumulator < playback_end;;
 }
 
 static float period_modulation(sampler_state_t *sampler)
@@ -190,24 +188,27 @@ static float period_modulation(sampler_state_t *sampler)
 static void get_interpolation_pair(
     const float *sample_data,
     const int phase,
-    const int sample_end,
+    const int playback_end,
     const bool sample_repeats,
     const int repeat_length,
     float *s1,
     float *s2
 ) {
+    assert(phase >= 0);
+    assert(phase < playback_end);
     *s1 = sample_data[phase];
-    if (phase >= sample_end - 1 && sample_repeats)
+    if (phase < playback_end - 1)
+    {
+        *s2 = sample_data[phase + 1];
+        return;
+    }
+    if (sample_repeats)
     {
         *s2 = sample_data[phase - repeat_length];
     }
-    else if (phase >= sample_end - 1 && !sample_repeats)
-    {
-        *s2 = *s1;
-    }
     else
     {
-        *s2 = sample_data[phase + 1];
+        *s2 = *s1;
     }
 }
 
