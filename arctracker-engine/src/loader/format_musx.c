@@ -1,5 +1,6 @@
 #include "format_musx.h"
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "messages.h"
@@ -153,6 +154,7 @@ typedef struct {
     uint32_t num_patterns;
     uint8_t pattern_lengths[MUSX_NUM_PATTERNS];
     uint8_t sequence[MUSX_SEQUENCE_LEN];
+    bool sequence_loaded;
     uint8_t patterns_discovered;
     const uint8_t *pattern_data[MUSX_NUM_PATTERNS];
     size_t pattern_data_sizes[MUSX_NUM_PATTERNS];
@@ -163,7 +165,7 @@ typedef struct {
 } musx_file_t;
 
 typedef struct {
-    char name[MUSX_SAMPLE_NAME_LEN];
+    char name[MUSX_SAMPLE_NAME_LEN + 1];
     uint32_t volume;
     uint32_t length;
     uint32_t repeat_offset;
@@ -227,7 +229,7 @@ static bool read_samp_chunk(size_t, const uint8_t *, musx_file_t *);
 static uint8_t decode_bcd(uint8_t value);
 static const uint8_t *next_chunk_address(const uint8_t *);
 static module_t *create_module(musx_file_t);
-static void init_tracks(module_t *module, musx_file_t);
+static bool init_tracks(module_t *module, musx_file_t);
 static bool set_sequence(module_t *, musx_file_t);
 static bool read_patterns(module_t *, musx_file_t);
 static void read_pattern_data(const uint8_t *, module_t *, int, uint8_t);
@@ -237,7 +239,7 @@ static command_t tracker_command(int, uint8_t);
 static bool read_samples(module_t *, musx_file_t);
 static float calculate_sample_rate(int, int);
 static float assumed_sample_period(int);
-static bool read_sample_definition(const uint8_t *chunk_addr, size_t end, sample_definition_t *);
+static bool read_sample_definition(const uint8_t *chunk_addr, const uint8_t *end, sample_definition_t *);
 static bool samp_sub_chunk_recognised(const uint8_t *);
 static void copy_string(char *, const char *, int);
 
@@ -276,7 +278,7 @@ static module_t *read_tracker_module(const mapped_file_t file)
     {
         return NULL;
     }
-    init_tracks(module, file_info);
+    if (!init_tracks(module, file_info)) goto failed;
     if (!set_sequence(module, file_info)) goto failed;
     if (!read_patterns(module, file_info)) goto failed;
     if (!read_samples(module, file_info)) goto failed;
@@ -491,6 +493,7 @@ static bool read_sequ_chunk(const size_t data_size, const uint8_t *data, musx_fi
     {
         out->sequence[position] = read_u8(data + position);
     }
+    out->sequence_loaded = true;
     return true;
 }
 
@@ -544,9 +547,9 @@ static module_t *create_module(const musx_file_t musx_file)
         return NULL;
     }
     module_t *module = module_create(
-        musx_file.num_tracks,
-        musx_file.sequence_length,
-        musx_file.num_patterns,
+        (int) musx_file.num_tracks,
+        (int) musx_file.sequence_length,
+        (int) musx_file.num_patterns,
         musx_file.samples_discovered
     );
     if (module == NULL)
@@ -564,7 +567,8 @@ static module_t *create_module(const musx_file_t musx_file)
     return module;
 }
 
-static void init_tracks(module_t *module, const musx_file_t musx_file)
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
+static bool init_tracks(module_t *module, const musx_file_t musx_file)
 {
     assert(module->tracks != NULL);
     for (int track = 0; track < module->num_tracks; track++)
@@ -573,15 +577,32 @@ static void init_tracks(module_t *module, const musx_file_t musx_file)
         module->tracks[track].effects_displayed = 1;
         const uint8_t initial_track_stereo = musx_file.stereo_positions[track];
         if (initial_track_stereo == 0 || initial_track_stereo > 7)
-            module->tracks[track].panning = 128; // Centre.
+        {
+            error("Missing initial stereo positions");
+            return false;
+        }
         else
+        {
             module->tracks[track].panning = PANNING[initial_track_stereo - 1];
+        }
     }
+    return true;
 }
 
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
 static bool set_sequence(module_t *module, const musx_file_t musx_file)
 {
     assert(module->sequence != NULL);
+    if (!musx_file.sequence_loaded)
+    {
+        error("Missing sequence");
+        return false;
+    }
+    if (musx_file.sequence_length == 0)
+    {
+        error("Missing sequence length");
+        return false;
+    }
     for (uint32_t position = 0; position < musx_file.sequence_length; position++)
     {
         const int pattern_no = musx_file.sequence[position];
@@ -600,6 +621,11 @@ static bool read_patterns(module_t *module, const musx_file_t musx_file)
     for (int pattern_no = 0; pattern_no < module->num_patterns; pattern_no++)
     {
         const uint8_t pattern_length = musx_file.pattern_lengths[pattern_no];
+        if (pattern_length == 0)
+        {
+            error("Missing pattern length");
+            return false;
+        }
         const int num_events = pattern_length * module->num_tracks;
         const size_t expected_size = MUSX_EVENT_SIZE_BYTES * num_events;
         const size_t reported_size = musx_file.pattern_data_sizes[pattern_no];
@@ -609,11 +635,6 @@ static bool read_patterns(module_t *module, const musx_file_t musx_file)
             return false;
         }
         const uint8_t *data_in = musx_file.pattern_data[pattern_no];
-        if (data_in > musx_file.file_end - expected_size)
-        {
-            error(MODFILE_INVALID_MISSING_PATTERN_DATA);
-            return false;
-        }
         if (!module_create_pattern(module, pattern_no, pattern_length))
         {
             return false;
@@ -623,6 +644,7 @@ static bool read_patterns(module_t *module, const musx_file_t musx_file)
     return true;
 }
 
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
 static void read_pattern_data(const uint8_t *data_in, module_t *module, const int pattern_no, const uint8_t pattern_length)
 {
     for (int line = 0; line < pattern_length; line++)
@@ -710,7 +732,7 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
         const uint8_t *first_chunk = musx_file.sample_chunks[sample_index];
         const size_t chunk_size = musx_file.sample_chunk_sizes[sample_index];
         sample_definition_t definition = {0};
-        if (!read_sample_definition(first_chunk, (size_t) first_chunk + chunk_size, &definition))
+        if (!read_sample_definition(first_chunk, first_chunk + chunk_size, &definition))
         {
             return false;
         }
@@ -723,6 +745,11 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
         if (definition.data == NULL || definition.data_size < definition.length)
         {
             error(MODFILE_CORRUPT_MISSING_SAMPLE_DATA);
+            return false;
+        }
+        if (definition.length > INT_MAX)
+        {
+            error("Sample too large");
             return false;
         }
         if (definition.volume > MUSX_VOLUME_MAX)
@@ -739,13 +766,17 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
         {
             sample_data[frame] = vidc_to_linear(definition.data[frame]);
         }
-        if (!module_set_sample(module, sample_data, definition.length, sample_rate, MUSX_BASE_NOTE, 0, sample_index))
+        if (!module_set_sample(module, sample_data, (int) definition.length, sample_rate, MUSX_BASE_NOTE, 0, sample_index))
         {
             deallocate(MODULE, sample_data);
             return false;
         }
         uint32_t repeat_length = definition.repeat_length;
-        if (repeat_length > definition.length - definition.repeat_offset || (repeat_length == 2 && definition.repeat_offset > 0))
+        if (definition.repeat_offset > definition.length)
+        {
+            repeat_length = 0;
+        }
+        else if (repeat_length > definition.length - definition.repeat_offset || (repeat_length == 2 && definition.repeat_offset > 0))
         {
             // If the repeat length extends beyond the sample length, shorten the repeat length so that it fits within
             // the sample. That part was my decision and ought to be self explanatory. The case of ROFS>0, RLEN=2 is
@@ -778,8 +809,8 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
             .transpose = 0,
             .default_volume = definition.volume,
             .repeats = repeats,
-            .repeat_offset = definition.repeat_offset,
-            .repeat_length = repeat_length,
+            .repeat_offset = (int) definition.repeat_offset,
+            .repeat_length = (int) repeat_length,
             .sample_slices = {0},
         };
         snprintf(instrument.name, sizeof(instrument.name), "%s", definition.name);
@@ -826,11 +857,11 @@ static float assumed_sample_period(const int channels)
     }
 }
 
-static bool read_sample_definition(const uint8_t *chunk_addr, const size_t end, sample_definition_t *definition)
+static bool read_sample_definition(const uint8_t *chunk_addr, const uint8_t *end, sample_definition_t *definition)
 {
-    while ((size_t) chunk_addr < end)
+    while (chunk_addr < end)
     {
-        const size_t remaining = end - (size_t) chunk_addr;
+        const size_t remaining = end - chunk_addr;
         if (remaining < CHUNK_HEADER_SIZE)
         {
             error("Truncated chunk header");
