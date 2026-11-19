@@ -19,6 +19,6 @@ typedef struct {
 
 bool wav_write_pcm16(const char *filename, const wav_pcm16_t *wav);
 
-audio_t wav_read_audio(const uint8_t *wav_data, size_t loaded_data_size);
+audio_t wav_read_audio(const uint8_t *base_addr, size_t loaded_data_size);
 
 #endif //ARCTRACKER_ENGINE_WAV_H

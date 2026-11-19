@@ -79,10 +79,10 @@ bool wav_write_pcm16(const char *filename, const wav_pcm16_t *wav)
         system_error(errno);
         return false;
     }
-    const bool ok = write_riff_chunk_descriptor(fp, data_size)
-        && write_format_subchunk(fp, wav->channels, BITS_PER_SAMPLE_PCM16, wav->sample_rate)
-        && write_data_subchunk(fp, data_size)
-        && write_audio_data(fp, wav->pcm16, wav->frames, wav->channels);
+    bool ok = write_riff_chunk_descriptor(fp, data_size);
+    if (ok) ok = write_format_subchunk(fp, wav->channels, BITS_PER_SAMPLE_PCM16, wav->sample_rate);
+    if (ok) ok = write_data_subchunk(fp, data_size);
+    if (ok) ok = write_audio_data(fp, wav->pcm16, wav->frames, wav->channels);
     fclose(fp);
     return ok;
 }
@@ -132,45 +132,48 @@ static bool write_fourcc(FILE *fp, const char *ch)
  * Code for reading a WAV file.                                               *
  ******************************************************************************/
 
-audio_t wav_read_audio(const uint8_t *wav_data, const size_t loaded_data_size)
+audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
 {
     audio_t output = {0};
-    if (!chunk_is(RIFF_CHUNK_ID, wav_data))
+    if (loaded_data_size < CHUNK_HEADER_SIZE || !chunk_is(RIFF_CHUNK_ID, base_addr))
     {
         error(RIFF_HEADER_NOT_FOUND);
         return output;
     }
-    const size_t riff_size = read_u32_le(wav_data + 4);
-    const size_t riff_end_offset = CHUNK_HEADER_SIZE + riff_size;
-    if (riff_end_offset > loaded_data_size)
+    const size_t riff_chunk_size = read_u32_le(base_addr + 4);
+    if (riff_chunk_size != loaded_data_size - CHUNK_HEADER_SIZE)
     {
-        fprintf(stderr, "RIFF end offset: %lu\n", riff_end_offset);
         error(SIZE_MISMATCH);
         return output;
     }
-    if (memcmp(wav_data + 8, FORMAT_WAVE, 4) != 0)
+    if (riff_chunk_size < 4)
+    {
+        error("Missing format specifier");
+        return output;
+    }
+    if (memcmp(base_addr + 8, FORMAT_WAVE, 4) != 0)
     {
         error(NOT_WAVE_FORMAT);
         return output;
     }
     wav_file_in_t wav_file_in = {0};
-    size_t chunk_offset = 12;
-    while (chunk_offset + CHUNK_HEADER_SIZE <= riff_end_offset)
+    size_t chunk_offset = CHUNK_HEADER_SIZE + 4;
+    while (chunk_offset <= riff_chunk_size)
     {
-        if (chunk_offset > loaded_data_size || loaded_data_size - chunk_offset < CHUNK_HEADER_SIZE)
+        if (chunk_offset > loaded_data_size || CHUNK_HEADER_SIZE > loaded_data_size - chunk_offset)
         {
             error(CHUNK_HEADER_EXTENDS_BEYOND_EOF);
             return output;
         }
-        const uint8_t *chunk_addr = wav_data + chunk_offset;
+        const uint8_t *chunk_addr = base_addr + chunk_offset;
         const size_t data_size = read_u32_le(chunk_addr + 4);
         const size_t data_offset = chunk_offset + CHUNK_HEADER_SIZE;
-        if (data_size > riff_end_offset - data_offset)
+        if (data_size > loaded_data_size - data_offset)
         {
             error(CHUNK_EXTENDS_BEYOND_EOF);
             return output;
         }
-        const uint8_t *data = wav_data + data_offset;
+        const uint8_t *data = base_addr + data_offset;
         if (chunk_is(FMT_SUBCHUNK, chunk_addr))
         {
             if (!read_fmt_chunk(data, data_size, &wav_file_in))
@@ -182,7 +185,7 @@ audio_t wav_read_audio(const uint8_t *wav_data, const size_t loaded_data_size)
             wav_file_in.audio_data = data;
         }
         const size_t padded_size = data_size + (data_size & 1);
-        if (padded_size > riff_end_offset - data_offset)
+        if (padded_size > loaded_data_size - data_offset)
         {
             error(CHUNK_EXTENDS_BEYOND_EOF);
             return output;
@@ -301,7 +304,9 @@ static float *copy_sample_data_8(const uint8_t *sample_data, const int channels,
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL)
+    {
         return output;
+    }
     for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
@@ -318,7 +323,10 @@ static float *copy_sample_data_8(const uint8_t *sample_data, const int channels,
 static float *copy_sample_data_16(const int16_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
-    if (output == NULL) return output;
+    if (output == NULL)
+    {
+        return output;
+    }
     for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
@@ -336,7 +344,10 @@ static float *copy_sample_data_16(const int16_t *sample_data, const int channels
 static float *copy_sample_data_24(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
-    if (output == NULL) return output;
+    if (output == NULL)
+    {
+        return output;
+    }
     for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
@@ -355,7 +366,10 @@ static float *copy_sample_data_24(const uint8_t *sample_data, const int channels
 static float *copy_sample_data_32(const int32_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
-    if (output == NULL) return output;
+    if (output == NULL)
+    {
+        return output;
+    }
     for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
@@ -373,7 +387,10 @@ static float *copy_sample_data_32(const int32_t *sample_data, const int channels
 static float *copy_sample_data_float(const float *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
-    if (output == NULL) return output;
+    if (output == NULL)
+    {
+        return output;
+    }
     for (uint32_t f = 0; f < frames; f++)
     {
         float frame = 0.0f;
@@ -386,4 +403,3 @@ static float *copy_sample_data_float(const float *sample_data, const int channel
     }
     return output;
 }
-
