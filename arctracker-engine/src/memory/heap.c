@@ -29,7 +29,9 @@ void *allocate_array(const resource_group_t resource_group, const unsigned int n
     }
     memset(array, 0, requested_bytes);
     if (resource_group < RESOURCE_GROUP_COUNT)
+    {
         resource_count[resource_group]++;
+    }
     return array;
 }
 
@@ -53,14 +55,18 @@ void *reallocate_array(const resource_group_t resource_group, void *array_before
         return NULL;
     }
     if (array_before == NULL && resource_group < RESOURCE_GROUP_COUNT)
+    {
         resource_count[resource_group]++;
+    }
     return array_after;
 }
 
 void deallocate(const resource_group_t resource_group, void *ptr)
 {
     if (ptr != NULL && resource_group < RESOURCE_GROUP_COUNT)
+    {
         resource_count[resource_group]--;
+    }
     free(ptr);
 }
 
