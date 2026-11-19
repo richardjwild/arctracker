@@ -1,12 +1,14 @@
 # How to build Arctracker
-## Macos
-### Prerequisites
-1. XCode command line development tools (or full XCode)
-2. Meson: `brew install meson`
-3. CMake: `brew install cmake`
-4. Rust: `brew install rust`
-5. Node: `brew install node`
-### Instructions
+## Prerequisites
+1. C development tools
+    1. macOS: XCode command line development tools (or full XCode)
+    1. Windows: MSVC
+    1. Linux: You're probably already good
+1. Meson
+1. CMake
+1. Rust
+1. Node
+## Instructions
 ```
 cd arctracker-ui
 npm install # you only need to do this the first time
