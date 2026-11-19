@@ -107,11 +107,14 @@ static void print_output_devices(arctracker_t *arctracker_handle)
     if (!result.success)
     {
         fprintf(stderr, "Failed to read available audio devices: %s\n", result.error_message);
+        free(audio_devices);
         exit(EXIT_FAILURE);
     }
     printf("Available audio outputs:\n");
     for (int i = 0; i < output_count; i++)
+    {
         printf("%d: %s (%s)\n", audio_devices[i].device_index, audio_devices[i].name, audio_devices[i].host_api_name);
+    }
     free(audio_devices);
 }
 
@@ -133,11 +136,14 @@ static void print_midi_input_devices(midi_subsystem_t *midi_handle)
     if (!result.success)
     {
         fprintf(stderr, "Failed to read available MIDI input devices: %s\n", result.error_message);
+        free(input_devices);
         exit(EXIT_FAILURE);
     }
     printf("Available MIDI input devices:\n");
     for (int i = 0; i < input_count; i++)
+    {
         printf("%s\n", input_devices[i].name);
+    }
     free(input_devices);
 }
 
