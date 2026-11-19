@@ -196,6 +196,7 @@ static void get_interpolation_pair(
 ) {
     assert(phase >= 0);
     assert(phase < playback_end);
+    assert(phase >= repeat_length);
     *s1 = sample_data[phase];
     if (phase < playback_end - 1)
     {
