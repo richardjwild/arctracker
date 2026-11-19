@@ -1,6 +1,11 @@
 #include <errno.h>
 #include <stddef.h>
 #include "wav.h"
+
+#include <float.h>
+#include <limits.h>
+#include <math.h>
+
 #include "messages.h"
 #include "io/error.h"
 #include "loader/files.h"
@@ -42,6 +47,7 @@ static const uint8_t SUBFORMAT_FLOAT[16] = {
 };
 
 typedef struct {
+    bool fmt_chunk_seen;
     uint16_t audio_format;
     uint16_t channels;
     uint32_t sample_rate;
@@ -61,10 +67,10 @@ static bool write_fourcc(FILE *fp, const char *ch);
 static bool read_fmt_chunk(const uint8_t *, size_t, wav_file_in_t *);
 static bool chunk_is(const char *, const uint8_t *);
 static float *copy_sample_data_8(const uint8_t *, int, uint32_t);
-static float *copy_sample_data_16(const int16_t *, int, uint32_t);
+static float *copy_sample_data_16(const uint8_t *, int, uint32_t);
 static float *copy_sample_data_24(const uint8_t *, int, uint32_t);
-static float *copy_sample_data_32(const int32_t *, int, uint32_t);
-static float *copy_sample_data_float(const float *, int, uint32_t);
+static float *copy_sample_data_32(const uint8_t *, int, uint32_t);
+static float *copy_sample_data_float(const uint8_t *, int, uint32_t);
 
 /******************************************************************************
  * Code for writing a WAV file.                                               *
@@ -158,7 +164,7 @@ audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
     }
     wav_file_in_t wav_file_in = {0};
     size_t chunk_offset = CHUNK_HEADER_SIZE + 4;
-    while (chunk_offset <= riff_chunk_size)
+    while (chunk_offset < loaded_data_size)
     {
         if (chunk_offset > loaded_data_size || CHUNK_HEADER_SIZE > loaded_data_size - chunk_offset)
         {
@@ -192,6 +198,11 @@ audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
         }
         chunk_offset = data_offset + padded_size;
     }
+    if (!wav_file_in.fmt_chunk_seen)
+    {
+        error(FMT_SUBCHUNK_NOT_FOUND);
+        return output;
+    }
     if (wav_file_in.audio_data == NULL)
     {
         error(DATA_SUBCHUNK_NOT_FOUND);
@@ -212,6 +223,11 @@ audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
         error(UNSUPPORTED_FLOATING_POINT_SIZE);
         return output;
     }
+    if (wav_file_in.audio_data_size == 0)
+    {
+        error("Zero-length sample");
+        return output;
+    }
     const uint32_t calculated_frame_size = wav_file_in.channels * (wav_file_in.bits_per_sample / 8);
     if (wav_file_in.block_align != calculated_frame_size)
     {
@@ -219,12 +235,6 @@ audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
         return output;
     }
     output.sample_rate = (int) wav_file_in.sample_rate;
-    if (wav_file_in.bits_per_sample % 8 != 0 || wav_file_in.bits_per_sample > 32)
-    {
-        fprintf(stderr, "Invalid bits per sample: %d\n", wav_file_in.bits_per_sample);
-        error(INVALID_BITS_PER_SAMPLE);
-        return output;
-    }
     const uint32_t frame_size = wav_file_in.bits_per_sample / 8 * wav_file_in.channels;
     if (wav_file_in.audio_data_size % frame_size != 0)
     {
@@ -237,13 +247,13 @@ audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
     if (wav_file_in.bits_per_sample == 8)
         output.audio_data = copy_sample_data_8(audio_data, wav_file_in.channels, output.frames);
     if (wav_file_in.bits_per_sample == 16)
-        output.audio_data = copy_sample_data_16((int16_t *) audio_data, wav_file_in.channels, output.frames);
+        output.audio_data = copy_sample_data_16(audio_data, wav_file_in.channels, output.frames);
     if (wav_file_in.bits_per_sample == 24)
         output.audio_data = copy_sample_data_24(audio_data, wav_file_in.channels, output.frames);
     if (wav_file_in.bits_per_sample == 32 && wav_file_in.audio_format == AUDIO_FORMAT_PCM)
-        output.audio_data = copy_sample_data_32((int32_t *) audio_data, wav_file_in.channels, output.frames);
+        output.audio_data = copy_sample_data_32(audio_data, wav_file_in.channels, output.frames);
     if (wav_file_in.bits_per_sample == 32 && wav_file_in.audio_format == AUDIO_FORMAT_FLOAT)
-        output.audio_data = copy_sample_data_float((float *) audio_data, wav_file_in.channels, output.frames);
+        output.audio_data = copy_sample_data_float(audio_data, wav_file_in.channels, output.frames);
     if (output.audio_data == NULL)
     {
         error(MEMORY_ALLOCATION_FAILED);
@@ -254,6 +264,11 @@ audio_t wav_read_audio(const uint8_t *base_addr, const size_t loaded_data_size)
 
 static bool read_fmt_chunk(const uint8_t *data, const size_t data_size, wav_file_in_t *wav)
 {
+    if (wav->fmt_chunk_seen)
+    {
+        error(DUPLICATE_FMT_SUBCHUNK);
+        return false;
+    }
     if (data_size < BASE_FMT_SIZE)
     {
         error(INVALID_FORMAT_CHUNK_SIZE);
@@ -261,9 +276,27 @@ static bool read_fmt_chunk(const uint8_t *data, const size_t data_size, wav_file
     }
     uint16_t format = read_u16_le(data);
     wav->channels = read_u16_le(data + 2);
+    if (wav->channels == 0)
+    {
+        error("Invalid number of channels");
+        return false;
+    }
     wav->sample_rate = read_u32_le(data + 4);
+    if (wav->sample_rate == 0 || wav->sample_rate > INT_MAX)
+    {
+        error("Invalid sample rate");
+        return false;
+    }
     wav->block_align = read_u16_le(data + 12);
     wav->bits_per_sample = read_u16_le(data + 14);
+    if (wav->bits_per_sample != 8
+        && wav->bits_per_sample != 16
+        && wav->bits_per_sample != 24
+        && wav->bits_per_sample != 32
+    ) {
+        error(INVALID_BITS_PER_SAMPLE);
+        return false;
+    }
     wav->valid_bits_per_sample = wav->bits_per_sample;
     if (format == AUDIO_FORMAT_EXTENSIBLE)
     {
@@ -292,6 +325,7 @@ static bool read_fmt_chunk(const uint8_t *data, const size_t data_size, wav_file
         }
     }
     wav->audio_format = format;
+    wav->fmt_chunk_seen = true;
     return true;
 }
 
@@ -312,7 +346,7 @@ static float *copy_sample_data_8(const uint8_t *sample_data, const int channels,
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
         {
-            frame += ((float) *sample_data - 128.0f) / 128.0f;
+            frame += ((float) read_u8(sample_data) - 128.0f) / 128.0f;
             sample_data++;
         }
         output[f] = frame / (float) channels;
@@ -320,7 +354,7 @@ static float *copy_sample_data_8(const uint8_t *sample_data, const int channels,
     return output;
 }
 
-static float *copy_sample_data_16(const int16_t *sample_data, const int channels, const uint32_t frames)
+static float *copy_sample_data_16(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL)
@@ -332,9 +366,9 @@ static float *copy_sample_data_16(const int16_t *sample_data, const int channels
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
         {
-            const int16_t value = *sample_data;
+            const int16_t value = (int16_t) read_u16_le(sample_data);
             frame += value < 0 ? (float) value / 32768.0f : (float) value / 32767.0f;
-            sample_data++;
+            sample_data += 2;
         }
         output[f] = frame / (float) channels;
     }
@@ -353,8 +387,8 @@ static float *copy_sample_data_24(const uint8_t *sample_data, const int channels
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
         {
-            int32_t value = (int32_t) sample_data[0] | (int32_t) sample_data[1] << 8 | (int32_t) sample_data[2] << 16;
-            if (value & 0x800000) value |= ~0xFFFFFF;
+            const uint32_t raw = (uint32_t) sample_data[0] | (uint32_t) sample_data[1] << 8 | (uint32_t) sample_data[2] << 16;
+            const int32_t value = raw & 0x800000u ? (int32_t) raw - 0x1000000 : (int32_t) raw;
             frame += value < 0 ? (float) value / 8388608.0f : (float) value / 8388607.0f;
             sample_data += 3;
         }
@@ -363,7 +397,7 @@ static float *copy_sample_data_24(const uint8_t *sample_data, const int channels
     return output;
 }
 
-static float *copy_sample_data_32(const int32_t *sample_data, const int channels, const uint32_t frames)
+static float *copy_sample_data_32(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL)
@@ -375,16 +409,17 @@ static float *copy_sample_data_32(const int32_t *sample_data, const int channels
         float frame = 0.0f;
         for (int c = 0; c < channels; c++)
         {
-            const int32_t value = *sample_data;
+            const uint32_t raw = read_u32_le(sample_data);
+            const int64_t value = raw >= 0x80000000u ? (int64_t) raw - 0x100000000LL : (int64_t) raw;
             frame += value < 0 ? (float) value / 2147483648.0f : (float) value / 2147483647.0f;
-            sample_data++;
+            sample_data += 4;
         }
         output[f] = frame / (float) channels;
     }
     return output;
 }
 
-static float *copy_sample_data_float(const float *sample_data, const int channels, const uint32_t frames)
+static float *copy_sample_data_float(const uint8_t *sample_data, const int channels, const uint32_t frames)
 {
     float *output = allocate_array(MODULE, frames, sizeof(float));
     if (output == NULL)
@@ -393,13 +428,15 @@ static float *copy_sample_data_float(const float *sample_data, const int channel
     }
     for (uint32_t f = 0; f < frames; f++)
     {
-        float frame = 0.0f;
+        double frame = 0.0;
         for (int c = 0; c < channels; c++)
         {
-            frame += *sample_data;
-            sample_data++;
+            const float sample = read_f32_le(sample_data);
+            if (isfinite(sample)) frame += sample;
+            sample_data += 4;
         }
-        output[f] = frame / (float) channels;
+        const double average = frame / channels;
+        output[f] = isfinite(average) && fabs(average) <= FLT_MAX ? (float) average : 0.0f;
     }
     return output;
 }

@@ -68,6 +68,8 @@
 #define FORMAT_SUBCHUNK_NOT_FOUND "Format subchunk not found"
 #define UNKNOWN_AUDIO_FORMAT "Unknown audio format"
 #define INVALID_BITS_PER_SAMPLE "Invalid bits per sample"
+#define DUPLICATE_FMT_SUBCHUNK "Duplicate FMT subchunk"
+#define FMT_SUBCHUNK_NOT_FOUND "FMT subchunk not found"
 #define DATA_SUBCHUNK_NOT_FOUND "Data subchunk not found"
 #define INCONSISTENT_AUDIO_DATA_SIZE "Audio data size not a whole number of frames"
 #define MODULE_NAME_MISSING "Module name not specified"
