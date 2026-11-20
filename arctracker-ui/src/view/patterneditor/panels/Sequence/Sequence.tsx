@@ -199,7 +199,7 @@ export default function Sequence() {
       return (
         <button
           type="button"
-          title={messageFn("jumpToSequencePositionHintText")((absolutePos + 1).toString())}
+          title={messageFn("jumpToSequencePositionHintText")((absolutePos).toString())}
           key={absolutePos}
           className="sequencePos"
           style={{ "--sequence-digits": digits } as React.CSSProperties}
@@ -215,8 +215,8 @@ export default function Sequence() {
     <>
       <div className="sequenceView">
         <div className="currentPosition uiArea">
-          <div className="position">{sequencePos + 1}</div>
-          <div className="tuneLength">({moduleSequence.length})</div>
+          <div className="position">{sequencePos}</div>
+          <div className="tuneLength">({moduleSequence.length - 1})</div>
         </div>
         <div className="sequence uiArea" ref={containerRef}>
           {visibleSequence.map((patternNo, index) =>

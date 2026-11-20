@@ -14,7 +14,7 @@ import { getSpinnerKeyboardEventHandler, SpinnerButtons } from "../../../compone
 export default function GoToPosition() {
   const dialogVisible = useStore((state) => state.editorState.editMode) === "goToPosition";
   const sequenceLength = useStore((state) => state.sequence.length);
-  const currentPosition = useStore((state) => state.editorState.sequencePosition) + 1;
+  const currentPosition = useStore((state) => state.editorState.sequencePosition);
   const [inputNewPosition, setInputNewPosition] = useState("");
 
   const handleKeys: KeyHandler = (e) => {
@@ -47,7 +47,7 @@ export default function GoToPosition() {
     if (e.code === 'Enter') {
       const newPosition = validateNewPosition();
       if (newPosition) {
-        commands.sequenceSeek(newPosition - 1);
+        commands.sequenceSeek(newPosition);
         editor.restorePreviousEditMode();
       } else {
         setInputNewPosition(currentPosition.toString());
