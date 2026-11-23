@@ -32,22 +32,10 @@
     vertical-align: middle;
 }
 
-.transportBar button.playPause svg {
-    transform: translateX(0px) translateY(1px);
-}
-
-.transportBar button.repeatOnOff svg {
-    transform: translateX(0px) translateY(1px);
-}
-
 .transportBar button.fastForward svg {
-    transform: translateX(1px) translateY(1px);
+    transform: translateX(1px);
 }
 
 .transportBar button.rewind svg {
-    transform: translateX(-1px) translateY(1px);
-}
-
-.transportBar button.tempo svg {
-    transform: translateY(1px);
+    transform: translateX(-1px);
 }
