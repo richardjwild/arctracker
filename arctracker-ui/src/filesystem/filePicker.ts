@@ -6,6 +6,16 @@ export const ARCTRACKER_MODFILE_EXTENSION = "arctm";
 export const SOUNDTRACKER_MODFILE_EXTENSION = "mod";
 export const AUDIO_EXPORT_EXTENSION = "wav";
 
+const caseVariants = (extension: string): string[] =>
+  [...extension].reduce<string[]>(
+    (variants, c) =>
+      variants.flatMap((prefix) => [
+        prefix + c.toLowerCase(),
+        prefix + c.toUpperCase(),
+      ]),
+    [""],
+  );
+
 export const filePicker = {
   chooseFileToOpen: async (
     filteredExtensions: string[],
@@ -16,7 +26,7 @@ export const filePicker = {
       filters: [
         {
           name: filterName,
-          extensions: filteredExtensions,
+          extensions: filteredExtensions.flatMap(caseVariants),
         },
       ],
     });

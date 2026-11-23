@@ -155,6 +155,8 @@ input[type="radio"]:focus + label {
 }
 
 select {
+  appearance: none;
+  -webkit-appearance: none;
   box-sizing: content-box;
   width: 100%;
   height: 28px;
@@ -171,6 +173,28 @@ select:focus {
   outline: none;
   background-color: var(--colour-input-text);
   color: var(--colour-panel-bg);
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--colour-input-text);
+  pointer-events: none;
+}
+
+.select-wrapper:focus-within::after {
+  border-top-color: var(--colour-panel-bg);
 }
 
 input[type='range'] {

@@ -369,25 +369,27 @@ export default function EditAppConfig() {
         text={message("outputDeviceLabel")}
       />
       <div className="outputDeviceEdit uiArea padded rounded">
-        <select
-          id="outputDeviceSelect"
-          name="outputDevice"
-          onChange={(e) => setSelectedAudioDevice(Number(e.target.value))}
-          value={getDeviceIndex(draftAppConfig.selectedAudioDevice)}
-          ref={outputDeviceSelectRef}
-        >
-          <option value={defaultOutputDeviceIndex}>
-            {message("defaultOutputDevice")}
-          </option>
-          {availableOutputs.toSorted(
-            (a: AudioDeviceInfo, b: AudioDeviceInfo) =>
-              a.hostApiName.localeCompare(b.hostApiName) ||
-              a.name.localeCompare(b.name)).map((output: AudioDeviceInfo) => (
-            <option key={output.deviceIndex} value={output.deviceIndex}>
-              {`${output.name} (${output.hostApiName})`}
+        <div className="select-wrapper">
+          <select
+            id="outputDeviceSelect"
+            name="outputDevice"
+            onChange={(e) => setSelectedAudioDevice(Number(e.target.value))}
+            value={getDeviceIndex(draftAppConfig.selectedAudioDevice)}
+            ref={outputDeviceSelectRef}
+          >
+            <option value={defaultOutputDeviceIndex}>
+              {message("defaultOutputDevice")}
             </option>
-          ))}
-        </select>
+            {availableOutputs.toSorted(
+              (a: AudioDeviceInfo, b: AudioDeviceInfo) =>
+                a.hostApiName.localeCompare(b.hostApiName) ||
+                a.name.localeCompare(b.name)).map((output: AudioDeviceInfo) => (
+              <option key={output.deviceIndex} value={output.deviceIndex}>
+                {`${output.name} (${output.hostApiName})`}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <FieldLabel
         className="outputSampleRateLabel"
@@ -449,20 +451,22 @@ export default function EditAppConfig() {
         text={message("midiInputDeviceLabel")}
         />
       <div className="midiInputDeviceEdit uiArea padded rounded">
-        <select
-          id="midiInputDeviceSelect"
-          name="midiInputDevice"
-          onChange={(e) => setSelectedMidiDevice(e.target.value)}
-          value={draftAppConfig.selectedMidiDevice?.name || ""}
-          ref={midiInputDeviceSelectRef}
-        >
-          <option value={""}>{message("noMidiInputDevice")}</option>
-          {availableMidiInputs.map((input, i) => (
-            <option key={i} value={input.name}>
-              {input.name}
-            </option>
-          ))}
-        </select>
+        <div className="select-wrapper">
+          <select
+            id="midiInputDeviceSelect"
+            name="midiInputDevice"
+            onChange={(e) => setSelectedMidiDevice(e.target.value)}
+            value={draftAppConfig.selectedMidiDevice?.name || ""}
+            ref={midiInputDeviceSelectRef}
+          >
+            <option value={""}>{message("noMidiInputDevice")}</option>
+            {availableMidiInputs.map((input, i) => (
+              <option key={i} value={input.name}>
+                {input.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <FieldLabel
         className="defaultAuthorNameLabel"
