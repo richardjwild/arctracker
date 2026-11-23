@@ -54,7 +54,7 @@
     box-sizing: border-box;
     min-width: calc(var(--sequence-digits) * 0.6em + 10px);
     width: 25px;
-    height: 25px;
+    height: 26px;
     font-family: SplineSansMono, monospace;
     font-size: 12px;
     color: var(--colour-sequence-position-fg);
