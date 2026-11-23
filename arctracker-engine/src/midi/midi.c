@@ -150,6 +150,13 @@ bool midi_use_device(midi_subsystem_t *midi, const char *requested_name)
 
 static void handle_message(const double timestamp, const unsigned char *message, const size_t message_size, void *user_data)
 {
+    #ifdef DEBUG_MIDI
+    if (message_size > 0)
+    {
+        for (size_t i = 0; i < message_size; i++) printf("%02X ", (unsigned int) message[i]);
+        printf("\n");
+    }
+    #endif
     if (message_size < 3) return;
     (void) timestamp;
     const midi_subsystem_t *midi = (midi_subsystem_t *) user_data;
