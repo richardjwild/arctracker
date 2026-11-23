@@ -130,7 +130,3 @@
 .sequenceEditButtons button.enabled:hover {
     background: var(--colour-button-bg-hover);
 }
-
-.sequenceEditButtons button svg {
-    transform: translateY(1px);
-}

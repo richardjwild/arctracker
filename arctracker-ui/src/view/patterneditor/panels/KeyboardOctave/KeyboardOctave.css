@@ -35,7 +35,3 @@
 .keyboardOctave .control button.killAllAudio:hover {
     background: var(--colour-button-bg-hover);
 }
-
-.keyboardOctave .control button.killAllAudio svg {
-    transform: translateX(0px) translateY(1px) scale(100%);
-}
