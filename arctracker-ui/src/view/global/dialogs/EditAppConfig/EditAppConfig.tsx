@@ -19,6 +19,7 @@ import { getSpinnerKeyboardEventHandler, SpinnerButtons } from "../../../compone
 import { MaxPatternLength } from "../../../../editing/pattern.ts";
 import { MaxTrackCount } from "../../../../module/module.ts";
 import { MaxBeatsPerMinute, MaxLinesPerBeat, MinBeatsPerMinute } from "../../../../editing/tempo.ts";
+import { error } from "@tauri-apps/plugin-log";
 
 const defaultOutputDeviceIndex = -1;
 const defaultConfig: DraftAppConfig = {
@@ -112,36 +113,40 @@ export default function EditAppConfig() {
   useKeyboardHandler(keyHandler, editing);
 
   const syncDraftConfigWithCurrent = async (currentConfig: AppConfig) => {
-    const audioOutputs = await audioDevice.getAvailableOutputs();
-    const midiInputs = await midi.getAvailableInputs();
-    setAvailableOutputs(audioOutputs);
-    setAvailableMidiInputs(midiInputs);
-    const selectedAudioDevice =
-      currentConfig.selectedAudioDevice === "default"
-        ? "default"
-        : (audioOutputs.find((output) =>
-            deviceSelected(output, currentConfig.selectedAudioDevice),
-          ) ?? "default");
-    const selectedMidiDevice =
-      currentConfig.selectedMidiDevice === null
-        ? null
-        : (midiInputs.find(
-            (input) => input.name === currentConfig.selectedMidiDevice?.name,
-          ) ?? null);
-    setDraftAppConfig({
-      selectedAudioDevice,
-      selectedSampleRate: currentConfig.selectedSampleRate || "auto",
-      selectedMidiDevice,
-      defaultAuthorName: currentConfig.defaultAuthorName,
-      defaultPatternLength: currentConfig.defaultPatternLength,
-      defaultTrackCount: currentConfig.defaultTrackCount,
-      defaultLinesPerBeat: currentConfig.defaultLinesPerBeat,
-      defaultBeatsPerMinute: currentConfig.defaultBeatsPerMinute,
-    });
-    setInputPatternLength(currentConfig.defaultPatternLength.toString());
-    setInputTrackCount(currentConfig.defaultTrackCount.toString());
-    setInputLinesPerBeat(currentConfig.defaultLinesPerBeat.toString());
-    setInputBeatsPerMinute(currentConfig.defaultBeatsPerMinute.toString());
+    try {
+      const audioOutputs = await audioDevice.getAvailableOutputs();
+      const midiInputs = await midi.getAvailableInputs();
+      setAvailableOutputs(audioOutputs);
+      setAvailableMidiInputs(midiInputs);
+      const selectedAudioDevice =
+        currentConfig.selectedAudioDevice === "default"
+          ? "default"
+          : (audioOutputs.find((output) =>
+              deviceSelected(output, currentConfig.selectedAudioDevice),
+            ) ?? "default");
+      const selectedMidiDevice =
+        currentConfig.selectedMidiDevice === null
+          ? null
+          : (midiInputs.find(
+              (input) => input.name === currentConfig.selectedMidiDevice?.name,
+            ) ?? null);
+      setDraftAppConfig({
+        selectedAudioDevice,
+        selectedSampleRate: currentConfig.selectedSampleRate || "auto",
+        selectedMidiDevice,
+        defaultAuthorName: currentConfig.defaultAuthorName,
+        defaultPatternLength: currentConfig.defaultPatternLength,
+        defaultTrackCount: currentConfig.defaultTrackCount,
+        defaultLinesPerBeat: currentConfig.defaultLinesPerBeat,
+        defaultBeatsPerMinute: currentConfig.defaultBeatsPerMinute,
+      });
+      setInputPatternLength(currentConfig.defaultPatternLength.toString());
+      setInputTrackCount(currentConfig.defaultTrackCount.toString());
+      setInputLinesPerBeat(currentConfig.defaultLinesPerBeat.toString());
+      setInputBeatsPerMinute(currentConfig.defaultBeatsPerMinute.toString());
+    } catch (e) {
+      void error(e as string);
+    }
   };
 
   useEffect(() => {

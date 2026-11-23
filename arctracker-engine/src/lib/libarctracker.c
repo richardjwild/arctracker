@@ -24,6 +24,7 @@ static const api_result_t SUCCESS = {
     .error_message = {0},
 };
 
+static int portaudio_callback(const void *, void *, unsigned long, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *);
 static void get_player_transport_state(const playback_audio_subsystem_t *playback, module_t *module, ui_transport_state_t *transport_state);
 static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks);
 static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event);
@@ -84,7 +85,7 @@ api_result_t arctracker_get_available_outputs(arctracker_t *handle, ui_audio_dev
         return failure(BAD_ARCTRACKER_HANDLE);
     if (!handle->portaudio_initialised)
         return failure(AUDIO_SYSTEM_NOT_INITIALISED);
-    audio_device_info_t *devices = allocate_array(MAIN, sizeof(audio_device_info_t), requested_outputs);
+    audio_device_info_t *devices = allocate_array(MAIN, requested_outputs, sizeof(audio_device_info_t));
     api_result_t result;
     if (!get_available_outputs(devices, requested_outputs))
         result = failure(FAILED_TO_GET_AVAILABLE_OUTPUTS);
@@ -105,7 +106,9 @@ api_result_t arctracker_get_available_outputs(arctracker_t *handle, ui_audio_dev
 api_result_t arctracker_use_output(arctracker_t *handle, const int device_index, const char *name, const char *host_api_name, const uint32_t sample_rate)
 {
     if (handle == NULL)
+    {
         return failure(BAD_ARCTRACKER_HANDLE);
+    }
     portaudio_config_t config = (portaudio_config_t) {
         .device_index = device_index,
         .sample_rate = (double) sample_rate,
@@ -113,42 +116,57 @@ api_result_t arctracker_use_output(arctracker_t *handle, const int device_index,
     snprintf(config.host_api_name, sizeof(config.host_api_name), "%s", host_api_name);
     snprintf(config.name, sizeof(config.name), "%s", name);
     handle->audio_config = config;
-    player_restore_state_t player_state = {0};
-    bool restore = false;
     if (handle->playback.stream_started)
     {
-        player_state = player_get_restore_state(handle->playback.player);
-        restore = true;
-        const api_result_t result = arctracker_player_shutdown(handle);
-        if (!result.success)
-            return result;
+        close_portaudio_stream(handle->playback.pa_stream);
+        printf("PortAudio stream closed\n");
+        handle->playback.stream_started = false;
     }
-    const api_result_t result =  arctracker_player_start(handle);
-    if (restore && result.success)
-        player_restore_state(handle->playback.player, player_state);
-    return result;
+    if (handle->playback.player == NULL)
+    {
+        handle->playback.player = player_create();
+    }
+    if (handle->playback.player == NULL)
+    {
+        return failure(PLAYER_INIT_FAILED);
+    }
+    const open_stream_result_t result = open_portaudio_stream(&handle->audio_config, &handle->playback.pa_stream, portaudio_callback, handle->playback.player);
+    if (result.success)
+    {
+        handle->playback.sample_rate = result.sample_rate;
+        handle->playback.reported_latency = result.reported_latency;
+    }
+    else
+    {
+        handle->playback.sample_rate = 0;
+        handle->playback.reported_latency = 0;
+        return failure(FAILED_TO_OPEN_STREAM);
+    }
+    if (handle->playback.player->initialised)
+    {
+        player_set_sample_rate(handle->playback.player, result.sample_rate);
+    }
+    else if (!player_init(handle->playback.player, handle->module, handle->playback.event_queue, handle->midi_queue, result.sample_rate))
+    {
+        player_destroy(handle->playback.player);
+        handle->playback.player = NULL;
+        close_portaudio_stream(handle->playback.pa_stream);
+        return failure(PLAYER_INIT_FAILED);
+    }
+    if (!start_portaudio_stream(handle->playback.pa_stream))
+    {
+        close_portaudio_stream(handle->playback.pa_stream);
+        return failure(FAILED_TO_START_STREAM);
+    }
+    handle->playback.stream_started = true;
+    return SUCCESS;
 }
 
 api_result_t arctracker_use_default_output(arctracker_t *handle, const uint32_t sample_rate)
 {
-    if (handle == NULL)
-        return failure(BAD_ARCTRACKER_HANDLE);
-    handle->audio_config.device_index = DEFAULT_PORTAUDIO_DEVICE_INDEX;
-    handle->audio_config.sample_rate = (double) sample_rate;
-    player_restore_state_t player_state = {0};
-    bool restore = false;
-    if (handle->playback.stream_started)
-    {
-        player_state = player_get_restore_state(handle->playback.player);
-        restore = true;
-        const api_result_t result = arctracker_player_shutdown(handle);
-        if (!result.success)
-            return result;
-    }
-    const api_result_t result =  arctracker_player_start(handle);
-    if (restore && result.success)
-        player_restore_state(handle->playback.player, player_state);
-    return result;
+    const char *device_name = "";
+    const char *host_api_name = "";
+    return arctracker_use_output(handle, DEFAULT_PORTAUDIO_DEVICE_INDEX, device_name, host_api_name, sample_rate);
 }
 
 int arctracker_get_available_midi_count(midi_subsystem_t *handle)
@@ -228,8 +246,7 @@ api_result_t arctracker_module_load(arctracker_t *handle, char *mod_filename, ui
         return failure(MODULE_TYPE_UNRECOGNISED);
     if (!load_result.module_loaded)
         return failure(MODULE_LOAD_FAILED);
-    if (handle->playback.stream_started)
-        arctracker_player_shutdown(handle);
+    arctracker_player_shutdown(handle);
     if (handle->module != NULL)
         remove_module(handle);
     handle->module = load_result.module;
@@ -273,8 +290,7 @@ api_result_t arctracker_module_create(arctracker_t *handle, const new_module_par
         return failure(MODULE_CREATE_FAILED);
     strncpy(module->name, NEW_MODULE_TITLE, MAX_LEN_TUNE_NAME);
     strncpy(module->author, params.author, MAX_LEN_AUTHOR);
-    if (handle->playback.stream_started)
-        arctracker_player_shutdown(handle);
+    arctracker_player_shutdown(handle);
     if (handle->module != NULL)
         remove_module(handle);
     handle->module = module;
@@ -335,18 +351,17 @@ api_result_t arctracker_player_start(arctracker_t *handle)
     {
         handle->playback.sample_rate = 0;
         handle->playback.reported_latency = 0;
-        player_destroy(handle->playback.player);
         return failure(FAILED_TO_OPEN_STREAM);
     }
     if (!player_init(handle->playback.player, handle->module, handle->playback.event_queue, handle->midi_queue, result.sample_rate))
     {
         player_destroy(handle->playback.player);
         close_portaudio_stream(handle->playback.pa_stream);
+        handle->playback.player = NULL;
         return failure(PLAYER_INIT_FAILED);
     }
     if (!start_portaudio_stream(handle->playback.pa_stream))
     {
-        player_destroy(handle->playback.player);
         close_portaudio_stream(handle->playback.pa_stream);
         return failure(FAILED_TO_START_STREAM);
     }
@@ -383,7 +398,7 @@ api_result_t arctracker_get_playback_state(arctracker_t *handle, ui_playback_sta
 
 bool arctracker_player_cmd(arctracker_t *handle, player_command_t *command)
 {
-    if (handle == NULL || !handle->playback.stream_started) return false;
+    if (handle == NULL || handle->playback.player == NULL) return false;
     return player_queue_command(handle->playback.player, *command);
 }
 
@@ -405,7 +420,7 @@ void arctracker_get_transport_state(arctracker_t *handle, ui_transport_state_t *
 {
     if (handle == NULL)
         return;
-    if (handle->playback.stream_started)
+    if (handle->playback.player)
     {
         get_player_transport_state(&handle->playback, handle->module, transport_state);
         return;
@@ -429,7 +444,7 @@ void arctracker_get_track_state(arctracker_t *handle, ui_track_state_t *track_st
         return;
     track_state->effects_displayed = handle->module->tracks[track].effects_displayed;
     track_state->muted = handle->module->tracks[track].muted;
-    if (handle->playback.stream_started)
+    if (handle->playback.player)
         track_state->panning = audio_channel_get_stereo(handle->playback.player->tracks[track].audio_channel);
     else
         track_state->panning = handle->module->tracks[track].panning;
@@ -613,12 +628,14 @@ api_result_t arctracker_export_audio(arctracker_t *handle, char *output_filename
     if (!player_init(handle->export.player, handle->module, handle->export.event_queue, handle->midi_queue, export_sample_rate))
     {
         player_destroy(handle->export.player);
+        handle->export.player = NULL;
         return failure(EXPORT_INIT_FAILED);
     }
     arc_thread_t export_thread;
     if (!arc_thread_create(&export_thread, run_export, handle))
     {
         player_destroy(handle->export.player);
+        handle->export.player = NULL;
         return failure(EXPORT_THREAD_CREATE_FAILED);
     }
     handle->export.thread_active = true;
@@ -674,16 +691,22 @@ api_result_t arctracker_export_sample(arctracker_t *handle, const int instrument
 api_result_t arctracker_player_shutdown(arctracker_t *handle)
 {
     if (handle == NULL)
+    {
         return failure(BAD_ARCTRACKER_HANDLE);
-    if (!handle->playback.stream_started)
-        return failure(PLAYER_NOT_RUNNING);
-    close_portaudio_stream(handle->playback.pa_stream);
-    printf("PortAudio stream closed\n");
-    handle->playback.stream_started = false;
-    printf("Destroying player\n");
-    player_destroy(handle->playback.player);
-    handle->playback.player = NULL;
-    printf("Player destroyed\n");
+    }
+    if (handle->playback.stream_started)
+    {
+        close_portaudio_stream(handle->playback.pa_stream);
+        printf("PortAudio stream closed\n");
+        handle->playback.stream_started = false;
+    }
+    if (handle->playback.player)
+    {
+        printf("Destroying player\n");
+        player_destroy(handle->playback.player);
+        handle->playback.player = NULL;
+        printf("Player destroyed\n");
+    }
     return SUCCESS;
 }
 
@@ -959,8 +982,7 @@ api_result_t arctracker_edit_set_num_tracks(arctracker_t *handle, const int num_
     if (num_tracks < 1 || num_tracks > MAX_TRACKS)
         return failure(INVALID_TRACK_COUNT);
     const player_restore_state_t player_state = player_get_restore_state(handle->playback.player);
-    if (handle->playback.stream_started)
-        arctracker_player_shutdown(handle);
+    arctracker_player_shutdown(handle);
     const edit_result_t edit_result = editor_set_num_tracks(handle->module, num_tracks, init_new_tracks);
     if (!edit_result.success)
         return failure(edit_result.error_message);
@@ -1001,15 +1023,18 @@ api_result_t arctracker_edit_set_panning(arctracker_t *handle, const uint8_t tra
 api_result_t arctracker_destroy(arctracker_t *handle)
 {
     if (handle == NULL)
-        return failure(BAD_ARCTRACKER_HANDLE);
-    if (handle->playback.stream_started)
     {
-        const api_result_t result = arctracker_player_shutdown(handle);
-        if (!result.success)
-            fprintf(stderr, "%s\n", result.error_message);
+        return failure(BAD_ARCTRACKER_HANDLE);
+    }
+    api_result_t result = arctracker_player_shutdown(handle);
+    if (!result.success)
+    {
+        fprintf(stderr, "%s\n", result.error_message);
     }
     if (handle->module != NULL)
+    {
         remove_module(handle);
+    }
     event_queue_destroy(handle->playback.event_queue);
     event_queue_destroy(handle->export.event_queue);
     midi_queue_destroy(handle->midi_queue);

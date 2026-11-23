@@ -411,11 +411,13 @@ impl Arctracker {
             host_api_name: [0; HOST_API_NAME_LEN],
         };
         let mut devices = vec![empty_device; output_count as usize];
-        let result = unsafe {
-            ffi::arctracker_get_available_outputs(self.handle, devices.as_mut_ptr(), output_count)
-        };
-        if !result.success {
-            return Err(c_string_to_rust(&result.error_message));
+        if output_count > 0 {
+            let result = unsafe {
+                ffi::arctracker_get_available_outputs(self.handle, devices.as_mut_ptr(), output_count)
+            };
+            if !result.success {
+                return Err(c_string_to_rust(&result.error_message));
+            }
         }
         Ok(devices.into_iter().map(AudioDeviceInfo::from).collect())
     }
@@ -1271,15 +1273,17 @@ impl ArctrackerMidi {
             name: [0; MIDI_DEVICE_NAME_LEN],
         };
         let mut devices = vec![empty_device; device_count as usize];
-        let result = unsafe {
-            ffi::arctracker_get_available_midi_devices(
-                self.handle,
-                devices.as_mut_ptr(),
-                device_count,
-            )
-        };
-        if !result.success {
-            return Err(c_string_to_rust(&result.error_message));
+        if device_count > 0 {
+            let result = unsafe {
+                ffi::arctracker_get_available_midi_devices(
+                    self.handle,
+                    devices.as_mut_ptr(),
+                    device_count,
+                )
+            };
+            if !result.success {
+                return Err(c_string_to_rust(&result.error_message));
+            }
         }
         Ok(devices.into_iter().map(MidiDeviceInfo::from).collect())
     }

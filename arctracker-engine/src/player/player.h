@@ -127,6 +127,8 @@ player_restore_state_t player_get_restore_state(const player_t *);
 
 void player_restore_state(player_t *player, player_restore_state_t state);
 
+void player_set_sample_rate(player_t *player, double sample_rate);
+
 void player_destroy(player_t *);
 
 void player_get_and_reset_peaks(player_t *player, float *peak_l, float *peak_r);
