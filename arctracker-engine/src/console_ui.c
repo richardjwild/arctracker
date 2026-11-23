@@ -7,6 +7,7 @@ void;
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <time.h>
 #include "console_ui.h"
 
 static const char *NOTES[] = {
@@ -24,6 +25,11 @@ static const char ALPHANUM[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
     'U', 'V', 'W', 'X', 'Y', 'Z'
+};
+
+static const struct timespec delay = {
+    .tv_sec = 0,
+    .tv_nsec = 16000000L
 };
 
 static bool state_changed(ui_transport_state_t);
@@ -63,7 +69,7 @@ void ui_loop(arctracker_t *arctracker_handle, ui_module_info_t module_info)
             old_state = ui_state;
         }
         player_healthy = handle_playback_events(arctracker_handle);
-        usleep(16000);
+        nanosleep(&delay, NULL);
         if (player_healthy)
             arctracker_get_transport_state(arctracker_handle, &ui_state);
     }
@@ -89,7 +95,7 @@ bool monitor_export(arctracker_t *arctracker_handle)
             printf("%d%% done\n", pct_complete);
         }
         player_healthy = handle_export_events(arctracker_handle);
-        usleep(16000);
+        nanosleep(&delay, NULL);
         if (player_healthy)
             arctracker_get_export_state(arctracker_handle, &export_state);
         else

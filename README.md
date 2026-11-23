@@ -3,11 +3,12 @@
 1. C development tools
     1. macOS: XCode command line development tools (or full XCode)
     1. Windows: MSVC
-    1. Linux: You're probably already good
+    1. Linux: Gcc
 1. Meson
 1. CMake
 1. Rust
 1. Node
+1. (Linux only) `libasound2-dev`
 ## Instructions
 ```
 cd arctracker-ui

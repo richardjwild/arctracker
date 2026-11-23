@@ -306,7 +306,7 @@ static bool read_fmt_chunk(const uint8_t *data, const size_t data_size, wav_file
             return false;
         }
         const uint16_t extension_size = read_u16_le(data + 16);
-        if (extension_size < EXTENSIBLE_EXTRA_SIZE || WAVE_FORMAT_EXTENSIBLE_SIZE + extension_size > data_size)
+        if (extension_size < EXTENSIBLE_EXTRA_SIZE || (size_t) WAVE_FORMAT_EXTENSIBLE_SIZE + extension_size > data_size)
         {
             error(INVALID_WAVEFORMATEXTENSIBLE_EXTENSION_SIZE);
             return false;

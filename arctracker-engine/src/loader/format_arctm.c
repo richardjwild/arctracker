@@ -283,6 +283,7 @@ static bool write_sample_slices_chunks(const module_t *, FILE *);
 static bool write_sample_slices_chunk(const module_t *, uint8_t, uint8_t, FILE *);
 static uint32_t write_gain(float);
 static bool write_fourcc(FILE *, const char *);
+static void copy_string(char *, const char *, int);
 
 format_t format_arctm(void)
 {
@@ -426,11 +427,6 @@ static module_t *instantiate_module(const uint8_t *meta_data, const size_t data_
     }
     module->initial_ticks_per_event = initial_speed;
     const uint8_t initial_bpm = read_u8(meta_data + 6 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
-    if (initial_bpm > MAX_BPM)
-    {
-        error(MODFILE_INVALID_BPM);
-        goto read_module_metadata_failed;
-    }
     const uint8_t lines_per_beat = read_u8(meta_data + 7 + MODULE_NAME_LEN + AUTHOR_NAME_LEN);
     module_set_lines_per_beat(module, lines_per_beat);
     module_set_initial_bpm(module, initial_bpm);
@@ -797,7 +793,7 @@ static bool read_sample_slices_chunk(const uint8_t *data, const size_t data_size
         return false;
     }
     const uint8_t slice_count = read_u8(data + 4);
-    if (data_size != 5 + slice_count * 9)
+    if (data_size != 5 + (size_t) slice_count * 9)
     {
         error(MODFILE_INVALID_INVALID_SAMPLE_SLICE_LENGTH);
         return false;
@@ -1165,8 +1161,8 @@ static bool write_instrument_chunk(const module_t *module, const uint8_t instrum
     const instrument_t instrument = module->instruments[instrument_index];
     if (!instrument.assigned) return true;
     samples_used[instrument.sample_index] = true;
-    char instrument_name[INSTRUMENT_NAME_LEN];
-    snprintf(instrument_name, sizeof instrument_name, "%s", instrument.name);
+    char instrument_name[INSTRUMENT_NAME_LEN + 1];
+    copy_string(instrument_name, instrument.name, INSTRUMENT_NAME_LEN);
     if (!write_fourcc(fp, INSTRUMENT_CHUNK_ID)) return false;
     if (!write_u32_le(fp, INSTRUMENT_CHUNK_LEN)) return false;
     if (!write_u32_le(fp, instrument_index)) return false;
@@ -1252,4 +1248,10 @@ static uint32_t write_gain(const float gain)
 static bool write_fourcc(FILE *fp, const char *ch)
 {
     return write_cc(fp, ch, 4);
+}
+
+static void copy_string(char *destination, const char *source, const int length)
+{
+    memcpy(destination, source, length);
+    destination[length] = '\0';
 }

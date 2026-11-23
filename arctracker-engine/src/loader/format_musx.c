@@ -811,7 +811,6 @@ static bool read_samples(module_t *module, const musx_file_t musx_file)
             .repeats = repeats,
             .repeat_offset = (int) definition.repeat_offset,
             .repeat_length = (int) repeat_length,
-            .sample_slices = {0},
         };
         snprintf(instrument.name, sizeof(instrument.name), "%s", definition.name);
         module_set_instrument(module, sample_index, instrument);

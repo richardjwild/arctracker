@@ -26,8 +26,6 @@ typedef struct {
     float *sample_data;
 } load_sample_result_t;
 
-static const char *UNKNOWN_FORMAT = "UNKNOWN";
-
 load_module_result_t load_module(const char *filename);
 
 bool save_module(const module_t *module, const char *filename, format_t format);
