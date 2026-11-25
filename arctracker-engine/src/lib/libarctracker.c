@@ -1,9 +1,7 @@
 #include <stddef.h>
 #include "concurrency/threads.h"
 #include "libarctracker.h"
-
 #include <assert.h>
-
 #include "arctracker.h"
 #include "messages.h"
 #include "player/player.h"
@@ -17,13 +15,12 @@
 #include "midi/midi.h"
 #include "player/period.h"
 
-#define MAX_PATTERN_LENGTH 1000
-
 static const api_result_t SUCCESS = {
     .success = true,
     .error_message = {0},
 };
 
+static int portaudio_callback(const void *, void *, unsigned long, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *);
 static void get_player_transport_state(const playback_audio_subsystem_t *playback, module_t *module, ui_transport_state_t *transport_state);
 static void copy_pattern_line(ui_pattern_event_t *line_buffer, event_t *events, int requested_tracks, int module_tracks);
 static void to_ui_event(ui_pattern_event_t *event_buffer, event_t *event);
@@ -297,14 +294,6 @@ api_result_t arctracker_get_pattern_lengths(arctracker_t *handle, int *pattern_l
         pattern_lengths[pattern] = module->patterns[pattern].num_lines;
     return SUCCESS;
 }
-
-static int portaudio_callback(
-    const void *input,
-    void *output,
-    unsigned long frames_requested,
-    const PaStreamCallbackTimeInfo *time_info,
-    PaStreamCallbackFlags status_flags,
-    void *player);
 
 api_result_t arctracker_player_start(arctracker_t *handle)
 {
