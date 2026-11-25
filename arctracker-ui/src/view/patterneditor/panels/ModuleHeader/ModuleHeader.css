@@ -39,7 +39,3 @@
 .moduleHeader button:hover {
     background: var(--colour-button-bg-hover)
 }
-
-.moduleHeader button svg {
-    transform: translateX(0px) translateY(1px);
-}

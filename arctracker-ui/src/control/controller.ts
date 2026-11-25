@@ -26,7 +26,6 @@ async function processCommands() {
     void debug(`Command: ${JSON.stringify(command)}`);
     switch (command.type) {
       case "Edit application config":
-        if (transport.playing()) transport.togglePlay();
         appConfig.showDialog();
         break;
       case "Set application config":

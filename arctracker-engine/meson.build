@@ -20,6 +20,10 @@ if cc.has_argument('-Wmissing-prototypes')
     add_project_arguments('-Wmissing-prototypes', language: 'c')
 endif
 
+if host_machine.system() == 'linux'
+    add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
+endif
+
 cmake = import('cmake')
 
 portaudio_options = cmake.subproject_options()
@@ -33,6 +37,10 @@ portaudio_options.add_cmake_defines({
 portaudio_options.set_override_option('warning_level', '0')
 portaudio_options.append_compile_args('c', '-w')
 portaudio_options.append_compile_args('cpp', '-w')
+if host_machine.system() == 'linux'
+    # PortAudio's ALSA backend uses GNU C extensions (typeof).
+    portaudio_options.set_override_option('c_std', 'gnu11')
+endif
 portaudio_project = cmake.subproject(
     'portaudio-19.7.0',
     options: portaudio_options,

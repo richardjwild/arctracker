@@ -101,6 +101,15 @@ fn main() {
         // RtMidi is implemented in C++.
         println!("cargo:rustc-link-lib=c++");
     }
+    #[cfg(target_os = "linux")]
+    {
+        println!("cargo:rustc-link-lib=asound");
+        println!("cargo:rustc-link-lib=m");
+        println!("cargo:rustc-link-lib=pthread");
+        println!("cargo:rustc-link-lib=dl");
+        // RtMidi is implemented in C++.
+        println!("cargo:rustc-link-lib=stdc++");
+    }
     #[cfg(target_os = "windows")]
     {
         println!("cargo:rustc-link-lib=winmm");
