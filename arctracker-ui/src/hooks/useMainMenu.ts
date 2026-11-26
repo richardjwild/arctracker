@@ -1,8 +1,13 @@
 import { commands } from "../control/commands.ts";
 import { useEffect } from "react";
-import { Menu } from "@tauri-apps/api/menu";
+import { Menu, MenuItem, Submenu } from "@tauri-apps/api/menu";
 import { platform } from "@tauri-apps/plugin-os";
 import exitArctracker from "../exit/exit.ts";
+import { SelectionType } from "../editing/pasteBuffer.ts";
+import { useStore } from "../store/useStore.ts";
+import { error } from "@tauri-apps/plugin-log";
+import { EditHistoryState, EditMode } from "../editing/editor.ts";
+import { Instrument, MaxInstrumentSlots } from "../editing/editInstrument.ts";
 
 const appMenu = {
   id: "app-menu",
@@ -58,7 +63,7 @@ const fileMenu = {
     {
       id: "file-save-module",
       text: "Save Module",
-      enabled: true,
+      enabled: false,
       action: commands.saveModule,
     },
     {
@@ -84,13 +89,13 @@ const editMenu = {
     {
       id: "edit-undo",
       text: "Undo",
-      enabled: true,
+      enabled: false,
       action: commands.undoEdit,
     },
     {
       id: "edit-redo",
       text: "Redo",
-      enabled: true,
+      enabled: false,
       action: commands.redoEdit,
     },
     { item: "Separator" },
@@ -108,7 +113,7 @@ const editMenu = {
       action: commands.clearPatternEvent,
     },
     {
-      id: "edit-clear-event",
+      id: "edit-clear-event-field",
       text: "Clear Field",
       enabled: true,
       action: commands.clearPatternEventField,
@@ -117,19 +122,19 @@ const editMenu = {
     {
       id: "edit-cut-events",
       text: "Cut Events",
-      enabled: true,
+      enabled: false,
       action: commands.cutPatternEvents,
     },
     {
       id: "edit-copy-events",
       text: "Copy Events",
-      enabled: true,
+      enabled: false,
       action: commands.copyPatternEvents,
     },
     {
       id: "edit-paste-events",
       text: "Paste Events",
-      enabled: true,
+      enabled: false,
       action: commands.pastePatternEvents,
     },
     {
@@ -154,7 +159,7 @@ const editMenu = {
     {
       id: "edit-paste-track",
       text: "Paste Track",
-      enabled: true,
+      enabled: false,
       action: commands.pasteTrack,
     },
     { item: "Separator" },
@@ -173,7 +178,7 @@ const editMenu = {
     {
       id: "edit-paste-pattern",
       text: "Paste Pattern",
-      enabled: true,
+      enabled: false,
       action: commands.pastePattern,
     },
     { item: "Separator" },
@@ -420,12 +425,11 @@ const instrumentMenu = {
   ],
 };
 
-let menuInitialised = false;
+let menuPromise: Promise<Menu> | null = null;
 
-export function useMainMenu() {
-  useEffect(() => {
-    if (menuInitialised) return;
-    Menu.new({
+function initialiseMenu(): Promise<Menu> {
+  if (!menuPromise) {
+    menuPromise = Menu.new({
       items: [
         appMenu,
         fileMenu,
@@ -437,7 +441,162 @@ export function useMainMenu() {
         patternMenu,
         instrumentMenu,
       ],
-    }).then((menu) => void menu.setAsAppMenu());
-    menuInitialised = true;
-  }, [menuInitialised]);
+    }).then(async (menu) => {
+      await menu.setAsAppMenu();
+      return menu;
+    }).catch((error) => {
+      menuPromise = null;
+      throw error;
+    });
+  }
+  return menuPromise;
+}
+
+async function updatePatternEditMenuItems(menu: Menu, editMode: EditMode, cursorField: number) {
+  const editMenu = await menu.get("edit-menu") as Submenu;
+  const [
+    clearEventItem,
+    clearFieldItem,
+    cutEventsItem,
+    copyEventsItem,
+    duplicateEventsItem,
+    cutTrackItem,
+    copyTrackItem,
+    cutPatternItem,
+    copyPatternItem,
+    setMultipleEffectsItem
+  ] =
+    await Promise.all([
+      editMenu.get("edit-clear-event"),
+      editMenu.get("edit-clear-event-field"),
+      editMenu.get("edit-cut-events"),
+      editMenu.get("edit-copy-events"),
+      editMenu.get("edit-duplicate-events"),
+      editMenu.get("edit-cut-track"),
+      editMenu.get("edit-copy-track"),
+      editMenu.get("edit-cut-pattern"),
+      editMenu.get("edit-copy-pattern"),
+      editMenu.get("edit-set-multiple-effects"),
+    ]) as MenuItem[];
+  await Promise.all([
+    clearEventItem.setEnabled(editMode === "patternEvents"),
+    clearFieldItem.setEnabled(editMode === "patternEvents" && cursorField > 0),
+    cutEventsItem.setEnabled(editMode === "patternEvents"),
+    copyEventsItem.setEnabled(editMode === "patternEvents"),
+    duplicateEventsItem.setEnabled(editMode === "patternEvents"),
+    cutTrackItem.setEnabled(editMode === "patternEvents"),
+    copyTrackItem.setEnabled(editMode === "patternEvents"),
+    cutPatternItem.setEnabled(editMode === "patternEvents"),
+    copyPatternItem.setEnabled(editMode === "patternEvents"),
+    setMultipleEffectsItem.setEnabled(editMode === "patternEvents"),
+  ]);
+}
+
+async function updatePasteMenuItems(
+  menu: Menu,
+  editMode: EditMode,
+  currentSelectionType: SelectionType | null,
+) {
+  const editMenu = await menu.get("edit-menu") as Submenu;
+  const [pasteEventsItem, pasteTrackItem, pastePatternItem] =
+    await Promise.all([
+      editMenu.get("edit-paste-events"),
+      editMenu.get("edit-paste-track"),
+      editMenu.get("edit-paste-pattern"),
+    ]) as MenuItem[];
+  await Promise.all([
+    pasteEventsItem.setEnabled(editMode === "patternEvents" && currentSelectionType === "patternEventSelection"),
+    pasteTrackItem.setEnabled(editMode === "patternEvents" && currentSelectionType === "track"),
+    pastePatternItem.setEnabled(editMode === "patternEvents" && currentSelectionType === "pattern"),
+  ]);
+}
+
+async function updateUndoRedoMenuItems(menu: Menu, editHistoryState: EditHistoryState) {
+  const editMenu = await menu.get("edit-menu") as Submenu;
+  const [undoItem, redoItem] =
+    await Promise.all([
+      editMenu.get("edit-undo"),
+      editMenu.get("edit-redo"),
+    ]) as MenuItem[];
+  await Promise.all([
+    undoItem.setEnabled(editHistoryState.canUndo),
+    redoItem.setEnabled(editHistoryState.canRedo),
+  ]);
+}
+
+async function updateFileSaveMenuItem(menu: Menu, savedFileName: string | null) {
+  const fileMenu = await menu.get("file-menu") as Submenu;
+  const saveItem = await fileMenu.get("file-save-module") as MenuItem;
+  await saveItem.setEnabled(savedFileName !== null && savedFileName !== undefined && savedFileName !== "");
+}
+
+async function updateInstrumentMenuItems(menu: Menu, instruments: Instrument[], selectedInstrumentIndex: number | null) {
+  const selectedInstrument = getSelectedInstrument(instruments, selectedInstrumentIndex);
+  const instrumentMenu = await menu.get("instrument-menu") as Submenu;
+  const [addInstrumentItem, editInstrumentItem, loadSampleItem, deleteSampleItem, exportSampleItem] = await Promise.all([
+    instrumentMenu.get("instrument-add"),
+    instrumentMenu.get("instrument-edit"),
+    instrumentMenu.get("instrument-load-sample"),
+    instrumentMenu.get("instrument-delete-sample"),
+    instrumentMenu.get("instrument-export-sample"),
+  ]) as MenuItem[];
+  await Promise.all([
+    addInstrumentItem.setEnabled(instruments.length < MaxInstrumentSlots),
+    editInstrumentItem.setEnabled(selectedInstrument != null),
+    loadSampleItem.setEnabled(selectedInstrument !== null),
+    deleteSampleItem.setEnabled(selectedInstrument?.assigned || false),
+    exportSampleItem.setEnabled(selectedInstrument?.assigned || false),
+  ]);
+}
+
+function getSelectedInstrument(instruments: Instrument[], selectedInstrumentIndex: number | null) {
+  if (instruments.length === 0)
+    return null;
+  if (selectedInstrumentIndex === null)
+    return null;
+  return instruments[selectedInstrumentIndex];
+}
+
+export function useMainMenu() {
+  const editMode = useStore((state) => state.editorState.editMode);
+  const cursorField = useStore((state) => state.editorState.cursorPosition.field);
+  const currentSelectionType = useStore((state) => state.pasteBuffer?.type ?? null);
+  const editHistoryState = useStore((state) => state.editHistoryState);
+  const savedFileName = useStore((state) => state.module.fileName);
+  const selectedInstrumentIndex = useStore((state) => state.selectedInstrument);
+  const instruments = useStore((state) => state.module.instruments);
+
+  useEffect(() => {
+    void initialiseMenu().catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updatePatternEditMenuItems(menu, editMode, cursorField))
+      .catch((e) => error(e));
+  }, [editMode, cursorField]);
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updatePasteMenuItems(menu, editMode, currentSelectionType))
+      .catch((e) => error(e));
+  }, [editMode, currentSelectionType]);
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updateUndoRedoMenuItems(menu, editHistoryState))
+      .catch((e) => error(e));
+  }, [editHistoryState])
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updateFileSaveMenuItem(menu, savedFileName))
+      .catch((e) => error(e));
+  }, [savedFileName])
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updateInstrumentMenuItems(menu, instruments, selectedInstrumentIndex))
+      .catch((e) => error(e));
+  }, [instruments, selectedInstrumentIndex]);
 }

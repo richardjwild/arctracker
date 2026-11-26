@@ -176,12 +176,7 @@ const keyBindings = new Map<string, KeyBinding[]>([
       { modifiers: "secondary", execute: commands.toggleCurrentTrackMute },
     ]
   ],
-  ["KeyN",
-    [
-      { modifiers: "primary", execute: () => commands.createModule() },
-      { modifiers: "primary+secondary", execute: () => commands.createModuleUsingDefaults() }
-    ]
-  ],
+  ["KeyN", [{ modifiers: "primary", execute: () => commands.createModuleUsingDefaults() }]],
   ["KeyO", [{ modifiers: "primary", execute: commands.loadFile }]],
   ["KeyP", [{ modifiers: "primary", execute: commands.editAppConfig }]],
   [

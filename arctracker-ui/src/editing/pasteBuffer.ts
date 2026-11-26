@@ -1,5 +1,7 @@
 import { PatternEvent } from "./patternEvents.ts";
 
+export type SelectionType = "patternEventSelection" | "track" | "pattern";
+
 export type PatternEventBlock = {
   width: number;
   height: number;
@@ -7,4 +9,4 @@ export type PatternEventBlock = {
 }
 
 export type PasteBufferObjectType =
-  | { type: "patternEvents"; block: PatternEventBlock };
+  | { type: SelectionType; block: PatternEventBlock };

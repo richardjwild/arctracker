@@ -6,6 +6,8 @@ import { alerting } from "../alerting/alert.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { userMessages } from "../messages/userMessages.ts";
 
+export const MaxInstrumentSlots = 255;
+
 export type SampleSlice = {
   id: number;
   offset: number;
@@ -105,7 +107,8 @@ export const editInstrument = {
   },
 
   showDialog: () => {
-    editor.setEditMode("instrument");
+    if (useStore.getState().module.instruments.length < MaxInstrumentSlots)
+      editor.setEditMode("instrument");
   },
 
   auditionInstrument: async () => {

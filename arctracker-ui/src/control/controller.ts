@@ -210,7 +210,7 @@ async function processCommands() {
         void copyPaste.cutPatternEvents();
         break;
       case "Paste pattern events":
-        void copyPaste.pastePatternEvents(null);
+        void copyPaste.pastePatternEvents("patternEventSelection", null);
         break;
       case "Duplicate pattern events":
         void patternEvents.duplicatePatternEvents();

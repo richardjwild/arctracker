@@ -1,7 +1,7 @@
 import { PatternSelectionBounds, selection } from "./selection.ts";
 import { useStore } from "../store/useStore.ts";
 import { cursor } from "./cursor.ts";
-import { PasteBufferObjectType } from "./pasteBuffer.ts";
+import { PasteBufferObjectType, SelectionType } from "./pasteBuffer.ts";
 import { EventLocation, PatternEvent, patternEvents } from "./patternEvents.ts";
 import { patternGrid, PatternGridPosition } from "./patternGrid.ts";
 import { userMessages } from "../messages/userMessages.ts";
@@ -39,7 +39,7 @@ function getFocusPatternNo() {
   return sequence[sequencePosition];
 }
 
-async function copyEvents(providedBounds: PatternSelectionBounds | null): Promise<EventLocation[]> {
+async function copyEvents(type: SelectionType, providedBounds: PatternSelectionBounds | null): Promise<EventLocation[]> {
   const selectionBounds = getSelectionBounds(providedBounds);
   const patternNo = getFocusPatternNo();
   const currentPattern = useStore.getState().currentPattern;
@@ -54,7 +54,7 @@ async function copyEvents(providedBounds: PatternSelectionBounds | null): Promis
   );
   if (blockHeight === 0 || blockWidth === 0) return []; // Shouldn't really be possible, but belt & braces.
   let pasteBuffer: PasteBufferObjectType = {
-    type: "patternEvents",
+    type,
     block: {
       width: blockWidth,
       height: blockHeight,
@@ -93,7 +93,10 @@ export const copyPaste = {
   copyPatternEvents: async (
     providedBounds: PatternSelectionBounds | null,
   ): Promise<EventLocation[]> => {
-    const cutLocations: EventLocation[] = await copyEvents(providedBounds);
+    const cutLocations: EventLocation[] = await copyEvents(
+      "patternEventSelection",
+      providedBounds,
+    );
     userMessages.logMessage({
       type: "info",
       message: messageFn("copiedEvents")(cutLocations.length.toString()),
@@ -102,13 +105,16 @@ export const copyPaste = {
   },
 
   cutPatternEvents: async () => {
-    const cutLocations = await copyEvents(null);
+    const cutLocations = await copyEvents("patternEventSelection", null);
     if (cutLocations.length > 0) await patternEvents.clearEvents(cutLocations);
   },
 
-  pastePatternEvents: async (providedLocation: PatternGridPosition | null) => {
+  pastePatternEvents: async (
+    type: SelectionType,
+    providedLocation: PatternGridPosition | null,
+  ) => {
     const pasteBuffer = useStore.getState().pasteBuffer;
-    if (!pasteBuffer || pasteBuffer.type !== "patternEvents") return;
+    if (!pasteBuffer || pasteBuffer.type !== type) return;
     const pasteLocation = getPasteLocation(providedLocation);
     const currentPattern = useStore.getState().currentPattern;
     const cursorPosition = cursor.currentPosition();
@@ -145,7 +151,7 @@ export const copyPaste = {
     const track = patternGrid.currentPosition().track;
     const currentPattern = useStore.getState().currentPattern;
     const patternLength = currentPattern.lines.length;
-    const copiedEventLocations = await copyEvents({
+    const copiedEventLocations = await copyEvents("track", {
       top: 0,
       bottom: patternLength - 1,
       left: track,
@@ -168,14 +174,14 @@ export const copyPaste = {
 
   pasteTrack: async () => {
     const track = patternGrid.currentPosition().track;
-    await copyPaste.pastePatternEvents({ track, patternIndex: 0 });
+    await copyPaste.pastePatternEvents("track", { track, patternIndex: 0 });
   },
 
   copyPattern: async (): Promise<EventLocation[]> => {
     const numTracks = useStore.getState().module.numTracks;
     const currentPattern = useStore.getState().currentPattern;
     const patternLength = currentPattern.lines.length;
-    const copiedEventLocations = await copyEvents({
+    const copiedEventLocations = await copyEvents("pattern", {
       top: 0,
       bottom: patternLength - 1,
       left: 0,
@@ -194,6 +200,9 @@ export const copyPaste = {
   },
 
   pastePattern: async () => {
-    await copyPaste.pastePatternEvents({ track: 0, patternIndex: 0 });
+    await copyPaste.pastePatternEvents("pattern", {
+      track: 0,
+      patternIndex: 0,
+    });
   },
 };

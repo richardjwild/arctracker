@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { CurrentPattern, TransportState } from "../transport/transport.ts";
-import { EditorState } from "../editing/editor.ts";
+import { EditHistoryState, EditorState } from "../editing/editor.ts";
 import { PatternSelection } from "../editing/selection.ts";
 import { PasteBufferObjectType } from "../editing/pasteBuffer.ts";
 import { InterpolationType, ModuleMetaData, VolumeMappingType } from "../editing/moduleMetaData.ts";
@@ -20,6 +20,7 @@ interface AppStore {
   patternGridStrideLength: number;
   transportState: TransportState;
   editorState: EditorState;
+  editHistoryState: EditHistoryState;
   effectsDisplayed: number[];
   trackMuteState: boolean[];
   trackPanning: number[];
@@ -62,6 +63,7 @@ interface AppStore {
   setPatternGridStrideLength: (lines: number) => void;
   setTransportState: (state: TransportState) => void;
   setEditorState: (state: EditorState) => void;
+  setEditHistoryState: (state: EditHistoryState) => void;
   setEffectsDisplayed: (effectsDisplayed: number[]) => void;
   setTrackMuteState: (trackMuteState: boolean[]) => void;
   setTrackPanning: (trackPanning: number[]) => void;
@@ -155,6 +157,13 @@ function initialEditorState(): EditorState {
   };
 }
 
+function initialEditHistoryState(): EditHistoryState {
+  return {
+    canUndo: false,
+    canRedo: false,
+  };
+}
+
 function arraysEqual<T>(a: T[], b: T[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
@@ -173,6 +182,7 @@ export const useStore = create<AppStore>((set) => ({
   patternGridStrideLength: 8,
   transportState: initialTransportState,
   editorState: initialEditorState(),
+  editHistoryState: initialEditHistoryState(),
   effectsDisplayed: [],
   trackMuteState: [],
   trackPanning: [],
@@ -206,6 +216,7 @@ export const useStore = create<AppStore>((set) => ({
       selectedChannel: 0,
       isLoadingModule: false,
       editorState: initialEditorState(),
+      editHistoryState: initialEditHistoryState(),
       effectsDisplayed: Array.from({ length: result.numTracks }, () => 1),
       patternSelection: null,
       pasteBuffer: null,
@@ -353,6 +364,15 @@ export const useStore = create<AppStore>((set) => ({
   setEditorState: (next) =>
     set({
       editorState: next,
+    }),
+
+  setEditHistoryState: (next) =>
+    set((state) => {
+      const current = state.editHistoryState;
+      if (current.canUndo === next.canUndo && current.canRedo === next.canRedo)
+        return state;
+      else
+        return { editHistoryState: next };
     }),
 
   setEffectsDisplayed: (next) =>

@@ -24,6 +24,11 @@ export type EditorState = {
   sequencePosition: number;
 };
 
+export type EditHistoryState = {
+  canUndo: boolean;
+  canRedo: boolean;
+};
+
 export type EditCommand = {
   apply: (redoing: boolean) => Promise<boolean>;
   undo: () => Promise<void>;
@@ -35,6 +40,13 @@ type HistoryEntry = {
   beforeRevision: number;
   afterRevision: number;
 };
+
+function publishEditHistoryState() {
+  useStore.getState().setEditHistoryState({
+    canUndo: undoStack.length > 0,
+    canRedo: redoStack.length > 0,
+  });
+}
 
 const undoStack: HistoryEntry[] = [];
 const redoStack: HistoryEntry[] = [];
@@ -126,6 +138,7 @@ export const editor = {
         currentRevisionId = entry.afterRevision;
         undoStack.push(entry);
         redoStack.length = 0;
+        publishEditHistoryState();
       }
     } catch (err) {
       void alerting.showError(err as string);
@@ -141,6 +154,7 @@ export const editor = {
       const message = entry.command.undoMessage;
       currentRevisionId = entry.beforeRevision;
       redoStack.push(entry);
+      publishEditHistoryState();
       userMessages.logMessage({ type: "info", message: messageFn("undid")(message) })
     } catch (err) {
       undoStack.push(entry);
@@ -157,6 +171,7 @@ export const editor = {
       const message = entry.command.undoMessage;
       currentRevisionId = entry.afterRevision;
       undoStack.push(entry);
+      publishEditHistoryState();
       userMessages.logMessage({ type: "info", message: messageFn("redid")(message) })
     } catch (err) {
       redoStack.push(entry);
@@ -168,6 +183,7 @@ export const editor = {
   newModuleLoaded: () => {
     undoStack.length = 0;
     redoStack.length = 0;
+    publishEditHistoryState();
     nextRevisionId = 1;
     currentRevisionId = 0;
     savedRevisionId = 0;
