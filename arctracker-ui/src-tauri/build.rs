@@ -50,7 +50,8 @@ fn main() {
     let engine_source_directory = manifest_dir.join("../../arctracker-engine");
     // Keep the Meson build directory shallow to avoid CMake's
     // object-file path length limit on Windows.
-    let engine_build_directory = out_directory.ancestors()
+    let engine_build_directory = out_directory
+        .ancestors()
         .nth(3)
         .expect("Unexpected Cargo OUT_DIR layout")
         .join("arctracker-engine");

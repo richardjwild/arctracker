@@ -2,7 +2,10 @@ pub mod arctracker;
 mod ffi;
 pub mod state;
 
-use crate::arctracker::{default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams, PlaybackState, UiPlayerSnapshot, VolumeMappingType};
+use crate::arctracker::{
+    default_module_params, AudioDeviceInfo, InterpolationType, MidiDeviceInfo, NewModuleParams,
+    PlaybackState, UiPlayerSnapshot, VolumeMappingType,
+};
 use crate::arctracker::{
     InstrumentUpdate, Module, PatternEvent, PatternLine, PlayerEvent, Sample, UiExportState,
     UiPeakLevels,
@@ -417,7 +420,11 @@ fn edit_set_module_meta_data(
 }
 
 #[tauri::command]
-fn edit_set_num_tracks(state: State<Arc<AppState>>, num_tracks: i32, init_new_tracks: bool) -> Result<(), String> {
+fn edit_set_num_tracks(
+    state: State<Arc<AppState>>,
+    num_tracks: i32,
+    init_new_tracks: bool,
+) -> Result<(), String> {
     let mut tracker = state.tracker.lock().unwrap();
     tracker
         .edit_set_num_tracks(num_tracks, init_new_tracks)
@@ -464,6 +471,7 @@ fn exit_unsuccessfully(app: AppHandle) {
 
 pub fn build_app(app_state: Arc<AppState>) -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(tauri_plugin_log::log::LevelFilter::Debug)

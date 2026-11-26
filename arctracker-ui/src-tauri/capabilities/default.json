@@ -49,6 +49,7 @@
         }
       ]
     },
-    "log:default"
+    "log:default",
+    "os:default"
   ]
 }

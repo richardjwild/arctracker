@@ -15,6 +15,7 @@
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-log": "^2.10.1",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "^2.4.0",
     "@tauri-apps/plugin-store": "^2.4.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

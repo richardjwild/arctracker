@@ -6,17 +6,19 @@ import useExportMonitoring from "./hooks/useExportMonitoring.ts";
 import useKeyboardInput from "./hooks/useKeyboardInput.ts";
 import useAnimation from "./hooks/useAnimation.ts";
 import { useExitGuard } from "./hooks/useExitGuard.ts";
-import { useMenuActions } from "./hooks/useMenuActions.ts";
+import { useMainMenu } from "./hooks/useMainMenu.ts";
 import useAppConfig from "./hooks/useAppConfig.ts";
 import useWelcomeMessage from "./hooks/useWelcomeMessage.ts";
 import { useOpenFileListener } from "./hooks/useOpenFileListener.ts";
+import { useWindowCloseHandler } from "./hooks/useWindowCloseHandler.ts";
 
 interface AppRuntimeProps {
   children: React.ReactNode;
 }
 
 export default function AppRuntime({ children }: AppRuntimeProps) {
-  useMenuActions();
+  useMainMenu();
+  useWindowCloseHandler();
   useExitGuard();
   useInitialModule();
   usePolling();

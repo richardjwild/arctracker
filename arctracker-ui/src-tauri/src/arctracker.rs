@@ -1,5 +1,8 @@
 use crate::ffi;
-use crate::ffi::{UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN, MIDI_DEVICE_NAME_LEN};
+use crate::ffi::{
+    UiInterpolationType, UiVolumeMappingType, AUDIO_DEVICE_NAME_LEN, HOST_API_NAME_LEN,
+    MIDI_DEVICE_NAME_LEN,
+};
 use serde::{Deserialize, Serialize};
 use std::ffi::{c_char, c_int, CStr, CString};
 
@@ -413,7 +416,11 @@ impl Arctracker {
         let mut devices = vec![empty_device; output_count as usize];
         if output_count > 0 {
             let result = unsafe {
-                ffi::arctracker_get_available_outputs(self.handle, devices.as_mut_ptr(), output_count)
+                ffi::arctracker_get_available_outputs(
+                    self.handle,
+                    devices.as_mut_ptr(),
+                    output_count,
+                )
             };
             if !result.success {
                 return Err(c_string_to_rust(&result.error_message));
@@ -446,12 +453,11 @@ impl Arctracker {
         }
         Ok(())
     }
-    
+
     pub fn get_playback_state(&mut self) -> Result<PlaybackState, String> {
         let mut playback_state = std::mem::MaybeUninit::<ffi::UiPlaybackState>::uninit();
-        let result = unsafe {
-            ffi::arctracker_get_playback_state(self.handle, playback_state.as_mut_ptr())
-        };
+        let result =
+            unsafe { ffi::arctracker_get_playback_state(self.handle, playback_state.as_mut_ptr()) };
         if !result.success {
             return Err(c_string_to_rust(&result.error_message));
         }
@@ -460,7 +466,8 @@ impl Arctracker {
     }
 
     pub fn use_default_output(&mut self, sample_rate: Option<u32>) -> Result<(), String> {
-        let result = unsafe { ffi::arctracker_use_default_output(self.handle, sample_rate.unwrap_or(0)) };
+        let result =
+            unsafe { ffi::arctracker_use_default_output(self.handle, sample_rate.unwrap_or(0)) };
         if !result.success {
             return Err(c_string_to_rust(&result.error_message));
         }
@@ -1196,8 +1203,14 @@ impl Arctracker {
         Ok(())
     }
 
-    pub fn edit_set_num_tracks(&mut self, num_tracks: i32, init_new_tracks: bool) -> Result<(), ArctrackerError> {
-        let result = unsafe { ffi::arctracker_edit_set_num_tracks(self.handle, num_tracks, init_new_tracks) };
+    pub fn edit_set_num_tracks(
+        &mut self,
+        num_tracks: i32,
+        init_new_tracks: bool,
+    ) -> Result<(), ArctrackerError> {
+        let result = unsafe {
+            ffi::arctracker_edit_set_num_tracks(self.handle, num_tracks, init_new_tracks)
+        };
         if !result.success {
             return Err(ArctrackerError {
                 message: c_string_to_rust(&result.error_message),
