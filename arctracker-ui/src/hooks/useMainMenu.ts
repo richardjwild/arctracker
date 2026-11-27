@@ -6,7 +6,7 @@ import exitArctracker from "../exit/exit.ts";
 import { SelectionType } from "../editing/pasteBuffer.ts";
 import { useStore } from "../store/useStore.ts";
 import { error } from "@tauri-apps/plugin-log";
-import { EditHistoryState, EditMode } from "../editing/editor.ts";
+import { EditHistoryState } from "../editing/editor.ts";
 import { Instrument, MaxInstrumentSlots } from "../editing/editInstrument.ts";
 
 const appMenu = {
@@ -16,20 +16,20 @@ const appMenu = {
     {
       id: "app-about",
       text: "About Arctracker",
-      enabled: true,
+      enabled: false,
       action: () => alert("Arctracker is amazing!"),
     },
     { item: "Separator" },
     {
       id: "app-settings",
       text: "Settings...",
-      enabled: true,
+      enabled: false,
       action: commands.editAppConfig,
     },
     {
       id: "app-command-reference",
       text: "Command Reference...",
-      enabled: true,
+      enabled: false,
       action: commands.showCommandReference,
     },
     { item: "Separator" },
@@ -57,7 +57,7 @@ const fileMenu = {
     {
       id: "file-open-module",
       text: "Open Module...",
-      enabled: true,
+      enabled: false,
       action: commands.loadFile,
     },
     {
@@ -69,14 +69,14 @@ const fileMenu = {
     {
       id: "file-save-module-as",
       text: "Save Module As...",
-      enabled: true,
+      enabled: false,
       action: commands.saveModuleAs,
     },
     { item: "Separator" },
     {
       id: "file-export-audio",
       text: "Export Audio...",
-      enabled: true,
+      enabled: false,
       action: commands.exportAudio,
     },
   ],
@@ -235,7 +235,7 @@ const transportMenu = {
     {
       id: "transport-seek-to-position",
       text: "Seek To Position...",
-      enabled: true,
+      enabled: false,
       action: commands.openSequenceSeekDialog,
     },
   ],
@@ -248,19 +248,19 @@ const moduleMenu = {
     {
       id: "module-edit-details",
       text: "Edit Module Details...",
-      enabled: true,
+      enabled: false,
       action: commands.editModuleMetaData,
     },
     {
       id: "module-set-track-count",
       text: "Set Track Count...",
-      enabled: true,
+      enabled: false,
       action: commands.editTrackCount,
     },
     {
       id: "module-edit-tempo",
       text: "Edit Tempo...",
-      enabled: true,
+      enabled: false,
       action: commands.editTempo,
     },
   ],
@@ -356,7 +356,7 @@ const patternMenu = {
     {
       id: "pattern-set-length",
       text: "Set Length...",
-      enabled: true,
+      enabled: false,
       action: commands.editCurrentPatternLength,
     },
   ],
@@ -452,7 +452,37 @@ function initialiseMenu(): Promise<Menu> {
   return menuPromise;
 }
 
-async function updatePatternEditMenuItems(menu: Menu, editMode: EditMode, cursorField: number) {
+async function updateAppMenuItems(menu: Menu, dialogOpen: boolean) {
+  const appMenu = await menu.get("app-menu") as Submenu;
+  const [aboutItem, appSettingsItem, commandReferenceItem] = await Promise.all([
+    appMenu.get("app-about"),
+    appMenu.get("app-settings"),
+    appMenu.get("app-command-reference"),
+  ]) as MenuItem[];
+  await Promise.all([
+    aboutItem.setEnabled(!dialogOpen),
+    appSettingsItem.setEnabled(!dialogOpen),
+    commandReferenceItem.setEnabled(!dialogOpen),
+  ])
+}
+
+async function updateFileMenuItems(menu: Menu, dialogOpen: boolean, fileAlreadySaved: boolean) {
+  const fileMenu = await menu.get("file-menu") as Submenu;
+  const [openItem, saveItem, saveAsItem, exportItem] = await Promise.all([
+    fileMenu.get("file-open-module"),
+    fileMenu.get("file-save-module"),
+    fileMenu.get("file-save-module-as"),
+    fileMenu.get("file-export-audio"),
+  ]) as MenuItem[];
+  await Promise.all([
+    openItem.setEnabled(!dialogOpen),
+    saveItem.setEnabled(!dialogOpen && fileAlreadySaved),
+    saveAsItem.setEnabled(!dialogOpen),
+    exportItem.setEnabled(!dialogOpen),
+  ]);
+}
+
+async function updatePatternEditMenuItems(menu: Menu, patternEditing: boolean, cursorField: number) {
   const editMenu = await menu.get("edit-menu") as Submenu;
   const [
     clearEventItem,
@@ -479,22 +509,22 @@ async function updatePatternEditMenuItems(menu: Menu, editMode: EditMode, cursor
       editMenu.get("edit-set-multiple-effects"),
     ]) as MenuItem[];
   await Promise.all([
-    clearEventItem.setEnabled(editMode === "patternEvents"),
-    clearFieldItem.setEnabled(editMode === "patternEvents" && cursorField > 0),
-    cutEventsItem.setEnabled(editMode === "patternEvents"),
-    copyEventsItem.setEnabled(editMode === "patternEvents"),
-    duplicateEventsItem.setEnabled(editMode === "patternEvents"),
-    cutTrackItem.setEnabled(editMode === "patternEvents"),
-    copyTrackItem.setEnabled(editMode === "patternEvents"),
-    cutPatternItem.setEnabled(editMode === "patternEvents"),
-    copyPatternItem.setEnabled(editMode === "patternEvents"),
-    setMultipleEffectsItem.setEnabled(editMode === "patternEvents"),
+    clearEventItem.setEnabled(patternEditing),
+    clearFieldItem.setEnabled(patternEditing && cursorField > 0),
+    cutEventsItem.setEnabled(patternEditing),
+    copyEventsItem.setEnabled(patternEditing),
+    duplicateEventsItem.setEnabled(patternEditing),
+    cutTrackItem.setEnabled(patternEditing),
+    copyTrackItem.setEnabled(patternEditing),
+    cutPatternItem.setEnabled(patternEditing),
+    copyPatternItem.setEnabled(patternEditing),
+    setMultipleEffectsItem.setEnabled(patternEditing),
   ]);
 }
 
 async function updatePasteMenuItems(
   menu: Menu,
-  editMode: EditMode,
+  patternEditing: boolean,
   currentSelectionType: SelectionType | null,
 ) {
   const editMenu = await menu.get("edit-menu") as Submenu;
@@ -505,9 +535,9 @@ async function updatePasteMenuItems(
       editMenu.get("edit-paste-pattern"),
     ]) as MenuItem[];
   await Promise.all([
-    pasteEventsItem.setEnabled(editMode === "patternEvents" && currentSelectionType === "patternEventSelection"),
-    pasteTrackItem.setEnabled(editMode === "patternEvents" && currentSelectionType === "track"),
-    pastePatternItem.setEnabled(editMode === "patternEvents" && currentSelectionType === "pattern"),
+    pasteEventsItem.setEnabled(patternEditing && currentSelectionType === "patternEventSelection"),
+    pasteTrackItem.setEnabled(patternEditing && currentSelectionType === "track"),
+    pastePatternItem.setEnabled(patternEditing && currentSelectionType === "pattern"),
   ]);
 }
 
@@ -524,20 +554,39 @@ async function updateUndoRedoMenuItems(menu: Menu, editHistoryState: EditHistory
   ]);
 }
 
-async function updateFileSaveMenuItem(menu: Menu, savedFileName: string | null) {
-  const fileMenu = await menu.get("file-menu") as Submenu;
-  const saveItem = await fileMenu.get("file-save-module") as MenuItem;
-  await saveItem.setEnabled(savedFileName !== null && savedFileName !== undefined && savedFileName !== "");
+async function updateTransportMenuItems(menu: Menu, dialogOpen: boolean) {
+  const transportMenu = await menu.get("transport-menu") as Submenu;
+  const [goToPositionItem] = await Promise.all([transportMenu.get("transport-seek-to-position")]) as MenuItem[];
+  await Promise.all([goToPositionItem.setEnabled(!dialogOpen)]);
+}
+
+async function updateModuleMenuItems(menu: Menu, dialogOpen: boolean) {
+  const moduleMenu = await menu.get("module-menu") as Submenu;
+  const [editModuleDetailsItem, setTrackCountItem, editTempoItem] = await Promise.all([
+    moduleMenu.get("module-edit-details"),
+    moduleMenu.get("module-set-track-count"),
+    moduleMenu.get("module-edit-tempo"),
+  ]) as MenuItem[];
+  await Promise.all([
+    editModuleDetailsItem.setEnabled(!dialogOpen),
+    setTrackCountItem.setEnabled(!dialogOpen),
+    editTempoItem.setEnabled(!dialogOpen),
+  ]);
+}
+
+async function updatePatternMenuItems(menu: Menu, dialogOpen: boolean) {
+  const patternMenu = await menu.get("pattern-menu") as Submenu;
+  const [setLengthItem] = await Promise.all([patternMenu.get("pattern-set-length")]) as MenuItem[];
+  await Promise.all([setLengthItem.setEnabled(!dialogOpen)]);
 }
 
 async function updateInstrumentMenuItems(
   menu: Menu,
-  editMode: EditMode,
+  dialogOpen: boolean,
   instrumentCount: number,
   instrumentSelected: boolean,
   draftInstrumentAssigned: boolean,
 ) {
-  const editing = editMode === "instrument";
   const instrumentMenu = await menu.get("instrument-menu") as Submenu;
   const [addInstrumentItem, editInstrumentItem, loadSampleItem, deleteSampleItem, exportSampleItem] = await Promise.all([
     instrumentMenu.get("instrument-add"),
@@ -547,11 +596,11 @@ async function updateInstrumentMenuItems(
     instrumentMenu.get("instrument-export-sample"),
   ]) as MenuItem[];
   await Promise.all([
-    addInstrumentItem.setEnabled(!editing && instrumentCount < MaxInstrumentSlots),
-    editInstrumentItem.setEnabled(!editing && instrumentSelected),
-    loadSampleItem.setEnabled(editing),
-    deleteSampleItem.setEnabled(editing && draftInstrumentAssigned),
-    exportSampleItem.setEnabled(editing && draftInstrumentAssigned),
+    addInstrumentItem.setEnabled(!dialogOpen && instrumentCount < MaxInstrumentSlots),
+    editInstrumentItem.setEnabled(!dialogOpen && instrumentSelected),
+    loadSampleItem.setEnabled(dialogOpen),
+    deleteSampleItem.setEnabled(dialogOpen && draftInstrumentAssigned),
+    exportSampleItem.setEnabled(dialogOpen && draftInstrumentAssigned),
   ]);
 }
 
@@ -571,25 +620,34 @@ export function useMainMenu() {
   const savedFileName = useStore((state) => state.module.fileName);
   const instruments = useStore((state) => state.module.instruments);
   const selectedInstrumentIndex = useStore((state) => state.selectedInstrument);
-  const instrumentSelected = getSelectedInstrument(instruments, selectedInstrumentIndex) !== null;
   const draftInstrumentAssigned = useStore((state) => state.draftInstrument.assigned);
   const instrumentCount = instruments.length;
+  const instrumentSelected = getSelectedInstrument(instruments, selectedInstrumentIndex) !== null;
+  const patternEditing = editMode === "patternEvents";
+  const dialogOpen = (editMode !== "none" && editMode !== "patternEvents");
+  const fileAlreadySaved = (savedFileName !== null && savedFileName !== undefined && savedFileName !== "");
 
   useEffect(() => {
-    void initialiseMenu().catch(console.error);
+    void initialiseMenu().catch((e) => error(e));
   }, []);
 
   useEffect(() => {
     void initialiseMenu()
-      .then((menu) => updatePatternEditMenuItems(menu, editMode, cursorField))
+      .then((menu) => updateAppMenuItems(menu, dialogOpen))
       .catch((e) => error(e));
-  }, [editMode, cursorField]);
+  }, [dialogOpen]);
 
   useEffect(() => {
     void initialiseMenu()
-      .then((menu) => updatePasteMenuItems(menu, editMode, currentSelectionType))
+      .then((menu) => updatePatternEditMenuItems(menu, patternEditing, cursorField))
       .catch((e) => error(e));
-  }, [editMode, currentSelectionType]);
+  }, [patternEditing, cursorField]);
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updatePasteMenuItems(menu, patternEditing, currentSelectionType))
+      .catch((e) => error(e));
+  }, [patternEditing, currentSelectionType]);
 
   useEffect(() => {
     void initialiseMenu()
@@ -599,13 +657,25 @@ export function useMainMenu() {
 
   useEffect(() => {
     void initialiseMenu()
-      .then((menu) => updateFileSaveMenuItem(menu, savedFileName))
+      .then((menu) => updateFileMenuItems(menu, dialogOpen, fileAlreadySaved))
       .catch((e) => error(e));
-  }, [savedFileName])
+  }, [dialogOpen, fileAlreadySaved])
 
   useEffect(() => {
     void initialiseMenu()
-      .then((menu) => updateInstrumentMenuItems(menu, editMode, instrumentCount, instrumentSelected, draftInstrumentAssigned))
+      .then((menu) =>
+        Promise.all([
+          updateTransportMenuItems(menu, dialogOpen),
+          updateModuleMenuItems(menu, dialogOpen),
+          updatePatternMenuItems(menu, dialogOpen),
+        ])
+      )
       .catch((e) => error(e));
-  }, [editMode, instruments, selectedInstrumentIndex, draftInstrumentAssigned]);
+  }, [dialogOpen])
+
+  useEffect(() => {
+    void initialiseMenu()
+      .then((menu) => updateInstrumentMenuItems(menu, dialogOpen, instrumentCount, instrumentSelected, draftInstrumentAssigned))
+      .catch((e) => error(e));
+  }, [dialogOpen, instruments, selectedInstrumentIndex, draftInstrumentAssigned]);
 }
