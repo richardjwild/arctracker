@@ -228,7 +228,6 @@ const messageFns = {
     errorSavingConfig: (p: string) => `Error saving config: ${p}`,
     failedToLoadConfig: (p: string) => `Failed to load config. Error details: ${p}`,
     audioSystemError: (p: string) => `Audio subsystem encountered error and will attempt restart. Error details: ${p}`,
-    menuListenersFailed: (p: string) => `Failed to install menu listeners. Error details: ${p}`,
     copiedEvents: (p: string) => p === "1" ? "Copied 1 event to clipboard." : `Copied ${p} events to clipboard.`,
     copiedPattern: (p: string) => `Copied pattern ${p} to clipboard.`,
     undid: (p: string) => `Undid: ${p}.`,
@@ -247,7 +246,6 @@ const messageFns = {
 
 const messageFns2 = {
   en: {
-    menuActionFailed: (eventId: string, errorMessage: string) => `Menu action failed: ${eventId}. Error details: ${errorMessage}`,
     copiedTrack: (trackIndex: string, patternNo: string) => `Copied pattern ${patternNo} track ${trackIndex} to clipboard.`,
     setTempo: (lpb: string, bpm: string) => `set tempo (LPB=${lpb}, BPM=${bpm})`,
     setPatternAtPosition: (pos: string, pat: string) => `set pattern at position ${pos} to ${pat}`,
