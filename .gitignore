@@ -51,3 +51,9 @@ dist-ssr
 # GoogleTest
 /arctracker-engine/subprojects/googletest-*/
 /arctracker-engine/subprojects/packagecache/
+
+# Icons
+/arctracker-ui/src-tauri/icons/*
+!/arctracker-ui/src-tauri/icons/arctracker-icon.svg
+!/arctracker-ui/src-tauri/icons/arctracker-icon-square.png
+!/arctracker-ui/src-tauri/icons/arctracker-icon-rounded.png

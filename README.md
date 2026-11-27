@@ -1,4 +1,4 @@
-# How to build Arctracker
+# How to build Arctracker for development
 ## Prerequisites
 1. C development tools
     1. macOS: XCode command line development tools (or full XCode)
@@ -27,3 +27,18 @@ cd arctracker-ui
 npm run tauri dev
 ```
 however, anything printed to stdout will be swallowed. For development purposes you may find it more convenient to run `npm run dev` and `cargo run` separately.
+
+# How to do a release build
+
+## Build the icons
+```
+cd arctracker-ui
+pnpm run tauri icon src-tauri/icons/arctracker-icon-square.png  # for macOS
+pnpm run tauri icon src-tauri/icons/arctracker-icon-rounded.png # for Windows and Linux
+```
+
+## Build the app bundle
+```
+npm run tauri build -- --bundles app                                         # for macOS
+sudo cp src-tauri/target/release/bundle/macos/Arctracker.app /Applications/. # for macOS (alternatively put it in ~/Applications)
+```
