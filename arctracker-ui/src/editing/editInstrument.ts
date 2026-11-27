@@ -5,6 +5,7 @@ import { AUDIO_EXPORT_EXTENSION, filePicker } from "../filesystem/filePicker.ts"
 import { alerting } from "../alerting/alert.ts";
 import { message, messageFn } from "../language/messages.ts";
 import { userMessages } from "../messages/userMessages.ts";
+import { hexadecimal } from "../rendering/hexadecimal.ts";
 
 export const MaxInstrumentSlots = 255;
 
@@ -171,7 +172,7 @@ export const editInstrument = {
         await engine.updateInstrument(selectedInstrument, before);
         useStore.getState().setInstrument(selectedInstrument, instrument);
       },
-      undoMessage: messageFn("updateInstrument")(selectedInstrument.toString()),
+      undoMessage: messageFn("updateInstrument")(hexadecimal.toHex(selectedInstrument + 1, 2)),
     };
     await editor.applyEdit(editCommand);
     ensureSelectedInstrumentValid();
