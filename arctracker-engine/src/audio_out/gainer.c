@@ -24,6 +24,8 @@ gainer_state_t gainer_init(const gain_curves_t *gain_curves, const volume_mappin
     assert(gain_curves->initialised);
     const gainer_state_t state = {
         .volume = INTERNAL_VOLUME_MAX,
+        .gain = 1.0f,
+        .gain_delta = 0.0f,
         .modulation = 0,
         .slide_rate = 0,
         .slide_fine = false,
@@ -41,30 +43,37 @@ void gainer_apply(gainer_state_t *state, float *channel_buffer, const unsigned i
     int volume = state->volume + state->modulation;
     if (volume < 0) volume = 0;
     if (volume > INTERNAL_VOLUME_MAX) volume = INTERNAL_VOLUME_MAX;
-    const float *curve = get_curve(state);
-    const float gain = curve[volume];
+    float gain = state->gain;
+    const float gain_delta = state->gain_delta;
     assert(gain >= 0.0);
     assert(gain <= 1.0);
     for (unsigned int frame = 0; frame < frames_requested; frame++)
     {
         channel_buffer[frame] *= gain;
+        gain += gain_delta;
+        if (gain > 1.0f) gain = 1.0f;
+        if (gain < 0.0f) gain = 0.0f;
     }
+    state->gain = gain;
 }
 
 void gainer_tick(gainer_state_t *state, const int ticks, const int ticks_per_event, const unsigned long frames_until_next_tick)
 {
     (void) ticks_per_event;
     (void) frames_until_next_tick;
+    const float *curve = get_curve(state);
     if (ticks == 0)
     {
         if (state->slide_rate != 0 && state->slide_fine)
             apply_volume_slide(state);
+        state->gain = curve[state->volume];
         return;
     }
     if (state->slide_rate != 0 && !state->slide_fine)
         apply_volume_slide(state);
     if (state->tremolo.enabled)
         apply_tremolo(state);
+    state->gain = curve[state->volume];
 }
 
 void gainer_set_volume(gainer_state_t *state, const int volume)

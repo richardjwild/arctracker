@@ -15,6 +15,8 @@ typedef struct {
 
 typedef struct {
     int volume;
+    float gain;
+    float gain_delta;
     int modulation;
     int slide_rate;
     bool slide_fine;
