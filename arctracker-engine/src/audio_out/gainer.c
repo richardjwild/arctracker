@@ -55,7 +55,12 @@ void gainer_tick(gainer_state_t *state, const int ticks, const int ticks_per_eve
 {
     (void) ticks_per_event;
     (void) frames_until_next_tick;
-    if (ticks == 0) return;
+    if (ticks == 0)
+    {
+        if (state->slide_rate != 0 && state->slide_fine)
+            apply_volume_slide(state);
+        return;
+    }
     if (state->slide_rate != 0 && !state->slide_fine)
         apply_volume_slide(state);
     if (state->tremolo.enabled)
@@ -70,18 +75,7 @@ void gainer_set_volume(gainer_state_t *state, const int volume)
 void gainer_volume_slide_on(gainer_state_t *state, const int slide_rate, const bool fine)
 {
     state->slide_rate = slide_rate;
-    if (fine)
-    {
-        int new_volume = state->volume + state->slide_rate;
-        if (new_volume < 0) new_volume = 0;
-        if (new_volume > INTERNAL_VOLUME_MAX) new_volume = INTERNAL_VOLUME_MAX;
-        state->volume = new_volume;
-        state->slide_fine = true;
-    }
-    else
-    {
-        state->slide_fine = false;
-    }
+    state->slide_fine = fine;
 }
 
 void gainer_volume_slide_off(gainer_state_t *state)
