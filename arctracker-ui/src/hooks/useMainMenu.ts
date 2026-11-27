@@ -530,8 +530,14 @@ async function updateFileSaveMenuItem(menu: Menu, savedFileName: string | null) 
   await saveItem.setEnabled(savedFileName !== null && savedFileName !== undefined && savedFileName !== "");
 }
 
-async function updateInstrumentMenuItems(menu: Menu, instruments: Instrument[], selectedInstrumentIndex: number | null) {
-  const selectedInstrument = getSelectedInstrument(instruments, selectedInstrumentIndex);
+async function updateInstrumentMenuItems(
+  menu: Menu,
+  editMode: EditMode,
+  instrumentCount: number,
+  instrumentSelected: boolean,
+  draftInstrumentAssigned: boolean,
+) {
+  const editing = editMode === "instrument";
   const instrumentMenu = await menu.get("instrument-menu") as Submenu;
   const [addInstrumentItem, editInstrumentItem, loadSampleItem, deleteSampleItem, exportSampleItem] = await Promise.all([
     instrumentMenu.get("instrument-add"),
@@ -541,11 +547,11 @@ async function updateInstrumentMenuItems(menu: Menu, instruments: Instrument[], 
     instrumentMenu.get("instrument-export-sample"),
   ]) as MenuItem[];
   await Promise.all([
-    addInstrumentItem.setEnabled(instruments.length < MaxInstrumentSlots),
-    editInstrumentItem.setEnabled(selectedInstrument != null),
-    loadSampleItem.setEnabled(selectedInstrument !== null),
-    deleteSampleItem.setEnabled(selectedInstrument?.assigned || false),
-    exportSampleItem.setEnabled(selectedInstrument?.assigned || false),
+    addInstrumentItem.setEnabled(!editing && instrumentCount < MaxInstrumentSlots),
+    editInstrumentItem.setEnabled(!editing && instrumentSelected),
+    loadSampleItem.setEnabled(editing),
+    deleteSampleItem.setEnabled(editing && draftInstrumentAssigned),
+    exportSampleItem.setEnabled(editing && draftInstrumentAssigned),
   ]);
 }
 
@@ -563,8 +569,11 @@ export function useMainMenu() {
   const currentSelectionType = useStore((state) => state.pasteBuffer?.type ?? null);
   const editHistoryState = useStore((state) => state.editHistoryState);
   const savedFileName = useStore((state) => state.module.fileName);
-  const selectedInstrumentIndex = useStore((state) => state.selectedInstrument);
   const instruments = useStore((state) => state.module.instruments);
+  const selectedInstrumentIndex = useStore((state) => state.selectedInstrument);
+  const instrumentSelected = getSelectedInstrument(instruments, selectedInstrumentIndex) !== null;
+  const draftInstrumentAssigned = useStore((state) => state.draftInstrument.assigned);
+  const instrumentCount = instruments.length;
 
   useEffect(() => {
     void initialiseMenu().catch(console.error);
@@ -596,7 +605,7 @@ export function useMainMenu() {
 
   useEffect(() => {
     void initialiseMenu()
-      .then((menu) => updateInstrumentMenuItems(menu, instruments, selectedInstrumentIndex))
+      .then((menu) => updateInstrumentMenuItems(menu, editMode, instrumentCount, instrumentSelected, draftInstrumentAssigned))
       .catch((e) => error(e));
-  }, [instruments, selectedInstrumentIndex]);
+  }, [editMode, instruments, selectedInstrumentIndex, draftInstrumentAssigned]);
 }
