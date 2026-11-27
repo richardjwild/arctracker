@@ -8,34 +8,35 @@ import { useStore } from "../store/useStore.ts";
 import { error } from "@tauri-apps/plugin-log";
 import { EditHistoryState } from "../editing/editor.ts";
 import { Instrument, MaxInstrumentSlots } from "../editing/editInstrument.ts";
+import { message } from "../language/messages.ts";
 
 const appMenu = {
   id: "app-menu",
-  text: "Arctracker",
+  text: message("menuApp"),
   items: [
     {
       id: "app-about",
-      text: "About Arctracker",
+      text: message("menuAppAbout"),
       enabled: false,
       action: () => alert("Arctracker is amazing!"),
     },
     { item: "Separator" },
     {
       id: "app-settings",
-      text: "Settings...",
+      text: message("menuAppSettings"),
       enabled: false,
       action: commands.editAppConfig,
     },
     {
       id: "app-command-reference",
-      text: "Command Reference...",
+      text: message("menuAppCommandReference"),
       enabled: false,
       action: commands.showCommandReference,
     },
     { item: "Separator" },
     {
       id: "app-exit",
-      text: "Quit",
+      text: message("menuAppQuit"),
       enabled: true,
       accelerator: platform() === "macos" ? "Cmd+Q" : undefined,
       action: exitArctracker,
@@ -45,37 +46,37 @@ const appMenu = {
 
 const fileMenu = {
   id: "file-menu",
-  text: "File",
+  text: message("menuFile"),
   items: [
     {
       id: "file-new",
-      text: "New Module",
+      text: message("menuFileNewModule"),
       enabled: true,
       action: commands.createModuleUsingDefaults,
     },
     { item: "Separator" },
     {
       id: "file-open-module",
-      text: "Open Module...",
+      text: message("menuFileOpenModule"),
       enabled: false,
       action: commands.loadFile,
     },
     {
       id: "file-save-module",
-      text: "Save Module",
+      text: message("menuFileSaveModule"),
       enabled: false,
       action: commands.saveModule,
     },
     {
       id: "file-save-module-as",
-      text: "Save Module As...",
+      text: message("menuFileSaveModuleAs"),
       enabled: false,
       action: commands.saveModuleAs,
     },
     { item: "Separator" },
     {
       id: "file-export-audio",
-      text: "Export Audio...",
+      text: message("menuFileExportAudio"),
       enabled: false,
       action: commands.exportAudio,
     },
@@ -84,107 +85,107 @@ const fileMenu = {
 
 const editMenu = {
   id: "edit-menu",
-  text: "Edit",
+  text: message("menuEdit"),
   items: [
     {
       id: "edit-undo",
-      text: "Undo",
+      text: message("menuEditUndo"),
       enabled: false,
       action: commands.undoEdit,
     },
     {
       id: "edit-redo",
-      text: "Redo",
+      text: message("menuEditRedo"),
       enabled: false,
       action: commands.redoEdit,
     },
     { item: "Separator" },
     {
       id: "edit-toggle",
-      text: "Toggle Edit Mode",
+      text: message("menuEditToggle"),
       enabled: true,
       action: commands.toggleEdit,
     },
     { item: "Separator" },
     {
       id: "edit-clear-event",
-      text: "Clear Event",
+      text: message("menuEditClearEvent"),
       enabled: true,
       action: commands.clearPatternEvent,
     },
     {
       id: "edit-clear-event-field",
-      text: "Clear Field",
+      text: message("menuEditClearEventField"),
       enabled: true,
       action: commands.clearPatternEventField,
     },
     { item: "Separator" },
     {
       id: "edit-cut-events",
-      text: "Cut Events",
+      text: message("menuEditCutEvents"),
       enabled: false,
       action: commands.cutPatternEvents,
     },
     {
       id: "edit-copy-events",
-      text: "Copy Events",
+      text: message("menuEditCopyEvents"),
       enabled: false,
       action: commands.copyPatternEvents,
     },
     {
       id: "edit-paste-events",
-      text: "Paste Events",
+      text: message("menuEditPasteEvents"),
       enabled: false,
       action: commands.pastePatternEvents,
     },
     {
       id: "edit-duplicate-events",
-      text: "Duplicate Events",
+      text: message("menuEditDuplicateEvents"),
       enabled: true,
       action: commands.duplicatePatternEvents,
     },
     { item: "Separator" },
     {
       id: "edit-cut-track",
-      text: "Cut Track",
+      text: message("menuEditCutTrack"),
       enabled: true,
       action: commands.cutTrack,
     },
     {
       id: "edit-copy-track",
-      text: "Copy Track",
+      text: message("menuEditCopyTrack"),
       enabled: true,
       action: commands.copyTrack,
     },
     {
       id: "edit-paste-track",
-      text: "Paste Track",
+      text: message("menuEditPasteTrack"),
       enabled: false,
       action: commands.pasteTrack,
     },
     { item: "Separator" },
     {
       id: "edit-cut-pattern",
-      text: "Cut Pattern",
+      text: message("menuEditCutPattern"),
       enabled: true,
       action: commands.cutPattern,
     },
     {
       id: "edit-copy-pattern",
-      text: "Copy Pattern",
+      text: message("menuEditCopyPattern"),
       enabled: true,
       action: commands.copyPattern,
     },
     {
       id: "edit-paste-pattern",
-      text: "Paste Pattern",
+      text: message("menuEditPastePattern"),
       enabled: false,
       action: commands.pastePattern,
     },
     { item: "Separator" },
     {
       id: "edit-set-multiple-effects",
-      text: "Set Multiple Effects",
+      text: message("menuEditSetMultipleEffects"),
       enabled: true,
       action: commands.openSetMultipleEffects,
     },
@@ -193,48 +194,48 @@ const editMenu = {
 
 const transportMenu = {
   id: "transport-menu",
-  text: "Transport",
+  text: message("menuTransport"),
   items: [
     {
       id: "transport-toggle-play",
-      text: "Toggle Play/Pause",
+      text: message("menuTransportTogglePlay"),
       enabled: true,
       action: commands.togglePlay,
     },
     {
       id: "transport-toggle-pattern-loop",
-      text: "Toggle Pattern Loop",
+      text: message("menuTransportToggleLoop"),
       enabled: true,
       action: commands.toggleLoop,
     },
     { item: "Separator" },
     {
       id: "transport-seek-forwards",
-      text: "Seek Forwards",
+      text: message("menuTransportSeekForwards"),
       enabled: true,
       action: commands.sequenceSeekForwards,
     },
     {
       id: "transport-seek-backwards",
-      text: "Seek Backwards",
+      text: message("menuTransportSeekBackwards"),
       enabled: true,
       action: commands.sequenceSeekBackwards,
     },
     {
       id: "transport-seek-to-start",
-      text: "Seek To Start",
+      text: message("menuTransportSeekStart"),
       enabled: true,
       action: commands.sequenceSeekToStart,
     },
     {
       id: "transport-seek-to-end",
-      text: "Seek To End",
+      text: message("menuTransportSeekEnd"),
       enabled: true,
       action: commands.sequenceSeekToEnd,
     },
     {
       id: "transport-seek-to-position",
-      text: "Seek To Position...",
+      text: message("menuTransportSeekPosition"),
       enabled: false,
       action: commands.openSequenceSeekDialog,
     },
@@ -243,23 +244,23 @@ const transportMenu = {
 
 const moduleMenu = {
   id: "module-menu",
-  text: "Module",
+  text: message("menuModule"),
   items: [
     {
       id: "module-edit-details",
-      text: "Edit Module Details...",
+      text: message("menuModuleEditDetails"),
       enabled: false,
       action: commands.editModuleMetaData,
     },
     {
       id: "module-set-track-count",
-      text: "Set Track Count...",
+      text: message("menuModuleSetTrackCount"),
       enabled: false,
       action: commands.editTrackCount,
     },
     {
       id: "module-edit-tempo",
-      text: "Edit Tempo...",
+      text: message("menuModuleEditTempo"),
       enabled: false,
       action: commands.editTempo,
     },
@@ -268,49 +269,49 @@ const moduleMenu = {
 
 const sequenceMenu = {
   id: "sequence-menu",
-  text: "Sequence",
+  text: message("menuSequence"),
   items: [
     {
       id: "sequence-increment-pattern",
-      text: "Increment Pattern",
+      text: message("menuSequenceIncrement"),
       enabled: true,
       action: commands.incrementPatternAtCurrentPosition,
     },
     {
       id: "sequence-decrement-pattern",
-      text: "Decrement Pattern",
+      text: message("menuSequenceDecrement"),
       enabled: true,
       action: commands.decrementPatternAtCurrentPosition,
     },
     { item: "Separator" },
     {
       id: "sequence-insert-before",
-      text: "Insert Before",
+      text: message("menuSequenceInsertBefore"),
       enabled: true,
       action: () => commands.insertSequencePositionBefore(false),
     },
     {
-      id: "sequence-insert-before-new",
-      text: "Insert Before With New Pattern",
-      enabled: true,
-      action: () => commands.insertSequencePositionBefore(true),
-    },
-    {
       id: "sequence-insert-after",
-      text: "Insert After",
+      text: message("menuSequenceInsertAfter"),
       enabled: true,
       action: () => commands.insertSequencePositionAfter(false),
     },
     {
+      id: "sequence-insert-before-new",
+      text: message("menuSequenceInsertNewBefore"),
+      enabled: true,
+      action: () => commands.insertSequencePositionBefore(true),
+    },
+    {
       id: "sequence-insert-after-new",
-      text: "Insert After With New Pattern",
+      text: message("menuSequenceInsertNewAfter"),
       enabled: true,
       action: () => commands.insertSequencePositionAfter(true),
     },
     { item: "Separator" },
     {
       id: "sequence-delete-position",
-      text: "Delete Current Position",
+      text: message("menuSequenceDelete"),
       enabled: true,
       action: commands.deleteSequencePosition,
     },
@@ -319,24 +320,24 @@ const sequenceMenu = {
 
 const trackMenu = {
   id: "track-menu",
-  text: "Track",
+  text: message("menuTrack"),
   items: [
     {
       id: "track-toggle-mute",
-      text: "Toggle Track Mute",
+      text: message("menuTrackToggleMute"),
       enabled: true,
       action: commands.toggleCurrentTrackMute,
     },
     { item: "Separator" },
     {
       id: "track-increase-effects-displayed",
-      text: "Increase Effects Displayed",
+      text: message("menuTrackIncreaseEffects"),
       enabled: true,
       action: commands.increaseEffectsDisplayed,
     },
     {
       id: "track-decrease-effects-displayed",
-      text: "Decrease Effects Displayed",
+      text: message("menuTrackDecreaseEffects"),
       enabled: true,
       action: commands.decreaseEffectsDisplayed,
     },
@@ -345,17 +346,17 @@ const trackMenu = {
 
 const patternMenu = {
   id: "pattern-menu",
-  text: "Pattern",
+  text: message("menuPattern"),
   items: [
     {
       id: "pattern-create",
-      text: "New Pattern",
+      text: message("menuPatternNew"),
       enabled: true,
       action: commands.createPatternAtCurrentPosition,
     },
     {
       id: "pattern-set-length",
-      text: "Set Length...",
+      text: message("menuPatternSetLength"),
       enabled: false,
       action: commands.editCurrentPatternLength,
     },
@@ -364,61 +365,61 @@ const patternMenu = {
 
 const instrumentMenu = {
   id: "instrument-menu",
-  text: "Instrument",
+  text: message("menuInstrument"),
   items: [
     {
       id: "instrument-next",
-      text: "Next",
+      text: message("menuInstrumentNext"),
       enabled: true,
       action: commands.nextInstrument,
     },
     {
       id: "instrument-previous",
-      text: "Previous",
+      text: message("menuInstrumentPrevious"),
       enabled: true,
       action: commands.previousInstrument,
     },
     {
       id: "instrument-first",
-      text: "First",
+      text: message("menuInstrumentFirst"),
       enabled: true,
       action: commands.firstInstrument,
     },
     {
       id: "instrument-last",
-      text: "Last",
+      text: message("menuInstrumentLast"),
       enabled: true,
       action: commands.lastInstrument,
     },
     { item: "Separator" },
     {
       id: "instrument-add",
-      text: "Add Instrument...",
+      text: message("menuInstrumentAdd"),
       enabled: true,
       action: commands.addInstrument,
     },
     {
       id: "instrument-edit",
-      text: "Edit Instrument...",
+      text: message("menuInstrumentEdit"),
       enabled: true,
       action: commands.openInstrumentEditor,
     },
     { item: "Separator" },
     {
       id: "instrument-load-sample",
-      text: "Load Sample...",
+      text: message("menuInstrumentLoadSample"),
       enabled: true,
       action: commands.loadSample,
     },
     {
       id: "instrument-delete-sample",
-      text: "Delete Sample...",
+      text: message("menuInstrumentDeleteSample"),
       enabled: true,
       action: commands.deleteSample,
     },
     {
       id: "instrument-export-sample",
-      text: "Export Sample...",
+      text: message("menuInstrumentExportSample"),
       enabled: true,
       action: commands.exportSample,
     },
